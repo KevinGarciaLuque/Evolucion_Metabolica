@@ -1,0 +1,88 @@
+.layout {
+  display: flex;
+  min-height: 100vh;
+  background: #f1f5f9;
+}
+
+.layout-main {
+  margin-left: 240px;
+  flex: 1;
+  padding: 28px 32px;
+  min-height: 100vh;
+  box-sizing: border-box;
+  transition: margin-left 0.25s ease;
+}
+
+.layout-main--collapsed {
+  margin-left: 64px;
+}
+
+/* ─── Topbar móvil ───────────────────────────────────────────────────────── */
+.mobile-topbar {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 56px;
+  background: #0f172a;
+  z-index: 200;
+  align-items: center;
+  padding: 0 16px;
+  gap: 14px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+.mobile-brand {
+  color: #f1f5f9;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+/* Botón hamburguesa */
+.hamburger {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  width: 36px;
+  height: 36px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  flex-shrink: 0;
+}
+.hamburger span {
+  display: block;
+  width: 22px;
+  height: 2px;
+  background: #f1f5f9;
+  border-radius: 2px;
+  transition: all 0.2s;
+}
+
+/* Overlay oscuro cuando el sidebar está abierto en móvil */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 150;
+}
+
+/* ─── Responsive ─────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .mobile-topbar   { display: flex; }
+  .sidebar-overlay { display: block; }
+
+  .layout-main {
+    margin-left: 0;
+    padding: 80px 14px 20px; /* 80px = topbar 56px + margen */
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  .layout-main {
+    padding: 24px 20px;
+  }
+}
+

@@ -1,0 +1,33 @@
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider } from "./context/AuthContext";
+import ProtectedRoute from "./components/ProtectedRoute";
+
+import Login           from "./pages/Login";
+import Dashboard       from "./pages/Dashboard";
+import PacientesList   from "./pages/Pacientes/PacientesList";
+import PacienteForm    from "./pages/Pacientes/PacienteForm";
+import PacienteDetalle from "./pages/Pacientes/PacienteDetalle";
+import SubirPDF        from "./pages/Analisis/SubirPDF";
+import Consolidado     from "./pages/Consolidado";
+
+function App() {
+  return (
+    <AuthProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/pacientes"        element={<ProtectedRoute><PacientesList /></ProtectedRoute>} />
+          <Route path="/pacientes/nuevo"  element={<ProtectedRoute><PacienteForm /></ProtectedRoute>} />
+          <Route path="/pacientes/:id"    element={<ProtectedRoute><PacienteDetalle /></ProtectedRoute>} />
+          <Route path="/pacientes/:id/editar" element={<ProtectedRoute><PacienteForm /></ProtectedRoute>} />
+          <Route path="/analisis/subir"   element={<ProtectedRoute><SubirPDF /></ProtectedRoute>} />
+          <Route path="/consolidado"      element={<ProtectedRoute><Consolidado /></ProtectedRoute>} />
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
+  );
+}
+
+export default App;

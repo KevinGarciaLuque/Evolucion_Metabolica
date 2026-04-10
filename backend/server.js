@@ -1,0 +1,42 @@
+import express from "express";
+import cors from "cors";
+import dotenv from "dotenv";
+import path from "path";
+import { fileURLToPath } from "url";
+
+import authRoutes from "./routes/auth.routes.js";
+import pacientesRoutes from "./routes/pacientes.routes.js";
+import analisisRoutes from "./routes/analisis.routes.js";
+import pdfRoutes from "./routes/pdf.routes.js";
+import dashboardRoutes from "./routes/dashboard.routes.js";
+
+dotenv.config();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const app = express();
+
+app.use(cors({ origin: process.env.FRONTEND_URL || "http://localhost:5173", credentials: true }));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Servir las carpetas de uploads como estáticos
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
+// Rutas de la API
+app.use("/api/auth", authRoutes);
+app.use("/api/pacientes", pacientesRoutes);
+app.use("/api/analisis", analisisRoutes);
+app.use("/api/pdf", pdfRoutes);
+app.use("/api/dashboard", dashboardRoutes);
+
+// Health check
+app.get("/api/health", (_req, res) => res.json({ status: "ok", timestamp: new Date().toISOString() }));
+
+const PORT = process.env.PORT || 3001;
+app.listen(PORT, () => {
+  console.log(`✅ Servidor corriendo en http://localhost:${PORT}`);
+});
+
+export default app;
