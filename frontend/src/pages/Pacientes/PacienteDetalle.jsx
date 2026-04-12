@@ -93,11 +93,14 @@ export default function PacienteDetalle() {
             <tbody>
               <InfoFila label="DNI/Expediente"  valor={paciente.dni || "—"} />
               <InfoFila label="Fecha Nacimiento" valor={paciente.fecha_nacimiento?.split("T")[0] || "—"} />
+              <InfoFila label="Edad al debut"    valor={paciente.edad_debut != null ? `${paciente.edad_debut} años` : "—"} />
               <InfoFila label="Género"           valor={paciente.sexo === "F" ? "👧 Femenino" : "👦 Masculino"} />
               <InfoFila label="Peso"             valor={paciente.peso ? `${paciente.peso} kg` : "—"} />
               <InfoFila label="Talla"            valor={paciente.talla ? `${paciente.talla} cm` : "—"} />
               <InfoFila label="Tipo Diabetes"    valor={paciente.tipo_diabetes || "—"} />
               <InfoFila label="Departamento"     valor={paciente.departamento} />
+              {paciente.procedencia_tipo && <InfoFila label="Procedencia" valor={paciente.procedencia_tipo} />}
+              {paciente.direccion && <InfoFila label="Dirección" valor={paciente.direccion} />}
               <InfoFila label="Institución"      valor={paciente.institucion || "—"} />
               {paciente.hba1c_previo && <InfoFila label="HbA1c previo" valor={`${paciente.hba1c_previo}%`} />}
               {paciente.telefono && <InfoFila label="Teléfono" valor={paciente.telefono} />}

@@ -5,10 +5,11 @@ import Layout from "../../components/Layout";
 
 const VACÍO = {
   dni: "", nombre: "", fecha_nacimiento: "", sexo: "F",
-  departamento: "", procedencia_tipo: "",
+  departamento: "", procedencia_tipo: "", direccion: "",
   peso: "", talla: "", tipo_diabetes: "Tipo 1",
   institucion: "HMEP", hba1c_previo: "", telefono: "",
   tipo_insulina: "", dosis_por_kg: "", promedio_glucometrias: "",
+  edad_debut: "",
 };
 
 export default function PacienteForm() {
@@ -95,6 +96,15 @@ export default function PacienteForm() {
               <input name="departamento" placeholder="Ej: Francisco Morazán" value={form.departamento} onChange={cambiar} required />
             </div>
             <div className="form-group">
+              <label>Edad al debut (años)</label>
+              <input
+                type="number" min="0" max="30" name="edad_debut"
+                placeholder="Ej: 10"
+                value={form.edad_debut}
+                onChange={cambiar}
+              />
+            </div>
+            <div className="form-group">
               <label>Procedencia</label>
               <select name="procedencia_tipo" value={form.procedencia_tipo} onChange={cambiar}>
                 <option value="">-- Sin especificar --</option>
@@ -102,10 +112,19 @@ export default function PacienteForm() {
                 <option value="Rural">Rural</option>
               </select>
             </div>
+            <div className="form-group" style={{ gridColumn: "1 / -1" }}>
+              <label>Dirección completa</label>
+              <input
+                name="direccion"
+                placeholder="Ej: Col. Peña por bajo, Tegucigalpa, FM"
+                value={form.direccion}
+                onChange={cambiar}
+              />
+            </div>
             <div className="form-group">
               <label>Institución *</label>
               <select name="institucion" value={form.institucion} onChange={cambiar} required>
-                <option value="HMEP">🏥 HMEP (Hospital Mario Catarino Rivas)</option>
+                <option value="HMEP">🏥 HMEP (Hospital María de Especialidades Pediátricas)</option>
                 <option value="IHSS">🏦 IHSS (Instituto Hondureño de Seguridad Social)</option>
               </select>
             </div>

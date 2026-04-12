@@ -66,6 +66,25 @@ function parseDuracion(s) {
   return (hours ? parseInt(hours[1]) * 60 : 0) + (mins ? parseInt(mins[1]) : 0) || null;
 }
 
+/**
+ * Parsea el campo fecha_colocacion (string con fechas separadas por "-" o Date object)
+ * y devuelve array de strings YYYY-MM-DD, uno por MCG.
+ * Ej: "02/12/25-16/12/25-30/12/25" → ['2025-12-02', '2025-12-16', '2025-12-30']
+ */
+function parseFechasColocacion(val) {
+  if (!val) return [];
+  if (val instanceof Date) {
+    return [val.toISOString().split('T')[0]];
+  }
+  const str = String(val).trim();
+  const matches = str.match(/(\d{1,2})\/(\d{1,2})\/(\d{2,4})/g) || [];
+  return matches.map(d => {
+    const [day, mon, yr] = d.split('/');
+    const year = yr.length === 2 ? '20' + yr : yr;
+    return `${year}-${mon.padStart(2, '0')}-${day.padStart(2, '0')}`;
+  });
+}
+
 /** Convierte géneros */
 function normSexo(g) {
   if (!g) return 'F';
@@ -136,7 +155,7 @@ const IHSS_COLS = {
 // ─── Main ────────────────────────────────────────────────────────────────────
 
 async function importarExcel() {
-  const wb = XLSX.readFile(path.join(__dirname, 'Niños con MCG con GRAFICOS abril 2.xlsx'));
+  const wb = XLSX.readFile(path.join(__dirname, 'Niños con MCG con GRAFICOS abril 2.xlsx'), { cellDates: true });
 
   const conn = await mysql.createConnection({
     host:     process.env.DB_HOST     || 'localhost',
@@ -150,7 +169,7 @@ async function importarExcel() {
 
   // ─── Procesar HMEP ────────────────────────────────────────────────────────
   console.log('\n📋 Procesando hoja HMEP...');
-  const hmepData = XLSX.utils.sheet_to_json(wb.Sheets['HMEP'], { header: 1, defval: '' });
+  const hmepData = XLSX.utils.sheet_to_json(wb.Sheets['HMEP'], { header: 1, defval: '', raw: false });
 
   for (let i = 6; i < hmepData.length; i++) {
     const r = hmepData[i];
@@ -179,16 +198,17 @@ async function importarExcel() {
     try {
       const [res] = await conn.query(
         `INSERT INTO pacientes
-          (dni, nombre, edad, sexo, departamento, procedencia_tipo, institucion, tipo_diabetes,
+          (dni, nombre, edad, sexo, departamento, procedencia_tipo, direccion, institucion, tipo_diabetes,
            hba1c_previo, tipo_insulina, dosis_por_kg, promedio_glucometrias, telefono)
-         VALUES (?, ?, ?, ?, ?, ?, 'HMEP', 'Tipo 1', ?, ?, ?, ?, ?)
+         VALUES (?, ?, ?, ?, ?, ?, ?, 'HMEP', 'Tipo 1', ?, ?, ?, ?, ?)
          ON DUPLICATE KEY UPDATE
            nombre=VALUES(nombre), edad=VALUES(edad), institucion='HMEP',
            procedencia_tipo=VALUES(procedencia_tipo),
+           direccion=VALUES(direccion),
            hba1c_previo=VALUES(hba1c_previo),
            tipo_insulina=VALUES(tipo_insulina), dosis_por_kg=VALUES(dosis_por_kg),
            promedio_glucometrias=VALUES(promedio_glucometrias), telefono=VALUES(telefono)`,
-        [dni, nombre, edad, sexo, departamento, procTipo, hba1c, tipoIns, dosiKg, glucom, telefon]
+        [dni, nombre, edad, sexo, departamento, procTipo, (deptUrbana || deptRural || null), hba1c, tipoIns, dosiKg, glucom, telefon]
       );
 
       let pacienteId;
@@ -205,8 +225,8 @@ async function importarExcel() {
 
       // Campos patient-level (Observaciones, HbA1c post, limitaciones, calidad vida)
       const comentarios  = String(r[HMEP_COLS.COMENTARIOS]  || '').trim() || null;
-      const hba1cPost    = r[HMEP_COLS.HBA1C_POST]
-        ? parseFloat(String(r[HMEP_COLS.HBA1C_POST]).replace(/%+/, '')) || null : null;
+      const hba1cRaw     = String(r[HMEP_COLS.HBA1C_POST] || '').trim().replace(/%+/g, '');
+      const hba1cPost    = hba1cRaw && !isNaN(hba1cRaw) ? toPercent(parseFloat(hba1cRaw)) : null;
       const limInternet  = String(r[HMEP_COLS.LIM_INTERNET]  || '').trim() ? 1 : 0;
       const limAlergias  = String(r[HMEP_COLS.LIM_ALERGIAS]  || '').trim() ? 1 : 0;
       const limEconomica = String(r[HMEP_COLS.LIM_ECONOMICA] || '').trim() ? 1 : 0;
@@ -234,11 +254,12 @@ async function importarExcel() {
         const hiposN     = r[HMEP_COLS.HIPOS_N     + reg] !== '' ? parseInt(r[HMEP_COLS.HIPOS_N     + reg]) || null : null;
         const hiposDurStr = String(r[HMEP_COLS.HIPOS_DURACION + reg] || '').trim() || null;
         const hiposDur   = parseDuracion(hiposDurStr);
-        const dosisPost  = String(r[HMEP_COLS.DOSIS_POST + reg] || '').trim() || null;
-        const fechaColStr = String(r[HMEP_COLS.fechaColocacion] || '').trim() || null;
-
+        const dosisPost   = String(r[HMEP_COLS.DOSIS_POST + reg] || '').trim() || null;
+        const fechas       = parseFechasColocacion(r[HMEP_COLS.fechaColocacion]);
+        const fechaColocStr = fechas[reg] || fechas[fechas.length - 1] || null;
+        const fechaBase    = fechaColocStr ? new Date(fechaColocStr + 'T12:00:00') : new Date(2025, 11, 1 + reg * 14);
+        const fecha        = new Date(fechaBase.getTime() + 14 * 24 * 3600 * 1000);
         const clasificacion = clasificarISPAD(tirVal, tar || 0, tbr || 0, gmi);
-        const fecha = new Date(2025, 11, 1 + reg * 15); // dic 2025 en adelante
 
         await conn.query(
           `INSERT INTO analisis
@@ -250,7 +271,7 @@ async function importarExcel() {
              limitacion_economica, calidad_vida, comentarios)
            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [
-            pacienteId, reg + 1, fecha.toISOString().split('T')[0], fechaColStr,
+            pacienteId, reg + 1, fecha.toISOString().split('T')[0], fechaColocStr,
             tirVal, tar, tarMuyAlto, tarAlto, tbr, tbrBajo, tbrMuyBajo,
             gmi, cv, ta, gri, hiposN, hiposDur,
             hiposDurStr, clasificacion, dosisPost,
@@ -267,7 +288,7 @@ async function importarExcel() {
 
   // ─── Procesar IHSS ────────────────────────────────────────────────────────
   console.log('\n📋 Procesando hoja IHSS...');
-  const ihssData = XLSX.utils.sheet_to_json(wb.Sheets['IHSS'], { header: 1, defval: '' });
+  const ihssData = XLSX.utils.sheet_to_json(wb.Sheets['IHSS'], { header: 1, defval: '', raw: false });
 
   for (let i = 4; i < ihssData.length; i++) {
     const r = ihssData[i];
@@ -281,9 +302,8 @@ async function importarExcel() {
     const edad    = normEdad(r[IHSS_COLS.edad]);
     const sexo    = normSexo(r[IHSS_COLS.sexo]);
     const telefon = String(r[IHSS_COLS.telefono] || '').trim() || null;
-    const hba1c   = r[IHSS_COLS.hba1cPrevio]
-      ? parseFloat(String(r[IHSS_COLS.hba1cPrevio]).replace(/%+/, '')) || null
-      : null;
+    const hba1cRawStr = String(r[IHSS_COLS.hba1cPrevio] || '').trim().replace(/%+/g, '');
+    const hba1c   = hba1cRawStr && !isNaN(hba1cRawStr) ? toPercent(parseFloat(hba1cRawStr)) : null;
     const tipoIns = String(r[IHSS_COLS.tipoInsulina] || '').trim() || null;
     const dosiKg  = String(r[IHSS_COLS.dosis] || '').trim() || null;
     const glucom  = String(r[IHSS_COLS.glucometriasDia] || '').trim() || null;
@@ -296,16 +316,17 @@ async function importarExcel() {
     try {
       const [res] = await conn.query(
         `INSERT INTO pacientes
-          (dni, nombre, edad, sexo, departamento, procedencia_tipo, institucion, tipo_diabetes,
+          (dni, nombre, edad, sexo, departamento, procedencia_tipo, direccion, institucion, tipo_diabetes,
            hba1c_previo, tipo_insulina, dosis_por_kg, promedio_glucometrias, telefono)
-         VALUES (?, ?, ?, ?, ?, ?, 'IHSS', 'Tipo 1', ?, ?, ?, ?, ?)
+         VALUES (?, ?, ?, ?, ?, ?, ?, 'IHSS', 'Tipo 1', ?, ?, ?, ?, ?)
          ON DUPLICATE KEY UPDATE
            nombre=VALUES(nombre), edad=VALUES(edad), institucion='IHSS',
            procedencia_tipo=VALUES(procedencia_tipo),
+           direccion=VALUES(direccion),
            hba1c_previo=VALUES(hba1c_previo),
            tipo_insulina=VALUES(tipo_insulina), dosis_por_kg=VALUES(dosis_por_kg),
            promedio_glucometrias=VALUES(promedio_glucometrias), telefono=VALUES(telefono)`,
-        [dni, nombre, edad, sexo, departamento, procTipo, hba1c, tipoIns, dosiKg, glucom, telefon]
+        [dni, nombre, edad, sexo, departamento, procTipo, (deptUrbana || deptRural || null), hba1c, tipoIns, dosiKg, glucom, telefon]
       );
 
       let pacienteId;
@@ -336,16 +357,16 @@ async function importarExcel() {
       const hiposN     = r[IHSS_COLS.HIPOS_N] !== '' ? parseInt(r[IHSS_COLS.HIPOS_N]) || null : null;
       const hiposDurStr = String(r[IHSS_COLS.HIPOS_DURACION] || '').trim() || null;
       const hiposDur   = parseDuracion(hiposDurStr);
-      const dosisPost  = String(r[IHSS_COLS.DOSIS_POST] || '').trim() || null;
-      const fechaColStr = String(r[IHSS_COLS.fechaColocacion] || '').trim() || null;
+      const dosisPost   = String(r[IHSS_COLS.DOSIS_POST] || '').trim() || null;
+      const fechasI     = parseFechasColocacion(r[IHSS_COLS.fechaColocacion]);
+      const fechaColStr = fechasI[0] || null;
 
       // Campos IHSS específicos
       const seMod       = String(r[IHSS_COLS.SE_MODIFICO] || '').trim();
       const seModBool   = seMod ? 1 : null;
       const dosisMod    = String(r[IHSS_COLS.DOSIS_MOD] || '').trim() || null;
-      const hba1cPost   = r[IHSS_COLS.HBA1C_POST]
-        ? parseFloat(String(r[IHSS_COLS.HBA1C_POST]).replace(/%+/, '')) || null
-        : null;
+      const hba1cPostRaw = String(r[IHSS_COLS.HBA1C_POST] || '').trim().replace(/%+/g, '');
+      const hba1cPost   = hba1cPostRaw && !isNaN(hba1cPostRaw) ? toPercent(parseFloat(hba1cPostRaw)) : null;
       const limInternet  = String(r[IHSS_COLS.LIM_INTERNET]  || '').trim() ? 1 : 0;
       const limAlergias  = String(r[IHSS_COLS.LIM_ALERGIAS]  || '').trim() ? 1 : 0;
       const limEconomica = String(r[IHSS_COLS.LIM_ECONOMICA] || '').trim() ? 1 : 0;

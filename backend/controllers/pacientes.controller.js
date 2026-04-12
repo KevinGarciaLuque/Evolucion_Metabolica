@@ -39,6 +39,7 @@ export async function crear(req, res) {
     dni, nombre, fecha_nacimiento, sexo, departamento, procedencia_tipo,
     peso, talla, tipo_diabetes, institucion, hba1c_previo, telefono,
     tipo_insulina, dosis_por_kg, promedio_glucometrias,
+    edad_debut, direccion,
   } = req.body;
   if (!nombre || !sexo || !departamento)
     return res.status(400).json({ error: "Nombre, sexo y departamento son obligatorios" });
@@ -49,13 +50,13 @@ export async function crear(req, res) {
   try {
     const [result] = await pool.query(
       `INSERT INTO pacientes
-        (dni, nombre, fecha_nacimiento, edad, sexo, departamento, procedencia_tipo, institucion,
-         peso, talla, tipo_diabetes, hba1c_previo, tipo_insulina, dosis_por_kg,
-         promedio_glucometrias, telefono)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        (dni, nombre, fecha_nacimiento, edad, edad_debut, sexo, departamento, procedencia_tipo,
+         direccion, institucion, peso, talla, tipo_diabetes, hba1c_previo, tipo_insulina,
+         dosis_por_kg, promedio_glucometrias, telefono)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
-        dni, nombre, fecha_nacimiento, edad, sexo, departamento,
-        procedencia_tipo || null, inst, peso, talla, tipo_diabetes,
+        dni, nombre, fecha_nacimiento, edad, edad_debut || null, sexo, departamento,
+        procedencia_tipo || null, direccion || null, inst, peso, talla, tipo_diabetes,
         hba1c_previo || null, tipo_insulina || null, dosis_por_kg || null,
         promedio_glucometrias || null, telefono || null,
       ]
@@ -74,20 +75,21 @@ export async function actualizar(req, res) {
     nombre, fecha_nacimiento, sexo, departamento, procedencia_tipo,
     peso, talla, tipo_diabetes, dni, institucion, hba1c_previo, telefono,
     tipo_insulina, dosis_por_kg, promedio_glucometrias,
+    edad_debut, direccion,
   } = req.body;
   const edad = fecha_nacimiento ? calcularEdad(fecha_nacimiento) : null;
 
   try {
     await pool.query(
       `UPDATE pacientes
-       SET dni=?, nombre=?, fecha_nacimiento=?, edad=?, sexo=?, departamento=?,
-           procedencia_tipo=?, institucion=?, peso=?, talla=?, tipo_diabetes=?,
+       SET dni=?, nombre=?, fecha_nacimiento=?, edad=?, edad_debut=?, sexo=?, departamento=?,
+           procedencia_tipo=?, direccion=?, institucion=?, peso=?, talla=?, tipo_diabetes=?,
            hba1c_previo=?, tipo_insulina=?, dosis_por_kg=?, promedio_glucometrias=?, telefono=?
        WHERE id = ?`,
       [
-        dni, nombre, fecha_nacimiento, edad, sexo, departamento,
-        procedencia_tipo || null, institucion || 'HMEP', peso, talla, tipo_diabetes,
-        hba1c_previo || null, tipo_insulina || null, dosis_por_kg || null,
+        dni, nombre, fecha_nacimiento, edad, edad_debut || null, sexo, departamento,
+        procedencia_tipo || null, direccion || null, institucion || 'HMEP', peso, talla,
+        tipo_diabetes, hba1c_previo || null, tipo_insulina || null, dosis_por_kg || null,
         promedio_glucometrias || null, telefono || null, req.params.id,
       ]
     );
