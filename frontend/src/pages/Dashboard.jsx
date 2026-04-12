@@ -28,6 +28,7 @@ function CountUp({ end, duration = 1.4, decimals = 0, suffix = "" }) {
 import api from "../api/axios";
 import Layout from "../components/Layout";
 import SemaforoISPAD from "../components/SemaforoISPAD";
+import DiagramaISPAD from "../components/DiagramaISPAD";
 
 /* ── Paleta profesional ─────────────────────────────────────────────────── */
 const PALETTE = {
@@ -134,8 +135,16 @@ export default function Dashboard() {
         <StatCard icon="📋" label="Total Análisis"   value={stats?.total_analisis ?? 0}   rawValue={stats?.total_analisis ?? 0}   color="blue"   suffix="" />
       </motion.div>
 
+      {/* Diagrama ISPAD + Distribución de control */}
       <motion.div className="dashboard-row" variants={stagger} initial="hidden" animate="show">
-        {/* Distribución de control */}
+        <motion.div className="card" variants={fadeUp} style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+          <h3 style={{ alignSelf: "flex-start", marginBottom: 8 }}>Objetivos de Control ISPAD</h3>
+          <p className="text-muted" style={{ alignSelf: "flex-start", marginBottom: 16, fontSize: 12 }}>
+            Metas internacionales de monitoreo continuo de glucosa
+          </p>
+          <DiagramaISPAD />
+        </motion.div>
+
         <motion.div className="card" variants={fadeUp}>
           <h3>Distribución de Control ISPAD</h3>
           <ResponsiveContainer width="100%" height={isMobile ? 200 : 230}>
@@ -160,7 +169,9 @@ export default function Dashboard() {
             </PieChart>
           </ResponsiveContainer>
         </motion.div>
+      </motion.div>
 
+      <motion.div className="dashboard-row" variants={stagger} initial="hidden" animate="show">
         {/* TIR por departamento */}
         <motion.div className="card" variants={fadeUp}>
           <h3>TIR Promedio por Departamento</h3>

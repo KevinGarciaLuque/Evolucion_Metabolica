@@ -290,7 +290,7 @@ body {
   gap: 14px;
 }
 /* ─── Tablas ─────────────────────────────────────────────────────────────── */
-.table-wrapper { overflow-x: auto; }
+.table-wrapper { overflow-x: auto; overflow-y: auto; max-height: 520px; }
 
 .tabla {
   width: 100%;
@@ -306,6 +306,9 @@ body {
   font-weight: 600;
   border-bottom: 2px solid var(--gray-200);
   white-space: nowrap;
+  position: sticky;
+  top: 0;
+  z-index: 1;
 }
 
 .tabla td {
@@ -332,6 +335,9 @@ body {
 .badge-bad  { background: var(--red-lt);    color: var(--red);    }
 .badge-blue { background: var(--blue-lt);   color: var(--blue);   }
 .badge-pink { background: #fdf2f8;          color: #9d174d;       }
+.badge-purple { background: #f3e8ff;        color: #7e22ce;       }
+.badge-green  { background: var(--green-lt); color: var(--green); }
+.badge-gray   { background: #f1f5f9;        color: #64748b;       }
 
 .badge-tir {
   display: inline-block;

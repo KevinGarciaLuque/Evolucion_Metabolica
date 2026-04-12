@@ -8,15 +8,19 @@ import {
   HiOutlineArrowRightOnRectangle,
   HiChevronLeft,
   HiChevronRight,
+  HiOutlineUserGroup,
+  HiOutlineBookOpen,
 } from "react-icons/hi2";
 import { RiHeartPulseFill } from "react-icons/ri";
 import "./Sidebar.css";
 
 const menu = [
-  { to: "/dashboard",       icon: HiOutlineSquares2X2,            label: "Dashboard"   },
-  { to: "/pacientes",       icon: HiOutlineUsers,                 label: "Pacientes"   },
-  { to: "/analisis/subir",  icon: HiOutlineDocumentArrowUp,       label: "Subir PDF"   },
-  { to: "/consolidado",     icon: HiOutlinePresentationChartLine, label: "Consolidado" },
+  { to: "/dashboard",       icon: HiOutlineSquares2X2,            label: "Dashboard",   rol: null      },
+  { to: "/consolidado",     icon: HiOutlinePresentationChartLine, label: "Consolidado", rol: null      },
+  { to: "/pacientes",       icon: HiOutlineUsers,                 label: "Pacientes",   rol: null      },
+  { to: "/analisis/subir",  icon: HiOutlineDocumentArrowUp,       label: "Subir PDF",   rol: null      },
+  { to: "/bitacora",        icon: HiOutlineBookOpen,              label: "Bitácora",    rol: null      },
+  { to: "/usuarios",        icon: HiOutlineUserGroup,             label: "Usuarios",    rol: "admin"   },
 ];
 
 export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }) {
@@ -55,7 +59,7 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
         </div>
 
         <nav className="sidebar-nav">
-          {menu.map(({ to, icon: Icon, label }) => (
+          {menu.filter(({ rol }) => !rol || usuario?.rol === rol).map(({ to, icon: Icon, label }) => (
             <NavLink
               key={to}
               to={to}

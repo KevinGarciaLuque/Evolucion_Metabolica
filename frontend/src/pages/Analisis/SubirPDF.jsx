@@ -1,9 +1,165 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { AnimatePresence, motion } from "framer-motion";
 import api from "../../api/axios";
 import Layout from "../../components/Layout";
 import SemaforoISPAD from "../../components/SemaforoISPAD";
 import { clasificarISPAD } from "../../utils/ispad";
+
+const PASOS_ANALISIS = [
+  { id: 1, texto: "Subiendo archivo al servidor..." },
+  { id: 2, texto: "Leyendo contenido del PDF..." },
+  { id: 3, texto: "Extrayendo valores de glucosa..." },
+  { id: 4, texto: "Calculando métricas ISPAD..." },
+  { id: 5, texto: "Preparando resultados..." },
+];
+const PASO_MS    = 500; // ms entre cada paso
+const VERDE_HOLD = 1000; // ms mostrando todos en verde antes de cerrar
+const TIEMPO_MIN = PASOS_ANALISIS.length * PASO_MS + VERDE_HOLD; // total garantizado
+
+function AnalizandoOverlay({ visible }) {
+  const [pasoActual, setPasoActual] = useState(0);
+
+  useEffect(() => {
+    if (!visible) { setPasoActual(0); return; }
+    setPasoActual(0);
+    const intervalos = [
+      // Avanzar cada paso
+      ...PASOS_ANALISIS.map((_, i) =>
+        setTimeout(() => setPasoActual(i), i * PASO_MS)
+      ),
+      // Poner todos en verde (pasoActual > último índice)
+      setTimeout(() => setPasoActual(PASOS_ANALISIS.length), PASOS_ANALISIS.length * PASO_MS),
+    ];
+    return () => intervalos.forEach(clearTimeout);
+  }, [visible]);
+
+  return (
+    <AnimatePresence>
+      {visible && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.3 }}
+          style={{
+            position: "fixed", inset: 0, zIndex: 9999,
+            background: "rgba(10, 15, 30, 0.82)",
+            backdropFilter: "blur(6px)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}
+        >
+          <motion.div
+            initial={{ scale: 0.85, opacity: 0, y: 30 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.9, opacity: 0, y: -20 }}
+            transition={{ type: "spring", stiffness: 300, damping: 25 }}
+            style={{
+              background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)",
+              border: "1px solid rgba(99,179,237,0.25)",
+              borderRadius: 20,
+              padding: "44px 52px",
+              maxWidth: 440,
+              width: "90%",
+              boxShadow: "0 30px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(99,179,237,0.1)",
+              textAlign: "center",
+            }}
+          >
+            {/* Spinner SVG animado */}
+            <div style={{ display: "flex", justifyContent: "center", marginBottom: 28 }}>
+              <svg width="68" height="68" viewBox="0 0 68 68" fill="none">
+                <circle cx="34" cy="34" r="28" stroke="rgba(99,179,237,0.15)" strokeWidth="5" />
+                <motion.circle
+                  cx="34" cy="34" r="28"
+                  stroke="url(#grad)"
+                  strokeWidth="5"
+                  strokeLinecap="round"
+                  strokeDasharray="175.93"
+                  strokeDashoffset="132"
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 1.1, repeat: Infinity, ease: "linear" }}
+                  style={{ transformOrigin: "34px 34px" }}
+                />
+                <defs>
+                  <linearGradient id="grad" x1="0" y1="0" x2="68" y2="68" gradientUnits="userSpaceOnUse">
+                    <stop stopColor="#63b3ed" />
+                    <stop offset="1" stopColor="#7c3aed" />
+                  </linearGradient>
+                </defs>
+                {/* Ícono PDF al centro */}
+                <text x="34" y="39" textAnchor="middle" fontSize="16" fill="#63b3ed" fontWeight="bold">PDF</text>
+              </svg>
+            </div>
+
+            <motion.h2
+              style={{ color: "#f1f5f9", fontSize: 20, fontWeight: 700, marginBottom: 8, letterSpacing: "-0.3px" }}
+            >
+              Analizando reporte
+            </motion.h2>
+            <p style={{ color: "#94a3b8", fontSize: 13, marginBottom: 32 }}>
+              Extracción automática de datos Syai X1
+            </p>
+
+            {/* Pasos */}
+            <div style={{ textAlign: "left", display: "flex", flexDirection: "column", gap: 10 }}>
+              {PASOS_ANALISIS.map((paso, i) => {
+                const completado = i < pasoActual;
+                const activo     = i === pasoActual;
+                return (
+                  <motion.div
+                    key={paso.id}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: i <= pasoActual ? 1 : 0.3, x: 0 }}
+                    transition={{ delay: i * 0.08, duration: 0.3 }}
+                    style={{ display: "flex", alignItems: "center", gap: 12 }}
+                  >
+                    <div style={{
+                      width: 22, height: 22, borderRadius: "50%", flexShrink: 0,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      background: completado ? "linear-gradient(135deg,#22c55e,#16a34a)"
+                                : activo     ? "linear-gradient(135deg,#63b3ed,#7c3aed)"
+                                :              "rgba(255,255,255,0.07)",
+                      border: activo ? "none" : "1px solid rgba(255,255,255,0.1)",
+                      transition: "background 0.4s",
+                    }}>
+                      {completado
+                        ? <svg width="12" height="12" viewBox="0 0 12 12"><path d="M2 6l3 3 5-5" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" fill="none"/></svg>
+                        : activo
+                          ? <motion.div
+                              animate={{ scale: [1, 1.3, 1] }}
+                              transition={{ duration: 0.8, repeat: Infinity }}
+                              style={{ width: 6, height: 6, borderRadius: "50%", background: "#fff" }}
+                            />
+                          : <div style={{ width: 6, height: 6, borderRadius: "50%", background: "rgba(255,255,255,0.3)" }} />
+                      }
+                    </div>
+                    <span style={{
+                      fontSize: 13,
+                      color: completado ? "#86efac" : activo ? "#e2e8f0" : "#475569",
+                      fontWeight: activo ? 600 : 400,
+                      transition: "color 0.3s",
+                    }}>
+                      {paso.texto}
+                    </span>
+                  </motion.div>
+                );
+              })}
+            </div>
+
+            {/* Barra de progreso */}
+            <div style={{ marginTop: 28, height: 4, background: "rgba(255,255,255,0.08)", borderRadius: 99, overflow: "hidden" }}>
+              <motion.div
+                animate={{ width: `${((pasoActual + 1) / PASOS_ANALISIS.length) * 100}%` }}
+                transition={{ duration: 0.5, ease: "easeOut" }}
+                style={{ height: "100%", background: "linear-gradient(90deg,#63b3ed,#7c3aed)", borderRadius: 99 }}
+              />
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
 
 export default function SubirPDF() {
   const navigate  = useNavigate();
@@ -21,7 +177,11 @@ export default function SubirPDF() {
   const [subiendo, setSubiendo]     = useState(false);
   const [guardando, setGuardando]   = useState(false);
   const [isMobile, setIsMobile]     = useState(window.innerWidth < 768);
+  const [filtroPaciente, setFiltroPaciente] = useState("");
+  const [pacienteNombre, setPacienteNombre] = useState("");
+  const [dropdownAbierto, setDropdownAbierto] = useState(false);
   const inputRef = useRef();
+  const busquedaRef = useRef();
 
   useEffect(() => {
     const onResize = () => setIsMobile(window.innerWidth < 768);
@@ -52,10 +212,15 @@ export default function SubirPDF() {
     const fd = new FormData();
     fd.append("pdf", archivo);
 
+    const tiempoMinimo = new Promise((r) => setTimeout(r, TIEMPO_MIN));
+
     try {
-      const { data } = await api.post(`/pdf/upload/${pacienteId}`, fd, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      const [{ data }] = await Promise.all([
+        api.post(`/pdf/upload/${pacienteId}`, fd, {
+          headers: { "Content-Type": "multipart/form-data" },
+        }),
+        tiempoMinimo,
+      ]);
       setDatos(data);
       const d = data.datos;
       setForm({
@@ -89,6 +254,7 @@ export default function SubirPDF() {
       });
       setEtapa("revisar");
     } catch (err) {
+      await tiempoMinimo;
       setError(err.response?.data?.error || "Error al procesar el PDF");
     } finally {
       setSubiendo(false);
@@ -136,6 +302,7 @@ export default function SubirPDF() {
 
   return (
     <Layout>
+      <AnalizandoOverlay visible={subiendo} />
       <div className="page-header">
         <div>
           <h1>Subir Reporte PDF · Syai X1</h1>
@@ -148,18 +315,87 @@ export default function SubirPDF() {
       {etapa === "subir" && (
         <div className="upload-container">
           <div className="card">
-            <div className="form-group">
+            <div className="form-group" style={{ position: "relative" }}>
               <label>Paciente *</label>
-              <select value={pacienteId} onChange={(e) => setPacienteId(e.target.value)} required>
-                <option value="">-- Seleccionar paciente --</option>
-                {pacientes.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {isMobile
-                      ? `${p.nombre.length > 22 ? p.nombre.slice(0, 22) + "…" : p.nombre} (${p.edad}a)`
-                      : `${p.nombre} (${p.edad} años · ${p.departamento})`}
-                  </option>
-                ))}
-              </select>
+              <div style={{ position: "relative" }}>
+                <input
+                  ref={busquedaRef}
+                  type="text"
+                  placeholder="Buscar por nombre o DNI..."
+                  value={pacienteNombre || filtroPaciente}
+                  autoComplete="off"
+                  onChange={(e) => {
+                    setFiltroPaciente(e.target.value);
+                    setPacienteNombre("");
+                    setPacienteId("");
+                    setDropdownAbierto(true);
+                  }}
+                  onFocus={() => setDropdownAbierto(true)}
+                  onBlur={() => setTimeout(() => setDropdownAbierto(false), 180)}
+                  style={{
+                    paddingRight: pacienteId ? 36 : 12,
+                    borderColor: pacienteId ? "#22c55e" : undefined,
+                  }}
+                />
+                {pacienteId && (
+                  <span style={{
+                    position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)",
+                    color: "#22c55e", fontSize: 18, pointerEvents: "none",
+                  }}>✓</span>
+                )}
+              </div>
+
+              <AnimatePresence>
+                {dropdownAbierto && filtroPaciente && !pacienteId && (() => {
+                  const resultados = pacientes.filter((p) => {
+                    const q = filtroPaciente.toLowerCase();
+                    return (
+                      p.nombre.toLowerCase().includes(q) ||
+                      (p.dni && String(p.dni).toLowerCase().includes(q))
+                    );
+                  });
+                  return (
+                    <motion.ul
+                      initial={{ opacity: 0, y: -6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -6 }}
+                      transition={{ duration: 0.15 }}
+                      style={{
+                        position: "absolute", top: "100%", left: 0, right: 0,
+                        zIndex: 999, margin: 0, padding: 0, listStyle: "none",
+                        background: "#fff", border: "1px solid #e2e8f0",
+                        borderRadius: 8, boxShadow: "0 8px 24px rgba(0,0,0,0.12)",
+                        maxHeight: 220, overflowY: "auto",
+                      }}
+                    >
+                      {resultados.length === 0 ? (
+                        <li style={{ padding: "10px 14px", color: "#94a3b8", fontSize: 13 }}>Sin resultados</li>
+                      ) : resultados.map((p) => (
+                        <li
+                          key={p.id}
+                          onMouseDown={() => {
+                            setPacienteId(p.id);
+                            setPacienteNombre(p.nombre);
+                            setFiltroPaciente("");
+                            setDropdownAbierto(false);
+                          }}
+                          style={{
+                            padding: "10px 14px", cursor: "pointer",
+                            borderBottom: "1px solid #f1f5f9",
+                            fontSize: 14,
+                          }}
+                          onMouseEnter={(e) => e.currentTarget.style.background = "#f0f9ff"}
+                          onMouseLeave={(e) => e.currentTarget.style.background = "#fff"}
+                        >
+                          <span style={{ fontWeight: 500 }}>{p.nombre}</span>
+                          {p.dni && <span style={{ color: "#64748b", fontSize: 12, marginLeft: 8 }}>DNI: {p.dni}</span>}
+                          <span style={{ color: "#94a3b8", fontSize: 12, marginLeft: 8 }}>{p.edad} años</span>
+                        </li>
+                      ))}
+                    </motion.ul>
+                  );
+                })()}
+              </AnimatePresence>
             </div>
 
             <div
@@ -205,6 +441,15 @@ export default function SubirPDF() {
 
       {etapa === "revisar" && form && (
         <div>
+          {/* Botón de regreso en la parte superior */}
+          <button
+            className="btn btn-outline"
+            onClick={() => { setEtapa("subir"); setArchivo(null); setForm(null); setPacienteNombre(""); setPacienteId(pacientePreseleccionado || ""); }}
+            style={{ marginBottom: 16, display: "flex", alignItems: "center", gap: 6 }}
+          >
+            ← Volver y subir otro PDF
+          </button>
+
           <div className="revisar-header">
             <div className="card" style={{ flex: 1 }}>
               <h3>📊 Datos Extraídos Automáticamente</h3>
