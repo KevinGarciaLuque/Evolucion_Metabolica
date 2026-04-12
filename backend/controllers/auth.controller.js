@@ -34,12 +34,6 @@ export async function login(req, res) {
       { expiresIn: "8h" }
     );
 
-    // Registrar en bitácora
-    await pool.query(
-      "INSERT INTO bitacora (usuario_id, accion, descripcion) VALUES (?, 'LOGIN', ?)",
-      [usuario.id, `Inicio de sesión: ${usuario.email}`]
-    );
-
     res.json({
       token,
       usuario: { id: usuario.id, nombre: usuario.nombre, email: usuario.email, rol: usuario.rol },
