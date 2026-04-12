@@ -246,7 +246,7 @@ export default function PacienteDetalle() {
                   <td>
                     {a.archivo_pdf && (
                       <a
-                        href={`http://localhost:3001/uploads/pdfs/${a.archivo_pdf}`}
+                        href={`${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:3001'}/uploads/pdfs/${a.archivo_pdf}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="link-small"
