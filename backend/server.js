@@ -22,7 +22,9 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Servir las carpetas de uploads como estáticos
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+// UPLOADS_PATH debe coincidir con el punto de montaje del volumen en Railway
+const uploadsPath = process.env.UPLOADS_PATH || path.join(__dirname, "uploads");
+app.use("/uploads", express.static(uploadsPath));
 
 // Rutas de la API
 app.use("/api/auth", authRoutes);
