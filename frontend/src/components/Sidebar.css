@@ -175,93 +175,7 @@
 
 /* ─── Footer ── */
 .sidebar-footer {
-  padding: 14px 10px;
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
-  flex-shrink: 0;
-}
-
-.sidebar-user {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px;
-  margin-bottom: 10px;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.04);
-  overflow: hidden;
-}
-
-.sidebar-avatar {
-  width: 34px;
-  height: 34px;
-  min-width: 34px;
-  border-radius: 9px;
-  background: linear-gradient(135deg, #1d4ed8, #7c3aed);
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
-  font-size: 0.95rem;
-  box-shadow: 0 2px 8px rgba(29, 78, 216, 0.35);
-  flex-shrink: 0;
-}
-
-.sidebar-user-info {
-  overflow: hidden;
-  white-space: nowrap;
-  opacity: 1;
-  max-width: 180px;
-  transition: opacity 0.2s ease, max-width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.sidebar-user-name {
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: #e2e8f0;
-  margin: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.sidebar-user-role {
-  font-size: 0.68rem;
-  color: #475569;
-  margin: 0;
-  text-transform: capitalize;
-}
-
-.sidebar-logout {
-  width: 100%;
-  padding: 9px 13px;
-  background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 9px;
-  color: #475569;
-  font-size: 0.82rem;
-  cursor: pointer;
-  transition: background 0.18s, border-color 0.18s, color 0.18s;
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 10px;
-  overflow: hidden;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
-.sidebar-logout:hover {
-  background: rgba(239, 68, 68, 0.12);
-  border-color: rgba(239, 68, 68, 0.28);
-  color: #f87171;
-}
-
-.sidebar-logout-label {
-  opacity: 1;
-  max-width: 160px;
-  overflow: hidden;
-  white-space: nowrap;
-  transition: opacity 0.2s ease, max-width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: none;
 }
 
 /* ================================================
@@ -274,9 +188,7 @@
 
 /* Ocultar textos con animación */
 .sidebar--collapsed .sidebar-brand-text,
-.sidebar--collapsed .sidebar-user-info,
-.sidebar--collapsed .sidebar-link-label,
-.sidebar--collapsed .sidebar-logout-label {
+.sidebar--collapsed .sidebar-link-label {
   opacity: 0;
   max-width: 0;
   pointer-events: none;
@@ -290,16 +202,6 @@
 .sidebar--collapsed .sidebar-link {
   justify-content: center;
   padding: 10px;
-}
-
-.sidebar--collapsed .sidebar-user {
-  justify-content: center;
-  padding: 10px;
-}
-
-.sidebar--collapsed .sidebar-logout {
-  justify-content: center;
-  padding: 9px;
 }
 
 /* ================================================

@@ -1,11 +1,10 @@
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import {
   HiOutlineSquares2X2,
   HiOutlineUsers,
   HiOutlineDocumentArrowUp,
   HiOutlinePresentationChartLine,
-  HiOutlineArrowRightOnRectangle,
   HiChevronLeft,
   HiChevronRight,
   HiOutlineUserGroup,
@@ -24,13 +23,7 @@ const menu = [
 ];
 
 export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }) {
-  const { usuario, logout } = useAuth();
-  const navigate = useNavigate();
-
-  function handleLogout() {
-    logout();
-    navigate("/login");
-  }
+  const { usuario } = useAuth();
 
   return (
     <aside className={`sidebar${isOpen ? " sidebar--open" : ""}${collapsed ? " sidebar--collapsed" : ""}`}>
@@ -72,22 +65,6 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
             </NavLink>
           ))}
         </nav>
-
-        <div className="sidebar-footer">
-          <div className="sidebar-user">
-            <div className="sidebar-avatar" title={usuario?.nombre}>
-              {usuario?.nombre?.[0]?.toUpperCase()}
-            </div>
-            <div className="sidebar-user-info">
-              <p className="sidebar-user-name">{usuario?.nombre}</p>
-              <p className="sidebar-user-role">{usuario?.rol}</p>
-            </div>
-          </div>
-          <button className="sidebar-logout" onClick={handleLogout}>
-            <HiOutlineArrowRightOnRectangle size={18} />
-            <span className="sidebar-logout-label">Cerrar sesión</span>
-          </button>
-        </div>
 
       </div>
     </aside>

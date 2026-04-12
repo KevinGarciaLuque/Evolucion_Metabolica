@@ -4,13 +4,153 @@
   background: #f1f5f9;
 }
 
+/* ─── Topbar ─────────────────────────────────────────────────────────────── */
+.topbar {
+  position: fixed;
+  top: 0;
+  left: 240px;
+  right: 0;
+  height: 58px;
+  background: #172A46;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+  display: flex;
+  align-items: center;
+  padding: 0 28px;
+  z-index: 100;
+  gap: 12px;
+  transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 6px rgba(0,0,0,0.25);
+}
+
+.topbar--collapsed {
+  left: 68px;
+}
+
+/* ─── Perfil en topbar ───────────────────────────────────────────────────── */
+.topbar-user {
+  position: relative;
+}
+
+.topbar-user-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.13);
+  border-radius: 10px;
+  padding: 6px 12px 6px 8px;
+  cursor: pointer;
+  transition: background 0.18s, border-color 0.18s, box-shadow 0.18s;
+}
+
+.topbar-user-btn:hover,
+.topbar-user-btn.open {
+  background: rgba(255,255,255,0.13);
+  border-color: rgba(255,255,255,0.22);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+}
+
+.topbar-avatar {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #1d4ed8, #7c3aed);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+  box-shadow: 0 2px 8px rgba(29, 78, 216, 0.3);
+}
+
+.topbar-user-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.2;
+}
+
+.topbar-user-name {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #f1f5f9;
+  white-space: nowrap;
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.topbar-user-role {
+  font-size: 0.68rem;
+  color: #94a3b8;
+  white-space: nowrap;
+}
+
+.topbar-chevron {
+  color: #94a3b8;
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+.topbar-chevron.rotated {
+  transform: rotate(180deg);
+}
+
+/* ─── Dropdown ───────────────────────────────────────────────────────────── */
+.topbar-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 190px;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  overflow: hidden;
+  z-index: 300;
+  animation: fadeDown 0.15s ease;
+}
+
+@keyframes fadeDown {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.topbar-dropdown-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 16px;
+  background: none;
+  border: none;
+  font-size: 0.85rem;
+  cursor: pointer;
+  color: #475569;
+  transition: background 0.15s;
+}
+.topbar-dropdown-item:hover {
+  background: #f8fafc;
+}
+.topbar-dropdown-item.danger {
+  color: #ef4444;
+}
+.topbar-dropdown-item.danger:hover {
+  background: #fef2f2;
+}
+
+/* ─── Main content ───────────────────────────────────────────────────────── */
 .layout-main {
   margin-left: 240px;
+  padding-top: 58px; /* altura del topbar */
   flex: 1;
-  padding: 28px 32px;
+  padding-left: 32px;
+  padding-right: 32px;
+  padding-bottom: 28px;
   min-height: 100vh;
   box-sizing: border-box;
-  transition: margin-left 0.25s ease;
+  transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .layout-main--collapsed {
@@ -20,15 +160,6 @@
 /* ─── Topbar móvil ───────────────────────────────────────────────────────── */
 .mobile-topbar {
   display: none;
-  position: fixed;
-  top: 0; left: 0; right: 0;
-  height: 56px;
-  background: #0f172a;
-  z-index: 200;
-  align-items: center;
-  padding: 0 16px;
-  gap: 14px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
 }
 
 .mobile-brand {
@@ -39,7 +170,7 @@
 
 /* Botón hamburguesa */
 .hamburger {
-  display: flex;
+  display: none;
   flex-direction: column;
   justify-content: center;
   gap: 5px;
@@ -55,7 +186,7 @@
   display: block;
   width: 22px;
   height: 2px;
-  background: #f1f5f9;
+  background: #64748b;
   border-radius: 2px;
   transition: all 0.2s;
 }
@@ -69,20 +200,67 @@
   z-index: 150;
 }
 
+/* Nombre de app centrado en móvil */
+.topbar-mobile-brand {
+  display: none;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #f1f5f9;
+  white-space: nowrap;
+  letter-spacing: 0.01em;
+}
+
 /* ─── Responsive ─────────────────────────────────────────────────────────── */
 @media (max-width: 768px) {
-  .mobile-topbar   { display: flex; }
+  .topbar {
+    left: 0 !important;
+    padding: 0 14px;
+    background: #172A46;
+    border-bottom-color: rgba(255,255,255,0.08);
+    height: 56px;
+  }
+  .hamburger {
+    display: flex;
+  }
+  .hamburger span {
+    background: #f1f5f9;
+  }
+  /* Ocultar brand en móvil — el sidebar ya lo tiene */
+  .mobile-brand {
+    display: none;
+  }
+  .topbar-mobile-brand {
+    display: block;
+  }
+  .topbar-user-btn {
+    background: rgba(255,255,255,0.08);
+    border-color: rgba(255,255,255,0.12);
+    padding: 5px 10px 5px 6px;
+    gap: 8px;
+  }
+  /* Ocultar texto del perfil en móvil, dejar solo avatar */
+  .topbar-user-info,
+  .topbar-chevron {
+    display: none;
+  }
+  .topbar-user-name { color: #f1f5f9; }
+  .topbar-user-role { color: #94a3b8; }
   .sidebar-overlay { display: block; }
 
   .layout-main {
     margin-left: 0;
-    padding: 80px 14px 20px; /* 80px = topbar 56px + margen */
+    padding-top: 68px;
+    padding-left: 14px;
+    padding-right: 14px;
+    padding-bottom: 24px;
   }
 }
 
 @media (min-width: 769px) and (max-width: 1024px) {
   .layout-main {
-    padding: 24px 20px;
+    padding-left: 20px;
+    padding-right: 20px;
   }
 }
+
 

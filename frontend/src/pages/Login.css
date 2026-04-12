@@ -50,6 +50,35 @@
   margin-bottom: 16px;
 }
 
+.input-password-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-password-wrap input {
+  width: 100%;
+  padding-right: 44px;
+}
+
+.toggle-pass-btn {
+  position: absolute;
+  right: 12px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s;
+}
+
+.toggle-pass-btn:hover {
+  color: #1d4ed8;
+}
+
 .login-footer {
   text-align: center;
   color: #94a3b8;
