@@ -5,6 +5,7 @@
 .sidebar {
   width: 240px;
   height: 100vh;
+  height: 100dvh;
   background: linear-gradient(180deg, #0f172a 0%, #0c1220 100%);
   display: flex;
   flex-direction: column;
@@ -118,12 +119,14 @@
 .sidebar-version {
   margin-top: auto;
   padding: 14px 16px 18px;
+  padding-bottom: max(18px, env(safe-area-inset-bottom, 18px));
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 2px;
   border-top: 1px solid rgba(255,255,255,0.07);
   overflow: hidden;
+  flex-shrink: 0;
 }
 .sidebar-version-label {
   font-size: 11px;
@@ -248,17 +251,39 @@
    MÓVIL
    ================================================ */
 
+@media (min-width: 769px) and (max-width: 1024px) {
+  .sidebar-version {
+    display: flex !important;
+    opacity: 1 !important;
+  }
+  .sidebar-version-name,
+  .sidebar-version-copy,
+  .sidebar-version-rights {
+    display: flex !important;
+  }
+}
+
 @media (max-width: 768px) {
   .sidebar {
     transform: translateX(-100%);
     width: 240px !important;
     overflow: hidden;
+    height: 100dvh;
   }
   .sidebar--open {
     transform: translateX(0);
   }
   .sidebar-collapse-btn {
     display: none;
+  }
+  .sidebar-version {
+    display: flex !important;
+    opacity: 1 !important;
+  }
+  .sidebar-version-name,
+  .sidebar-version-copy,
+  .sidebar-version-rights {
+    display: flex !important;
   }
 }
 
