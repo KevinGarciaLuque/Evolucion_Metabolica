@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, Link } from "react-router-dom";
+import { FiArrowLeft } from "react-icons/fi";
 import api from "../../api/axios";
 import Layout from "../../components/Layout";
 
@@ -80,9 +81,18 @@ export default function PacienteForm() {
   return (
     <Layout>
       <div className="page-header">
-        <div>
-          <h1>{esEdicion ? "Editar Paciente" : "Nuevo Paciente"}</h1>
-          <p className="page-subtitle">Registro de datos del paciente con diabetes</p>
+        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+          <Link
+            to={esEdicion ? `/pacientes/${id}` : "/pacientes"}
+            className="back-btn"
+            title="Volver"
+          >
+            <FiArrowLeft size={18} />
+          </Link>
+          <div>
+            <h1 style={{ margin: 0 }}>{esEdicion ? "Editar Paciente" : "Nuevo Paciente"}</h1>
+            <p className="page-subtitle">Registro de datos del paciente con diabetes</p>
+          </div>
         </div>
       </div>
 

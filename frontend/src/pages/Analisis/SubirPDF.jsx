@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams, Link } from "react-router-dom";
+import { FiArrowLeft } from "react-icons/fi";
 import { AnimatePresence, motion } from "framer-motion";
 import api from "../../api/axios";
 import Layout from "../../components/Layout";
@@ -190,7 +191,14 @@ export default function SubirPDF() {
   }, []);
 
   useEffect(() => {
-    api.get("/pacientes").then((r) => setPacientes(r.data));
+    api.get("/pacientes").then((r) => {
+      setPacientes(r.data);
+      // Si hay paciente preseleccionado desde la URL, buscar y llenar el nombre
+      if (pacientePreseleccionado) {
+        const encontrado = r.data.find(p => String(p.id) === String(pacientePreseleccionado));
+        if (encontrado) setPacienteNombre(encontrado.nombre);
+      }
+    });
   }, []);
 
   function onDragOver(e)  { e.preventDefault(); setArrastrado(true); }
@@ -304,9 +312,18 @@ export default function SubirPDF() {
     <Layout>
       <AnalizandoOverlay visible={subiendo} />
       <div className="page-header">
-        <div>
-          <h1>Subir Reporte PDF · Syai X1</h1>
-          <p className="page-subtitle">Carga el PDF generado por el monitor Syai X1 para extracción automática de datos</p>
+        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+          <Link
+            to={pacientePreseleccionado ? `/pacientes/${pacientePreseleccionado}` : "/pacientes"}
+            className="back-btn"
+            title="Volver"
+          >
+            <FiArrowLeft size={18} />
+          </Link>
+          <div>
+            <h1 style={{ margin: 0 }}>Subir Reporte PDF · Syai X1</h1>
+            <p className="page-subtitle">Carga el PDF generado por el monitor Syai X1 para extracción automática de datos</p>
+          </div>
         </div>
       </div>
 

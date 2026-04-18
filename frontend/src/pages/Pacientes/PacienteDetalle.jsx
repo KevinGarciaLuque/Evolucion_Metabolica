@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { FiTrash2 } from "react-icons/fi";
+import { FiTrash2, FiEdit2, FiEye, FiArrowLeft, FiUpload, FiEdit3 } from "react-icons/fi";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Legend, BarChart, Bar, Cell, ReferenceLine,
@@ -43,6 +43,10 @@ export default function PacienteDetalle() {
   const [isMobile, setIsMobile]   = useState(window.innerWidth < 768);
   const [modalEliminar, setModalEliminar] = useState(null); // { id, fecha }
   const [eliminando, setEliminando] = useState(false);
+  const [modalEditar, setModalEditar] = useState(null); // analisis object
+  const [editForm, setEditForm] = useState(null);
+  const [guardandoEdicion, setGuardandoEdicion] = useState(false);
+  const [modalVer, setModalVer] = useState(null); // analisis object
 
   async function eliminarAnalisis() {
     setEliminando(true);
@@ -54,6 +58,32 @@ export default function PacienteDetalle() {
       alert("Error al eliminar el análisis. Intenta de nuevo.");
     } finally {
       setEliminando(false);
+    }
+  }
+
+  function abrirEditar(analisis) {
+    setEditForm({ ...analisis });
+    setModalEditar(analisis);
+  }
+
+  function cambiarEditForm(e) {
+    const { name, type, checked, value } = e.target;
+    setEditForm(f => ({ ...f, [name]: type === "checkbox" ? checked : value }));
+  }
+
+  async function guardarEdicion() {
+    setGuardandoEdicion(true);
+    try {
+      const { data } = await api.put(`/analisis/${modalEditar.id}`, editForm);
+      setHistorial(h => h.map(a =>
+        a.id === modalEditar.id ? { ...a, ...editForm, clasificacion: data.clasificacion } : a
+      ));
+      setModalEditar(null);
+      setEditForm(null);
+    } catch {
+      alert("Error al guardar los cambios. Intenta de nuevo.");
+    } finally {
+      setGuardandoEdicion(false);
     }
   }
 
@@ -95,16 +125,38 @@ export default function PacienteDetalle() {
   return (
     <Layout>
       <div className="page-header">
-        <div>
-          <Link to="/pacientes" className="breadcrumb">← Pacientes</Link>
-          <h1>{paciente.nombre}</h1>
-          <p className="page-subtitle">
-            {paciente.sexo === "F" ? "👧" : "👦"} {paciente.edad} años · {paciente.departamento} · {paciente.tipo_diabetes}
-          </p>
+        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+          <Link to="/pacientes" className="back-btn" title="Volver a Pacientes">
+            <FiArrowLeft size={18} />
+          </Link>
+          <div className="patient-avatar">
+            {paciente.nombre?.[0]?.toUpperCase()}
+          </div>
+          <div>
+            <h1 style={{ margin: 0 }}>{paciente.nombre}</h1>
+            <div className="patient-chips">
+              <span className="patient-chip">
+                {paciente.sexo === "F" ? "♀ Femenino" : "♂ Masculino"}
+              </span>
+              <span className="patient-chip chip-age">
+                {paciente.edad} años
+              </span>
+              {paciente.departamento && (
+                <span className="patient-chip">{paciente.departamento}</span>
+              )}
+              <span className="patient-chip chip-diabetes">
+                {paciente.tipo_diabetes}
+              </span>
+            </div>
+          </div>
         </div>
-        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-          <Link to={`/analisis/subir?paciente=${id}`} className="btn btn-primary">📄 Subir PDF</Link>
-          <Link to={`/pacientes/${id}/editar`} className="btn btn-outline">Editar</Link>
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+          <Link to={`/analisis/subir?paciente=${id}`} className="btn btn-primary" style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <FiUpload size={15} /> Subir PDF
+          </Link>
+          <Link to={`/pacientes/${id}/editar`} className="btn btn-outline" style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <FiEdit3 size={15} /> Editar
+          </Link>
         </div>
       </div>
 
@@ -126,8 +178,8 @@ export default function PacienteDetalle() {
                 <InfoFila label="Institución"          valor={paciente.institucion || "—"} />
                 <InfoFila label="Tipo Diabetes"        valor={paciente.tipo_diabetes || "—"} />
                 {paciente.subtipo_monogenica && <InfoFila label="Subtipo Monogénica"  valor={paciente.subtipo_monogenica} />}
-                <InfoFila label="Peso"                 valor={paciente.peso  ? `${paciente.peso} kg`  : "—"} />
-                <InfoFila label="Talla"                valor={paciente.talla ? `${paciente.talla} cm` : "—"} />
+                <InfoFila label="Peso"                 valor={paciente.peso  ? `${Number(paciente.peso).toFixed(1)} kg`  : "—"} />
+                <InfoFila label="Talla"                valor={paciente.talla ? `${Number(paciente.talla).toFixed(1)} cm` : "—"} />
                 {paciente.hba1c_previo          && <InfoFila label="HbA1c previo"      valor={`${paciente.hba1c_previo}%`} />}
                 {paciente.tipo_insulina         && <InfoFila label="Tipo de insulina"   valor={paciente.tipo_insulina} />}
                 {paciente.dosis_por_kg          && <InfoFila label="Dosis por Kg"       valor={paciente.dosis_por_kg} />}
@@ -137,13 +189,12 @@ export default function PacienteDetalle() {
                 {paciente.procedencia_tipo && <InfoFila label="Procedencia"  valor={paciente.procedencia_tipo} />}
                 {paciente.telefono         && <InfoFila label="Teléfono"     valor={paciente.telefono} />}
                 {paciente.direccion        && <InfoFila label="Dirección"    valor={paciente.direccion} />}
-                {paciente.antecedente_familiar && <InfoFila label="Ant. Familiar" valor={paciente.antecedente_familiar} />}
               </tbody>
             </table>
           </div>
 
           <div className="card">
-            <h3 style={{ marginBottom: 16 }}>👨‍👩‍👧 Datos del Tutor</h3>
+            <h3 style={{ marginBottom: 0 }}>👨‍👩‍👧 Datos del Tutor</h3>
             <table className="info-tabla">
               <tbody>
                 <InfoFila label="Nombre"   valor={paciente.nombre_tutor   || "—"} />
@@ -151,6 +202,15 @@ export default function PacienteDetalle() {
               </tbody>
             </table>
           </div>
+
+          {paciente.antecedente_familiar && (
+            <div className="card">
+              <h3 style={{ marginBottom: 0 }}>🧬 Antecedentes Familiares</h3>
+              <p style={{ fontSize: "0.88rem", color: "#334155", lineHeight: 1.6, margin: 0, whiteSpace: "pre-wrap" }}>
+                {paciente.antecedente_familiar}
+              </p>
+            </div>
+          )}
         </div>
 
         {/* COLUMNA DERECHA: último análisis + guía de métricas */}
@@ -330,6 +390,7 @@ export default function PacienteDetalle() {
           <table className="tabla">
             <thead>
               <tr>
+                <th>Nº MCG</th>
                 <th>Fecha</th>
                 <th>TIR</th>
                 <th className="hide-mobile">TAR</th>
@@ -340,13 +401,16 @@ export default function PacienteDetalle() {
                 <th className="hide-mobile">G. Promedio</th>
                 <th>Clasificación</th>
                 <th>PDF</th>
-                <th></th>
+                <th>Acciones</th>
               </tr>
             </thead>
             <tbody>
               {historial.map((a) => (
                 <tr key={a.id}>
-                  <td>{a.fecha}</td>
+                  <td style={{ textAlign: "center", fontWeight: 600, color: "#3b82f6" }}>
+                    {a.numero_registro ?? "—"}
+                  </td>
+                  <td>{a.fecha ? new Date(a.fecha).toLocaleString("es-GT", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "—"}</td>
                   <td><span className={`badge-tir ${a.tir >= 70 ? "ok" : a.tir >= 50 ? "warn" : "bad"}`}>{a.tir}%</span></td>
                   <td className="hide-mobile">{a.tar}%</td>
                   <td className="hide-mobile">{a.tbr}%</td>
@@ -368,6 +432,25 @@ export default function PacienteDetalle() {
                     )}
                   </td>
                   <td>
+                    <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+                    <button
+                      onClick={() => setModalVer(a)}
+                      style={{
+                        background: "none", border: "none", cursor: "pointer",
+                        color: "#0ea5e9", padding: "2px 6px", borderRadius: 4,
+                        fontSize: 16, lineHeight: 1, display: "flex", alignItems: "center",
+                      }}
+                      title="Ver detalle"
+                    ><FiEye size={16} /></button>
+                    <button
+                      onClick={() => abrirEditar(a)}
+                      style={{
+                        background: "none", border: "none", cursor: "pointer",
+                        color: "#3b82f6", padding: "2px 6px", borderRadius: 4,
+                        fontSize: 16, lineHeight: 1, display: "flex", alignItems: "center",
+                      }}
+                      title="Editar análisis"
+                    ><FiEdit2 size={16} /></button>
                     <button
                       onClick={() => setModalEliminar({ id: a.id, fecha: a.fecha })}
                       style={{
@@ -377,12 +460,13 @@ export default function PacienteDetalle() {
                       }}
                       title="Eliminar análisis"
                     ><FiTrash2 size={16} /></button>
+                    </div>
                   </td>
                 </tr>
               ))}
               {historial.length === 0 && (
                 <tr>
-                  <td colSpan={10} className="empty-cell">
+                  <td colSpan={11} className="empty-cell">
                     No hay análisis aún.{" "}
                     <Link to={`/analisis/subir?paciente=${id}`}>Subir primer PDF →</Link>
                   </td>
@@ -392,6 +476,265 @@ export default function PacienteDetalle() {
           </table>
         </div>
       </div>
+
+      {/* Modal editar análisis */}
+      {modalEditar && editForm && (
+        <div style={{
+          position: "fixed", inset: 0, zIndex: 9999,
+          background: "rgba(0,0,0,0.5)",
+          display: "flex", alignItems: "flex-start", justifyContent: "center",
+          overflowY: "auto", padding: "24px 16px",
+        }}>
+          <div style={{
+            background: "#fff", borderRadius: 14, padding: "28px 28px",
+            maxWidth: 680, width: "100%",
+            boxShadow: "0 24px 64px rgba(0,0,0,0.25)",
+          }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+              <h3 style={{ margin: 0, color: "#0f172a", display: "flex", alignItems: "center", gap: 8 }}>
+                <FiEdit2 size={20} color="#3b82f6" /> Editar Análisis
+              </h3>
+              <button
+                onClick={() => { setModalEditar(null); setEditForm(null); }}
+                style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer", color: "#94a3b8", lineHeight: 1 }}
+              >✕</button>
+            </div>
+
+            {/* Identificación */}
+            <div className="form-grid">
+              <div className="form-group">
+                <label>Nº de monitor (registro)</label>
+                <input type="number" name="numero_registro" value={editForm.numero_registro ?? ""} onChange={cambiarEditForm} min={1} max={10} />
+              </div>
+              <div className="form-group">
+                <label>Fecha análisis *</label>
+                <input type="date" name="fecha" value={editForm.fecha?.split("T")[0] || editForm.fecha || ""} onChange={cambiarEditForm} />
+              </div>
+              <div className="form-group">
+                <label>Fecha colocación MCG</label>
+                <input type="date" name="fecha_colocacion" value={editForm.fecha_colocacion?.split("T")[0] || editForm.fecha_colocacion || ""} onChange={cambiarEditForm} />
+              </div>
+            </div>
+
+            {/* Métricas principales */}
+            <h4 style={{ margin: "16px 0 10px", color: "#334155", fontSize: "0.85rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>Métricas MCG</h4>
+            <div className="form-grid">
+              <div className="form-group">
+                <label>TIR (%)</label>
+                <input type="number" step="0.1" name="tir" value={editForm.tir ?? ""} onChange={cambiarEditForm} min={0} max={100} />
+              </div>
+              <div className="form-group">
+                <label>TAR Total (%)</label>
+                <input type="number" step="0.1" name="tar" value={editForm.tar ?? ""} onChange={cambiarEditForm} min={0} max={100} />
+              </div>
+              <div className="form-group">
+                <label>TAR Muy alto &gt;250 (%)</label>
+                <input type="number" step="0.1" name="tar_muy_alto" value={editForm.tar_muy_alto ?? ""} onChange={cambiarEditForm} min={0} max={100} />
+              </div>
+              <div className="form-group">
+                <label>TAR Alto 181-250 (%)</label>
+                <input type="number" step="0.1" name="tar_alto" value={editForm.tar_alto ?? ""} onChange={cambiarEditForm} min={0} max={100} />
+              </div>
+              <div className="form-group">
+                <label>TBR Total (%)</label>
+                <input type="number" step="0.1" name="tbr" value={editForm.tbr ?? ""} onChange={cambiarEditForm} min={0} max={100} />
+              </div>
+              <div className="form-group">
+                <label>TBR Bajo 54-69 (%)</label>
+                <input type="number" step="0.1" name="tbr_bajo" value={editForm.tbr_bajo ?? ""} onChange={cambiarEditForm} min={0} max={100} />
+              </div>
+              <div className="form-group">
+                <label>TBR Muy bajo &lt;54 (%)</label>
+                <input type="number" step="0.1" name="tbr_muy_bajo" value={editForm.tbr_muy_bajo ?? ""} onChange={cambiarEditForm} min={0} max={100} />
+              </div>
+              <div className="form-group">
+                <label>GMI (%)</label>
+                <input type="number" step="0.01" name="gmi" value={editForm.gmi ?? ""} onChange={cambiarEditForm} />
+              </div>
+              <div className="form-group">
+                <label>CV (%)</label>
+                <input type="number" step="0.1" name="cv" value={editForm.cv ?? ""} onChange={cambiarEditForm} />
+              </div>
+              <div className="form-group">
+                <label>Tiempo Activo (%)</label>
+                <input type="number" step="0.1" name="tiempo_activo" value={editForm.tiempo_activo ?? ""} onChange={cambiarEditForm} />
+              </div>
+              <div className="form-group">
+                <label>Glucosa Promedio (mg/dL)</label>
+                <input type="number" step="0.1" name="glucosa_promedio" value={editForm.glucosa_promedio ?? ""} onChange={cambiarEditForm} />
+              </div>
+              <div className="form-group">
+                <label>GRI</label>
+                <input type="number" step="0.1" name="gri" value={editForm.gri ?? ""} onChange={cambiarEditForm} />
+              </div>
+              <div className="form-group">
+                <label>Eventos hipoglucemia</label>
+                <input type="number" name="eventos_hipoglucemia" value={editForm.eventos_hipoglucemia ?? ""} onChange={cambiarEditForm} />
+              </div>
+              <div className="form-group">
+                <label>Duración hipoglucemia (min)</label>
+                <input type="number" name="duracion_hipoglucemia" value={editForm.duracion_hipoglucemia ?? ""} onChange={cambiarEditForm} />
+              </div>
+            </div>
+
+            {/* Insulina */}
+            <h4 style={{ margin: "16px 0 10px", color: "#334155", fontSize: "0.85rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>Insulina y seguimiento</h4>
+            <div className="form-grid">
+              <div className="form-group" style={{ gridColumn: "span 2" }}>
+                <label>Dosis de insulina (durante MCG)</label>
+                <input name="dosis_insulina_post" value={editForm.dosis_insulina_post ?? ""} onChange={cambiarEditForm} />
+              </div>
+              <div className="form-group">
+                <label>Se modificó dosis</label>
+                <input type="checkbox" name="se_modifico_dosis" checked={!!editForm.se_modifico_dosis} onChange={cambiarEditForm} style={{ width: "auto" }} />
+              </div>
+              <div className="form-group">
+                <label>Dosis modificada</label>
+                <input name="dosis_modificada" value={editForm.dosis_modificada ?? ""} onChange={cambiarEditForm} />
+              </div>
+              <div className="form-group">
+                <label>HbA1c post MCG (%)</label>
+                <input type="number" step="0.1" name="hba1c_post_mcg" value={editForm.hba1c_post_mcg ?? ""} onChange={cambiarEditForm} />
+              </div>
+            </div>
+
+            {/* Limitaciones */}
+            <h4 style={{ margin: "16px 0 10px", color: "#334155", fontSize: "0.85rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>Limitaciones y calidad de vida</h4>
+            <div className="form-grid">
+              <div className="form-group">
+                <label><input type="checkbox" name="limitacion_internet" checked={!!editForm.limitacion_internet} onChange={cambiarEditForm} style={{ width: "auto", marginRight: 6 }} />Internet</label>
+              </div>
+              <div className="form-group">
+                <label><input type="checkbox" name="limitacion_alergias" checked={!!editForm.limitacion_alergias} onChange={cambiarEditForm} style={{ width: "auto", marginRight: 6 }} />Alergias</label>
+              </div>
+              <div className="form-group">
+                <label><input type="checkbox" name="limitacion_economica" checked={!!editForm.limitacion_economica} onChange={cambiarEditForm} style={{ width: "auto", marginRight: 6 }} />Económicas</label>
+              </div>
+              <div className="form-group">
+                <label>Valoración calidad de vida</label>
+                <select name="calidad_vida" value={editForm.calidad_vida ?? ""} onChange={cambiarEditForm}>
+                  <option value="">-- Sin registrar --</option>
+                  <option value="Buena">Buena</option>
+                  <option value="Mala">Mala</option>
+                  <option value="Igual">Igual</option>
+                </select>
+              </div>
+              <div className="form-group" style={{ gridColumn: "span 2" }}>
+                <label>Comentarios</label>
+                <textarea name="comentarios" value={editForm.comentarios ?? ""} onChange={cambiarEditForm} rows={3} style={{ width: "100%", resize: "vertical" }} />
+              </div>
+            </div>
+
+            <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 20 }}>
+              <button
+                className="btn btn-outline"
+                onClick={() => { setModalEditar(null); setEditForm(null); }}
+                disabled={guardandoEdicion}
+              >Cancelar</button>
+              <button
+                className="btn btn-primary"
+                onClick={guardarEdicion}
+                disabled={guardandoEdicion}
+              >{guardandoEdicion ? "Guardando..." : "✔ Guardar cambios"}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal ver detalle análisis */}
+      {modalVer && (
+        <div style={{
+          position: "fixed", inset: 0, zIndex: 9999,
+          background: "rgba(0,0,0,0.5)",
+          display: "flex", alignItems: "flex-start", justifyContent: "center",
+          overflowY: "auto", padding: "24px 16px",
+        }}>
+          <div style={{
+            background: "#fff", borderRadius: 14, padding: "28px 28px",
+            maxWidth: 860, width: "100%",
+            boxShadow: "0 24px 64px rgba(0,0,0,0.25)",
+          }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+              <h3 style={{ margin: 0, color: "#0f172a", display: "flex", alignItems: "center", gap: 8 }}>
+                <FiEye size={20} color="#0ea5e9" /> Detalle del Análisis
+              </h3>
+              <button
+                onClick={() => setModalVer(null)}
+                style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer", color: "#94a3b8", lineHeight: 1 }}
+              >✕</button>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 24px" }}>
+
+              {/* COLUMNA IZQUIERDA */}
+              <div>
+                {/* Identificación */}
+                <h4 style={{ margin: "0 0 8px", color: "#334155", fontSize: "0.8rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>Identificación</h4>
+                <table className="info-tabla" style={{ marginBottom: 16 }}>
+                  <tbody>
+                    <InfoFila label="Nº de monitor" valor={modalVer.numero_registro ?? "—"} />
+                    <InfoFila label="Fecha análisis" valor={modalVer.fecha ? new Date(modalVer.fecha).toLocaleString("es-GT", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "—"} />
+                    <InfoFila label="Fecha colocación MCG" valor={modalVer.fecha_colocacion ? new Date(modalVer.fecha_colocacion).toLocaleDateString("es-GT", { day: "2-digit", month: "2-digit", year: "numeric" }) : "—"} />
+                    <InfoFila label="Clasificación" valor={<ClasificacionBadge valor={modalVer.clasificacion} />} />
+                  </tbody>
+                </table>
+
+                {/* Métricas MCG */}
+                <h4 style={{ margin: "0 0 8px", color: "#334155", fontSize: "0.8rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>Métricas MCG</h4>
+                <table className="info-tabla" style={{ marginBottom: 16 }}>
+                  <tbody>
+                    <InfoFila label="TIR (%)" valor={modalVer.tir != null ? `${modalVer.tir}%` : "—"} />
+                    <InfoFila label="TAR Total (%)" valor={modalVer.tar != null ? `${modalVer.tar}%` : "—"} />
+                    <InfoFila label="TAR Muy alto >250 (%)" valor={modalVer.tar_muy_alto != null ? `${modalVer.tar_muy_alto}%` : "—"} />
+                    <InfoFila label="TAR Alto 181-250 (%)" valor={modalVer.tar_alto != null ? `${modalVer.tar_alto}%` : "—"} />
+                    <InfoFila label="TBR Total (%)" valor={modalVer.tbr != null ? `${modalVer.tbr}%` : "—"} />
+                    <InfoFila label="TBR Bajo 54-69 (%)" valor={modalVer.tbr_bajo != null ? `${modalVer.tbr_bajo}%` : "—"} />
+                    <InfoFila label="TBR Muy bajo <54 (%)" valor={modalVer.tbr_muy_bajo != null ? `${modalVer.tbr_muy_bajo}%` : "—"} />
+                    <InfoFila label="GMI (%)" valor={modalVer.gmi != null ? `${modalVer.gmi}%` : "—"} />
+                    <InfoFila label="CV (%)" valor={modalVer.cv != null ? `${modalVer.cv}%` : "—"} />
+                    <InfoFila label="Tiempo Activo (%)" valor={modalVer.tiempo_activo != null ? `${modalVer.tiempo_activo}%` : "—"} />
+                    <InfoFila label="Glucosa Promedio" valor={modalVer.glucosa_promedio != null ? `${modalVer.glucosa_promedio} mg/dL` : "—"} />
+                    <InfoFila label="GRI" valor={modalVer.gri ?? "—"} />
+                    <InfoFila label="Eventos hipoglucemia" valor={modalVer.eventos_hipoglucemia ?? "—"} />
+                    <InfoFila label="Duración hipoglucemia" valor={modalVer.duracion_hipoglucemia != null ? `${modalVer.duracion_hipoglucemia} min` : "—"} />
+                  </tbody>
+                </table>
+              </div>
+
+              {/* COLUMNA DERECHA */}
+              <div>
+                {/* Insulina */}
+                <h4 style={{ margin: "0 0 8px", color: "#334155", fontSize: "0.8rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>Insulina y seguimiento</h4>
+                <table className="info-tabla" style={{ marginBottom: 16 }}>
+                  <tbody>
+                    <InfoFila label="Dosis insulina (durante MCG)" valor={modalVer.dosis_insulina_post || "—"} />
+                    <InfoFila label="Se modificó dosis" valor={modalVer.se_modifico_dosis ? "Sí" : "No"} />
+                    {modalVer.se_modifico_dosis && <InfoFila label="Dosis modificada" valor={modalVer.dosis_modificada || "—"} />}
+                    <InfoFila label="HbA1c post MCG" valor={modalVer.hba1c_post_mcg != null ? `${modalVer.hba1c_post_mcg}%` : "—"} />
+                  </tbody>
+                </table>
+
+                {/* Limitaciones */}
+                <h4 style={{ margin: "0 0 8px", color: "#334155", fontSize: "0.8rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>Limitaciones y calidad de vida</h4>
+                <table className="info-tabla" style={{ marginBottom: 16 }}>
+                  <tbody>
+                    <InfoFila label="Limitación internet" valor={modalVer.limitacion_internet ? "Sí" : "No"} />
+                    <InfoFila label="Limitación alergias" valor={modalVer.limitacion_alergias ? "Sí" : "No"} />
+                    <InfoFila label="Limitación económica" valor={modalVer.limitacion_economica ? "Sí" : "No"} />
+                    <InfoFila label="Calidad de vida" valor={modalVer.calidad_vida || "—"} />
+                    <InfoFila label="Comentarios" valor={modalVer.comentarios || "—"} />
+                  </tbody>
+                </table>
+              </div>
+
+            </div>
+
+            <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 8 }}>
+              <button className="btn btn-outline" onClick={() => setModalVer(null)}>Cerrar</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modal confirmación eliminar */}
       {modalEliminar && (
