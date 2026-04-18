@@ -2,8 +2,9 @@ import { useEffect, useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell, Legend, LineChart, Line, CartesianGrid,
+  Cell, Legend, LineChart, Line, CartesianGrid,
 } from "recharts";
+import ReactApexChart from "react-apexcharts";
 import { motion } from "framer-motion";
 
 /* ── CountUp propio (compatible con React 19 + Vite) ──────────────────── */
@@ -40,7 +41,13 @@ const PALETTE = {
   purple: "#a855f7",
   slate:  "#64748b",
 };
-const COLORS_PIE = [PALETTE.green, PALETTE.amber, PALETTE.red];
+const COLORS_GLUCOSA = [
+  { key: "muy_alto", label: "Muy Alto >250",       color: "#FEBF01" },
+  { key: "alto",     label: "Alto 181-250",        color: "#FDD94F" },
+  { key: "objetivo", label: "Objetivo 70-180",     color: "#76B250" },
+  { key: "bajo",     label: "Bajo 54-69",          color: "#FB0D0A" },
+  { key: "muy_bajo", label: "Muy Bajo <54",        color: "#86270C" },
+];
 
 /* ── Tooltip personalizado ──────────────────────────────────────────────── */
 function CustomTooltip({ active, payload, label, suffix = "" }) {
@@ -62,6 +69,35 @@ function CustomTooltip({ active, payload, label, suffix = "" }) {
   );
 }
 
+/* ── Tooltip TIR por Departamento (con clasificación) ──────────────────── */
+function TooltipDeptoD({ active, payload }) {
+  if (!active || !payload?.length) return null;
+  const d = payload[0].payload;
+  const tir = d.tir_promedio;
+  const { label, color } = tir >= 70
+    ? { label: "Óptimo", color: "#76B250" }
+    : tir >= 50
+    ? { label: "Moderado", color: "#FEBF01" }
+    : { label: "Alto Riesgo", color: "#FB0D0A" };
+  return (
+    <div style={{
+      background: "#0f172a", border: "1px solid #1e293b",
+      borderRadius: 10, padding: "10px 14px", fontSize: 13, color: "#e2e8f0",
+      boxShadow: "0 8px 32px rgba(0,0,0,0.5)", maxWidth: 220,
+    }}>
+      <p style={{ margin: "0 0 6px", color: "#94a3b8", fontSize: 12 }}>{d.departamento}</p>
+      <p style={{ margin: "2px 0", color }}>
+        <span style={{ color: "#94a3b8" }}>TIR %: </span>
+        <strong>{tir}%</strong>
+      </p>
+      <p style={{ margin: "4px 0 0", display: "flex", alignItems: "center", gap: 6 }}>
+        <span style={{ width: 10, height: 10, borderRadius: "50%", background: color, display: "inline-block", flexShrink: 0 }} />
+        <span style={{ color, fontWeight: 600, fontSize: 12 }}>{label}</span>
+      </p>
+    </div>
+  );
+}
+
 /* ── Variantes globales de animación ────────────────────────────────────── */
 const fadeUp = { hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0 } };
 const stagger = { show: { transition: { staggerChildren: 0.08 } } };
@@ -72,8 +108,10 @@ export default function Dashboard() {
   const [tendencias, setTend]     = useState([]);
   const [recientes, setRecientes] = useState([]);
   const [genero, setGenero]       = useState([]);
+  const [glucosaRangos, setGlucosaRangos] = useState(null);
   const [cargando, setCargando]   = useState(true);
   const [isMobile, setIsMobile]   = useState(window.innerWidth < 768);
+  const [institucion, setInstitucion] = useState("HMEP");
 
   useEffect(() => {
     const onResize = () => setIsMobile(window.innerWidth < 768);
@@ -82,31 +120,34 @@ export default function Dashboard() {
   }, []);
 
   useEffect(() => {
+    setCargando(true);
+    const q = `?institucion=${institucion}`;
     Promise.all([
-      api.get("/dashboard/stats"),
-      api.get("/dashboard/por-departamento"),
-      api.get("/dashboard/tendencias"),
-      api.get("/dashboard/recientes"),
-      api.get("/dashboard/por-genero"),
+      api.get(`/dashboard/stats${q}`),
+      api.get(`/dashboard/por-departamento${q}`),
+      api.get(`/dashboard/tendencias${q}`),
+      api.get(`/dashboard/recientes${q}`),
+      api.get(`/dashboard/por-genero${q}`),
+      api.get(`/dashboard/distribucion-glucosa${q}`),
     ])
-      .then(([s, d, t, r, g]) => {
+      .then(([s, d, t, r, g, gl]) => {
         setStats(s.data);
         setDeptos(d.data);
         setTend(t.data);
         setRecientes(r.data);
         setGenero(g.data);
+        setGlucosaRangos(gl.data);
       })
       .finally(() => setCargando(false));
-  }, []);
+  }, [institucion]);
 
   if (cargando) return <Layout><div className="loading">Cargando dashboard...</div></Layout>;
 
-  const pieData = stats
-    ? [
-        { name: "Óptimo",      value: Number(stats.en_control) },
-        { name: "Moderado",    value: Number(stats.moderado) },
-        { name: "Alto Riesgo", value: Number(stats.alto_riesgo) },
-      ]
+  const pieData = glucosaRangos
+    ? COLORS_GLUCOSA.map(({ key, label }) => ({
+        name:  label,
+        value: Number(glucosaRangos[key] ?? 0),
+      })).filter(d => d.value > 0)
     : [];
 
   return (
@@ -114,6 +155,7 @@ export default function Dashboard() {
       {/* Header */}
       <motion.div
         className="page-header"
+        style={{ marginTop: 20 }}
         initial={{ opacity: 0, y: -16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
@@ -122,7 +164,19 @@ export default function Dashboard() {
           <h1>Dashboard Global</h1>
           <p className="page-subtitle">Resumen clínico del programa de monitoreo continuo</p>
         </div>
-        <Link to="/analisis/subir" className="btn btn-primary">+ Subir PDF</Link>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, alignSelf: "flex-end", marginBottom: 6 }}>
+          <span style={{ fontSize: 13, color: "#94a3b8" }}>Institución:</span>
+          <div
+            className={`toggle-pill ${institucion === "IHSS" ? "is-ihss" : ""}`}
+            onClick={() => setInstitucion(institucion === "HMEP" ? "IHSS" : "HMEP")}
+            role="switch"
+            aria-checked={institucion === "HMEP"}
+            title={`Cambiar a ${institucion === "HMEP" ? "IHSS" : "HMEP"}`}
+          >
+            <span className="toggle-label">{institucion}</span>
+            <span className="toggle-thumb" />
+          </div>
+        </div>
       </motion.div>
 
       {/* Tarjetas de resumen */}
@@ -147,27 +201,7 @@ export default function Dashboard() {
 
         <motion.div className="card" variants={fadeUp}>
           <h3>Distribución de Control ISPAD</h3>
-          <ResponsiveContainer width="100%" height={isMobile ? 200 : 230}>
-            <PieChart>
-              <Pie
-                data={pieData}
-                cx="50%"
-                cy="50%"
-                innerRadius={isMobile ? 35 : 45}
-                outerRadius={isMobile ? 70 : 88}
-                dataKey="value"
-                paddingAngle={3}
-                label={isMobile ? null : ({ name, value }) => `${name}: ${value}`}
-                labelLine={!isMobile}
-              >
-                {pieData.map((_, i) => <Cell key={i} fill={COLORS_PIE[i]} />)}
-              </Pie>
-              <Legend
-                formatter={(value) => <span style={{ color: "#94a3b8", fontSize: 12 }}>{value}</span>}
-              />
-              <Tooltip content={<CustomTooltip />} />
-            </PieChart>
-          </ResponsiveContainer>
+          <Pie3DChart data={pieData} isMobile={isMobile} />
         </motion.div>
       </motion.div>
 
@@ -175,19 +209,54 @@ export default function Dashboard() {
         {/* TIR por departamento */}
         <motion.div className="card" variants={fadeUp}>
           <h3>TIR Promedio por Departamento</h3>
+          <div style={{ display: "flex", gap: 20, marginBottom: 10, flexWrap: "wrap" }}>
+            <span style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#64748b" }}>
+              <span style={{ width: 12, height: 12, borderRadius: 3, background: "#76B250", display: "inline-block" }} />
+              TIR Óptimo ≥ 70%
+            </span>
+            <span style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#64748b" }}>
+              <span style={{ width: 12, height: 12, borderRadius: 3, background: "#FEBF01", display: "inline-block" }} />
+              Moderado 50–69%
+            </span>
+            <span style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#64748b" }}>
+              <span style={{ width: 12, height: 12, borderRadius: 3, background: "#FB0D0A", display: "inline-block" }} />
+              Alto Riesgo &lt; 50%
+            </span>
+          </div>
           <ResponsiveContainer width="100%" height={isMobile ? 190 : 230}>
             <BarChart data={deptos} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
               <defs>
-                <linearGradient id="gradBar" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor={PALETTE.blue} />
-                  <stop offset="100%" stopColor={PALETTE.indigo} />
+                <linearGradient id="gradDBar" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#8fce5a" />
+                  <stop offset="100%" stopColor="#76B250" />
+                </linearGradient>
+                <linearGradient id="gradDAmber" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#ffe033" />
+                  <stop offset="100%" stopColor="#FEBF01" />
+                </linearGradient>
+                <linearGradient id="gradDRed" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#ff4d4a" />
+                  <stop offset="100%" stopColor="#FB0D0A" />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
               <XAxis dataKey="departamento" tick={{ fontSize: 11, fill: "#64748b" }} />
               <YAxis domain={[0, 100]} tick={{ fontSize: 11, fill: "#64748b" }} />
-              <Tooltip content={<CustomTooltip suffix="%" />} />
-              <Bar dataKey="tir_promedio" fill="url(#gradBar)" radius={[5, 5, 0, 0]} name="TIR %" />
+              <Tooltip content={<TooltipDeptoD />} />
+              <Bar dataKey="tir_promedio" radius={[5, 5, 0, 0]} name="TIR %">
+                {deptos.map((d) => (
+                  <Cell
+                    key={d.departamento}
+                    fill={
+                      d.tir_promedio >= 70
+                        ? "url(#gradDBar)"
+                        : d.tir_promedio >= 50
+                        ? "url(#gradDAmber)"
+                        : "url(#gradDRed)"
+                    }
+                  />
+                ))}
+              </Bar>
             </BarChart>
           </ResponsiveContainer>
         </motion.div>
@@ -286,6 +355,116 @@ export default function Dashboard() {
 }
 
 /* ── Componentes auxiliares ─────────────────────────────────────────────── */
+
+/* Convierte hex a rgba para efecto de opacidad */
+function hexToRgba(hex, alpha) {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+
+/* Gráfico de dona ApexCharts: clic en leyenda/segmento resalta el seleccionado */
+function Pie3DChart({ data, isMobile }) {
+  const [selectedIdx, setSelectedIdx] = useState(null);
+
+  const series = data.map(d => d.value);
+  const labels = data.map(d => d.name);
+  const baseColors = data.map(d => COLORS_GLUCOSA.find(c => c.label === d.name)?.color ?? "#64748b");
+
+  const colors = baseColors.map((color, i) =>
+    selectedIdx === null || selectedIdx === i
+      ? color
+      : hexToRgba(color, 0.2)
+  );
+
+  const options = {
+    chart: {
+      type: "donut",
+      background: "transparent",
+      animations: { enabled: true, speed: 700, animateGradually: { enabled: true, delay: 100 } },
+      dropShadow: { enabled: true, top: 6, left: 0, blur: 14, color: "#000", opacity: 0.28 },
+      events: {
+        legendClick: (_chart, seriesIndex) => {
+          setSelectedIdx(prev => prev === seriesIndex ? null : seriesIndex);
+        },
+        dataPointSelection: (_e, _ctx, config) => {
+          setSelectedIdx(prev => prev === config.dataPointIndex ? null : config.dataPointIndex);
+        },
+      },
+    },
+    labels,
+    colors,
+    fill: { opacity: 1 },
+    states: {
+      normal: { filter: { type: "none" } },
+      hover:  { filter: { type: "none" } },
+      active: { filter: { type: "none" }, allowMultipleDataPointsSelection: false },
+    },
+    dataLabels: {
+      enabled: true,
+      formatter: (val) => `${val.toFixed(1)}%`,
+      style: { fontSize: "13px", fontWeight: 700, colors: ["#fff"] },
+      dropShadow: { enabled: true, blur: 3, opacity: 0.5 },
+    },
+    plotOptions: {
+      pie: {
+        donut: {
+          size: "58%",
+          labels: {
+            show: true,
+            total: {
+              show: true,
+              label: selectedIdx !== null ? labels[selectedIdx] : "TIR Objetivo",
+              color: "#1e293b",
+              fontSize: "13px",
+              fontWeight: 600,
+              formatter: () => {
+                if (selectedIdx !== null) return `${series[selectedIdx]}%`;
+                const obj = data.find(d => d.name === "Objetivo 70-180");
+                return obj ? `${obj.value}%` : "";
+              },
+            },
+            value: { color: "#0f172a", fontSize: "22px", fontWeight: 700 },
+            name: { color: "#334155", fontSize: "14px", fontWeight: 600 },
+          },
+        },
+        expandOnClick: true,
+        offsetY: 0,
+      },
+    },
+    stroke: {
+      width: 2,
+      colors: baseColors.map((_, i) =>
+        selectedIdx === null || selectedIdx === i
+          ? "#1e293b"
+          : "rgba(30,41,59,0.15)"
+      ),
+    },
+    legend: {
+      position: "bottom",
+      labels: { colors: "#94a3b8", useSeriesColors: false },
+      fontSize: "12px",
+      itemMargin: { horizontal: 8, vertical: 4 },
+      onItemClick: { toggleDataSeries: false },
+      onItemHover: { highlightDataSeries: false },
+    },
+    tooltip: {
+      theme: "dark",
+      y: { formatter: (v) => `${v}%` },
+    },
+    theme: { mode: "dark" },
+  };
+
+  return (
+    <ReactApexChart
+      type="donut"
+      series={series}
+      options={options}
+      height={isMobile ? 320 : 400}
+    />
+  );
+}
 
 function StatCard({ icon, label, rawValue, color, suffix }) {
   const isFloat = !Number.isInteger(Number(rawValue));

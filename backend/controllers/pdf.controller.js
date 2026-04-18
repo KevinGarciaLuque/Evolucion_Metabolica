@@ -50,8 +50,8 @@ export async function subirYParsear(req, res) {
  */
 export async function confirmarAnalisis(req, res) {
   const {
-    paciente_id, fecha, tir, tar, tbr, gmi, cv,
-    tiempo_activo, glucosa_promedio, gri,
+    paciente_id, fecha, tir, tar, tar_muy_alto, tar_alto, tbr, tbr_bajo, tbr_muy_bajo,
+    gmi, cv, tiempo_activo, glucosa_promedio, gri,
     eventos_hipoglucemia, duracion_hipoglucemia, archivo_pdf,
   } = req.body;
 
@@ -68,13 +68,16 @@ export async function confirmarAnalisis(req, res) {
   try {
     const [result] = await pool.query(
       `INSERT INTO analisis
-        (paciente_id, fecha, tir, tar, tbr, gmi, cv, tiempo_activo, glucosa_promedio, gri,
+        (paciente_id, fecha, tir, tar, tar_muy_alto, tar_alto, tbr, tbr_bajo, tbr_muy_bajo,
+         gmi, cv, tiempo_activo, glucosa_promedio, gri,
          eventos_hipoglucemia, duracion_hipoglucemia, clasificacion, archivo_pdf)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
-        paciente_id, fecha, tir, tar, tbr, gmi, cv, tiempo_activo,
-        glucosa_promedio, gri, eventos_hipoglucemia, duracion_hipoglucemia,
-        clasificacion, archivo_pdf,
+        paciente_id, fecha, tir, tar,
+        tar_muy_alto ?? null, tar_alto ?? null,
+        tbr, tbr_bajo ?? null, tbr_muy_bajo ?? null,
+        gmi, cv, tiempo_activo, glucosa_promedio, gri,
+        eventos_hipoglucemia, duracion_hipoglucemia, clasificacion, archivo_pdf,
       ]
     );
 

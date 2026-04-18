@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
+import { FiTrash2 } from "react-icons/fi";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Legend, BarChart, Bar, Cell, ReferenceLine,
@@ -10,6 +11,13 @@ import SemaforoISPAD from "../../components/SemaforoISPAD";
 
 // ─── Colores por clasificación ──────────────────────────────────────────────
 const COLORS_CLASIF = { OPTIMO: "#16a34a", MODERADO: "#d97706", ALTO_RIESGO: "#dc2626" };
+
+// ─── Paleta ISPAD ────────────────────────────────────────────────────────────
+const C_MUY_ALTO  = "#FEBF01"; // TAR Muy Alto  >250 mg/dL
+const C_ALTO      = "#FDD94F"; // TAR Alto      181-250 mg/dL
+const C_OBJETIVO  = "#76B250"; // TIR Objetivo  70-180 mg/dL
+const C_BAJO      = "#FB0D0A"; // TBR Bajo      54-69 mg/dL
+const C_MUY_BAJO  = "#86270C"; // TBR Muy Bajo  <54 mg/dL
 
 // ─── Tooltip personalizado para barra apilada ───────────────────────────────
 function TooltipTIR({ active, payload, label }) {
@@ -33,6 +41,21 @@ export default function PacienteDetalle() {
   const [historial, setHistorial] = useState([]);
   const [cargando, setCargando]   = useState(true);
   const [isMobile, setIsMobile]   = useState(window.innerWidth < 768);
+  const [modalEliminar, setModalEliminar] = useState(null); // { id, fecha }
+  const [eliminando, setEliminando] = useState(false);
+
+  async function eliminarAnalisis() {
+    setEliminando(true);
+    try {
+      await api.delete(`/analisis/${modalEliminar.id}`);
+      setHistorial(h => h.filter(a => a.id !== modalEliminar.id));
+      setModalEliminar(null);
+    } catch {
+      alert("Error al eliminar el análisis. Intenta de nuevo.");
+    } finally {
+      setEliminando(false);
+    }
+  }
 
   useEffect(() => {
     const onResize = () => setIsMobile(window.innerWidth < 768);
@@ -85,42 +108,134 @@ export default function PacienteDetalle() {
         </div>
       </div>
 
-      {/* Info básica */}
-      <div className="detalle-grid">
-        <div className="card info-card">
-          <h3>Información del Paciente</h3>
-          <table className="info-tabla">
-            <tbody>
-              <InfoFila label="DNI/Expediente"  valor={paciente.dni || "—"} />
-              <InfoFila label="Fecha Nacimiento" valor={paciente.fecha_nacimiento?.split("T")[0] || "—"} />
-              <InfoFila label="Edad al debut"    valor={paciente.edad_debut != null ? `${paciente.edad_debut} años` : "—"} />
-              <InfoFila label="Género"           valor={paciente.sexo === "F" ? "👧 Femenino" : "👦 Masculino"} />
-              <InfoFila label="Peso"             valor={paciente.peso ? `${paciente.peso} kg` : "—"} />
-              <InfoFila label="Talla"            valor={paciente.talla ? `${paciente.talla} cm` : "—"} />
-              <InfoFila label="Tipo Diabetes"    valor={paciente.tipo_diabetes || "—"} />
-              <InfoFila label="Departamento"     valor={paciente.departamento} />
-              {paciente.procedencia_tipo && <InfoFila label="Procedencia" valor={paciente.procedencia_tipo} />}
-              {paciente.direccion && <InfoFila label="Dirección" valor={paciente.direccion} />}
-              <InfoFila label="Institución"      valor={paciente.institucion || "—"} />
-              {paciente.hba1c_previo && <InfoFila label="HbA1c previo" valor={`${paciente.hba1c_previo}%`} />}
-              {paciente.telefono && <InfoFila label="Teléfono" valor={paciente.telefono} />}
-            </tbody>
-          </table>
+      {/* ── Layout principal: izquierda info+tutor / derecha semáforo ── */}
+      <div className="detalle-grid" style={{ alignItems: "start", marginBottom: 16 }}>
+
+        {/* COLUMNA IZQUIERDA: datos del paciente + tutor */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+
+          <div className="card">
+            <h3 style={{ marginBottom: 16 }}>Información del Paciente</h3>
+            <table className="info-tabla">
+              <tbody>
+                <InfoFila label="DNI / Expediente"    valor={paciente.dni || "—"} />
+                <InfoFila label="Fecha Nacimiento"     valor={paciente.fecha_nacimiento?.split("T")[0] || "—"} />
+                <InfoFila label="Edad actual"          valor={paciente.edad != null ? `${paciente.edad} años` : "—"} />
+                <InfoFila label="Edad al debut"        valor={paciente.edad_debut != null ? `${paciente.edad_debut} años` : "—"} />
+                <InfoFila label="Género"               valor={paciente.sexo === "F" ? "👧 Femenino" : "👦 Masculino"} />
+                <InfoFila label="Institución"          valor={paciente.institucion || "—"} />
+                <InfoFila label="Tipo Diabetes"        valor={paciente.tipo_diabetes || "—"} />
+                {paciente.subtipo_monogenica && <InfoFila label="Subtipo Monogénica"  valor={paciente.subtipo_monogenica} />}
+                <InfoFila label="Peso"                 valor={paciente.peso  ? `${paciente.peso} kg`  : "—"} />
+                <InfoFila label="Talla"                valor={paciente.talla ? `${paciente.talla} cm` : "—"} />
+                {paciente.hba1c_previo          && <InfoFila label="HbA1c previo"      valor={`${paciente.hba1c_previo}%`} />}
+                {paciente.tipo_insulina         && <InfoFila label="Tipo de insulina"   valor={paciente.tipo_insulina} />}
+                {paciente.dosis_por_kg          && <InfoFila label="Dosis por Kg"       valor={paciente.dosis_por_kg} />}
+                {paciente.promedio_glucometrias && <InfoFila label="Glucometrías / día" valor={paciente.promedio_glucometrias} />}
+                <InfoFila label="Departamento"         valor={paciente.departamento || "—"} />
+                {paciente.municipio        && <InfoFila label="Municipio"    valor={paciente.municipio} />}
+                {paciente.procedencia_tipo && <InfoFila label="Procedencia"  valor={paciente.procedencia_tipo} />}
+                {paciente.telefono         && <InfoFila label="Teléfono"     valor={paciente.telefono} />}
+                {paciente.direccion        && <InfoFila label="Dirección"    valor={paciente.direccion} />}
+                {paciente.antecedente_familiar && <InfoFila label="Ant. Familiar" valor={paciente.antecedente_familiar} />}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="card">
+            <h3 style={{ marginBottom: 16 }}>👨‍👩‍👧 Datos del Tutor</h3>
+            <table className="info-tabla">
+              <tbody>
+                <InfoFila label="Nombre"   valor={paciente.nombre_tutor   || "—"} />
+                <InfoFila label="Teléfono" valor={paciente.telefono_tutor || "—"} />
+              </tbody>
+            </table>
+          </div>
         </div>
 
-        {/* Semáforo del último análisis */}
-        {ultimoAnalisis && (
-          <div className="card">
-            <h3>Último Análisis · {ultimoAnalisis.fecha}</h3>
-            <SemaforoISPAD
-              tir={Number(ultimoAnalisis.tir)}
-              tar={Number(ultimoAnalisis.tar)}
-              tbr={Number(ultimoAnalisis.tbr)}
-              gmi={Number(ultimoAnalisis.gmi)}
-              clasificacion={ultimoAnalisis.clasificacion}
-            />
+        {/* COLUMNA DERECHA: último análisis + guía de métricas */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          {ultimoAnalisis ? (
+            <div className="card">
+              <h3>Último Análisis · {ultimoAnalisis.fecha?.split("T")[0] || ultimoAnalisis.fecha}</h3>
+              <SemaforoISPAD
+                tir={Number(ultimoAnalisis.tir)}
+                tar={Number(ultimoAnalisis.tar)}
+                tbr={Number(ultimoAnalisis.tbr)}
+                gmi={Number(ultimoAnalisis.gmi)}
+                clasificacion={ultimoAnalisis.clasificacion}
+                tarMuyAlto={ultimoAnalisis.tar_muy_alto != null ? Number(ultimoAnalisis.tar_muy_alto) : null}
+                tarAlto={ultimoAnalisis.tar_alto != null ? Number(ultimoAnalisis.tar_alto) : null}
+                tbrBajo={ultimoAnalisis.tbr_bajo != null ? Number(ultimoAnalisis.tbr_bajo) : null}
+                tbrMuyBajo={ultimoAnalisis.tbr_muy_bajo != null ? Number(ultimoAnalisis.tbr_muy_bajo) : null}
+                tiempoActivo={ultimoAnalisis.tiempo_activo != null ? ultimoAnalisis.tiempo_activo : null}
+              />
+            </div>
+          ) : (
+            <div className="card" style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: 140, color: "#94a3b8", fontSize: "0.9rem" }}>
+              Sin análisis registrados aún
+            </div>
+          )}
+
+          {/* Tarjeta: guía de métricas MCG */}
+          <div className="card guia-metricas">
+            <h3 style={{ marginBottom: 14 }}>📘 Guía de Métricas MCG</h3>
+            <p style={{ fontSize: "0.78rem", color: "#64748b", marginBottom: 14, lineHeight: 1.5 }}>
+              Los indicadores del monitoreo continuo de glucosa (MCG) se calculan a partir del porcentaje
+              de tiempo que el sensor registra glucosa dentro de cada rango, sobre un período mínimo de 14 días
+              con ≥ 70% de datos activos (recomendación ISPAD 2022).
+            </p>
+            <div className="guia-items">
+              <div className="guia-item">
+                <span className="guia-dot" style={{ background: "#FEBF01" }} />
+                <div>
+                  <strong>TAR Muy Alto</strong> — Tiempo sobre rango (&gt; 250 mg/dL)
+                  <span className="guia-meta">Objetivo: &lt; 5%</span>
+                </div>
+              </div>
+              <div className="guia-item">
+                <span className="guia-dot" style={{ background: "#FDD94F" }} />
+                <div>
+                  <strong>TAR Alto</strong> — Tiempo sobre rango (181–250 mg/dL)
+                  <span className="guia-meta">Objetivo: &lt; 25%</span>
+                </div>
+              </div>
+              <div className="guia-item">
+                <span className="guia-dot" style={{ background: "#76B250" }} />
+                <div>
+                  <strong>TIR</strong> — Tiempo en Rango (70–180 mg/dL)
+                  <span className="guia-meta">Objetivo: ≥ 70%</span>
+                </div>
+              </div>
+              <div className="guia-item">
+                <span className="guia-dot" style={{ background: "#FB0D0A" }} />
+                <div>
+                  <strong>TBR Bajo</strong> — Tiempo bajo rango (54–69 mg/dL)
+                  <span className="guia-meta">Objetivo: &lt; 4%</span>
+                </div>
+              </div>
+              <div className="guia-item">
+                <span className="guia-dot" style={{ background: "#86270C" }} />
+                <div>
+                  <strong>TBR Muy Bajo</strong> — Tiempo bajo rango (&lt; 54 mg/dL)
+                  <span className="guia-meta">Objetivo: &lt; 1%</span>
+                </div>
+              </div>
+              <div className="guia-item">
+                <span className="guia-dot" style={{ background: "#c27803" }} />
+                <div>
+                  <strong>GMI</strong> — Indicador de Gestión de Glucosa
+                  <span className="guia-meta">Estimado de HbA1c a partir del sensor</span>
+                </div>
+              </div>
+            </div>
+            <p style={{ fontSize: "0.72rem", color: "#94a3b8", marginTop: 14, borderTop: "1px solid #f1f5f9", paddingTop: 10 }}>
+              Clasificación: <strong style={{ color: "#22c55e" }}>Óptimo</strong> (TIR ≥ 70% y TBR &lt; 4%) ·{" "}
+              <strong style={{ color: "#f59e0b" }}>Moderado</strong> (TIR 50–69%) ·{" "}
+              <strong style={{ color: "#ef4444" }}>Alto Riesgo</strong> (TIR &lt; 50%)
+            </p>
           </div>
-        )}
+        </div>
       </div>
 
       {/* Gráficas de evolución */}
@@ -157,13 +272,9 @@ export default function PacienteDetalle() {
                 <Tooltip content={<TooltipTIR />} />
                 <Legend wrapperStyle={{ fontSize: 12 }} />
                 <ReferenceLine y={70} stroke="#16a34a" strokeDasharray="4 4" label={{ value: "TIR 70%", fontSize: 10, fill: "#16a34a" }} />
-                <Bar dataKey="TIR" name="TIR %" stackId="a" fill="#1d4ed8" radius={[0,0,0,0]}>
-                  {chartData.map((d) => (
-                    <Cell key={d.label} fill={d.TIR >= 70 ? "#16a34a" : d.TIR >= 50 ? "#d97706" : "#dc2626"} />
-                  ))}
-                </Bar>
-                <Bar dataKey="TAR" name="TAR %" stackId="b" fill="#f59e0b" radius={[4,4,0,0]} />
-                <Bar dataKey="TBR" name="TBR %" stackId="c" fill="#ef4444" radius={[4,4,0,0]} />
+                <Bar dataKey="TIR" name="TIR %" stackId="a" fill={C_OBJETIVO} radius={[0,0,0,0]} />
+                <Bar dataKey="TAR" name="TAR %" stackId="b" fill={C_MUY_ALTO} radius={[4,4,0,0]} />
+                <Bar dataKey="TBR" name="TBR %" stackId="c" fill={C_BAJO} radius={[4,4,0,0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -229,6 +340,7 @@ export default function PacienteDetalle() {
                 <th className="hide-mobile">G. Promedio</th>
                 <th>Clasificación</th>
                 <th>PDF</th>
+                <th></th>
               </tr>
             </thead>
             <tbody>
@@ -255,6 +367,17 @@ export default function PacienteDetalle() {
                       </a>
                     )}
                   </td>
+                  <td>
+                    <button
+                      onClick={() => setModalEliminar({ id: a.id, fecha: a.fecha })}
+                      style={{
+                        background: "none", border: "none", cursor: "pointer",
+                        color: "#dc2626", padding: "2px 6px", borderRadius: 4,
+                        fontSize: 16, lineHeight: 1, display: "flex", alignItems: "center",
+                      }}
+                      title="Eliminar análisis"
+                    ><FiTrash2 size={16} /></button>
+                  </td>
                 </tr>
               ))}
               {historial.length === 0 && (
@@ -269,6 +392,52 @@ export default function PacienteDetalle() {
           </table>
         </div>
       </div>
+
+      {/* Modal confirmación eliminar */}
+      {modalEliminar && (
+        <div style={{
+          position: "fixed", inset: 0, zIndex: 9999,
+          background: "rgba(0,0,0,0.45)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+        }}>
+          <div style={{
+            background: "#fff", borderRadius: 12, padding: "32px 28px",
+            maxWidth: 420, width: "90%",
+            boxShadow: "0 20px 60px rgba(0,0,0,0.25)",
+          }}>
+            <div style={{ display: "flex", justifyContent: "center", marginBottom: 12 }}>
+              <FiTrash2 size={40} color="#dc2626" />
+            </div>
+            <h3 style={{ margin: "0 0 8px", textAlign: "center", color: "#0f172a" }}>Eliminar análisis</h3>
+            <p style={{ textAlign: "center", color: "#64748b", marginBottom: 24, fontSize: 14 }}>
+              ¿Estás seguro de que deseas eliminar el análisis del{" "}
+              <strong>{modalEliminar.fecha?.split("T")[0] || modalEliminar.fecha}</strong>?<br />
+              <span style={{ color: "#dc2626", fontSize: 13 }}>Esta acción no se puede deshacer.</span>
+            </p>
+            <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
+              <button
+                className="btn btn-outline"
+                onClick={() => setModalEliminar(null)}
+                disabled={eliminando}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={eliminarAnalisis}
+                disabled={eliminando}
+                style={{
+                  background: eliminando ? "#fca5a5" : "#dc2626",
+                  color: "#fff", border: "none", borderRadius: 8,
+                  padding: "8px 20px", fontWeight: 600, cursor: eliminando ? "not-allowed" : "pointer",
+                  transition: "background 0.2s",
+                }}
+              >
+                {eliminando ? "Eliminando..." : "Sí, eliminar"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </Layout>
   );
 }

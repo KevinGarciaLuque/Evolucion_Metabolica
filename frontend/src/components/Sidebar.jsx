@@ -66,6 +66,15 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
           ))}
         </nav>
 
+        <div className="sidebar-version">
+          <span className="sidebar-version-label">v1.0.0</span>
+          <span className="sidebar-version-name">Evol. Metabólica</span>
+          <span className="sidebar-version-copy">
+            © {new Date().getFullYear()} Kevin Garcia
+          </span>
+          <span className="sidebar-version-rights">Todos los derechos reservados</span>
+        </div>
+
       </div>
     </aside>
   );

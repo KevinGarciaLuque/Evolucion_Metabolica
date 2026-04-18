@@ -3,6 +3,8 @@ import { grupoEtario } from "../utils/helpers.js";
 
 export async function statsGlobales(req, res) {
   try {
+    const { institucion } = req.query;
+    const where = institucion ? `AND p.institucion = '${institucion}'` : "";
     const [[totales]] = await pool.query(`
       SELECT
         COUNT(DISTINCT p.id) AS total_pacientes,
@@ -16,7 +18,7 @@ export async function statsGlobales(req, res) {
         SUM(a.clasificacion = 'ALTO_RIESGO') AS alto_riesgo
       FROM pacientes p
       LEFT JOIN analisis a ON a.paciente_id = p.id
-      WHERE p.estado = 1
+      WHERE p.estado = 1 ${where}
     `);
     res.json(totales);
   } catch (err) {
@@ -26,6 +28,8 @@ export async function statsGlobales(req, res) {
 
 export async function porDepartamento(req, res) {
   try {
+    const { institucion } = req.query;
+    const where = institucion ? `AND p.institucion = '${institucion}'` : "";
     const [rows] = await pool.query(`
       SELECT
         p.departamento,
@@ -37,7 +41,7 @@ export async function porDepartamento(req, res) {
         SUM(a.clasificacion = 'ALTO_RIESGO') AS alto_riesgo
       FROM pacientes p
       LEFT JOIN analisis a ON a.paciente_id = p.id
-      WHERE p.estado = 1
+      WHERE p.estado = 1 ${where}
       GROUP BY p.departamento
       ORDER BY p.departamento
     `);
@@ -49,6 +53,8 @@ export async function porDepartamento(req, res) {
 
 export async function porGenero(req, res) {
   try {
+    const { institucion } = req.query;
+    const where = institucion ? `AND p.institucion = '${institucion}'` : "";
     const [rows] = await pool.query(`
       SELECT
         p.sexo,
@@ -59,7 +65,7 @@ export async function porGenero(req, res) {
         ROUND(AVG(a.glucosa_promedio), 1) AS glucosa_promedio
       FROM pacientes p
       LEFT JOIN analisis a ON a.paciente_id = p.id
-      WHERE p.estado = 1 AND p.sexo IS NOT NULL
+      WHERE p.estado = 1 AND p.sexo IS NOT NULL ${where}
       GROUP BY p.sexo
     `);
     res.json(rows);
@@ -107,16 +113,21 @@ export async function porEdad(req, res) {
 
 export async function tendencias(req, res) {
   try {
+    const { institucion } = req.query;
+    const join  = institucion ? "JOIN pacientes p ON p.id = a.paciente_id" : "";
+    const where = institucion ? `WHERE p.institucion = '${institucion}'` : "";
     const [rows] = await pool.query(`
       SELECT
-        DATE_FORMAT(fecha, '%Y-%m') AS mes,
-        COUNT(*)                     AS total,
-        ROUND(AVG(tir), 1)           AS tir_promedio,
-        ROUND(AVG(gmi), 2)           AS gmi_promedio,
-        ROUND(AVG(cv), 1)            AS cv_promedio,
-        ROUND(AVG(glucosa_promedio), 1) AS glucosa_promedio
-      FROM analisis
-      GROUP BY DATE_FORMAT(fecha, '%Y-%m')
+        DATE_FORMAT(a.fecha, '%Y-%m') AS mes,
+        COUNT(*)                       AS total,
+        ROUND(AVG(a.tir), 1)           AS tir_promedio,
+        ROUND(AVG(a.gmi), 2)           AS gmi_promedio,
+        ROUND(AVG(a.cv), 1)            AS cv_promedio,
+        ROUND(AVG(a.glucosa_promedio), 1) AS glucosa_promedio
+      FROM analisis a
+      ${join}
+      ${where}
+      GROUP BY DATE_FORMAT(a.fecha, '%Y-%m')
       ORDER BY mes DESC
       LIMIT 12
     `);
@@ -126,13 +137,38 @@ export async function tendencias(req, res) {
   }
 }
 
+export async function distribucionGlucosa(req, res) {
+  try {
+    const { institucion } = req.query;
+    const join  = institucion ? "JOIN pacientes p ON p.id = a.paciente_id" : "";
+    const where = institucion ? `WHERE p.institucion = '${institucion}'` : "";
+    const [[rows]] = await pool.query(`
+      SELECT
+        ROUND(AVG(a.tar_muy_alto), 1) AS muy_alto,
+        ROUND(AVG(a.tar_alto), 1)     AS alto,
+        ROUND(AVG(a.tir), 1)          AS objetivo,
+        ROUND(AVG(a.tbr_bajo), 1)     AS bajo,
+        ROUND(AVG(a.tbr_muy_bajo), 1) AS muy_bajo
+      FROM analisis a
+      ${join}
+      ${where}
+    `);
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: "Error al obtener distribución de glucosa" });
+  }
+}
+
 export async function recientes(req, res) {
   try {
+    const { institucion } = req.query;
+    const where = institucion ? `AND p.institucion = '${institucion}'` : "";
     const [rows] = await pool.query(`
       SELECT a.id, a.fecha, a.tir, a.gmi, a.clasificacion, a.archivo_pdf,
              p.nombre AS paciente_nombre, p.sexo, p.departamento
       FROM analisis a
       JOIN pacientes p ON p.id = a.paciente_id
+      WHERE 1=1 ${where}
       ORDER BY a.created_at DESC
       LIMIT 10
     `);

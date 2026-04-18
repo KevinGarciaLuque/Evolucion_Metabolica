@@ -1,6 +1,6 @@
 import { Router } from "express";
 import {
-  statsGlobales, porDepartamento, porGenero, porEdad, tendencias, recientes,
+  statsGlobales, porDepartamento, porGenero, porEdad, tendencias, recientes, distribucionGlucosa,
 } from "../controllers/dashboard.controller.js";
 import { verificarToken } from "../middlewares/auth.js";
 
@@ -13,6 +13,7 @@ router.get("/por-departamento", porDepartamento);
 router.get("/por-genero",       porGenero);
 router.get("/por-edad",         porEdad);
 router.get("/tendencias",       tendencias);
-router.get("/recientes",        recientes);
+router.get("/recientes",           recientes);
+router.get("/distribucion-glucosa", distribucionGlucosa);
 
 export default router;

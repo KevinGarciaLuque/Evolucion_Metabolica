@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, Legend, Cell,
+  ResponsiveContainer, Legend, Cell, LabelList,
 } from "recharts";
 import { motion } from "framer-motion";
 
@@ -45,6 +45,75 @@ function CustomTooltip({ active, payload, label, suffix = "" }) {
           <strong>{p.value}{suffix}</strong>
         </p>
       ))}
+    </div>
+  );
+}
+
+/* ── Tooltip TIR por Departamento (con clasificación) ───────────────────── */
+function TooltipDepto({ active, payload }) {
+  if (!active || !payload?.length) return null;
+  const d = payload[0].payload;
+  const tir = d.tir_promedio;
+  const { label, color } = tir >= 70
+    ? { label: "Óptimo", color: "#76B250" }
+    : tir >= 50
+    ? { label: "Moderado", color: "#FEBF01" }
+    : { label: "Alto Riesgo", color: "#FB0D0A" };
+  return (
+    <div style={{
+      background: "#0f172a", border: "1px solid #1e293b",
+      borderRadius: 10, padding: "10px 14px", fontSize: 13, color: "#e2e8f0",
+      boxShadow: "0 8px 32px rgba(0,0,0,0.5)", maxWidth: 220,
+    }}>
+      <p style={{ margin: "0 0 6px", color: "#94a3b8", fontSize: 12 }}>{d.departamento}</p>
+      <p style={{ margin: "2px 0", color }}>
+        <span style={{ color: "#94a3b8" }}>TIR %: </span>
+        <strong>{tir}%</strong>
+      </p>
+      <p style={{ margin: "4px 0 0", display: "flex", alignItems: "center", gap: 6 }}>
+        <span style={{ width: 10, height: 10, borderRadius: "50%", background: color, display: "inline-block", flexShrink: 0 }} />
+        <span style={{ color, fontWeight: 600, fontSize: 12 }}>{label}</span>
+      </p>
+    </div>
+  );
+}
+
+/* ── Tooltip TIR por Grupo Etario (con clasificación) ──────────────────── */
+function TooltipGrupoEtario({ active, payload, label }) {
+  if (!active || !payload?.length) return null;
+  const tirEntry = payload.find(p => p.dataKey === "tir_promedio");
+  const gmiEntry = payload.find(p => p.dataKey === "gmi_promedio");
+  const tir = tirEntry?.value;
+  const { clasi, color } = tir >= 70
+    ? { clasi: "Óptimo", color: "#76B250" }
+    : tir >= 50
+    ? { clasi: "Moderado", color: "#FEBF01" }
+    : { clasi: "Alto Riesgo", color: "#FB0D0A" };
+  return (
+    <div style={{
+      background: "#0f172a", border: "1px solid #1e293b",
+      borderRadius: 10, padding: "10px 14px", fontSize: 13, color: "#e2e8f0",
+      boxShadow: "0 8px 32px rgba(0,0,0,0.5)", maxWidth: 200,
+    }}>
+      <p style={{ margin: "0 0 6px", color: "#94a3b8", fontSize: 12 }}>{label}</p>
+      {tir != null && (
+        <>
+          <p style={{ margin: "2px 0", color }}>
+            <span style={{ color: "#94a3b8" }}>TIR %: </span>
+            <strong>{tir}%</strong>
+          </p>
+          <p style={{ margin: "4px 0", display: "flex", alignItems: "center", gap: 6 }}>
+            <span style={{ width: 10, height: 10, borderRadius: "50%", background: color, display: "inline-block", flexShrink: 0 }} />
+            <span style={{ color, fontWeight: 600, fontSize: 12 }}>{clasi}</span>
+          </p>
+        </>
+      )}
+      {gmiEntry?.value != null && (
+        <p style={{ margin: "2px 0", color: "#c27803" }}>
+          <span style={{ color: "#94a3b8" }}>GMI %: </span>
+          <strong>{gmiEntry.value}%</strong>
+        </p>
+      )}
     </div>
   );
 }
@@ -100,6 +169,29 @@ export default function Consolidado() {
   const promedioGMI = filtrados.length
     ? (filtrados.reduce((s, a) => s + Number(a.gmi || 0), 0) / filtrados.length).toFixed(2)
     : "—";
+
+  // GMI vs HbA1c por clasificación ISPAD
+  const gmiHbA1cData = (() => {
+    const order = ["OPTIMO", "MODERADO", "ALTO_RIESGO"];
+    const labelMap = { OPTIMO: "Óptimo", MODERADO: "Moderado", ALTO_RIESGO: "Alto Riesgo" };
+    const grupos = {};
+    for (const a of todos) {
+      const key = a.clasificacion;
+      if (!key || !order.includes(key)) continue;
+      if (!grupos[key]) grupos[key] = { gmi_sum: 0, hba1c_sum: 0, n_gmi: 0, n_hba1c: 0 };
+      if (a.gmi != null) { grupos[key].gmi_sum += Number(a.gmi); grupos[key].n_gmi++; }
+      if (a.hba1c_post_mcg != null && a.hba1c_post_mcg !== "") {
+        grupos[key].hba1c_sum += Number(a.hba1c_post_mcg); grupos[key].n_hba1c++;
+      }
+    }
+    return order
+      .filter((k) => grupos[k])
+      .map((k) => ({
+        clasificacion: labelMap[k],
+        gmi_promedio: grupos[k].n_gmi ? +(grupos[k].gmi_sum / grupos[k].n_gmi).toFixed(2) : 0,
+        hba1c_promedio: grupos[k].n_hba1c ? +(grupos[k].hba1c_sum / grupos[k].n_hba1c).toFixed(2) : 0,
+      }));
+  })();
 
   // Etiqueta corta para el eje X en móvil
   const deptosTick = deptos.map((d) => ({
@@ -213,6 +305,20 @@ export default function Consolidado() {
           {/* TIR por departamento — ancho completo */}
           <motion.div className="card" style={{ marginBottom: 20 }} initial="hidden" animate="show" variants={fadeUp}>
             <h3>TIR Promedio por Departamento</h3>
+            <div style={{ display: "flex", gap: 20, marginBottom: 10, flexWrap: "wrap" }}>
+              <span style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#64748b" }}>
+                <span style={{ width: 12, height: 12, borderRadius: 3, background: "#76B250", display: "inline-block" }} />
+                TIR Óptimo ≥ 70%
+              </span>
+              <span style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#64748b" }}>
+                <span style={{ width: 12, height: 12, borderRadius: 3, background: "#FEBF01", display: "inline-block" }} />
+                Moderado 50–69%
+              </span>
+              <span style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#64748b" }}>
+                <span style={{ width: 12, height: 12, borderRadius: 3, background: "#FB0D0A", display: "inline-block" }} />
+                Alto Riesgo &lt; 50%
+              </span>
+            </div>
             <ResponsiveContainer width="100%" height={isMobile ? 240 : 280}>
               <BarChart
                 data={deptosTick}
@@ -220,16 +326,16 @@ export default function Consolidado() {
               >
                 <defs>
                   <linearGradient id="gradGreen" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#22c55e" />
-                    <stop offset="100%" stopColor="#16a34a" />
+                    <stop offset="0%" stopColor="#8fce5a" />
+                    <stop offset="100%" stopColor="#76B250" />
                   </linearGradient>
                   <linearGradient id="gradAmber" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#f59e0b" />
-                    <stop offset="100%" stopColor="#d97706" />
+                    <stop offset="0%" stopColor="#ffe033" />
+                    <stop offset="100%" stopColor="#FEBF01" />
                   </linearGradient>
                   <linearGradient id="gradRed" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#f87171" />
-                    <stop offset="100%" stopColor="#dc2626" />
+                    <stop offset="0%" stopColor="#ff4d4a" />
+                    <stop offset="100%" stopColor="#FB0D0A" />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
@@ -242,8 +348,7 @@ export default function Consolidado() {
                 />
                 <YAxis domain={[0, 100]} tickFormatter={(v) => `${v}%`} tick={{ fontSize: 11, fill: "#64748b" }} />
                 <Tooltip
-                  content={<CustomTooltip suffix="%" />}
-                  labelFormatter={(_, payload) => payload?.[0]?.payload?.departamento || ""}
+                  content={<TooltipDepto />}
                 />
                 <Bar dataKey="tir_promedio" name="TIR %" radius={[5, 5, 0, 0]}>
                   {deptosTick.map((d) => (
@@ -294,28 +399,99 @@ export default function Consolidado() {
 
             <motion.div className="card card-wide" variants={fadeUp}>
               <h3>TIR Promedio por Grupo Etario</h3>
+              <div style={{ display: "flex", gap: 16, marginBottom: 10, flexWrap: "wrap" }}>
+                <span style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#64748b" }}>
+                  <span style={{ width: 12, height: 12, borderRadius: 3, background: "#76B250", display: "inline-block" }} />
+                  TIR Óptimo ≥ 70%
+                </span>
+                <span style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#64748b" }}>
+                  <span style={{ width: 12, height: 12, borderRadius: 3, background: "#FEBF01", display: "inline-block" }} />
+                  Moderado 50–69%
+                </span>
+                <span style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#64748b" }}>
+                  <span style={{ width: 12, height: 12, borderRadius: 3, background: "#FB0D0A", display: "inline-block" }} />
+                  Alto Riesgo &lt; 50%
+                </span>
+                <span style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#64748b" }}>
+                  <span style={{ width: 12, height: 12, borderRadius: 3, background: "#c27803", display: "inline-block" }} />
+                  GMI
+                </span>
+              </div>
               <ResponsiveContainer width="100%" height={isMobile ? 160 : 200}>
                 <BarChart data={edades} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
                   <defs>
                     <linearGradient id="gradPurple" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#a855f7" />
-                      <stop offset="100%" stopColor="#7c3aed" />
+                      <stop offset="0%" stopColor="#8fce5a" />
+                      <stop offset="100%" stopColor="#76B250" />
+                    </linearGradient>
+                    <linearGradient id="gradTirMod" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#ffe033" />
+                      <stop offset="100%" stopColor="#FEBF01" />
+                    </linearGradient>
+                    <linearGradient id="gradTirBad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#ff4d4a" />
+                      <stop offset="100%" stopColor="#FB0D0A" />
                     </linearGradient>
                     <linearGradient id="gradAmber2" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#f59e0b" />
-                      <stop offset="100%" stopColor="#d97706" />
+                      <stop offset="0%" stopColor="#e0960a" />
+                      <stop offset="100%" stopColor="#c27803" />
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
                   <XAxis dataKey="grupo" tick={{ fontSize: 11, fill: "#64748b" }} />
                   <YAxis domain={[0, 100]} tickFormatter={(v) => `${v}%`} tick={{ fontSize: 11, fill: "#64748b" }} />
-                  <Tooltip content={<CustomTooltip suffix="%" />} />
-                  <Legend formatter={(v) => <span style={{ color: "#94a3b8", fontSize: 12 }}>{v}</span>} />
-                  <Bar dataKey="tir_promedio" fill="url(#gradPurple)" radius={[5, 5, 0, 0]} name="TIR %" />
+                  <Tooltip content={<TooltipGrupoEtario />} />
+                  <Bar dataKey="tir_promedio" radius={[5, 5, 0, 0]} name="TIR %">
+                    {edades.map((e, i) => (
+                      <Cell
+                        key={i}
+                        fill={
+                          e.tir_promedio >= 70
+                            ? "url(#gradPurple)"
+                            : e.tir_promedio >= 50
+                            ? "url(#gradTirMod)"
+                            : "url(#gradTirBad)"
+                        }
+                      />
+                    ))}
+                  </Bar>
                   <Bar dataKey="gmi_promedio" fill="url(#gradAmber2)" radius={[5, 5, 0, 0]} name="GMI %" />
                 </BarChart>
               </ResponsiveContainer>
             </motion.div>
+          </motion.div>
+
+          {/* GMI vs HbA1c por clasificación */}
+          <motion.div className="card" style={{ marginBottom: 20 }} initial="hidden" animate="show" variants={fadeUp}>
+            <h3>Comparación GMI vs HbA1c por Clasificación ISPAD</h3>
+            <p style={{ fontSize: 12, color: "#64748b", marginBottom: 12 }}>
+              Promedio de GMI estimado (%) y HbA1c post-MCG (%) agrupados por nivel de control
+            </p>
+            <ResponsiveContainer width="100%" height={isMobile ? 200 : 240}>
+              <BarChart data={gmiHbA1cData} margin={{ top: 8, right: 20, left: -10, bottom: 5 }}>
+                <defs>
+                  <linearGradient id="gradGMI" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#e0960a" />
+                    <stop offset="100%" stopColor="#c27803" />
+                  </linearGradient>
+                  <linearGradient id="gradHbA1c" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#60a5fa" />
+                    <stop offset="100%" stopColor="#2563eb" />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
+                <XAxis dataKey="clasificacion" tick={{ fontSize: 12, fill: "#94a3b8" }} />
+                <YAxis tickFormatter={(v) => `${v}%`} tick={{ fontSize: 11, fill: "#64748b" }} domain={[0, "auto"]} />
+                <Tooltip content={<CustomTooltip suffix="%" />} />
+                <Legend formatter={(v) => <span style={{ color: "#94a3b8", fontSize: 12 }}>{v}</span>} />
+                <Bar dataKey="gmi_promedio" name="GMI %" fill="url(#gradGMI)" radius={[5, 5, 0, 0]}>
+                  <LabelList dataKey="gmi_promedio" position="top" formatter={(v) => v ? `${v}%` : ""} style={{ fill: "#c27803", fontSize: 11, fontWeight: 600 }} />
+                </Bar>
+                <Bar dataKey="hba1c_promedio" name="HbA1c %" fill="url(#gradHbA1c)" radius={[5, 5, 0, 0]}>
+                  <LabelList dataKey="hba1c_promedio" position="top" formatter={(v) => v ? `${v}%` : ""} style={{ fill: "#2563eb", fontSize: 11, fontWeight: 600 }} />
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
           </motion.div>
 
           {/* Tabla detallada */}

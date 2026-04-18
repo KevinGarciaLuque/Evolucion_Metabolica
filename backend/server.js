@@ -19,7 +19,15 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 
-app.use(cors({ origin: process.env.FRONTEND_URL || "http://localhost:5173", credentials: true }));
+const allowedOrigins = [
+  process.env.FRONTEND_URL || "http://localhost:5173",
+  "http://localhost:5174",
+  "http://localhost:5175",
+];
+app.use(cors({
+  origin: (origin, cb) => cb(null, !origin || allowedOrigins.includes(origin)),
+  credentials: true,
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

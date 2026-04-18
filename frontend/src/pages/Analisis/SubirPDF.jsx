@@ -589,6 +589,11 @@ export default function SubirPDF() {
                 tbr={Number(form.tbr) || 0}
                 gmi={form.gmi ? Number(form.gmi) : null}
                 clasificacion={clasificacion}
+                tarMuyAlto={form.tar_muy_alto !== "" ? Number(form.tar_muy_alto) : null}
+                tarAlto={form.tar_alto !== "" ? Number(form.tar_alto) : null}
+                tbrBajo={form.tbr_bajo !== "" ? Number(form.tbr_bajo) : null}
+                tbrMuyBajo={form.tbr_muy_bajo !== "" ? Number(form.tbr_muy_bajo) : null}
+                tiempoActivo={form.tiempo_activo !== "" ? form.tiempo_activo : null}
               />
             </div>
           </div>

@@ -36,10 +36,10 @@ export async function obtener(req, res) {
 
 export async function crear(req, res) {
   const {
-    dni, nombre, fecha_nacimiento, sexo, departamento, procedencia_tipo,
-    peso, talla, tipo_diabetes, institucion, hba1c_previo, telefono,
+    dni, nombre, fecha_nacimiento, sexo, departamento, municipio, procedencia_tipo,
+    peso, talla, tipo_diabetes, subtipo_monogenica, institucion, hba1c_previo, telefono,
     tipo_insulina, dosis_por_kg, promedio_glucometrias,
-    edad_debut, direccion,
+    edad_debut, direccion, antecedente_familiar, nombre_tutor, telefono_tutor,
   } = req.body;
   if (!nombre || !sexo || !departamento)
     return res.status(400).json({ error: "Nombre, sexo y departamento son obligatorios" });
@@ -50,15 +50,18 @@ export async function crear(req, res) {
   try {
     const [result] = await pool.query(
       `INSERT INTO pacientes
-        (dni, nombre, fecha_nacimiento, edad, edad_debut, sexo, departamento, procedencia_tipo,
-         direccion, institucion, peso, talla, tipo_diabetes, hba1c_previo, tipo_insulina,
-         dosis_por_kg, promedio_glucometrias, telefono)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        (dni, nombre, fecha_nacimiento, edad, edad_debut, sexo, departamento, municipio,
+         procedencia_tipo, direccion, antecedente_familiar, institucion, peso, talla,
+         tipo_diabetes, subtipo_monogenica, hba1c_previo, tipo_insulina,
+         dosis_por_kg, promedio_glucometrias, telefono, nombre_tutor, telefono_tutor)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         dni, nombre, fecha_nacimiento, edad, edad_debut || null, sexo, departamento,
-        procedencia_tipo || null, direccion || null, inst, peso, talla, tipo_diabetes,
-        hba1c_previo || null, tipo_insulina || null, dosis_por_kg || null,
-        promedio_glucometrias || null, telefono || null,
+        municipio || null, procedencia_tipo || null, direccion || null,
+        antecedente_familiar || null, inst, peso, talla, tipo_diabetes,
+        subtipo_monogenica || null, hba1c_previo || null, tipo_insulina || null,
+        dosis_por_kg || null, promedio_glucometrias || null, telefono || null,
+        nombre_tutor || null, telefono_tutor || null,
       ]
     );
     res.status(201).json({ id: result.insertId, mensaje: "Paciente creado correctamente" });
@@ -72,10 +75,10 @@ export async function crear(req, res) {
 
 export async function actualizar(req, res) {
   const {
-    nombre, fecha_nacimiento, sexo, departamento, procedencia_tipo,
-    peso, talla, tipo_diabetes, dni, institucion, hba1c_previo, telefono,
+    nombre, fecha_nacimiento, sexo, departamento, municipio, procedencia_tipo,
+    peso, talla, tipo_diabetes, subtipo_monogenica, dni, institucion, hba1c_previo, telefono,
     tipo_insulina, dosis_por_kg, promedio_glucometrias,
-    edad_debut, direccion,
+    edad_debut, direccion, antecedente_familiar, nombre_tutor, telefono_tutor,
   } = req.body;
   const edad = fecha_nacimiento ? calcularEdad(fecha_nacimiento) : null;
 
@@ -83,14 +86,19 @@ export async function actualizar(req, res) {
     await pool.query(
       `UPDATE pacientes
        SET dni=?, nombre=?, fecha_nacimiento=?, edad=?, edad_debut=?, sexo=?, departamento=?,
-           procedencia_tipo=?, direccion=?, institucion=?, peso=?, talla=?, tipo_diabetes=?,
-           hba1c_previo=?, tipo_insulina=?, dosis_por_kg=?, promedio_glucometrias=?, telefono=?
+           municipio=?, procedencia_tipo=?, direccion=?, antecedente_familiar=?, institucion=?,
+           peso=?, talla=?, tipo_diabetes=?, subtipo_monogenica=?,
+           hba1c_previo=?, tipo_insulina=?, dosis_por_kg=?, promedio_glucometrias=?,
+           telefono=?, nombre_tutor=?, telefono_tutor=?
        WHERE id = ?`,
       [
         dni, nombre, fecha_nacimiento, edad, edad_debut || null, sexo, departamento,
-        procedencia_tipo || null, direccion || null, institucion || 'HMEP', peso, talla,
-        tipo_diabetes, hba1c_previo || null, tipo_insulina || null, dosis_por_kg || null,
-        promedio_glucometrias || null, telefono || null, req.params.id,
+        municipio || null, procedencia_tipo || null, direccion || null,
+        antecedente_familiar || null, institucion || 'HMEP', peso, talla,
+        tipo_diabetes, subtipo_monogenica || null,
+        hba1c_previo || null, tipo_insulina || null, dosis_por_kg || null,
+        promedio_glucometrias || null, telefono || null,
+        nombre_tutor || null, telefono_tutor || null, req.params.id,
       ]
     );
     res.json({ mensaje: "Paciente actualizado correctamente" });
@@ -116,7 +124,7 @@ export async function historial(req, res) {
        FROM analisis a
        JOIN pacientes p ON p.id = a.paciente_id
        WHERE a.paciente_id = ?
-       ORDER BY a.fecha DESC`,
+       ORDER BY a.fecha DESC, a.id DESC`,
       [req.params.id]
     );
     res.json(analisis);

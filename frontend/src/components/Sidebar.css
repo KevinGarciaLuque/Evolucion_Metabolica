@@ -114,6 +114,46 @@
 .sidebar-nav::-webkit-scrollbar-track { background: transparent; }
 .sidebar-nav::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 4px; }
 
+/* Versión */
+.sidebar-version {
+  margin-top: auto;
+  padding: 14px 16px 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  border-top: 1px solid rgba(255,255,255,0.07);
+  overflow: hidden;
+}
+.sidebar-version-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.55);
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+.sidebar-version-name {
+  font-size: 10px;
+  color: rgba(255,255,255,0.30);
+  white-space: nowrap;
+}
+.sidebar-version-copy {
+  font-size: 10px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.40);
+  white-space: nowrap;
+  margin-top: 4px;
+}
+.sidebar-version-rights {
+  font-size: 9px;
+  color: rgba(255,255,255,0.22);
+  white-space: nowrap;
+}
+.sidebar--collapsed .sidebar-version-name,
+.sidebar--collapsed .sidebar-version-copy,
+.sidebar--collapsed .sidebar-version-rights { display: none; }
+.sidebar--collapsed .sidebar-version-label { font-size: 10px; }
+
 .sidebar-link {
   display: flex;
   align-items: center;
