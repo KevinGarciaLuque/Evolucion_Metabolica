@@ -444,8 +444,9 @@ function Pie3DChart({ data, isMobile }) {
     legend: {
       position: "bottom",
       labels: { colors: "#94a3b8", useSeriesColors: false },
-      fontSize: "12px",
-      itemMargin: { horizontal: 8, vertical: 4 },
+      fontSize: isMobile ? "10px" : "12px",
+      itemMargin: { horizontal: isMobile ? 4 : 8, vertical: isMobile ? 2 : 4 },
+      markers: { width: isMobile ? 8 : 12, height: isMobile ? 8 : 12 },
       onItemClick: { toggleDataSeries: false },
       onItemHover: { highlightDataSeries: false },
     },
@@ -461,7 +462,7 @@ function Pie3DChart({ data, isMobile }) {
       type="donut"
       series={series}
       options={options}
-      height={isMobile ? 320 : 400}
+      height={isMobile ? 420 : 400}
     />
   );
 }
