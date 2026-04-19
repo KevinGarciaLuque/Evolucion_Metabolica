@@ -91,7 +91,7 @@ export default function Auditoria() {
     } finally {
       setCargando(false);
     }
-  }, [buscar, accion, desde, hasta, page]);
+  }, [buscar, accion, entidad, desde, hasta, page]);
 
   useEffect(() => { cargar(); }, [cargar]);
 
