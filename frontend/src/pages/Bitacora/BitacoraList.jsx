@@ -89,46 +89,52 @@ export default function BitacoraList() {
         ) : entradas.length === 0 ? (
           <p className="text-center" style={{ padding: "32px 0", color: "#94a3b8" }}>No hay entradas registradas.</p>
         ) : (
-          <div className="table-wrap">
+        <div className="table-wrapper">
             <table className="tabla">
               <thead>
                 <tr>
                   <th>Fecha</th>
                   <th>Paciente</th>
-                  <th>Tipo</th>
-                  <th>Glucosa ayunas</th>
-                  <th>HbA1c</th>
-                  <th>Próxima cita</th>
+                  <th className="hide-mobile">Tipo</th>
+                  <th className="hide-mobile">Glucosa ayunas</th>
+                  <th className="hide-mobile">HbA1c</th>
+                  <th className="hide-mobile">Próxima cita</th>
                   <th>Acciones</th>
                 </tr>
               </thead>
               <tbody>
                 {entradas.map((e) => (
                   <tr key={e.id}>
-                    <td>{e.fecha?.split("T")[0]}</td>
+                    <td style={{ whiteSpace: "nowrap", fontSize: "0.85rem" }}>{e.fecha?.split("T")[0]}</td>
                     <td>
                       <Link to={`/pacientes/${e.paciente_id}`} className="link-paciente">
                         {e.paciente_nombre}
                       </Link>
                       {e.paciente_dni && <span className="text-muted" style={{ fontSize: "0.75rem", marginLeft: 6 }}>({e.paciente_dni})</span>}
+                      <div className="show-mobile-only" style={{ marginTop: 4, display: "flex", gap: 6, flexWrap: "wrap" }}>
+                        <span className={`badge ${TIPO_BADGE[e.tipo_consulta] || "badge-gray"}`}>{e.tipo_consulta}</span>
+                        {e.hba1c != null && <span className="badge badge-gray">HbA1c: {e.hba1c}%</span>}
+                      </div>
                     </td>
-                    <td>
+                    <td className="hide-mobile">
                       <span className={`badge ${TIPO_BADGE[e.tipo_consulta] || "badge-gray"}`}>
                         {e.tipo_consulta}
                       </span>
                     </td>
-                    <td>{e.glucosa_ayunas != null ? `${e.glucosa_ayunas} mg/dL` : "—"}</td>
-                    <td>{e.hba1c != null ? `${e.hba1c}%` : "—"}</td>
-                    <td>{e.proxima_cita?.split("T")[0] || "—"}</td>
-                    <td className="acciones">
-                      <button
-                        className="btn btn-sm btn-outline"
-                        onClick={() => navigate(`/bitacora/${e.id}/editar`)}
-                      >Editar</button>
-                      <button
-                        className="btn btn-sm btn-danger"
-                        onClick={() => eliminar(e.id)}
-                      >Eliminar</button>
+                    <td className="hide-mobile">{e.glucosa_ayunas != null ? `${e.glucosa_ayunas} mg/dL` : "—"}</td>
+                    <td className="hide-mobile">{e.hba1c != null ? `${e.hba1c}%` : "—"}</td>
+                    <td className="hide-mobile">{e.proxima_cita?.split("T")[0] || "—"}</td>
+                    <td>
+                      <div className="acciones">
+                        <button
+                          className="btn btn-sm btn-outline"
+                          onClick={() => navigate(`/bitacora/${e.id}/editar`)}
+                        >Editar</button>
+                        <button
+                          className="btn btn-sm btn-danger"
+                          onClick={() => eliminar(e.id)}
+                        >Eliminar</button>
+                      </div>
                     </td>
                   </tr>
                 ))}

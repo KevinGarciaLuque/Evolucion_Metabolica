@@ -80,21 +80,24 @@ export default function UsuariosList() {
             <table className="tabla">
               <thead>
                 <tr>
-                  <th>#</th>
+                  <th className="hide-mobile">#</th>
                   <th>Nombre</th>
-                  <th>Email</th>
+                  <th className="hide-mobile">Email</th>
                   <th>Rol</th>
                   <th>Estado</th>
-                  <th>Creado</th>
+                  <th className="hide-mobile">Creado</th>
                   <th>Acciones</th>
                 </tr>
               </thead>
               <tbody>
                 {filtrados.map((u, idx) => (
                   <tr key={u.id}>
-                    <td style={{ color: "#64748b", fontSize: "0.85rem" }}>{idx + 1}</td>
-                    <td style={{ fontWeight: 500 }}>{u.nombre}</td>
-                    <td style={{ color: "#64748b" }}>{u.email}</td>
+                    <td className="hide-mobile" style={{ color: "#64748b", fontSize: "0.85rem" }}>{idx + 1}</td>
+                    <td style={{ fontWeight: 500 }}>
+                      {u.nombre}
+                      <div className="show-mobile-only" style={{ fontSize: "0.76rem", color: "#64748b", marginTop: 2 }}>{u.email}</div>
+                    </td>
+                    <td className="hide-mobile" style={{ color: "#64748b" }}>{u.email}</td>
                     <td>
                       <span className={`badge ${ROL_BADGE[u.rol] || "badge-blue"}`}>
                         {ROL_LABEL[u.rol] || u.rol}
@@ -105,7 +108,7 @@ export default function UsuariosList() {
                         {u.estado ? "Activo" : "Inactivo"}
                       </span>
                     </td>
-                    <td style={{ color: "#64748b", fontSize: "0.83rem" }}>
+                    <td className="hide-mobile" style={{ color: "#64748b", fontSize: "0.83rem" }}>
                       {u.created_at ? new Date(u.created_at).toLocaleDateString("es-HN") : "—"}
                     </td>
                     <td>

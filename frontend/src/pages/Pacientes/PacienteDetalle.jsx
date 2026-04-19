@@ -309,14 +309,14 @@ export default function PacienteDetalle() {
   return (
     <Layout>
       <div className="page-header">
-        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 14, minWidth: 0, flex: 1 }}>
           <Link to="/pacientes" className="back-btn" title="Volver a Pacientes">
             <FiArrowLeft size={18} />
           </Link>
           <div className="patient-avatar">
             {paciente.nombre?.[0]?.toUpperCase()}
           </div>
-          <div>
+          <div style={{ minWidth: 0 }}>
             <h1 style={{ margin: 0 }}>{paciente.nombre}</h1>
             <div className="patient-chips">
               <span className="patient-chip">
@@ -344,10 +344,7 @@ export default function PacienteDetalle() {
       {/* ══════════════════════════════════════════════════════════════════════
           BARRA DE TABS
       ══════════════════════════════════════════════════════════════════════ */}
-      <div style={{
-        display: "flex", overflowX: "auto", marginBottom: 28,
-        borderBottom: "2px solid #e2e8f0", gap: 0,
-      }}>
+      <div className="tab-bar">
         {[
           { key: "info",         label: "Información",  icon: <FiUser size={14} /> },
           { key: "analisis",     label: "Análisis MCG", icon: <FiBarChart2 size={14} />, count: historial.length },
@@ -364,7 +361,7 @@ export default function PacienteDetalle() {
               onMouseLeave={() => setHoveredTab(null)}
               style={{
                 display: "flex", alignItems: "center", gap: 8,
-                padding: "12px 22px 10px",
+                padding: isMobile ? "10px 12px 8px" : "12px 22px 10px",
                 border: "none", cursor: "pointer",
                 borderBottom: activa ? "3px solid #6366f1" : "3px solid transparent",
                 marginBottom: -2,
@@ -385,7 +382,7 @@ export default function PacienteDetalle() {
                 color: activa ? "#6366f1" : hoveredTab === tab.key ? "#6366f1" : "#94a3b8",
                 transition: "all 0.15s",
               }}>{tab.icon}</span>
-              {tab.label}
+              <span className="tab-label">{tab.label}</span>
               {tab.count != null && (
                 <span style={{
                   background: activa ? "#ede9fe" : "#f1f5f9",
@@ -407,7 +404,7 @@ export default function PacienteDetalle() {
           {/* COLUMNA IZQUIERDA: datos del paciente + tutor */}
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             <div className="card">
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+              <div className="card-header-row">
                 <h3 style={{ margin: 0 }}>Información del Paciente</h3>
                 <Link to={`/pacientes/${id}/editar`} className="btn btn-outline" style={{ display: "flex", alignItems: "center", gap: 6, fontSize: "0.82rem", padding: "5px 12px" }}>
                   <FiEdit3 size={13} /> Editar
@@ -835,7 +832,7 @@ export default function PacienteDetalle() {
 
             {/* ─── HISTORIAL DE INSULINA ───────────────────────────────── */}
             <div className="card">
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+              <div className="card-header-row">
                 <div>
                   <h3 style={{ margin: 0 }}>💉 Historial de Insulina</h3>
                   <p style={{ margin: "4px 0 0", fontSize: "0.78rem", color: "#64748b" }}>
@@ -892,7 +889,7 @@ export default function PacienteDetalle() {
         {/* ── TAB: ALIMENTACIÓN ─────────────────────────────────────────── */}
         {tabActiva === "anticuerpos" && (
           <div className="card">
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+            <div className="card-header-row">
               <h3 style={{ margin: 0 }}>🔬 Historial de Anticuerpos</h3>
               <button className="btn btn-primary" style={{ display: "flex", alignItems: "center", gap: 6 }} onClick={abrirNuevoAnticuerpos}>
                 <FiPlus size={15} /> Nuevo registro
@@ -941,7 +938,7 @@ export default function PacienteDetalle() {
 
         {tabActiva === "alimentacion" && (
           <div className="card">
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+            <div className="card-header-row">
               <h3 style={{ margin: 0 }}>🥗 Planes de Alimentación</h3>
               <button className="btn btn-primary" style={{ display: "flex", alignItems: "center", gap: 6 }} onClick={abrirNuevaAlimentacion}>
                 <FiPlus size={15} /> Nuevo plan
@@ -1178,7 +1175,7 @@ export default function PacienteDetalle() {
               >✕</button>
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 24px" }}>
+            <div className="detalle-modal-cols">
 
               {/* COLUMNA IZQUIERDA */}
               <div>

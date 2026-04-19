@@ -150,7 +150,7 @@ export default function Auditoria() {
         <form className="filtros-row" onSubmit={handleFiltrar}
           style={{ display: "flex", flexWrap: "wrap", gap: "0.75rem", alignItems: "flex-end" }}>
 
-          <div className="form-group" style={{ margin: 0, flex: "1 1 200px" }}>
+          <div className="form-group" style={{ margin: 0, flex: "1 1 180px" }}>
             <label>Buscar usuario</label>
             <input
               type="text"
@@ -160,7 +160,7 @@ export default function Auditoria() {
             />
           </div>
 
-          <div className="form-group" style={{ margin: 0, flex: "0 1 140px" }}>
+          <div className="form-group" style={{ margin: 0, flex: "1 1 130px" }}>
             <label>Acción</label>
             <select value={accion} onChange={(e) => setAccion(e.target.value)}>
               <option value="">Todas</option>
@@ -186,7 +186,7 @@ export default function Auditoria() {
             </select>
           </div>
 
-          <div className="form-group" style={{ margin: 0, flex: "0 1 130px" }}>
+          <div className="form-group" style={{ margin: 0, flex: "1 1 110px" }}>
             <label>Módulo</label>
             <select value={entidad} onChange={(e) => setEntidad(e.target.value)}>
               <option value="">Todos</option>
@@ -198,27 +198,28 @@ export default function Auditoria() {
             </select>
           </div>
 
-          <div className="form-group" style={{ margin: 0, flex: "0 1 155px" }}>
+          <div className="form-group" style={{ margin: 0, flex: "1 1 130px" }}>
             <label>Desde</label>
             <input type="date" value={desde} onChange={(e) => setDesde(e.target.value)} />
           </div>
 
-          <div className="form-group" style={{ margin: 0, flex: "0 1 155px" }}>
+          <div className="form-group" style={{ margin: 0, flex: "1 1 130px" }}>
             <label>Hasta</label>
             <input type="date" value={hasta} onChange={(e) => setHasta(e.target.value)} />
           </div>
 
-          <button type="submit" className="btn btn-primary" style={{ marginBottom: "2px" }}>
-            Filtrar
-          </button>
-          <button
-            type="button"
-            className="btn btn-outline"
-            style={{ marginBottom: "2px" }}
-            onClick={() => { setBuscar(""); setAccion(""); setEntidad(""); setDesde(""); setHasta(""); setPage(1); }}
-          >
-            Limpiar
-          </button>
+          <div className="filtros-btns">
+            <button type="submit" className="btn btn-primary">
+              Filtrar
+            </button>
+            <button
+              type="button"
+              className="btn btn-outline"
+              onClick={() => { setBuscar(""); setAccion(""); setEntidad(""); setDesde(""); setHasta(""); setPage(1); }}
+            >
+              Limpiar
+            </button>
+          </div>
         </form>
       </div>
 
@@ -237,13 +238,13 @@ export default function Auditoria() {
             <table className="tabla">
               <thead>
                 <tr>
-                  <th>#</th>
+                  <th className="hide-mobile">#</th>
                   <th>Fecha</th>
                   <th>Usuario</th>
-                  <th>Rol</th>
+                  <th className="hide-mobile">Rol</th>
                   <th>Acción</th>
-                  <th>Descripción</th>
-                  <th>IP</th>
+                  <th className="hide-mobile">Descripción</th>
+                  <th className="hide-mobile">IP</th>
                 </tr>
               </thead>
               <tbody>
@@ -251,13 +252,16 @@ export default function Auditoria() {
                   const cfg = ACCION_CONFIG[r.accion] || { label: r.accion, badge: "badge-gray", Icon: HiOutlineShieldCheck };
                   return (
                     <tr key={r.id}>
-                      <td>{(page - 1) * LIMIT + idx + 1}</td>
-                      <td style={{ whiteSpace: "nowrap" }}>{formatFecha(r.fecha)}</td>
+                      <td className="hide-mobile">{(page - 1) * LIMIT + idx + 1}</td>
+                      <td style={{ whiteSpace: "nowrap", fontSize: "0.8rem" }}>{formatFecha(r.fecha)}</td>
                       <td>
                         <div style={{ fontWeight: 600, lineHeight: 1.3 }}>{r.usuario_nombre}</div>
                         <div style={{ fontSize: "0.78rem", color: "var(--text-secondary)" }}>{r.usuario_email}</div>
+                        <span className={`badge show-mobile-only ${ROL_BADGE[r.usuario_rol] || "badge-gray"}`} style={{ marginTop: 4 }}>
+                          {r.usuario_rol}
+                        </span>
                       </td>
-                      <td>
+                      <td className="hide-mobile">
                         <span className={`badge ${ROL_BADGE[r.usuario_rol] || "badge-gray"}`}>
                           {r.usuario_rol}
                         </span>
@@ -268,10 +272,10 @@ export default function Auditoria() {
                           {cfg.label}
                         </span>
                       </td>
-                      <td style={{ fontSize: "0.82rem", color: "var(--text-secondary)" }}>
+                      <td style={{ fontSize: "0.82rem", color: "var(--text-secondary)" }} className="hide-mobile">
                         {r.descripcion || "—"}
                       </td>
-                      <td style={{ fontFamily: "monospace", fontSize: "0.82rem" }}>
+                      <td style={{ fontFamily: "monospace", fontSize: "0.82rem" }} className="hide-mobile">
                         {r.ip || "—"}
                       </td>
                     </tr>
@@ -284,7 +288,7 @@ export default function Auditoria() {
 
         {/* Paginación */}
         {totalPaginas > 1 && (
-          <div style={{ display: "flex", justifyContent: "center", gap: "0.5rem", padding: "1rem 0 0.5rem" }}>
+          <div className="paginacion" style={{ display: "flex", justifyContent: "center", gap: "0.5rem", padding: "1rem 0 0.5rem" }}>
             <button
               className="btn btn-outline"
               disabled={page === 1}
