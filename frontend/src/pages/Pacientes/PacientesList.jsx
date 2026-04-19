@@ -54,7 +54,7 @@ export default function PacientesList() {
   const [cargando, setCargando]     = useState(true);
   const [institucion, setInstitucion] = useState("HMEP");
   const [filtros, setFiltros]       = useState({
-    buscar: "", departamento: "", sexo: "", edad_min: "", edad_max: "",
+    buscar: "", departamento: "", sexo: "", edad_min: "", edad_max: "", con_monitor: "",
   });
   const [mostrarFiltros, setMostrarFiltros] = useState(false);
 
@@ -69,6 +69,7 @@ export default function PacientesList() {
     if (filtros.sexo)         params.sexo         = filtros.sexo;
     if (filtros.edad_min)     params.edad_min     = filtros.edad_min;
     if (filtros.edad_max)     params.edad_max     = filtros.edad_max;
+    if (filtros.con_monitor !== "") params.con_monitor = filtros.con_monitor;
 
     setCargando(true);
     api.get("/pacientes", { params })
@@ -124,7 +125,7 @@ export default function PacientesList() {
             onClick={() => setMostrarFiltros(!mostrarFiltros)}
             type="button"
           >
-            ⋮ Filtros{(filtros.departamento || filtros.sexo || filtros.edad_min || filtros.edad_max) ? " ●" : ""}
+            ⋮ Filtros{(filtros.departamento || filtros.sexo || filtros.edad_min || filtros.edad_max || filtros.con_monitor !== "") ? " ●" : ""}
           </button>
         </div>
 
@@ -154,6 +155,14 @@ export default function PacientesList() {
               <label>Edad máx.</label>
               <input type="number" name="edad_max" placeholder="18" value={filtros.edad_max} onChange={cambiarFiltro} min={0} />
             </div>
+            <div className="form-group">
+              <label>Monitor MCG</label>
+              <select name="con_monitor" value={filtros.con_monitor} onChange={cambiarFiltro}>
+                <option value="">Todos</option>
+                <option value="1">Con monitor</option>
+                <option value="0">Sin monitor</option>
+              </select>
+            </div>
           </div>
         </div>
       </div>
@@ -179,6 +188,7 @@ export default function PacientesList() {
                   <th>Departamento</th>
                   <th className="hide-mobile">Tipo DM</th>
                   <th className="hide-mobile">HbA1c prev.</th>
+                  <th className="hide-mobile">Monitor</th>
                   <th>Acciones</th>
                 </tr>
               </thead>
@@ -200,6 +210,16 @@ export default function PacientesList() {
                     <td>{p.departamento}</td>
                     <td className="hide-mobile">{p.tipo_diabetes || "—"}</td>
                     <td className="hide-mobile">{p.hba1c_previo ? `${p.hba1c_previo}%` : "—"}</td>
+                    <td className="hide-mobile">
+                      <span style={{
+                        display: "inline-flex", alignItems: "center", gap: 4,
+                        padding: "2px 8px", borderRadius: 20, fontSize: "0.75rem", fontWeight: 600,
+                        background: p.con_monitor ? "#ede9fe" : "#f1f5f9",
+                        color: p.con_monitor ? "#6366f1" : "#94a3b8",
+                      }}>
+                        {p.con_monitor ? "🟣 Con MCG" : "Sin MCG"}
+                      </span>
+                    </td>
                     <td>
                       <div className="acciones">
                         <button className="btn btn-sm btn-outline" onClick={() => navigate(`/pacientes/${p.id}`)}>Ver</button>

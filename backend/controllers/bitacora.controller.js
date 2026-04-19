@@ -1,8 +1,9 @@
 import pool from "../config/db.js";
+import { auditarAccion } from "../utils/helpers.js";
 
 /* ── Listar ─────────────────────────────────────── */
 export async function listar(req, res) {
-  const { paciente_id, fecha_desde, fecha_hasta } = req.query;
+  const { paciente_nombre, paciente_id, fecha_desde, fecha_hasta } = req.query;
   let sql = `
     SELECT b.*, p.nombre AS paciente_nombre, p.dni AS paciente_dni
     FROM bitacora b
@@ -11,9 +12,10 @@ export async function listar(req, res) {
   `;
   const params = [];
 
-  if (paciente_id)  { sql += " AND b.paciente_id = ?";   params.push(paciente_id); }
-  if (fecha_desde)  { sql += " AND b.fecha >= ?";         params.push(fecha_desde); }
-  if (fecha_hasta)  { sql += " AND b.fecha <= ?";         params.push(fecha_hasta); }
+  if (paciente_nombre) { sql += " AND p.nombre LIKE ?";    params.push(`%${paciente_nombre}%`); }
+  if (paciente_id)     { sql += " AND b.paciente_id = ?";  params.push(paciente_id); }
+  if (fecha_desde)     { sql += " AND b.fecha >= ?";        params.push(fecha_desde); }
+  if (fecha_hasta)     { sql += " AND b.fecha <= ?";        params.push(`${fecha_hasta} 23:59:59`); }
 
   sql += " ORDER BY b.fecha DESC, b.created_at DESC";
 
@@ -66,8 +68,7 @@ export async function crear(req, res) {
         observaciones || null, plan_tratamiento || null, proxima_cita || null,
         req.usuario?.id || null,
       ]
-    );
-    res.status(201).json({ id: result.insertId, mensaje: "Entrada registrada correctamente" });
+    );    auditarAccion(pool, req, { accion: "crear_bitacora", entidad: "bitacora", entidad_id: result.insertId, descripcion: `Nueva entrada bitácora paciente ID ${paciente_id}` });    res.status(201).json({ id: result.insertId, mensaje: "Entrada registrada correctamente" });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Error al crear entrada" });
@@ -97,8 +98,7 @@ export async function actualizar(req, res) {
       ]
     );
     if (result.affectedRows === 0)
-      return res.status(404).json({ error: "Entrada no encontrada" });
-    res.json({ mensaje: "Entrada actualizada correctamente" });
+      return res.status(404).json({ error: "Entrada no encontrada" });    auditarAccion(pool, req, { accion: "editar_bitacora", entidad: "bitacora", entidad_id: Number(req.params.id), descripcion: `Editó entrada bitácora ID ${req.params.id}` });    res.json({ mensaje: "Entrada actualizada correctamente" });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Error al actualizar entrada" });
@@ -111,6 +111,7 @@ export async function eliminar(req, res) {
     const [result] = await pool.query("DELETE FROM bitacora WHERE id = ?", [req.params.id]);
     if (result.affectedRows === 0)
       return res.status(404).json({ error: "Entrada no encontrada" });
+    auditarAccion(pool, req, { accion: "eliminar_bitacora", entidad: "bitacora", entidad_id: Number(req.params.id), descripcion: `Eliminó entrada bitácora ID ${req.params.id}` });
     res.json({ mensaje: "Entrada eliminada" });
   } catch (err) {
     res.status(500).json({ error: "Error al eliminar entrada" });

@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { FiArrowLeft } from "react-icons/fi";
 import api from "../../api/axios";
 import Layout from "../../components/Layout";
 
@@ -25,10 +26,17 @@ export default function BitacoraForm() {
   const [error, setError] = useState("");
   const [guardando, setGuardando] = useState(false);
 
+  // Autocomplete paciente
+  const [buscarPac, setBuscarPac] = useState("");
+  const [sugerencias, setSugerencias] = useState([]);
+  const [pacienteNombre, setPacienteNombre] = useState("");
+  const refSug = useRef(null);
+
   useEffect(() => {
     api.get("/pacientes").then((r) => setPacientes(r.data));
   }, []);
 
+  // Cuando carga en edición, buscar el nombre del paciente seleccionado
   useEffect(() => {
     if (esEdicion) {
       api.get(`/bitacora/${id}`).then((r) => {
@@ -36,9 +44,38 @@ export default function BitacoraForm() {
         if (d.fecha)        d.fecha        = d.fecha.split("T")[0];
         if (d.proxima_cita) d.proxima_cita = d.proxima_cita.split("T")[0];
         setForm(d);
+        if (d.paciente_nombre) setPacienteNombre(d.paciente_nombre);
+        if (d.paciente_nombre) setBuscarPac(d.paciente_nombre);
       });
     }
   }, [id, esEdicion]);
+
+  // Cerrar sugerencias al hacer clic fuera
+  useEffect(() => {
+    function handler(e) {
+      if (refSug.current && !refSug.current.contains(e.target)) setSugerencias([]);
+    }
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  function filtrarPacientes(texto) {
+    setBuscarPac(texto);
+    setPacienteNombre("");
+    setForm((f) => ({ ...f, paciente_id: "" }));
+    if (!texto.trim()) { setSugerencias([]); return; }
+    const lower = texto.toLowerCase();
+    setSugerencias(
+      pacientes.filter((p) => p.nombre.toLowerCase().includes(lower)).slice(0, 8)
+    );
+  }
+
+  function seleccionarPaciente(p) {
+    setForm((f) => ({ ...f, paciente_id: p.id }));
+    setPacienteNombre(p.nombre);
+    setBuscarPac(p.nombre);
+    setSugerencias([]);
+  }
 
   function cambiar(e) {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -46,16 +83,16 @@ export default function BitacoraForm() {
 
   async function handleSubmit(e) {
     e.preventDefault();
+    if (!form.paciente_id) { setError("Debes seleccionar un paciente de la lista"); return; }
     setError("");
     setGuardando(true);
     try {
       if (esEdicion) {
         await api.put(`/bitacora/${id}`, form);
-        navigate("/bitacora");
       } else {
         await api.post("/bitacora", form);
-        navigate("/bitacora");
       }
+      navigate("/bitacora");
     } catch (err) {
       setError(err.response?.data?.error || "Error al guardar");
     } finally {
@@ -66,9 +103,19 @@ export default function BitacoraForm() {
   return (
     <Layout>
       <div className="page-header">
-        <div>
-          <h1>{esEdicion ? "Editar Entrada" : "Nueva Entrada de Bitácora"}</h1>
-          <p className="page-subtitle">Registro de consulta o seguimiento</p>
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          <button
+            type="button"
+            className="back-btn"
+            onClick={() => navigate("/bitacora")}
+            title="Volver a Registro Clínico"
+          >
+            <FiArrowLeft size={18} />
+          </button>
+          <div>
+            <h1>{esEdicion ? "Editar Registro Clínico" : "Nuevo Registro Clínico"}</h1>
+            <p className="page-subtitle">Registro de consulta o seguimiento</p>
+          </div>
         </div>
       </div>
 
@@ -79,14 +126,45 @@ export default function BitacoraForm() {
           <div className="form-grid">
 
             {/* Fila 1 */}
-            <div className="form-group">
+            <div className="form-group" style={{ position: "relative" }} ref={refSug}>
               <label>Paciente *</label>
-              <select name="paciente_id" value={form.paciente_id} onChange={cambiar} required>
-                <option value="">-- Seleccionar paciente --</option>
-                {pacientes.map((p) => (
-                  <option key={p.id} value={p.id}>{p.nombre}{p.dni ? ` (${p.dni})` : ""}</option>
-                ))}
-              </select>
+              <input
+                type="text"
+                placeholder="Buscar paciente por nombre..."
+                value={buscarPac}
+                onChange={(e) => filtrarPacientes(e.target.value)}
+                autoComplete="off"
+                style={{ borderColor: form.paciente_id ? "var(--green, #22c55e)" : undefined }}
+              />
+              {form.paciente_id && pacienteNombre && (
+                <span style={{ fontSize: "0.75rem", color: "#22c55e", marginTop: "3px", display: "block" }}>
+                  ✓ {pacienteNombre}
+                </span>
+              )}
+              {sugerencias.length > 0 && (
+                <ul style={{
+                  position: "absolute", top: "100%", left: 0, right: 0, zIndex: 50,
+                  background: "#fff", border: "1px solid var(--gray-200)",
+                  borderRadius: "8px", boxShadow: "0 8px 24px rgba(0,0,0,0.12)",
+                  listStyle: "none", margin: 0, padding: "4px 0", maxHeight: "220px", overflowY: "auto",
+                }}>
+                  {sugerencias.map((p) => (
+                    <li
+                      key={p.id}
+                      onMouseDown={() => seleccionarPaciente(p)}
+                      style={{
+                        padding: "8px 14px", cursor: "pointer", fontSize: "0.9rem",
+                        display: "flex", justifyContent: "space-between", alignItems: "center",
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.background = "#f1f5f9"}
+                      onMouseLeave={(e) => e.currentTarget.style.background = ""}
+                    >
+                      <span>{p.nombre}</span>
+                      {p.dni && <span style={{ fontSize: "0.75rem", color: "#94a3b8" }}>{p.dni}</span>}
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
 
             <div className="form-group">

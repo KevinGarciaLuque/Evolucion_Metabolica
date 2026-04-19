@@ -16,10 +16,25 @@ const VACÍO = {
   departamento: "", municipio: "", procedencia_tipo: "", direccion: "",
   peso: "", talla: "", tipo_diabetes: "Tipo 1", subtipo_monogenica: "",
   institucion: "HMEP", hba1c_previo: "", telefono: "",
-  tipo_insulina: "", dosis_por_kg: "", promedio_glucometrias: "",
+  tipo_insulina: "", tipo_insulina_2: "", anticuerpos: "", dosis_por_kg: "", promedio_glucometrias: "",
   edad_debut: "", antecedente_familiar: "",
   nombre_tutor: "", telefono_tutor: "",
+  con_monitor: false,
 };
+
+function SeccionTitulo({ children }) {
+  return (
+    <div style={{ marginTop: 28, marginBottom: 10 }}>
+      <h3 style={{
+        fontSize: "0.85rem", fontWeight: 700, color: "#64748b",
+        textTransform: "uppercase", letterSpacing: "0.08em",
+        borderBottom: "1px solid #e2e8f0", paddingBottom: 8, margin: 0,
+      }}>
+        {children}
+      </h3>
+    </div>
+  );
+}
 
 function calcularEdad(fechaNacimiento) {
   if (!fechaNacimiento) return "";
@@ -53,7 +68,8 @@ export default function PacienteForm() {
   }, [id, esEdicion]);
 
   function cambiar(e) {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value, type, checked } = e.target;
+    setForm({ ...form, [name]: type === "checkbox" ? checked : value });
   }
 
   async function handleSubmit(e) {
@@ -100,6 +116,9 @@ export default function PacienteForm() {
         {error && <div className="login-error">{error}</div>}
 
         <form onSubmit={handleSubmit}>
+
+          {/* ── Sección 1: Datos Personales ── */}
+          <SeccionTitulo>Datos del Paciente</SeccionTitulo>
           <div className="form-grid">
             <div className="form-group">
               <label>DNI / Expediente</label>
@@ -130,6 +149,15 @@ export default function PacienteForm() {
               </select>
             </div>
             <div className="form-group">
+              <label>Teléfono</label>
+              <input name="telefono" placeholder="9999-9999" value={form.telefono} onChange={cambiar} />
+            </div>
+          </div>
+
+          {/* ── Sección 2: Ubicación y Procedencia ── */}
+          <SeccionTitulo>Ubicación y Procedencia</SeccionTitulo>
+          <div className="form-grid">
+            <div className="form-group">
               <label>Departamento *</label>
               <select name="departamento" value={form.departamento} onChange={cambiar} required>
                 <option value="">-- Seleccionar --</option>
@@ -141,15 +169,6 @@ export default function PacienteForm() {
             <div className="form-group">
               <label>Municipio</label>
               <input name="municipio" placeholder="Ej: Tegucigalpa" value={form.municipio} onChange={cambiar} />
-            </div>
-            <div className="form-group">
-              <label>Edad al debut (años)</label>
-              <input
-                type="number" min="0" max="30" name="edad_debut"
-                placeholder="Ej: 10"
-                value={form.edad_debut}
-                onChange={cambiar}
-              />
             </div>
             <div className="form-group">
               <label>Procedencia</label>
@@ -168,16 +187,11 @@ export default function PacienteForm() {
                 onChange={cambiar}
               />
             </div>
-            <div className="form-group" style={{ gridColumn: "1 / -1" }}>
-              <label>Antecedente Familiar</label>
-              <textarea
-                name="antecedente_familiar"
-                placeholder="Describe antecedentes familiares relevantes..."
-                value={form.antecedente_familiar}
-                onChange={cambiar}
-                rows={3}
-              />
-            </div>
+          </div>
+
+          {/* ── Sección 3: Datos Clínicos ── */}
+          <SeccionTitulo>Datos Clínicos</SeccionTitulo>
+          <div className="form-grid">
             <div className="form-group">
               <label>Institución *</label>
               <select name="institucion" value={form.institucion} onChange={cambiar} required>
@@ -206,24 +220,17 @@ export default function PacienteForm() {
               </div>
             )}
             <div className="form-group">
+              <label>Edad al debut (años)</label>
+              <input
+                type="number" min="0" max="30" name="edad_debut"
+                placeholder="Ej: 10"
+                value={form.edad_debut}
+                onChange={cambiar}
+              />
+            </div>
+            <div className="form-group">
               <label>HbA1c previo al MCG (%)</label>
               <input type="number" step="0.1" name="hba1c_previo" placeholder="Ej: 8.5" value={form.hba1c_previo} onChange={cambiar} />
-            </div>
-            <div className="form-group">
-              <label>Tipo de insulina</label>
-              <input name="tipo_insulina" placeholder="Ej: Glargina 15ui / Lispro 10ui" value={form.tipo_insulina} onChange={cambiar} />
-            </div>
-            <div className="form-group">
-              <label>Dosis por Kg</label>
-              <input name="dosis_por_kg" placeholder="Ej: 0.97u/kg/día" value={form.dosis_por_kg} onChange={cambiar} />
-            </div>
-            <div className="form-group">
-              <label>Promedio glucometrías / día</label>
-              <input name="promedio_glucometrias" placeholder="Ej: 4 veces al día" value={form.promedio_glucometrias} onChange={cambiar} />
-            </div>
-            <div className="form-group">
-              <label>Teléfono</label>
-              <input name="telefono" placeholder="9999-9999" value={form.telefono} onChange={cambiar} />
             </div>
             <div className="form-group">
               <label>Peso (kg)</label>
@@ -233,14 +240,87 @@ export default function PacienteForm() {
               <label>Talla (cm)</label>
               <input type="number" step="0.1" name="talla" placeholder="140" value={form.talla} onChange={cambiar} />
             </div>
+            <div className="form-group">
+              <label>Dosis por Kg</label>
+              <input name="dosis_por_kg" placeholder="Ej: 0.97u/kg/día" value={form.dosis_por_kg} onChange={cambiar} />
+            </div>
+            <div className="form-group">
+              <label>Promedio glucometrías / día</label>
+              <input name="promedio_glucometrias" placeholder="Ej: 4 veces al día" value={form.promedio_glucometrias} onChange={cambiar} />
+            </div>
+            <div className="form-group" style={{ display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
+              <label style={{ marginBottom: 10 }}>Monitor de Glucosa (MCG)</label>
+              <label style={{
+                display: "inline-flex", alignItems: "center", gap: 12,
+                cursor: "pointer", userSelect: "none",
+              }}>
+                <span style={{
+                  position: "relative", display: "inline-block",
+                  width: 44, height: 24, flexShrink: 0,
+                }}>
+                  <input
+                    type="checkbox" name="con_monitor"
+                    checked={!!form.con_monitor}
+                    onChange={cambiar}
+                    style={{ opacity: 0, width: 0, height: 0, position: "absolute" }}
+                  />
+                  <span style={{
+                    position: "absolute", inset: 0, borderRadius: 24,
+                    background: form.con_monitor ? "#6366f1" : "#cbd5e1",
+                    transition: "background 0.2s",
+                  }} />
+                  <span style={{
+                    position: "absolute", top: 3, left: form.con_monitor ? 23 : 3,
+                    width: 18, height: 18, borderRadius: "50%",
+                    background: "#fff",
+                    boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+                    transition: "left 0.2s",
+                  }} />
+                </span>
+                <span style={{
+                  fontWeight: 600, fontSize: "0.9rem",
+                  color: form.con_monitor ? "#4f46e5" : "#94a3b8",
+                }}>
+                  {form.con_monitor ? "Con monitor MCG" : "Sin monitor MCG"}
+                </span>
+              </label>
+            </div>
           </div>
 
-          {/* Sección Tutor */}
-          <div style={{ marginTop: 28, marginBottom: 10 }}>
-            <h3 style={{ fontSize: "1rem", fontWeight: 600, color: "#475569", borderBottom: "1px solid #e2e8f0", paddingBottom: 8, margin: 0 }}>
-              Datos del Tutor
-            </h3>
+          {/* ── Sección 4: Antecedentes ── */}
+          <SeccionTitulo>Antecedentes</SeccionTitulo>
+          <div className="form-grid">
+            <div className="form-group" style={{ gridColumn: "1 / -1" }}>
+              <label>Antecedente Familiar</label>
+              <textarea
+                name="antecedente_familiar"
+                placeholder="Describe antecedentes familiares relevantes..."
+                value={form.antecedente_familiar}
+                onChange={cambiar}
+                rows={3}
+              />
+            </div>
           </div>
+
+          {/* ── Sección 5: Tipos de Insulina Histórico ── */}
+          <SeccionTitulo>Tipos de Insulina Histórico</SeccionTitulo>
+          <div className="form-grid">
+            <div className="form-group">
+              <label>Insulina acción prolongada</label>
+              <input name="tipo_insulina" placeholder="Ej: Glargina 15ui / NPH 12ui" value={form.tipo_insulina} onChange={cambiar} />
+            </div>
+            <div className="form-group">
+              <label>Insulina acción corta</label>
+              <input name="tipo_insulina_2" placeholder="Ej: Lispro 10ui / Regular 8ui" value={form.tipo_insulina_2} onChange={cambiar} />
+            </div>
+            <div className="form-group" style={{ gridColumn: "1 / -1" }}>
+              <label>Anticuerpos para diabetes</label>
+              <input name="anticuerpos" placeholder="Ej: Anti-GAD positivo, IA-2 positivo, ZnT8 negativo" value={form.anticuerpos} onChange={cambiar} />
+            </div>
+          </div>
+
+          {/* ── Sección 6: Datos del Tutor ── */}
+          <SeccionTitulo>Datos del Tutor</SeccionTitulo>
           <div className="form-grid">
             <div className="form-group">
               <label>Nombre completo del tutor</label>

@@ -11,24 +11,23 @@ const TIPO_BADGE = {
   Otro:         "badge-gray",
 };
 
+function hoy() {
+  return new Date().toISOString().split("T")[0];
+}
+
 export default function BitacoraList() {
   const navigate = useNavigate();
   const [entradas, setEntradas] = useState([]);
-  const [pacientes, setPacientes] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [filtros, setFiltros] = useState({
-    paciente_id: "", fecha_desde: "", fecha_hasta: "",
+    paciente_nombre: "", fecha_desde: "", fecha_hasta: hoy(),
   });
 
   useEffect(() => {
-    api.get("/pacientes").then((r) => setPacientes(r.data));
-  }, []);
-
-  useEffect(() => {
     const params = {};
-    if (filtros.paciente_id) params.paciente_id = filtros.paciente_id;
-    if (filtros.fecha_desde) params.fecha_desde = filtros.fecha_desde;
-    if (filtros.fecha_hasta) params.fecha_hasta = filtros.fecha_hasta;
+    if (filtros.paciente_nombre) params.paciente_nombre = filtros.paciente_nombre;
+    if (filtros.fecha_desde)     params.fecha_desde     = filtros.fecha_desde;
+    if (filtros.fecha_hasta)     params.fecha_hasta     = filtros.fecha_hasta;
     setCargando(true);
     api.get("/bitacora", { params })
       .then((r) => setEntradas(r.data))
@@ -40,7 +39,7 @@ export default function BitacoraList() {
   }
 
   async function eliminar(id) {
-    if (!confirm("¿Eliminar esta entrada de bitácora?")) return;
+    if (!confirm("¿Eliminar este registro clínico?")) return;
     await api.delete(`/bitacora/${id}`);
     setEntradas(entradas.filter((e) => e.id !== id));
   }
@@ -49,23 +48,24 @@ export default function BitacoraList() {
     <Layout>
       <div className="page-header">
         <div>
-          <h1>Bitácora</h1>
+          <h1>Registro Clínico</h1>
           <p className="page-subtitle">Registro de consultas y seguimiento de pacientes</p>
         </div>
-        <Link to="/bitacora/nueva" className="btn btn-primary">+ Nueva Entrada</Link>
+        <Link to="/bitacora/nueva" className="btn btn-primary">+ Nuevo Registro</Link>
       </div>
 
       {/* Filtros */}
       <div className="card filtros-card">
         <div className="filtros-grid-extra" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "12px" }}>
           <div className="form-group">
-            <label>Paciente</label>
-            <select name="paciente_id" value={filtros.paciente_id} onChange={cambiarFiltro}>
-              <option value="">Todos</option>
-              {pacientes.map((p) => (
-                <option key={p.id} value={p.id}>{p.nombre}</option>
-              ))}
-            </select>
+            <label>Buscar paciente</label>
+            <input
+              type="text"
+              name="paciente_nombre"
+              placeholder="Nombre del paciente..."
+              value={filtros.paciente_nombre}
+              onChange={cambiarFiltro}
+            />
           </div>
           <div className="form-group">
             <label>Desde</label>

@@ -1,5 +1,6 @@
 import pool from "../config/db.js";
 import bcrypt from "bcryptjs";
+import { auditarAccion } from "../utils/helpers.js";
 
 export async function listar(req, res) {
   try {
@@ -41,6 +42,7 @@ export async function crear(req, res) {
       "INSERT INTO usuarios (nombre, email, password, rol) VALUES (?, ?, ?, ?)",
       [nombre, email, hash, rol || "doctor"]
     );
+    auditarAccion(pool, req, { accion: "crear_usuario", entidad: "usuario", entidad_id: result.insertId, descripcion: `Creó usuario: ${nombre} (${rol || "doctor"})` });
     res.status(201).json({ id: result.insertId, mensaje: "Usuario creado correctamente" });
   } catch (err) {
     if (err.code === "ER_DUP_ENTRY")
@@ -72,6 +74,7 @@ export async function actualizar(req, res) {
         [nombre, email, rol || "doctor", estado ?? 1, req.params.id]
       );
     }
+    auditarAccion(pool, req, { accion: "editar_usuario", entidad: "usuario", entidad_id: Number(req.params.id), descripcion: `Editó usuario: ${nombre}` });
     res.json({ mensaje: "Usuario actualizado correctamente" });
   } catch (err) {
     if (err.code === "ER_DUP_ENTRY")
@@ -88,6 +91,7 @@ export async function eliminar(req, res) {
 
   try {
     await pool.query("UPDATE usuarios SET estado = 0 WHERE id = ?", [req.params.id]);
+    auditarAccion(pool, req, { accion: "eliminar_usuario", entidad: "usuario", entidad_id: Number(req.params.id), descripcion: `Desactivó usuario ID ${req.params.id}` });
     res.json({ mensaje: "Usuario desactivado correctamente" });
   } catch (err) {
     console.error(err);

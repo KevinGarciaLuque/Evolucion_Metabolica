@@ -34,6 +34,14 @@ export async function login(req, res) {
       { expiresIn: "8h" }
     );
 
+    // Registrar auditoría de inicio de sesión
+    const ip = req.headers["x-forwarded-for"]?.split(",")[0].trim() || req.socket?.remoteAddress || null;
+    const ua = req.headers["user-agent"] || null;
+    pool.query(
+      "INSERT INTO auditoria_sesiones (usuario_id, usuario_nombre, usuario_email, usuario_rol, accion, ip, user_agent) VALUES (?, ?, ?, ?, 'login', ?, ?)",
+      [usuario.id, usuario.nombre, usuario.email, usuario.rol, ip, ua]
+    ).catch((e) => console.error("Auditoría login error:", e));
+
     res.json({
       token,
       usuario: { id: usuario.id, nombre: usuario.nombre, email: usuario.email, rol: usuario.rol },
