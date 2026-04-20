@@ -630,24 +630,24 @@ export default function PacienteDetalle() {
                 <table className="tabla">
                   <thead>
                     <tr>
-                      <th className="hide-mobile">Nº MCG</th>
+                      <th className="hide-tablet">Nº MCG</th>
                       <th>Fecha</th>
                       <th>TIR</th>
                       <th className="hide-mobile">TAR</th>
                       <th className="hide-mobile">TBR</th>
                       <th className="hide-mobile">GMI</th>
-                      <th className="hide-mobile">CV</th>
-                      <th className="hide-mobile">T. Activo</th>
-                      <th className="hide-mobile">G. Promedio</th>
+                      <th className="hide-tablet">CV</th>
+                      <th className="hide-tablet">T. Activo</th>
+                      <th className="hide-tablet">G. Promedio</th>
                       <th>Estado</th>
-                      <th className="hide-mobile">PDF</th>
+                      <th className="hide-tablet">PDF</th>
                       <th>Acciones</th>
                     </tr>
                   </thead>
                   <tbody>
                     {historial.map((a) => (
                       <tr key={a.id}>
-                        <td className="hide-mobile" style={{ textAlign: "center", fontWeight: 600, color: "#3b82f6" }}>
+                        <td className="hide-tablet" style={{ textAlign: "center", fontWeight: 600, color: "#3b82f6" }}>
                           {a.numero_registro ?? "—"}
                         </td>
                         <td style={{ whiteSpace: "nowrap", fontSize: "0.82rem" }}>{a.fecha ? new Date(a.fecha).toLocaleDateString("es-GT", { day: "2-digit", month: "2-digit", year: "2-digit" }) : "—"}</td>
@@ -655,11 +655,11 @@ export default function PacienteDetalle() {
                         <td className="hide-mobile">{a.tar}%</td>
                         <td className="hide-mobile">{a.tbr}%</td>
                         <td className="hide-mobile">{a.gmi}%</td>
-                        <td className="hide-mobile">{a.cv}%</td>
-                        <td className="hide-mobile">{a.tiempo_activo}%</td>
-                        <td className="hide-mobile">{a.glucosa_promedio} mg/dL</td>
+                        <td className="hide-tablet">{a.cv}%</td>
+                        <td className="hide-tablet">{a.tiempo_activo}%</td>
+                        <td className="hide-tablet">{a.glucosa_promedio} mg/dL</td>
                         <td><ClasificacionBadge valor={a.clasificacion} /></td>
-                        <td className="hide-mobile">
+                        <td className="hide-tablet">
                           {a.archivo_pdf && (
                             <a
                               href={`${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:3001'}/uploads/pdfs/${a.archivo_pdf}`}
@@ -848,12 +848,12 @@ export default function PacienteDetalle() {
                 <thead>
                   <tr>
                     <th>Fecha</th>
-                    <th className="hide-mobile">Insulina prolongada</th>
+                    <th className="hide-tablet">Insulina prolongada</th>
                     <th>D. Prol.</th>
-                    <th className="hide-mobile">Insulina corta</th>
+                    <th className="hide-tablet">Insulina corta</th>
                     <th>D. Corta</th>
                     <th className="hide-mobile">Vía</th>
-                    <th className="hide-mobile">Motivo cambio</th>
+                    <th className="hide-tablet">Motivo cambio</th>
                     <th>Acciones</th>
                   </tr>
                 </thead>
@@ -861,12 +861,12 @@ export default function PacienteDetalle() {
                   {insulina.map(r => (
                     <tr key={r.id}>
                       <td style={{ whiteSpace: "nowrap", fontSize: "0.82rem" }}>{r.fecha ? new Date(String(r.fecha).substring(0, 10) + "T00:00:00").toLocaleDateString("es-GT", { day: "2-digit", month: "2-digit", year: "2-digit" }) : "—"}</td>
-                      <td className="hide-mobile">{r.insulina_prolongada || "—"}</td>
+                      <td className="hide-tablet">{r.insulina_prolongada || "—"}</td>
                       <td>{r.dosis_prolongada || "—"}</td>
-                      <td className="hide-mobile">{r.insulina_corta || "—"}</td>
+                      <td className="hide-tablet">{r.insulina_corta || "—"}</td>
                       <td>{r.dosis_corta || "—"}</td>
                       <td className="hide-mobile">{r.via_administracion || "—"}</td>
-                      <td className="hide-mobile" style={{ maxWidth: 180, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.motivo_cambio || "—"}</td>
+                      <td className="hide-tablet" style={{ maxWidth: 180, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.motivo_cambio || "—"}</td>
                       <td>
                         <div style={{ display: "flex", gap: 4 }}>
                           <button onClick={() => abrirEditarInsulina(r)} style={{ background: "none", border: "none", cursor: "pointer", color: "#3b82f6", padding: "2px 6px", borderRadius: 4, display: "flex", alignItems: "center" }} title="Editar"><FiEdit2 size={15} /></button>
@@ -903,9 +903,9 @@ export default function PacienteDetalle() {
                     <th>IAA</th>
                     <th className="hide-mobile">Anti-GAD65</th>
                     <th className="hide-mobile">Anti-IA2</th>
-                    <th className="hide-mobile">ZnT8</th>
-                    <th className="hide-mobile">ICA</th>
-                    <th className="hide-mobile">Elaborado por</th>
+                    <th className="hide-tablet">ZnT8</th>
+                    <th className="hide-tablet">ICA</th>
+                    <th className="hide-tablet">Elaborado por</th>
                     <th>Acciones</th>
                   </tr>
                 </thead>
@@ -916,9 +916,9 @@ export default function PacienteDetalle() {
                       <td>{r.iaa || "—"}</td>
                       <td className="hide-mobile">{r.anti_gad65 || "—"}</td>
                       <td className="hide-mobile">{r.anti_ia2 || "—"}</td>
-                      <td className="hide-mobile">{r.znt8 || "—"}</td>
-                      <td className="hide-mobile">{r.ica || "—"}</td>
-                      <td className="hide-mobile">{r.elaborado_por || "—"}</td>
+                      <td className="hide-tablet">{r.znt8 || "—"}</td>
+                      <td className="hide-tablet">{r.ica || "—"}</td>
+                      <td className="hide-tablet">{r.elaborado_por || "—"}</td>
                       <td>
                         <div style={{ display: "flex", gap: 4 }}>
                           <button onClick={() => abrirEditarAnticuerpos(r)} style={{ background: "none", border: "none", cursor: "pointer", color: "#3b82f6", padding: "2px 6px", borderRadius: 4, display: "flex", alignItems: "center" }} title="Editar"><FiEdit2 size={15} /></button>

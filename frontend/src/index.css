@@ -700,6 +700,12 @@ body {
     box-shadow: none;
     border-bottom: none;
   }
+
+  /* Columnas ocultas en tablet Y móvil */
+  .hide-tablet { display: none !important; }
+
+  /* Detalle paciente — 2 columnas iguales en tablet */
+  .detalle-grid { grid-template-columns: 1fr 1fr; }
 }
 
 /* ─── Móvil / tablet vertical ────────────────────────────────────────────── */
