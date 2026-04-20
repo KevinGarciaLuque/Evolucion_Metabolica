@@ -326,7 +326,7 @@ export default function Dashboard() {
           <DiagramaISPAD />
         </motion.div>
 
-        <motion.div className="card" variants={fadeUp}>
+        <motion.div className="card" variants={fadeUp} style={{ paddingBottom: 24 }}>
           <h3>Distribución de Control ISPAD</h3>
           <Pie3DChart data={pieData} isMobile={isMobile} />
         </motion.div>
@@ -572,8 +572,9 @@ function Pie3DChart({ data, isMobile }) {
       position: "bottom",
       labels: { colors: "#94a3b8", useSeriesColors: false },
       fontSize: isMobile ? "10px" : "12px",
-      itemMargin: { horizontal: isMobile ? 4 : 8, vertical: isMobile ? 2 : 4 },
+      itemMargin: { horizontal: isMobile ? 4 : 8, vertical: isMobile ? 4 : 4 },
       markers: { width: isMobile ? 8 : 12, height: isMobile ? 8 : 12 },
+      offsetY: isMobile ? 8 : 0,
       onItemClick: { toggleDataSeries: false },
       onItemHover: { highlightDataSeries: false },
     },
@@ -589,7 +590,7 @@ function Pie3DChart({ data, isMobile }) {
       type="donut"
       series={series}
       options={options}
-      height={isMobile ? 420 : 400}
+      height={isMobile ? Math.min(window.innerHeight * 0.52, 460) : 400}
     />
   );
 }
