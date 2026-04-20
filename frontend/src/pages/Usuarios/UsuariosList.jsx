@@ -21,12 +21,19 @@ export default function UsuariosList() {
   const { usuario: yo } = useAuth();
   const [usuarios, setUsuarios] = useState([]);
   const [cargando, setCargando] = useState(true);
+  const [error, setError]       = useState(null);
   const [buscar, setBuscar]     = useState("");
 
   useEffect(() => {
     setCargando(true);
+    setError(null);
     api.get("/usuarios")
       .then((r) => setUsuarios(r.data))
+      .catch((err) => {
+        const msg = err.response?.data?.error || err.message || "Error al cargar usuarios";
+        const status = err.response?.status;
+        setError(status === 403 ? "Acceso denegado: se requiere rol administrador" : msg);
+      })
       .finally(() => setCargando(false));
   }, []);
 
@@ -75,6 +82,10 @@ export default function UsuariosList() {
 
         {cargando ? (
           <div className="loading">Cargando usuarios...</div>
+        ) : error ? (
+          <div style={{ padding: "20px", color: "#ef4444", fontSize: 14, display: "flex", alignItems: "center", gap: 8 }}>
+            <span>⚠️</span> {error}
+          </div>
         ) : (
           <div className="table-wrapper">
             <table className="tabla">
