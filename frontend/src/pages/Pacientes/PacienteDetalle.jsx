@@ -43,6 +43,7 @@ export default function PacienteDetalle() {
   const [historial, setHistorial] = useState([]);
   const [cargando, setCargando]   = useState(true);
   const [isMobile, setIsMobile]   = useState(window.innerWidth < 768);
+  const [isTablet, setIsTablet]   = useState(window.innerWidth < 1024);
   const [modalEliminar, setModalEliminar] = useState(null);
   const [eliminando, setEliminando] = useState(false);
   const [modalEditar, setModalEditar] = useState(null);
@@ -263,7 +264,10 @@ export default function PacienteDetalle() {
   }
 
   useEffect(() => {
-    const onResize = () => setIsMobile(window.innerWidth < 768);
+    const onResize = () => {
+      setIsMobile(window.innerWidth < 768);
+      setIsTablet(window.innerWidth < 1024);
+    };
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
   }, []);
@@ -361,7 +365,7 @@ export default function PacienteDetalle() {
               onMouseLeave={() => setHoveredTab(null)}
               style={{
                 display: "flex", alignItems: "center", gap: 8,
-                padding: isMobile ? "10px 12px 8px" : "12px 22px 10px",
+                padding: isMobile ? "10px 10px 8px" : isTablet ? "10px 10px 8px" : "12px 22px 10px",
                 border: "none", cursor: "pointer",
                 borderBottom: activa ? "3px solid #6366f1" : "3px solid transparent",
                 marginBottom: -2,
@@ -834,7 +838,7 @@ export default function PacienteDetalle() {
             <div className="card">
               <div className="card-header-row">
                 <div>
-                  <h3 style={{ margin: 0 }}>💉 Historial de Insulina</h3>
+                  <h3 style={{ margin: 0 }}>💉 a</h3>
                   <p style={{ margin: "4px 0 0", fontSize: "0.78rem", color: "#64748b" }}>
                     Inicio: <strong>{paciente.tipo_insulina || "—"}</strong> (prolongada) · <strong>{paciente.tipo_insulina_2 || "—"}</strong> (corta)
                   </p>

@@ -706,6 +706,10 @@ body {
 
   /* Detalle paciente — 2 columnas iguales en tablet */
   .detalle-grid { grid-template-columns: 1fr 1fr; }
+
+  /* Tabs: ocultar texto, solo icono + badge */
+  .tab-label { display: none; }
+  .tab-bar button { min-width: 48px; justify-content: center; }
 }
 
 /* ─── Móvil / tablet vertical ────────────────────────────────────────────── */
