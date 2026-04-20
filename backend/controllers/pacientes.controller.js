@@ -3,18 +3,32 @@ import { calcularEdad, auditarAccion } from "../utils/helpers.js";
 
 export async function listar(req, res) {
   const { departamento, sexo, edad_min, edad_max, buscar, institucion, con_monitor } = req.query;
-  let sql = "SELECT * FROM pacientes WHERE estado = 1";
+  let sql = `
+    SELECT p.*,
+      sub.tir_promedio,
+      sub.ultima_clasificacion
+    FROM pacientes p
+    LEFT JOIN (
+      SELECT a.paciente_id,
+        ROUND(AVG(a.tir), 1) AS tir_promedio,
+        (SELECT a2.clasificacion FROM analisis a2
+         WHERE a2.paciente_id = a.paciente_id
+         ORDER BY a2.fecha DESC LIMIT 1) AS ultima_clasificacion
+      FROM analisis a
+      GROUP BY a.paciente_id
+    ) sub ON sub.paciente_id = p.id
+    WHERE p.estado = 1`;
   const params = [];
 
-  if (institucion)  { sql += " AND institucion = ?";  params.push(institucion); }
-  if (departamento) { sql += " AND departamento = ?"; params.push(departamento); }
-  if (sexo)         { sql += " AND sexo = ?";         params.push(sexo); }
-  if (buscar)       { sql += " AND nombre LIKE ?";     params.push(`%${buscar}%`); }
-  if (edad_min)     { sql += " AND edad >= ?";         params.push(Number(edad_min)); }
-  if (edad_max)     { sql += " AND edad <= ?";         params.push(Number(edad_max)); }
-  if (con_monitor !== undefined && con_monitor !== "") { sql += " AND con_monitor = ?"; params.push(Number(con_monitor)); }
+  if (institucion)  { sql += " AND p.institucion = ?";  params.push(institucion); }
+  if (departamento) { sql += " AND p.departamento = ?"; params.push(departamento); }
+  if (sexo)         { sql += " AND p.sexo = ?";         params.push(sexo); }
+  if (buscar)       { sql += " AND p.nombre LIKE ?";    params.push(`%${buscar}%`); }
+  if (edad_min)     { sql += " AND p.edad >= ?";        params.push(Number(edad_min)); }
+  if (edad_max)     { sql += " AND p.edad <= ?";        params.push(Number(edad_max)); }
+  if (con_monitor !== undefined && con_monitor !== "") { sql += " AND p.con_monitor = ?"; params.push(Number(con_monitor)); }
 
-  sql += " ORDER BY nombre ASC";
+  sql += " ORDER BY p.nombre ASC";
 
   try {
     const [rows] = await pool.query(sql, params);
@@ -39,7 +53,8 @@ export async function crear(req, res) {
   const {
     dni, nombre, fecha_nacimiento, sexo, departamento, municipio, procedencia_tipo,
     peso, talla, tipo_diabetes, subtipo_monogenica, institucion, hba1c_previo, telefono,
-    tipo_insulina, tipo_insulina_2, anticuerpos, dosis_por_kg, promedio_glucometrias,
+    tipo_insulina, dosis_insulina_prolongada, tipo_insulina_2, dosis_insulina_corta,
+    anticuerpos, dosis_por_kg, promedio_glucometrias,
     edad_debut, direccion, antecedente_familiar, nombre_tutor, telefono_tutor, con_monitor,
   } = req.body;
   if (!nombre || !sexo || !departamento)
@@ -53,16 +68,18 @@ export async function crear(req, res) {
       `INSERT INTO pacientes
         (dni, nombre, fecha_nacimiento, edad, edad_debut, sexo, departamento, municipio,
          procedencia_tipo, direccion, antecedente_familiar, institucion, peso, talla,
-         tipo_diabetes, subtipo_monogenica, hba1c_previo, tipo_insulina, tipo_insulina_2, anticuerpos,
-         dosis_por_kg, promedio_glucometrias, telefono, nombre_tutor, telefono_tutor, con_monitor)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+         tipo_diabetes, subtipo_monogenica, hba1c_previo,
+         tipo_insulina, dosis_insulina_prolongada, tipo_insulina_2, dosis_insulina_corta,
+         anticuerpos, dosis_por_kg, promedio_glucometrias, telefono, nombre_tutor, telefono_tutor, con_monitor)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 
       [
         dni, nombre, fecha_nacimiento, edad, edad_debut || null, sexo, departamento,
         municipio || null, procedencia_tipo || null, direccion || null,
         antecedente_familiar || null, inst, peso, talla, tipo_diabetes,
-        subtipo_monogenica || null, hba1c_previo || null, tipo_insulina || null, tipo_insulina_2 || null, anticuerpos || null,
-        dosis_por_kg || null, promedio_glucometrias || null, telefono || null,
+        subtipo_monogenica || null, hba1c_previo || null,
+        tipo_insulina || null, dosis_insulina_prolongada || null, tipo_insulina_2 || null, dosis_insulina_corta || null,
+        anticuerpos || null, dosis_por_kg || null, promedio_glucometrias || null, telefono || null,
         nombre_tutor || null, telefono_tutor || null, con_monitor ? 1 : 0,
       ]
     );
@@ -80,7 +97,8 @@ export async function actualizar(req, res) {
   const {
     nombre, fecha_nacimiento, sexo, departamento, municipio, procedencia_tipo,
     peso, talla, tipo_diabetes, subtipo_monogenica, dni, institucion, hba1c_previo, telefono,
-    tipo_insulina, tipo_insulina_2, anticuerpos, dosis_por_kg, promedio_glucometrias,
+    tipo_insulina, dosis_insulina_prolongada, tipo_insulina_2, dosis_insulina_corta,
+    anticuerpos, dosis_por_kg, promedio_glucometrias,
     edad_debut, direccion, antecedente_familiar, nombre_tutor, telefono_tutor, con_monitor,
   } = req.body;
   const edad = fecha_nacimiento ? calcularEdad(fecha_nacimiento) : null;
@@ -91,7 +109,8 @@ export async function actualizar(req, res) {
        SET dni=?, nombre=?, fecha_nacimiento=?, edad=?, edad_debut=?, sexo=?, departamento=?,
            municipio=?, procedencia_tipo=?, direccion=?, antecedente_familiar=?, institucion=?,
            peso=?, talla=?, tipo_diabetes=?, subtipo_monogenica=?,
-           hba1c_previo=?, tipo_insulina=?, tipo_insulina_2=?, anticuerpos=?, dosis_por_kg=?, promedio_glucometrias=?,
+           hba1c_previo=?, tipo_insulina=?, dosis_insulina_prolongada=?, tipo_insulina_2=?, dosis_insulina_corta=?,
+           anticuerpos=?, dosis_por_kg=?, promedio_glucometrias=?,
            telefono=?, nombre_tutor=?, telefono_tutor=?, con_monitor=?
        WHERE id = ?`,
       [
@@ -99,8 +118,9 @@ export async function actualizar(req, res) {
         municipio || null, procedencia_tipo || null, direccion || null,
         antecedente_familiar || null, institucion || 'HMEP', peso, talla,
         tipo_diabetes, subtipo_monogenica || null,
-        hba1c_previo || null, tipo_insulina || null, tipo_insulina_2 || null, anticuerpos || null, dosis_por_kg || null,
-        promedio_glucometrias || null, telefono || null,
+        hba1c_previo || null, tipo_insulina || null, dosis_insulina_prolongada || null,
+        tipo_insulina_2 || null, dosis_insulina_corta || null,
+        anticuerpos || null, dosis_por_kg || null, promedio_glucometrias || null, telefono || null,
         nombre_tutor || null, telefono_tutor || null, con_monitor ? 1 : 0, req.params.id,
       ]
     );

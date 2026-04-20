@@ -8,6 +8,7 @@ const VACÍO = {
   email: "",
   password: "",
   rol: "doctor",
+  sexo: "",
   estado: 1,
 };
 
@@ -30,6 +31,7 @@ export default function UsuarioForm() {
           email:    u.email   || "",
           password: "",
           rol:      u.rol     || "doctor",
+          sexo:     u.sexo    || "",
           estado:   u.estado  ?? 1,
         });
       });
@@ -149,6 +151,15 @@ export default function UsuarioForm() {
                 <option value="admin">Administrador</option>
                 <option value="doctor">Doctor</option>
                 <option value="asistente">Asistente</option>
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label>Sexo</label>
+              <select name="sexo" value={form.sexo} onChange={cambiar}>
+                <option value="">No especificado</option>
+                <option value="M">Masculino</option>
+                <option value="F">Femenino</option>
               </select>
             </div>
 

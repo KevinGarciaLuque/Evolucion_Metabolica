@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Legend, Cell, LabelList,
@@ -121,16 +122,25 @@ function TooltipGrupoEtario({ active, payload, label }) {
 const fadeUp = { hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0 } };
 const stagger = { show: { transition: { staggerChildren: 0.08 } } };
 
+const GRUPOS_ORDER = ["0-5 años", "6-9 años", "10-12 años", "13-17 años", "18+ años"];
+function grupoEtario(edad) {
+  if (edad <= 5)  return "0-5 años";
+  if (edad <= 9)  return "6-9 años";
+  if (edad <= 12) return "10-12 años";
+  if (edad <= 17) return "13-17 años";
+  return "18+ años";
+}
+
 export default function Consolidado() {
-  const [deptos, setDeptos]   = useState([]);
-  const [genero, setGenero]   = useState([]);
-  const [edades, setEdades]   = useState([]);
   const [todos, setTodos]     = useState([]);
   const [filtros, setFiltros] = useState({ departamento: "", sexo: "", edad_min: "", edad_max: "" });
   const [listaDeptos, setListaDeptos] = useState([]);
   const [cargando, setCargando]       = useState(true);
   const [mostrarFiltros, setMostrarFiltros] = useState(false);
   const [isMobile, setIsMobile]       = useState(window.innerWidth < 768);
+  const [modalDepto, setModalDepto]   = useState(null); // { departamento, pacientes[] }
+  const [clsVis, setClsVis] = useState({ OPTIMO: true, MODERADO: true, ALTO_RIESGO: true });
+  const navigate = useNavigate();
 
   useEffect(() => {
     const onResize = () => setIsMobile(window.innerWidth < 768);
@@ -140,17 +150,7 @@ export default function Consolidado() {
 
   useEffect(() => {
     api.get("/pacientes/departamentos").then((r) => setListaDeptos(r.data));
-    Promise.all([
-      api.get("/dashboard/por-departamento"),
-      api.get("/dashboard/por-genero"),
-      api.get("/dashboard/por-edad"),
-      api.get("/analisis"),
-    ]).then(([d, g, e, a]) => {
-      setDeptos(d.data);
-      setGenero(g.data);
-      setEdades(e.data);
-      setTodos(a.data);
-    }).finally(() => setCargando(false));
+    api.get("/analisis").then((r) => setTodos(r.data)).finally(() => setCargando(false));
   }, []);
 
   function cambiar(e) { setFiltros({ ...filtros, [e.target.name]: e.target.value }); }
@@ -170,16 +170,75 @@ export default function Consolidado() {
     ? (filtrados.reduce((s, a) => s + Number(a.gmi || 0), 0) / filtrados.length).toFixed(2)
     : "—";
 
-  // GMI vs HbA1c por clasificación ISPAD
+  // ── Computar todos los datos de gráficos desde filtrados ──────────────
+  const deptos = (() => {
+    const map = {};
+    for (const a of filtrados) {
+      const dep = a.departamento || "Sin departamento";
+      if (!map[dep]) map[dep] = { tir_sum: 0, gmi_sum: 0, cv_sum: 0, n: 0, n_gmi: 0, n_cv: 0, pacientes: new Set(), en_control: 0, alto_riesgo: 0 };
+      map[dep].tir_sum += Number(a.tir || 0);
+      map[dep].n++;
+      if (a.gmi != null && a.gmi !== "") { map[dep].gmi_sum += Number(a.gmi); map[dep].n_gmi++; }
+      if (a.cv != null && a.cv !== "")   { map[dep].cv_sum  += Number(a.cv);  map[dep].n_cv++; }
+      map[dep].pacientes.add(a.paciente_id);
+      if (a.clasificacion === "OPTIMO")      map[dep].en_control++;
+      if (a.clasificacion === "ALTO_RIESGO") map[dep].alto_riesgo++;
+    }
+    return Object.entries(map)
+      .map(([departamento, v]) => ({
+        departamento,
+        total_pacientes: v.pacientes.size,
+        tir_promedio:  v.n     ? +(v.tir_sum  / v.n).toFixed(1)     : 0,
+        gmi_promedio:  v.n_gmi ? +(v.gmi_sum  / v.n_gmi).toFixed(2) : null,
+        cv_promedio:   v.n_cv  ? +(v.cv_sum   / v.n_cv).toFixed(1)  : null,
+        en_control:    v.en_control,
+        alto_riesgo:   v.alto_riesgo,
+      }))
+      .sort((a, b) => a.departamento.localeCompare(b.departamento));
+  })();
+
+  const genero = (() => {
+    const map = {};
+    for (const a of filtrados) {
+      const s = a.sexo || "?";
+      if (!map[s]) map[s] = { tir_sum: 0, n: 0 };
+      map[s].tir_sum += Number(a.tir || 0);
+      map[s].n++;
+    }
+    return Object.entries(map).map(([sexo, v]) => ({
+      sexo,
+      tir_promedio: v.n ? +(v.tir_sum / v.n).toFixed(1) : 0,
+    }));
+  })();
+
+  const edades = (() => {
+    const map = {};
+    for (const a of filtrados) {
+      const grupo = grupoEtario(Number(a.edad || 0));
+      if (!map[grupo]) map[grupo] = { tir_sum: 0, gmi_sum: 0, n: 0, n_gmi: 0 };
+      map[grupo].tir_sum += Number(a.tir || 0);
+      map[grupo].n++;
+      if (a.gmi != null && a.gmi !== "") { map[grupo].gmi_sum += Number(a.gmi); map[grupo].n_gmi++; }
+    }
+    return GRUPOS_ORDER
+      .filter((g) => map[g])
+      .map((g) => ({
+        grupo: g,
+        tir_promedio: map[g].n     ? +(map[g].tir_sum / map[g].n).toFixed(1)     : 0,
+        gmi_promedio: map[g].n_gmi ? +(map[g].gmi_sum / map[g].n_gmi).toFixed(2) : 0,
+      }));
+  })();
+
+  // GMI vs HbA1c por clasificación ISPAD (desde filtrados)
   const gmiHbA1cData = (() => {
     const order = ["OPTIMO", "MODERADO", "ALTO_RIESGO"];
     const labelMap = { OPTIMO: "Óptimo", MODERADO: "Moderado", ALTO_RIESGO: "Alto Riesgo" };
     const grupos = {};
-    for (const a of todos) {
+    for (const a of filtrados) {
       const key = a.clasificacion;
       if (!key || !order.includes(key)) continue;
       if (!grupos[key]) grupos[key] = { gmi_sum: 0, hba1c_sum: 0, n_gmi: 0, n_hba1c: 0 };
-      if (a.gmi != null) { grupos[key].gmi_sum += Number(a.gmi); grupos[key].n_gmi++; }
+      if (a.gmi != null && a.gmi !== "") { grupos[key].gmi_sum += Number(a.gmi); grupos[key].n_gmi++; }
       if (a.hba1c_post_mcg != null && a.hba1c_post_mcg !== "") {
         grupos[key].hba1c_sum += Number(a.hba1c_post_mcg); grupos[key].n_hba1c++;
       }
@@ -188,7 +247,7 @@ export default function Consolidado() {
       .filter((k) => grupos[k])
       .map((k) => ({
         clasificacion: labelMap[k],
-        gmi_promedio: grupos[k].n_gmi ? +(grupos[k].gmi_sum / grupos[k].n_gmi).toFixed(2) : 0,
+        gmi_promedio:   grupos[k].n_gmi   ? +(grupos[k].gmi_sum   / grupos[k].n_gmi).toFixed(2)   : 0,
         hba1c_promedio: grupos[k].n_hba1c ? +(grupos[k].hba1c_sum / grupos[k].n_hba1c).toFixed(2) : 0,
       }));
   })();
@@ -201,8 +260,116 @@ export default function Consolidado() {
       : d.departamento.length > 22 ? d.departamento.slice(0, 22) + "…" : d.departamento,
   }));
 
+  // ── Modal: pacientes de un departamento ───────────────────────────────
+  function abrirModalDepto(departamento) {
+    const pacientesMap = {};
+    filtrados
+      .filter((a) => a.departamento === departamento)
+      .forEach((a) => {
+        if (!pacientesMap[a.paciente_id]) {
+          pacientesMap[a.paciente_id] = {
+            id: a.paciente_id,
+            nombre: a.paciente_nombre,
+            sexo: a.sexo,
+            edad: a.edad,
+            clasificacion: a.clasificacion,
+            tir_vals: [],
+            gmi_vals: [],
+          };
+        }
+        pacientesMap[a.paciente_id].tir_vals.push(Number(a.tir || 0));
+        if (a.gmi != null && a.gmi !== "") pacientesMap[a.paciente_id].gmi_vals.push(Number(a.gmi));
+      });
+    const pacientes = Object.values(pacientesMap).map((p) => ({
+      ...p,
+      tir: p.tir_vals.length ? +(p.tir_vals.reduce((s, v) => s + v, 0) / p.tir_vals.length).toFixed(1) : null,
+      gmi: p.gmi_vals.length ? +(p.gmi_vals.reduce((s, v) => s + v, 0) / p.gmi_vals.length).toFixed(2) : null,
+      analisis: p.tir_vals.length,
+    }));
+    setModalDepto({ departamento, pacientes });
+  }
+
   return (
     <Layout>
+      {/* ── Modal pacientes por departamento ─────────────────────────────── */}
+      {modalDepto && (
+        <div
+          style={{
+            position: "fixed", inset: 0, zIndex: 1000,
+            background: "rgba(0,0,0,0.6)", display: "flex",
+            alignItems: "center", justifyContent: "center", padding: 16,
+          }}
+          onClick={() => setModalDepto(null)}
+        >
+          <div
+            style={{
+              background: "#0f172a", border: "1px solid #1e293b",
+              borderRadius: 14, padding: 24, width: "100%", maxWidth: 620,
+              maxHeight: "80vh", overflowY: "auto",
+              boxShadow: "0 20px 60px rgba(0,0,0,0.7)",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
+              <div>
+                <h3 style={{ margin: 0, color: "#e2e8f0", fontSize: 16 }}>Pacientes — {modalDepto.departamento}</h3>
+                <p style={{ margin: "4px 0 0", color: "#64748b", fontSize: 12 }}>
+                  {modalDepto.pacientes.length} paciente{modalDepto.pacientes.length !== 1 ? "s" : ""} en este departamento
+                </p>
+              </div>
+              <button
+                onClick={() => setModalDepto(null)}
+                style={{
+                  background: "none", border: "1px solid #334155", color: "#94a3b8",
+                  borderRadius: 8, padding: "4px 10px", cursor: "pointer", fontSize: 16,
+                }}
+              >✕</button>
+            </div>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+              <thead>
+                <tr style={{ borderBottom: "1px solid #1e293b" }}>
+                  <th style={{ textAlign: "left", padding: "6px 8px", color: "#64748b", fontWeight: 600 }}>Nombre</th>
+                  <th style={{ textAlign: "center", padding: "6px 8px", color: "#64748b", fontWeight: 600 }}>Sexo</th>
+                  <th style={{ textAlign: "center", padding: "6px 8px", color: "#64748b", fontWeight: 600 }}>Edad</th>
+                  <th style={{ textAlign: "center", padding: "6px 8px", color: "#64748b", fontWeight: 600 }}>TIR prom.</th>
+                  <th style={{ textAlign: "center", padding: "6px 8px", color: "#64748b", fontWeight: 600 }}>GMI prom.</th>
+                  <th style={{ textAlign: "center", padding: "6px 8px", color: "#64748b", fontWeight: 600 }}>Análisis</th>
+                  <th style={{ textAlign: "center", padding: "6px 8px", color: "#64748b", fontWeight: 600 }}>Control</th>
+                </tr>
+              </thead>
+              <tbody>
+                {modalDepto.pacientes.map((p) => {
+                  const tirColor = p.tir >= 70 ? "#76B250" : p.tir >= 50 ? "#FEBF01" : "#FB0D0A";
+                  const clsLabel = p.clasificacion === "OPTIMO" ? "Óptimo" : p.clasificacion === "MODERADO" ? "Moderado" : "Alto Riesgo";
+                  const clsColor = p.clasificacion === "OPTIMO" ? "#76B250" : p.clasificacion === "MODERADO" ? "#FEBF01" : "#FB0D0A";
+                  return (
+                    <tr
+                      key={p.id}
+                      onClick={() => navigate(`/pacientes/${p.id}`)}
+                      style={{ borderBottom: "1px solid #1e293b", cursor: "pointer", transition: "background 0.15s" }}
+                      onMouseEnter={(e) => e.currentTarget.style.background = "#1e293b"}
+                      onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}
+                    >
+                      <td style={{ padding: "8px 8px", color: "#3b82f6", fontWeight: 600, textDecoration: "underline" }}>{p.nombre}</td>
+                      <td style={{ padding: "8px 8px", textAlign: "center", color: "#94a3b8" }}>{p.sexo === "F" ? "👧" : "👦"}</td>
+                      <td style={{ padding: "8px 8px", textAlign: "center", color: "#94a3b8" }}>{p.edad} años</td>
+                      <td style={{ padding: "8px 8px", textAlign: "center", color: tirColor, fontWeight: 700 }}>
+                        {p.tir != null ? `${p.tir}%` : "—"}
+                      </td>
+                      <td style={{ padding: "8px 8px", textAlign: "center", color: "#c27803" }}>
+                        {p.gmi != null ? `${p.gmi}%` : "—"}
+                      </td>
+                      <td style={{ padding: "8px 8px", textAlign: "center", color: "#94a3b8" }}>{p.analisis}</td>
+                      <td style={{ padding: "8px 8px", textAlign: "center", color: clsColor, fontSize: 12, fontWeight: 600 }}>{clsLabel}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
       <div className="page-header">
         <div>
           <h1>Consolidado Poblacional</h1>
@@ -496,13 +663,52 @@ export default function Consolidado() {
 
           {/* Tabla detallada */}
           <div className="card">
-            <h3>Detalle por Departamento</h3>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12, marginBottom: 16 }}>
+              <h3 style={{ margin: 0 }}>Detalle por Departamento</h3>
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                {[
+                  { key: "OPTIMO",      label: "TIR Óptimo",  color: "#76B250" },
+                  { key: "MODERADO",    label: "Moderado",    color: "#FEBF01" },
+                  { key: "ALTO_RIESGO", label: "Alto Riesgo", color: "#FB0D0A" },
+                ].map(({ key, label, color }) => (
+                  <button
+                    key={key}
+                    onClick={() => setClsVis((v) => ({ ...v, [key]: !v[key] }))}
+                    style={{
+                      display: "inline-flex", alignItems: "center", gap: 7,
+                      padding: "5px 12px", borderRadius: 20, fontSize: 12, fontWeight: 600,
+                      cursor: "pointer", transition: "all 0.15s",
+                      border: `1.5px solid ${color}`,
+                      background: clsVis[key] ? color + "22" : "transparent",
+                      color: clsVis[key] ? color : "#64748b",
+                    }}
+                  >
+                    <span style={{
+                      width: 28, height: 16, borderRadius: 8, position: "relative",
+                      background: clsVis[key] ? color : "#334155",
+                      transition: "background 0.2s", flexShrink: 0,
+                      display: "inline-block",
+                    }}>
+                      <span style={{
+                        position: "absolute", top: 2,
+                        left: clsVis[key] ? 14 : 2,
+                        width: 12, height: 12, borderRadius: "50%",
+                        background: "#fff",
+                        transition: "left 0.2s",
+                        boxShadow: "0 1px 3px rgba(0,0,0,0.3)",
+                      }} />
+                    </span>
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
             <div className="table-wrapper">
               <table className="tabla">
                 <thead>
                   <tr>
                     <th>Departamento</th>
-                    <th className="hide-mobile">Pacientes</th>
+                    <th>Pacientes</th>
                     <th>TIR</th>
                     <th className="hide-mobile">GMI</th>
                     <th className="hide-mobile">CV</th>
@@ -511,23 +717,47 @@ export default function Consolidado() {
                   </tr>
                 </thead>
                 <tbody>
-                  {deptos.map((d) => (
+                  {deptos
+                    .filter((d) => {
+                      const cls = d.tir_promedio >= 70 ? "OPTIMO" : d.tir_promedio >= 50 ? "MODERADO" : "ALTO_RIESGO";
+                      if (!clsVis[cls]) return false;
+                      if (!clsVis.ALTO_RIESGO && d.alto_riesgo > 0) return false;
+                      return true;
+                    })
+                    .map((d) => (
                     <tr key={d.departamento}>
                       <td title={d.departamento}>
                         {isMobile && d.departamento.length > 22
                           ? d.departamento.slice(0, 22) + "…"
                           : d.departamento}
                       </td>
-                      <td className="hide-mobile">{d.total_pacientes}</td>
+                      <td>
+                        {d.total_pacientes > 0 ? (
+                          <button
+                            onClick={() => abrirModalDepto(d.departamento)}
+                            style={{
+                              background: "none", border: "none", color: "#3b82f6",
+                              cursor: "pointer", fontWeight: 700, fontSize: 13,
+                              textDecoration: "underline", padding: 0,
+                            }}
+                            title="Ver pacientes"
+                          >{d.total_pacientes}</button>
+                        ) : d.total_pacientes}
+                      </td>
                       <td><span className={`badge-tir ${d.tir_promedio >= 70 ? "ok" : d.tir_promedio >= 50 ? "warn" : "bad"}`}>{d.tir_promedio}%</span></td>
-                      <td className="hide-mobile">{d.gmi_promedio}%</td>
-                      <td className="hide-mobile">{d.cv_promedio}%</td>
+                      <td className="hide-mobile">{d.gmi_promedio != null ? `${d.gmi_promedio}%` : "—"}</td>
+                      <td className="hide-mobile">{d.cv_promedio  != null ? `${d.cv_promedio}%`  : "—"}</td>
                       <td><span className="badge badge-ok">{d.en_control}</span></td>
                       <td><span className="badge badge-bad">{d.alto_riesgo}</span></td>
                     </tr>
                   ))}
-                  {deptos.length === 0 && (
-                    <tr><td colSpan={7} className="empty-cell">Sin datos registrados</td></tr>
+                  {deptos.filter((d) => {
+                    const cls = d.tir_promedio >= 70 ? "OPTIMO" : d.tir_promedio >= 50 ? "MODERADO" : "ALTO_RIESGO";
+                    if (!clsVis[cls]) return false;
+                    if (!clsVis.ALTO_RIESGO && d.alto_riesgo > 0) return false;
+                    return true;
+                  }).length === 0 && (
+                    <tr><td colSpan={7} className="empty-cell">Sin datos para los filtros seleccionados</td></tr>
                   )}
                 </tbody>
               </table>

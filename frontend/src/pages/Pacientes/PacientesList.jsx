@@ -57,6 +57,7 @@ export default function PacientesList() {
     buscar: "", departamento: "", sexo: "", edad_min: "", edad_max: "", con_monitor: "",
   });
   const [mostrarFiltros, setMostrarFiltros] = useState(false);
+  const [clsVis, setClsVis] = useState({ OPTIMO: true, MODERADO: true, ALTO_RIESGO: true });
 
   useEffect(() => {
     api.get("/pacientes/departamentos").then((r) => setDeptos(r.data));
@@ -169,10 +170,45 @@ export default function PacientesList() {
 
       {/* Tabla */}
       <div className="card">
-        <div className="card-header-row">
-          <h3>
-            Pacientes {institucion} ({pacientes.length})
+        <div className="card-header-row" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12, marginBottom: 16 }}>
+          <h3 style={{ margin: 0 }}>
+            Pacientes {institucion} ({pacientes.filter((p) => !p.ultima_clasificacion || clsVis[p.ultima_clasificacion]).length})
           </h3>
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+            {[
+              { key: "OPTIMO",      label: "TIR Óptimo",  color: "#76B250" },
+              { key: "MODERADO",    label: "Moderado",    color: "#FEBF01" },
+              { key: "ALTO_RIESGO", label: "Alto Riesgo", color: "#FB0D0A" },
+            ].map(({ key, label, color }) => (
+              <button
+                key={key}
+                onClick={() => setClsVis((v) => ({ ...v, [key]: !v[key] }))}
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: 7,
+                  padding: "5px 12px", borderRadius: 20, fontSize: 12, fontWeight: 600,
+                  cursor: "pointer", transition: "all 0.15s",
+                  border: `1.5px solid ${color}`,
+                  background: clsVis[key] ? color + "22" : "transparent",
+                  color: clsVis[key] ? color : "#64748b",
+                }}
+              >
+                <span style={{
+                  width: 28, height: 16, borderRadius: 8, position: "relative",
+                  background: clsVis[key] ? color : "#334155",
+                  transition: "background 0.2s", flexShrink: 0, display: "inline-block",
+                }}>
+                  <span style={{
+                    position: "absolute", top: 2,
+                    left: clsVis[key] ? 14 : 2,
+                    width: 12, height: 12, borderRadius: "50%",
+                    background: "#fff", transition: "left 0.2s",
+                    boxShadow: "0 1px 3px rgba(0,0,0,0.3)",
+                  }} />
+                </span>
+                {label}
+              </button>
+            ))}
+          </div>
         </div>
         {cargando ? (
           <div className="loading">Cargando pacientes...</div>
@@ -188,12 +224,13 @@ export default function PacientesList() {
                   <th>Departamento</th>
                   <th className="hide-mobile">Tipo DM</th>
                   <th className="hide-mobile">HbA1c prev.</th>
+                  <th>TIR</th>
                   <th className="hide-mobile">Monitor</th>
                   <th>Acciones</th>
                 </tr>
               </thead>
               <tbody>
-                {pacientes.map((p, idx) => (
+                {pacientes.filter((p) => !p.ultima_clasificacion || clsVis[p.ultima_clasificacion]).map((p, idx) => (
                   <tr key={p.id}>
                     <td className="hide-mobile" style={{ color: "#64748b", fontSize: "0.85rem" }}>{idx + 1}</td>
                     <td>
@@ -210,6 +247,11 @@ export default function PacientesList() {
                     <td>{p.departamento}</td>
                     <td className="hide-mobile">{p.tipo_diabetes || "—"}</td>
                     <td className="hide-mobile">{p.hba1c_previo ? `${p.hba1c_previo}%` : "—"}</td>
+                    <td>
+                      {p.tir_promedio != null
+                        ? <span className={`badge-tir ${p.ultima_clasificacion === "OPTIMO" ? "ok" : p.ultima_clasificacion === "MODERADO" ? "warn" : "bad"}`}>{p.tir_promedio}%</span>
+                        : <span style={{ color: "#64748b", fontSize: 12 }}>—</span>}
+                    </td>
                     <td className="hide-mobile">
                       <span style={{
                         display: "inline-flex", alignItems: "center", gap: 4,

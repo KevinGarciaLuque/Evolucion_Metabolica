@@ -29,7 +29,7 @@ export async function login(req, res) {
       return res.status(401).json({ error: "Credenciales incorrectas" });
 
     const token = jwt.sign(
-      { id: usuario.id, nombre: usuario.nombre, email: usuario.email, rol: usuario.rol },
+      { id: usuario.id, nombre: usuario.nombre, email: usuario.email, rol: usuario.rol, sexo: usuario.sexo ?? null },
       process.env.JWT_SECRET,
       { expiresIn: "8h" }
     );
@@ -37,14 +37,15 @@ export async function login(req, res) {
     // Registrar auditoría de inicio de sesión
     const ip = req.headers["x-forwarded-for"]?.split(",")[0].trim() || req.socket?.remoteAddress || null;
     const ua = req.headers["user-agent"] || null;
+    const desc = `Acceso al sistema desde ${ua ? ua.split(" ").slice(-1)[0] : "navegador desconocido"}`;
     pool.query(
-      "INSERT INTO auditoria_sesiones (usuario_id, usuario_nombre, usuario_email, usuario_rol, accion, ip, user_agent) VALUES (?, ?, ?, ?, 'login', ?, ?)",
-      [usuario.id, usuario.nombre, usuario.email, usuario.rol, ip, ua]
+      "INSERT INTO auditoria_sesiones (usuario_id, usuario_nombre, usuario_email, usuario_rol, accion, descripcion, ip, user_agent) VALUES (?, ?, ?, ?, 'login', ?, ?, ?)",
+      [usuario.id, usuario.nombre, usuario.email, usuario.rol, desc, ip, ua]
     ).catch((e) => console.error("Auditoría login error:", e));
 
     res.json({
       token,
-      usuario: { id: usuario.id, nombre: usuario.nombre, email: usuario.email, rol: usuario.rol },
+      usuario: { id: usuario.id, nombre: usuario.nombre, email: usuario.email, rol: usuario.rol, sexo: usuario.sexo ?? null },
     });
   } catch (err) {
     console.error(err);
@@ -55,7 +56,7 @@ export async function login(req, res) {
 export async function me(req, res) {
   try {
     const [rows] = await pool.query(
-      "SELECT id, nombre, email, rol FROM usuarios WHERE id = ?",
+      "SELECT id, nombre, email, rol, sexo FROM usuarios WHERE id = ?",
       [req.usuario.id]
     );
     if (rows.length === 0) return res.status(404).json({ error: "Usuario no encontrado" });

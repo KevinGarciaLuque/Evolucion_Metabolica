@@ -16,7 +16,7 @@ const VACÍO = {
   departamento: "", municipio: "", procedencia_tipo: "", direccion: "",
   peso: "", talla: "", tipo_diabetes: "Tipo 1", subtipo_monogenica: "",
   institucion: "HMEP", hba1c_previo: "", telefono: "",
-  tipo_insulina: "", tipo_insulina_2: "", anticuerpos: "", dosis_por_kg: "", promedio_glucometrias: "",
+  tipo_insulina: "", dosis_insulina_prolongada: "", tipo_insulina_2: "", dosis_insulina_corta: "", anticuerpos: "", dosis_por_kg: "", promedio_glucometrias: "",
   edad_debut: "", antecedente_familiar: "",
   nombre_tutor: "", telefono_tutor: "",
   con_monitor: false,
@@ -304,14 +304,22 @@ export default function PacienteForm() {
 
           {/* ── Sección 5: Tipos de Insulina Histórico ── */}
           <SeccionTitulo>Tipos de Insulina Histórico</SeccionTitulo>
-          <div className="form-grid">
+          <div className="form-grid" style={{ gridTemplateColumns: "1fr 1fr" }}>
             <div className="form-group">
               <label>Insulina acción prolongada</label>
-              <input name="tipo_insulina" placeholder="Ej: Glargina 15ui / NPH 12ui" value={form.tipo_insulina} onChange={cambiar} />
+              <input name="tipo_insulina" placeholder="Ej: Glargina / NPH" value={form.tipo_insulina} onChange={cambiar} />
+            </div>
+            <div className="form-group">
+              <label>Dosis acción prolongada</label>
+              <input name="dosis_insulina_prolongada" placeholder="Ej: 15 UI / 12 UI" value={form.dosis_insulina_prolongada} onChange={cambiar} />
             </div>
             <div className="form-group">
               <label>Insulina acción corta</label>
-              <input name="tipo_insulina_2" placeholder="Ej: Lispro 10ui / Regular 8ui" value={form.tipo_insulina_2} onChange={cambiar} />
+              <input name="tipo_insulina_2" placeholder="Ej: Lispro / Regular" value={form.tipo_insulina_2} onChange={cambiar} />
+            </div>
+            <div className="form-group">
+              <label>Dosis acción corta</label>
+              <input name="dosis_insulina_corta" placeholder="Ej: 10 UI / 8 UI" value={form.dosis_insulina_corta} onChange={cambiar} />
             </div>
             <div className="form-group" style={{ gridColumn: "1 / -1" }}>
               <label>Anticuerpos para diabetes</label>

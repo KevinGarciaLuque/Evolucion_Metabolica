@@ -276,7 +276,7 @@ export default function Auditoria() {
                         {r.descripcion || "—"}
                       </td>
                       <td style={{ fontFamily: "monospace", fontSize: "0.82rem" }} className="hide-mobile">
-                        {r.ip || "—"}
+                        {r.ip === "::1" ? "Localhost" : (r.ip || "—")}
                       </td>
                     </tr>
                   );

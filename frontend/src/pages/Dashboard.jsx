@@ -6,6 +6,11 @@ import {
 } from "recharts";
 import ReactApexChart from "react-apexcharts";
 import { motion } from "framer-motion";
+import _LottieLib from "lottie-react";
+import solData from "../assets/lottie/sol.json";
+import tardeData from "../assets/lottie/tarde.json";
+import lunaData from "../assets/lottie/luna.json";
+
 
 /* ── CountUp propio (compatible con React 19 + Vite) ──────────────────── */
 function CountUp({ end, duration = 1.4, decimals = 0, suffix = "" }) {
@@ -30,6 +35,42 @@ import api from "../api/axios";
 import Layout from "../components/Layout";
 import SemaforoISPAD from "../components/SemaforoISPAD";
 import DiagramaISPAD from "../components/DiagramaISPAD";
+import { useAuth } from "../context/AuthContext";
+
+// Fix interop Vite: lottie-react bundle exporta el módulo como default en vez del componente
+const Lottie = typeof _LottieLib === "function" ? _LottieLib : _LottieLib.default;
+
+/* ── Saludo según hora ────────────────────────────────────── */
+function useSaludo() {
+  const hora = new Date().getHours();
+  if (hora >= 5  && hora < 12) return { texto: "Buenos días",   lottie: solData,   color: "#f59e0b", emoji: "☀️" };
+  if (hora >= 12 && hora < 19) return { texto: "Buenas tardes", lottie: tardeData, color: "#f97316", emoji: "⛅" };
+  return                              { texto: "Buenas noches", lottie: lunaData,  color: "#6366f1", emoji: "🌙" };
+}
+
+const MENSAJES = [
+  "Cada dato registrado hoy puede cambiar la vida de un niño mañana.",
+  "El control metabólico es un esfuerzo de equipo. Gracias por ser parte.",
+  "La constancia en el monitoreo es la mejor medicina preventiva.",
+  "Pequeños ajustes hoy, grandes mejoras en la calidad de vida.",
+  "Su dedicación hace la diferencia en el bienestar de cada paciente.",
+  "El seguimiento continuo es la base de un tratamiento exitoso.",
+  "Cada consulta registrada es un paso hacia un mejor control glucémico.",
+];
+
+function useFechaYMensaje() {
+  const hoy = new Date();
+  const fecha = hoy.toLocaleDateString("es-HN", {
+    weekday: "long", day: "numeric", month: "long", year: "numeric",
+  });
+  // Capitalizar primera letra
+  const fechaFormateada = fecha.charAt(0).toUpperCase() + fecha.slice(1);
+  // Mensaje del día (basado en el día del año para que rote pero sea estable)
+  const diaSemana = hoy.getDay(); // 0-6
+  const diaAno = Math.floor((hoy - new Date(hoy.getFullYear(), 0, 0)) / 86400000);
+  const mensaje = MENSAJES[diaAno % MENSAJES.length];
+  return { fechaFormateada, mensaje };
+}
 
 /* ── Paleta profesional ─────────────────────────────────────────────────── */
 const PALETTE = {
@@ -103,6 +144,12 @@ const fadeUp = { hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0 } };
 const stagger = { show: { transition: { staggerChildren: 0.08 } } };
 
 export default function Dashboard() {
+  const { usuario } = useAuth();
+  const saludo = useSaludo();
+  const { fechaFormateada, mensaje } = useFechaYMensaje();
+  const colorGenero = usuario?.sexo === "F" ? "#f472b6"
+                   : usuario?.sexo === "M" ? "#10b981"
+                   : saludo.color;
   const [stats, setStats]         = useState(null);
   const [deptos, setDeptos]       = useState([]);
   const [tendencias, setTend]     = useState([]);
@@ -176,6 +223,86 @@ export default function Dashboard() {
             <span className="toggle-label">{institucion}</span>
             <span className="toggle-thumb" />
           </div>
+        </div>
+      </motion.div>
+
+      {/* Bienvenida */}
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.45, delay: 0.08 }}
+        style={{
+          background: `linear-gradient(135deg, ${colorGenero}18 0%, ${colorGenero}08 100%)`,
+          border: `1px solid ${colorGenero}44`,
+          borderRadius: 16,
+          padding: isMobile ? "16px 16px" : "24px 28px",
+          marginBottom: 20,
+          display: "flex",
+          alignItems: isMobile ? "flex-start" : "center",
+          gap: isMobile ? 12 : 18,
+          boxShadow: `0 2px 16px ${colorGenero}18`,
+        }}
+      >
+        {/* Ícono animado clima */}
+        <motion.span
+          animate={{ rotate: saludo.emoji === "☀️" ? [0, 15, -15, 0] : saludo.emoji === "🌙" ? [0, -10, 10, 0] : [0, -5, 5, 0] }}
+          transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+          style={{ fontSize: isMobile ? 48 : 64, lineHeight: 1, flexShrink: 0, display: "block" }}
+        >
+          {saludo.emoji}
+        </motion.span>
+
+        {/* Contenido */}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          {/* Saludo + nombre */}
+          <div style={{ display: "flex", alignItems: "baseline", gap: isMobile ? 4 : 8, flexWrap: "wrap" }}>
+            <span style={{
+              fontSize: isMobile ? 13 : 17, fontWeight: 600, letterSpacing: 0.5,
+              color: colorGenero, textTransform: "uppercase",
+            }}>
+              {saludo.texto},
+            </span>
+            <span style={{
+              fontSize: isMobile ? 22 : 32, fontWeight: 900, lineHeight: 1,
+              background: `linear-gradient(100deg, #1e293b 20%, ${colorGenero} 100%)`,
+              WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text",
+              wordBreak: "break-word",
+            }}>
+              {usuario?.nombre ?? "Doctor/a"}
+            </span>
+          </div>
+
+          {/* Fecha */}
+          <p style={{ margin: "5px 0 0", fontSize: isMobile ? 12 : 14, fontWeight: 600, color: colorGenero, opacity: 0.85, letterSpacing: 0.3 }}>
+            📅 {fechaFormateada}
+          </p>
+
+          {/* Línea separadora */}
+          <div style={{ height: 1, margin: "8px 0", background: `linear-gradient(90deg, ${colorGenero}55, transparent)` }} />
+
+          {/* Mensaje motivacional */}
+          <p style={{ margin: 0, fontSize: isMobile ? 13 : 15, lineHeight: 1.6, display: "flex", alignItems: "flex-start", gap: 8 }}>
+            <span style={{
+              display: "inline-flex", alignItems: "center", justifyContent: "center",
+              width: 22, height: 22, borderRadius: "50%", flexShrink: 0, marginTop: 1,
+              background: `${colorGenero}1a`, border: `1.5px solid ${colorGenero}66`, fontSize: 11,
+              color: colorGenero,
+            }}>✦</span>
+            <span>
+              <strong style={{ color: colorGenero, fontWeight: 800, fontSize: isMobile ? 13 : 15.5 }}>
+                {usuario?.sexo === "M" ? "Listo" : usuario?.sexo === "F" ? "Lista" : "Listo/a"} para hacer la diferencia hoy.
+              </strong>{" "}
+              {!isMobile && (
+                <span style={{ color: "var(--text-muted, #94a3b8)", fontStyle: "italic", fontSize: 14 }}>{mensaje}</span>
+              )}
+            </span>
+          </p>
+          {/* Mensaje en móvil va en línea separada para no colapsar */}
+          {isMobile && (
+            <p style={{ margin: "4px 0 0 30px", fontSize: 12, color: "var(--text-muted, #94a3b8)", fontStyle: "italic", lineHeight: 1.5 }}>
+              {mensaje}
+            </p>
+          )}
         </div>
       </motion.div>
 
