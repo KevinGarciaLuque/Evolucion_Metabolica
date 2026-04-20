@@ -550,7 +550,7 @@ export default function PacienteDetalle() {
                     Cada barra representa un registro de monitoreo. Objetivo: TIR ≥ 70% (verde), TAR ≤ 25%, TBR ≤ 4%.
                   </p>
                   <ResponsiveContainer width="100%" height={isMobile ? 220 : 280}>
-                    <BarChart data={chartData} margin={{ top: 16, right: 20, left: -10, bottom: 5 }}>
+                    <BarChart data={chartData} margin={{ top: 16, right: isMobile ? 4 : 20, left: isMobile ? -16 : -10, bottom: 5 }}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} />
                       <XAxis
                         dataKey="label"
@@ -585,7 +585,7 @@ export default function PacienteDetalle() {
                   <div className="card card-wide">
                     <h3>GMI y CV por registro</h3>
                     <ResponsiveContainer width="100%" height={isMobile ? 165 : 200}>
-                      <BarChart data={chartData} margin={{ top: 5, right: 20, left: -20, bottom: 5 }}>
+                      <BarChart data={chartData} margin={{ top: 5, right: isMobile ? 4 : 20, left: isMobile ? -18 : -20, bottom: 5 }}>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} />
                         <XAxis dataKey="label" tick={{ fontSize: 11 }} />
                         <YAxis domain={[0, 60]} tickFormatter={v => `${v}%`} tick={{ fontSize: 11 }} />
@@ -593,8 +593,8 @@ export default function PacienteDetalle() {
                         <Legend wrapperStyle={{ fontSize: 12 }} />
                         <ReferenceLine y={7} stroke="#c27803" strokeDasharray="4 4" label={{ value: "GMI 7%", fontSize: 10, fill: "#c27803" }} />
                         <ReferenceLine y={36} stroke="#7c3aed" strokeDasharray="4 4" label={{ value: "CV 36%", fontSize: 10, fill: "#7c3aed" }} />
-                        <Bar dataKey="GMI" name="GMI %" fill="#c27803" radius={[4,4,0,0]} label={{ position: "top", fontSize: 10, formatter: v => v > 0 ? `${v}%` : "" }} />
-                        <Bar dataKey="CV"  name="CV %"  fill="#7c3aed" radius={[4,4,0,0]} label={{ position: "top", fontSize: 10, formatter: v => v > 0 ? `${v}%` : "" }} />
+                        <Bar dataKey="GMI" name="GMI %" fill="#c27803" radius={[4,4,0,0]} label={isMobile ? false : { position: "top", fontSize: 10, formatter: v => v > 0 ? `${v}%` : "" }} />
+                        <Bar dataKey="CV"  name="CV %"  fill="#7c3aed" radius={[4,4,0,0]} label={isMobile ? false : { position: "top", fontSize: 10, formatter: v => v > 0 ? `${v}%` : "" }} />
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
@@ -602,7 +602,7 @@ export default function PacienteDetalle() {
                     <h3>GRI por registro</h3>
                     <p style={{ fontSize: "0.78rem", color: "#64748b", marginBottom: 8 }}>Zona A: 0-20 (ideal) · B: 20-40 · C: 40-60 · D: 60-80 · E: &gt;80</p>
                     <ResponsiveContainer width="100%" height={isMobile ? 165 : 200}>
-                      <BarChart data={chartData} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
+                      <BarChart data={chartData} margin={{ top: 5, right: isMobile ? 4 : 10, left: isMobile ? -18 : -20, bottom: 5 }}>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} />
                         <XAxis dataKey="label" tick={{ fontSize: 11 }} />
                         <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} />
@@ -610,7 +610,7 @@ export default function PacienteDetalle() {
                         <ReferenceLine y={20} stroke="#16a34a" strokeDasharray="3 3" />
                         <ReferenceLine y={40} stroke="#d97706" strokeDasharray="3 3" />
                         <Bar dataKey="GRI" name="GRI" radius={[4,4,0,0]}
-                          label={{ position: "top", fontSize: 10, formatter: v => v > 0 ? v : "" }}>
+                          label={isMobile ? false : { position: "top", fontSize: 10, formatter: v => v > 0 ? v : "" }}>
                           {chartData.map(d => (
                             <Cell key={d.label}
                               fill={d.GRI <= 20 ? "#16a34a" : d.GRI <= 40 ? "#d97706" : d.GRI <= 60 ? "#f59e0b" : "#dc2626"} />
@@ -630,36 +630,36 @@ export default function PacienteDetalle() {
                 <table className="tabla">
                   <thead>
                     <tr>
-                      <th>Nº MCG</th>
+                      <th className="hide-mobile">Nº MCG</th>
                       <th>Fecha</th>
                       <th>TIR</th>
                       <th className="hide-mobile">TAR</th>
                       <th className="hide-mobile">TBR</th>
-                      <th>GMI</th>
+                      <th className="hide-mobile">GMI</th>
                       <th className="hide-mobile">CV</th>
                       <th className="hide-mobile">T. Activo</th>
                       <th className="hide-mobile">G. Promedio</th>
-                      <th>Clasificación</th>
-                      <th>PDF</th>
+                      <th>Estado</th>
+                      <th className="hide-mobile">PDF</th>
                       <th>Acciones</th>
                     </tr>
                   </thead>
                   <tbody>
                     {historial.map((a) => (
                       <tr key={a.id}>
-                        <td style={{ textAlign: "center", fontWeight: 600, color: "#3b82f6" }}>
+                        <td className="hide-mobile" style={{ textAlign: "center", fontWeight: 600, color: "#3b82f6" }}>
                           {a.numero_registro ?? "—"}
                         </td>
-                        <td>{a.fecha ? new Date(a.fecha).toLocaleString("es-GT", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "—"}</td>
+                        <td style={{ whiteSpace: "nowrap", fontSize: "0.82rem" }}>{a.fecha ? new Date(a.fecha).toLocaleDateString("es-GT", { day: "2-digit", month: "2-digit", year: "2-digit" }) : "—"}</td>
                         <td><span className={`badge-tir ${a.tir >= 70 ? "ok" : a.tir >= 50 ? "warn" : "bad"}`}>{a.tir}%</span></td>
                         <td className="hide-mobile">{a.tar}%</td>
                         <td className="hide-mobile">{a.tbr}%</td>
-                        <td>{a.gmi}%</td>
+                        <td className="hide-mobile">{a.gmi}%</td>
                         <td className="hide-mobile">{a.cv}%</td>
                         <td className="hide-mobile">{a.tiempo_activo}%</td>
                         <td className="hide-mobile">{a.glucosa_promedio} mg/dL</td>
                         <td><ClasificacionBadge valor={a.clasificacion} /></td>
-                        <td>
+                        <td className="hide-mobile">
                           {a.archivo_pdf && (
                             <a
                               href={`${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:3001'}/uploads/pdfs/${a.archivo_pdf}`}
@@ -672,10 +672,10 @@ export default function PacienteDetalle() {
                           )}
                         </td>
                         <td>
-                          <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
-                            <button onClick={() => setModalVer(a)} style={{ background: "none", border: "none", cursor: "pointer", color: "#0ea5e9", padding: "2px 6px", borderRadius: 4, fontSize: 16, lineHeight: 1, display: "flex", alignItems: "center" }} title="Ver detalle"><FiEye size={16} /></button>
-                            <button onClick={() => abrirEditar(a)} style={{ background: "none", border: "none", cursor: "pointer", color: "#3b82f6", padding: "2px 6px", borderRadius: 4, fontSize: 16, lineHeight: 1, display: "flex", alignItems: "center" }} title="Editar análisis"><FiEdit2 size={16} /></button>
-                            <button onClick={() => setModalEliminar({ id: a.id, fecha: a.fecha })} style={{ background: "none", border: "none", cursor: "pointer", color: "#dc2626", padding: "2px 6px", borderRadius: 4, fontSize: 16, lineHeight: 1, display: "flex", alignItems: "center" }} title="Eliminar análisis"><FiTrash2 size={16} /></button>
+                          <div style={{ display: "flex", gap: 2, alignItems: "center", flexWrap: "nowrap" }}>
+                            <button onClick={() => setModalVer(a)} style={{ background: "none", border: "none", cursor: "pointer", color: "#0ea5e9", padding: "3px", borderRadius: 4, display: "flex", alignItems: "center" }} title="Ver detalle"><FiEye size={15} /></button>
+                            <button onClick={() => abrirEditar(a)} style={{ background: "none", border: "none", cursor: "pointer", color: "#3b82f6", padding: "3px", borderRadius: 4, display: "flex", alignItems: "center" }} title="Editar análisis"><FiEdit2 size={15} /></button>
+                            <button onClick={() => setModalEliminar({ id: a.id, fecha: a.fecha })} style={{ background: "none", border: "none", cursor: "pointer", color: "#dc2626", padding: "3px", borderRadius: 4, display: "flex", alignItems: "center" }} title="Eliminar análisis"><FiTrash2 size={15} /></button>
                           </div>
                         </td>
                       </tr>
@@ -848,10 +848,10 @@ export default function PacienteDetalle() {
                 <thead>
                   <tr>
                     <th>Fecha</th>
-                    <th>Insulina prolongada</th>
-                    <th>Dosis</th>
-                    <th>Insulina corta</th>
-                    <th>Dosis</th>
+                    <th className="hide-mobile">Insulina prolongada</th>
+                    <th>D. Prol.</th>
+                    <th className="hide-mobile">Insulina corta</th>
+                    <th>D. Corta</th>
                     <th className="hide-mobile">Vía</th>
                     <th className="hide-mobile">Motivo cambio</th>
                     <th>Acciones</th>
@@ -860,10 +860,10 @@ export default function PacienteDetalle() {
                 <tbody>
                   {insulina.map(r => (
                     <tr key={r.id}>
-                      <td>{r.fecha ? new Date(String(r.fecha).substring(0, 10) + "T00:00:00").toLocaleDateString("es-GT", { day: "2-digit", month: "2-digit", year: "numeric" }) : "—"}</td>
-                      <td>{r.insulina_prolongada || "—"}</td>
+                      <td style={{ whiteSpace: "nowrap", fontSize: "0.82rem" }}>{r.fecha ? new Date(String(r.fecha).substring(0, 10) + "T00:00:00").toLocaleDateString("es-GT", { day: "2-digit", month: "2-digit", year: "2-digit" }) : "—"}</td>
+                      <td className="hide-mobile">{r.insulina_prolongada || "—"}</td>
                       <td>{r.dosis_prolongada || "—"}</td>
-                      <td>{r.insulina_corta || "—"}</td>
+                      <td className="hide-mobile">{r.insulina_corta || "—"}</td>
                       <td>{r.dosis_corta || "—"}</td>
                       <td className="hide-mobile">{r.via_administracion || "—"}</td>
                       <td className="hide-mobile" style={{ maxWidth: 180, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.motivo_cambio || "—"}</td>
@@ -901,8 +901,8 @@ export default function PacienteDetalle() {
                   <tr>
                     <th>Fecha</th>
                     <th>IAA</th>
-                    <th>Anti-GAD65</th>
-                    <th>Anti-IA2</th>
+                    <th className="hide-mobile">Anti-GAD65</th>
+                    <th className="hide-mobile">Anti-IA2</th>
                     <th className="hide-mobile">ZnT8</th>
                     <th className="hide-mobile">ICA</th>
                     <th className="hide-mobile">Elaborado por</th>
@@ -912,10 +912,10 @@ export default function PacienteDetalle() {
                 <tbody>
                   {anticuerpos.map(r => (
                     <tr key={r.id}>
-                      <td>{r.fecha ? new Date(String(r.fecha).substring(0, 10) + "T00:00:00").toLocaleDateString("es-GT", { day: "2-digit", month: "2-digit", year: "numeric" }) : "—"}</td>
+                      <td style={{ whiteSpace: "nowrap", fontSize: "0.82rem" }}>{r.fecha ? new Date(String(r.fecha).substring(0, 10) + "T00:00:00").toLocaleDateString("es-GT", { day: "2-digit", month: "2-digit", year: "2-digit" }) : "—"}</td>
                       <td>{r.iaa || "—"}</td>
-                      <td>{r.anti_gad65 || "—"}</td>
-                      <td>{r.anti_ia2 || "—"}</td>
+                      <td className="hide-mobile">{r.anti_gad65 || "—"}</td>
+                      <td className="hide-mobile">{r.anti_ia2 || "—"}</td>
                       <td className="hide-mobile">{r.znt8 || "—"}</td>
                       <td className="hide-mobile">{r.ica || "—"}</td>
                       <td className="hide-mobile">{r.elaborado_por || "—"}</td>

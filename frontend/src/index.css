@@ -221,7 +221,7 @@ body {
   flex-wrap: wrap;
 }
 
-.dashboard-row .card { flex: 1; min-width: 260px; }
+.dashboard-row .card { flex: 1; min-width: min(260px, 100%); }
 
 /* ─── Botones ────────────────────────────────────────────────────────────── */
 .btn {
@@ -290,6 +290,11 @@ body {
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: 16px;
   margin-bottom: 24px;
+}
+
+/* Grid fijo 2 columnas en desktop, 1 en móvil */
+.form-grid-2col {
+  grid-template-columns: 1fr 1fr;
 }
 
 .form-actions {
@@ -686,6 +691,9 @@ body {
   .form-grid {
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   }
+  .form-grid-2col {
+    grid-template-columns: 1fr 1fr;
+  }
 
   .page-header {
     position: static;
@@ -734,7 +742,8 @@ body {
   .card-wide { flex: unset !important; }
 
   /* Grids de formularios y filtros */
-  .form-grid {
+  .form-grid,
+  .form-grid-2col {
     grid-template-columns: 1fr;
   }
   .filtros-grid {

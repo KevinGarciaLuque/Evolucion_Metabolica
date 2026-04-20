@@ -304,7 +304,7 @@ export default function PacienteForm() {
 
           {/* ── Sección 5: Tipos de Insulina Histórico ── */}
           <SeccionTitulo>Tipos de Insulina Histórico</SeccionTitulo>
-          <div className="form-grid" style={{ gridTemplateColumns: "1fr 1fr" }}>
+          <div className="form-grid form-grid-2col">
             <div className="form-group">
               <label>Insulina acción prolongada</label>
               <input name="tipo_insulina" placeholder="Ej: Glargina / NPH" value={form.tipo_insulina} onChange={cambiar} />
