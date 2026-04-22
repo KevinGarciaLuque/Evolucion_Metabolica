@@ -1028,6 +1028,72 @@ export default function PacienteDetalle() {
               </div>
             )}
 
+            {/* ─── HISTORIAL DE INSULINA ───────────────────────────────── */}
+            <div className="card">
+              <div className="card-header-row">
+                <div>
+                  <h3 style={{ margin: 0 }}>💉 Historial de Insulina</h3>
+                  <p style={{ margin: "4px 0 0", fontSize: "0.78rem", color: "#64748b" }}>
+                    Inicio: <strong>{paciente.tipo_insulina || "—"}</strong> (prolongada) · <strong>{paciente.tipo_insulina_2 || "—"}</strong> (corta)
+                  </p>
+                </div>
+              </div>
+              <div className="table-wrapper" style={{ marginTop: 12 }}>
+                <table className="tabla">
+                  <thead>
+                    <tr>
+                      <th>Fecha</th>
+                      <th className="hide-tablet">Insulina prolongada</th>
+                      <th>D. Prol.</th>
+                      <th className="hide-tablet">Insulina corta</th>
+                      <th>D. Corta</th>
+                      <th style={{ color: "#6366f1", fontWeight: 700 }}>DDT (UI)</th>
+                      <th className="hide-mobile">FSI</th>
+                      <th className="hide-mobile">Vía</th>
+                      <th className="hide-tablet">Motivo cambio</th>
+                      <th>Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {insulina.map(r => (
+                      <tr key={r.id}>
+                        <td style={{ whiteSpace: "nowrap", fontSize: "0.82rem" }}>{r.fecha ? new Date(String(r.fecha).substring(0, 10) + "T00:00:00").toLocaleDateString("es-GT", { day: "2-digit", month: "2-digit", year: "2-digit" }) : "—"}</td>
+                        <td className="hide-tablet">{r.insulina_prolongada || "—"}</td>
+                        <td>{r.dosis_prolongada || "—"}</td>
+                        <td className="hide-tablet">{r.insulina_corta || "—"}</td>
+                        <td>{r.dosis_corta || "—"}</td>
+                        <td style={{ fontWeight: 700, color: "#6366f1" }}>
+                          {r.dosis_total_u != null
+                            ? `${r.dosis_total_u} UI`
+                            : (r.dosis_prolongada_u != null || r.dosis_corta_u != null)
+                              ? `${parseFloat(((r.dosis_prolongada_u ?? 0) + (r.dosis_corta_u ?? 0)).toFixed(2))} UI`
+                              : "—"}
+                        </td>
+                        <td className="hide-mobile" style={{ fontSize: "0.8rem", color: "#64748b" }}>
+                          {r.dosis_total_u > 0
+                            ? `${Math.round(1700 / r.dosis_total_u)} mg/dL/UI`
+                            : (r.dosis_prolongada_u != null || r.dosis_corta_u != null)
+                              ? (() => { const t = (r.dosis_prolongada_u ?? 0) + (r.dosis_corta_u ?? 0); return t > 0 ? `${Math.round(1700 / t)} mg/dL/UI` : "—"; })()
+                              : "—"}
+                        </td>
+                        <td className="hide-mobile">{r.via_administracion || "—"}</td>
+                        <td className="hide-tablet" style={{ maxWidth: 180, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.motivo_cambio || "—"}</td>
+                        <td>
+                          <div style={{ display: "flex", gap: 4 }}>
+                            <button onClick={() => abrirEditarInsulina(r)} style={{ background: "none", border: "none", cursor: "pointer", color: "#3b82f6", padding: "2px 6px", borderRadius: 4, display: "flex", alignItems: "center" }} title="Editar"><FiEdit2 size={15} /></button>
+                            <button onClick={() => setEliminarInsulina(r)} style={{ background: "none", border: "none", cursor: "pointer", color: "#dc2626", padding: "2px 6px", borderRadius: 4, display: "flex", alignItems: "center" }} title="Eliminar"><FiTrash2 size={15} /></button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                    {insulina.length === 0 && (
+                      <tr><td colSpan={10} className="empty-cell">Sin registros de insulina. Añade el primero →</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
           </div>
         )}
 
