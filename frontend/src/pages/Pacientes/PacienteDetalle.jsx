@@ -996,35 +996,6 @@ export default function PacienteDetalle() {
                   </LineChart>
                 </ResponsiveContainer>
 
-                {/* Tabla detalle ICR */}
-                <div className="table-wrapper" style={{ marginTop: 16 }}>
-                  <table className="tabla">
-                    <thead>
-                      <tr>
-                        <th>Fecha</th>
-                        <th>Insulina corta</th>
-                        <th>Dosis (UI)</th>
-                        <th>CHO/día (g)</th>
-                        <th>Cal/día</th>
-                        <th style={{ color: "#6366f1", fontWeight: 700 }}>ICR (g/UI)</th>
-                        <th className="hide-mobile">Motivo</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {relacionIC.filter(r => r.icr != null).map(r => (
-                        <tr key={r.id}>
-                          <td>{String(r.fecha).substring(0, 10)}</td>
-                          <td>{r.insulina_corta || "—"}</td>
-                          <td>{r.dosis_corta_u  ?? "—"}</td>
-                          <td>{r.carbohidratos_g ?? "—"}</td>
-                          <td>{r.calorias_dia    ?? "—"}</td>
-                          <td style={{ fontWeight: 700, color: "#6366f1" }}>{r.icr}</td>
-                          <td className="hide-mobile" style={{ maxWidth: 160, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.motivo_cambio || "—"}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
               </div>
             )}
 
