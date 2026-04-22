@@ -159,6 +159,7 @@ export default function Dashboard() {
   const [cargando, setCargando]   = useState(true);
   const [isMobile, setIsMobile]   = useState(window.innerWidth < 768);
   const [institucion, setInstitucion] = useState("HMEP");
+  const [modalInfo, setModalInfo]     = useState(null);
 
   useEffect(() => {
     const onResize = () => setIsMobile(window.innerWidth < 768);
@@ -187,6 +188,58 @@ export default function Dashboard() {
       })
       .finally(() => setCargando(false));
   }, [institucion]);
+
+  // ── Información explicativa de cada gráfica del Dashboard ──────────────
+  const INFO_DASHBOARD = {
+    ispad: {
+      titulo: "Objetivos de Control ISPAD",
+      items: [
+        { label: "TIR — Tiempo en Rango", desc: "Porcentaje de tiempo que la glucosa estuvo entre 70–180 mg/dL. Objetivo ISPAD: ≥ 70%. Es el indicador principal del control glucémico en MCG." },
+        { label: "TAR — Sobre el Rango", desc: "Tiempo con glucosa > 180 mg/dL. Objetivo: < 25% total. Se divide en TAR Alto (181–250 mg/dL) y TAR Muy Alto (> 250 mg/dL)." },
+        { label: "TBR — Bajo el Rango", desc: "Tiempo con glucosa < 70 mg/dL. Objetivo: < 4% total. Se divide en TBR Bajo (54–69 mg/dL) y TBR Muy Bajo (< 54 mg/dL). Es clínicamente prioritario reducirlo." },
+        { label: "Clasificación ISPAD", desc: "Óptimo: TIR ≥ 70% y TBR < 4%. Moderado: TIR 50–69%. Alto Riesgo: TIR < 50%. Basado en consenso ISPAD 2022 para población pediátrica." },
+      ],
+    },
+    distribucionControl: {
+      titulo: "Distribución de Control ISPAD",
+      items: [
+        { label: "¿Qué muestra?", desc: "Proporción del total de análisis MCG clasificados según el nivel de control ISPAD. Permite ver de un vistazo cuántos pacientes están en cada zona de control." },
+        { label: "Zona Objetivo (verde)", desc: "Representa el porcentaje de lecturas en rango 70–180 mg/dL (TIR). Es el segmento más importante; idealmente debe ser ≥ 70% del total." },
+        { label: "Cómo usar el gráfico", desc: "Hacer clic en un segmento o en la leyenda lo resalta para ver su valor exacto. El centro muestra el valor del segmento seleccionado o el TIR objetivo si no hay selección." },
+      ],
+    },
+    tirDepto: {
+      titulo: "TIR Promedio por Departamento",
+      items: [
+        { label: "¿Qué muestra?", desc: "Promedio del Tiempo en Rango (TIR) de todos los análisis MCG agrupados por departamento del paciente. Permite identificar qué regiones tienen mejor o peor control glucémico." },
+        { label: "Colores", desc: "Verde ≥ 70%: control óptimo. Amarillo 50–69%: moderado. Rojo < 50%: alto riesgo. La meta institucional es que todos los departamentos estén en verde." },
+        { label: "Consideración", desc: "Departamentos con pocos pacientes pueden mostrar promedios extremos. Complementar con el Consolidado Poblacional para una vista más detallada por departamento." },
+      ],
+    },
+    tendencia: {
+      titulo: "Tendencia Mensual TIR",
+      items: [
+        { label: "TIR mensual", desc: "Promedio del Tiempo en Rango del mes, calculado a partir de todos los análisis MCG con fecha en ese mes. Muestra si el control glucémico poblacional mejora o empeora con el tiempo." },
+        { label: "GMI mensual", desc: "Promedio del Glucose Management Indicator del mes. Valores cercanos a 7% se corresponden con un buen control. Si GMI y TIR se mueven en dirección contraria, puede indicar cambios en la composición del grupo." },
+        { label: "Cómo interpretarla", desc: "Una tendencia ascendente en TIR indica mejora global del programa. Caidas bruscas pueden coincidir con períodos vacacionales, cambios de tratamiento o incorporación de nuevos pacientes de alto riesgo." },
+      ],
+    },
+    genero: {
+      titulo: "Comparativa por Género",
+      items: [
+        { label: "¿Qué muestra?", desc: "TIR promedio separado por sexo (niños vs niñas). Permite detectar brechas de control que requieran intervención diferenciada." },
+        { label: "Interpretación", desc: "Las diferencias pueden estar relacionadas con factores hormonales, adherencia al tratamiento, actividad física o nivel de supervisión parental. Una diferencia > 5% es clínicamente relevante y amerita análisis adicional." },
+      ],
+    },
+    recientes: {
+      titulo: "Análisis Recientes",
+      items: [
+        { label: "¿Qué muestra?", desc: "Los últimos análisis MCG registrados en el sistema, ordenados por fecha descendente. Permite hacer un seguimiento rápido de los pacientes que más recientemente tuvieron una consulta." },
+        { label: "Estado (badge de color)", desc: "Óptimo (verde): TIR ≥ 70%. Moderado (amarillo): TIR 50–69%. Alto Riesgo (rojo): TIR < 50%. El color del TIR también refleja este criterio." },
+        { label: "Acción recomendada", desc: "Los pacientes en Alto Riesgo que aparecen en esta tabla deben ser priorizados para seguimiento. Hacer clic en 'Ver todos' lleva al listado completo de pacientes." },
+      ],
+    },
+  };
 
   if (cargando) return <Layout><div className="loading">Cargando dashboard...</div></Layout>;
 
@@ -319,7 +372,12 @@ export default function Dashboard() {
       {/* Diagrama ISPAD + Distribución de control */}
       <motion.div className="dashboard-row" variants={stagger} initial="hidden" animate="show">
         <motion.div className="card" variants={fadeUp} style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-          <h3 style={{ alignSelf: "flex-start", marginBottom: 8 }}>Objetivos de Control ISPAD</h3>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", marginBottom: 8 }}>
+            <h3 style={{ margin: 0 }}>Objetivos de Control ISPAD</h3>
+            {usuario?.mostrar_info_graficas ? (
+              <button onClick={() => setModalInfo("ispad")} title="¿Cómo se interpreta?" style={{ background: "none", border: "1.5px solid #334155", borderRadius: "50%", width: 26, height: 26, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#6366f1", fontWeight: 700, fontSize: 14, flexShrink: 0 }}>i</button>
+            ) : null}
+          </div>
           <p className="text-muted" style={{ alignSelf: "flex-start", marginBottom: 16, fontSize: 12 }}>
             Metas internacionales de monitoreo continuo de glucosa
           </p>
@@ -327,7 +385,12 @@ export default function Dashboard() {
         </motion.div>
 
         <motion.div className="card" variants={fadeUp} style={{ paddingBottom: 24 }}>
-          <h3>Distribución de Control ISPAD</h3>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
+            <h3 style={{ margin: 0 }}>Distribución de Control ISPAD</h3>
+            {usuario?.mostrar_info_graficas ? (
+              <button onClick={() => setModalInfo("distribucionControl")} title="¿Cómo se interpreta?" style={{ background: "none", border: "1.5px solid #334155", borderRadius: "50%", width: 26, height: 26, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#6366f1", fontWeight: 700, fontSize: 14, flexShrink: 0 }}>i</button>
+            ) : null}
+          </div>
           <Pie3DChart data={pieData} isMobile={isMobile} />
         </motion.div>
       </motion.div>
@@ -335,7 +398,12 @@ export default function Dashboard() {
       <motion.div className="dashboard-row" variants={stagger} initial="hidden" animate="show">
         {/* TIR por departamento */}
         <motion.div className="card" variants={fadeUp}>
-          <h3>TIR Promedio por Departamento</h3>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+            <h3 style={{ margin: 0 }}>TIR Promedio por Departamento</h3>
+            {usuario?.mostrar_info_graficas ? (
+              <button onClick={() => setModalInfo("tirDepto")} title="¿Cómo se calcula?" style={{ background: "none", border: "1.5px solid #334155", borderRadius: "50%", width: 26, height: 26, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#6366f1", fontWeight: 700, fontSize: 14, flexShrink: 0 }}>i</button>
+            ) : null}
+          </div>
           <div style={{ display: "flex", gap: 20, marginBottom: 10, flexWrap: "wrap" }}>
             <span style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#64748b" }}>
               <span style={{ width: 12, height: 12, borderRadius: 3, background: "#76B250", display: "inline-block" }} />
@@ -392,7 +460,12 @@ export default function Dashboard() {
       <motion.div className="dashboard-row" variants={stagger} initial="hidden" animate="show">
         {/* Tendencia mensual */}
         <motion.div className="card card-wide" variants={fadeUp}>
-          <h3>Tendencia Mensual TIR</h3>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+            <h3 style={{ margin: 0 }}>Tendencia Mensual TIR</h3>
+            {usuario?.mostrar_info_graficas ? (
+              <button onClick={() => setModalInfo("tendencia")} title="¿Cómo se calcula?" style={{ background: "none", border: "1.5px solid #334155", borderRadius: "50%", width: 26, height: 26, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#6366f1", fontWeight: 700, fontSize: 14, flexShrink: 0 }}>i</button>
+            ) : null}
+          </div>
           <ResponsiveContainer width="100%" height={isMobile ? 175 : 210}>
             <LineChart data={tendencias} margin={{ top: 5, right: 20, left: -20, bottom: 5 }}>
               <defs>
@@ -424,7 +497,12 @@ export default function Dashboard() {
 
         {/* Comparativa por género */}
         <motion.div className="card" variants={fadeUp}>
-          <h3>Comparativa por Género</h3>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+            <h3 style={{ margin: 0 }}>Comparativa por Género</h3>
+            {usuario?.mostrar_info_graficas ? (
+              <button onClick={() => setModalInfo("genero")} title="¿Cómo se calcula?" style={{ background: "none", border: "1.5px solid #334155", borderRadius: "50%", width: 26, height: 26, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#6366f1", fontWeight: 700, fontSize: 14, flexShrink: 0 }}>i</button>
+            ) : null}
+          </div>
           <div className="genero-cards">
             {genero.map((g) => (
               <div key={g.sexo} className="genero-card">
@@ -444,7 +522,12 @@ export default function Dashboard() {
       {/* Análisis recientes */}
       <motion.div className="card" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}>
         <div className="card-header-row">
-          <h3>Análisis Recientes</h3>
+          <h3 style={{ display: "flex", alignItems: "center", gap: 10, margin: 0 }}>
+            Análisis Recientes
+            {usuario?.mostrar_info_graficas ? (
+              <button onClick={() => setModalInfo("recientes")} title="¿Cómo se interpreta?" style={{ background: "none", border: "1.5px solid #334155", borderRadius: "50%", width: 26, height: 26, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#6366f1", fontWeight: 700, fontSize: 14, flexShrink: 0 }}>i</button>
+            ) : null}
+          </h3>
           <Link to="/pacientes" className="link-small">Ver todos</Link>
         </div>
         <div className="table-wrapper">
@@ -477,6 +560,39 @@ export default function Dashboard() {
           </table>
         </div>
       </motion.div>
+      {/* ── Modal información de gráficas ────────────────────────────── */}
+      {modalInfo && INFO_DASHBOARD[modalInfo] && (
+        <div
+          style={{ position: "fixed", inset: 0, zIndex: 10000, background: "rgba(0,0,0,0.55)", display: "flex", alignItems: "center", justifyContent: "center", padding: "20px 16px" }}
+          onClick={() => setModalInfo(null)}
+        >
+          <div
+            style={{ background: "#fff", borderRadius: 14, padding: "28px 28px", maxWidth: 520, width: "100%", boxShadow: "0 24px 64px rgba(0,0,0,0.3)", maxHeight: "90vh", overflowY: "auto" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
+              <h3 style={{ margin: 0, color: "#0f172a", fontSize: "1.05rem", lineHeight: 1.4 }}>
+                {INFO_DASHBOARD[modalInfo].titulo}
+              </h3>
+              <button onClick={() => setModalInfo(null)} style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer", color: "#94a3b8", lineHeight: 1, marginLeft: 12, flexShrink: 0 }}>✕</button>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              {INFO_DASHBOARD[modalInfo].items.map((item, i) => (
+                <div key={i} style={{ borderLeft: "3px solid #6366f1", paddingLeft: 14 }}>
+                  <div style={{ fontWeight: 700, color: "#3730a3", fontSize: "0.88rem", marginBottom: 4 }}>{item.label}</div>
+                  <div style={{ color: "#374151", fontSize: "0.84rem", lineHeight: 1.6 }}>{item.desc}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{ marginTop: 24, textAlign: "right" }}>
+              <button
+                onClick={() => setModalInfo(null)}
+                style={{ padding: "8px 20px", borderRadius: 8, border: "1.5px solid #6366f1", background: "none", color: "#6366f1", fontWeight: 600, cursor: "pointer", fontSize: "0.88rem" }}
+              >Cerrar</button>
+            </div>
+          </div>
+        </div>
+      )}
     </Layout>
   );
 }
