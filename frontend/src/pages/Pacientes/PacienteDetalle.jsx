@@ -1030,9 +1030,9 @@ export default function PacienteDetalle() {
                       <tr key={r.id}>
                         <td style={{ whiteSpace: "nowrap", fontSize: "0.82rem" }}>{r.fecha ? new Date(String(r.fecha).substring(0, 10) + "T00:00:00").toLocaleDateString("es-GT", { day: "2-digit", month: "2-digit", year: "2-digit" }) : "—"}</td>
                         <td className="hide-tablet">{r.insulina_prolongada || "—"}</td>
-                        <td>{r.dosis_prolongada || "—"}</td>
+                        <td>{r.dosis_prolongada_u != null ? `${r.dosis_prolongada_u} UI` : "—"}</td>
                         <td className="hide-tablet">{r.insulina_corta || "—"}</td>
-                        <td>{r.dosis_corta || "—"}</td>
+                        <td>{r.dosis_corta_u != null ? `${r.dosis_corta_u} UI` : "—"}</td>
                         <td style={{ fontWeight: 700, color: "#6366f1" }}>
                           {r.dosis_total_u != null
                             ? `${r.dosis_total_u} UI`
@@ -1534,23 +1534,15 @@ export default function PacienteDetalle() {
                 <input value={formInsulina.insulina_prolongada || ""} onChange={e => setFormInsulina(f => ({ ...f, insulina_prolongada: e.target.value }))} placeholder="Ej: Glargina, Detemir…" />
               </div>
               <div className="form-group">
-                <label>Dosis prolongada</label>
-                <input value={formInsulina.dosis_prolongada || ""} onChange={e => setFormInsulina(f => ({ ...f, dosis_prolongada: e.target.value }))} placeholder="Ej: 10 UI nocturna" />
+                <label>Dosis prolongada (UI)</label>
+                <input type="number" min="0" step="0.1" value={formInsulina.dosis_prolongada_u ?? ""} onChange={e => actualizarDosisInsulina("dosis_prolongada_u", e.target.value)} placeholder="Ej: 10" />
               </div>
               <div className="form-group">
                 <label>Insulina acción corta</label>
                 <input value={formInsulina.insulina_corta || ""} onChange={e => setFormInsulina(f => ({ ...f, insulina_corta: e.target.value }))} placeholder="Ej: Lispro, Aspart…" />
               </div>
               <div className="form-group">
-                <label>Dosis corta (texto)</label>
-                <input value={formInsulina.dosis_corta || ""} onChange={e => setFormInsulina(f => ({ ...f, dosis_corta: e.target.value }))} placeholder="Ej: 1 UI / 10g CH" />
-              </div>
-              <div className="form-group">
-                <label>Dosis prolongada (UI numérico)</label>
-                <input type="number" min="0" step="0.1" value={formInsulina.dosis_prolongada_u ?? ""} onChange={e => actualizarDosisInsulina("dosis_prolongada_u", e.target.value)} placeholder="Ej: 10" />
-              </div>
-              <div className="form-group">
-                <label>Dosis corta (UI numérico)</label>
+                <label>Dosis corta (UI)</label>
                 <input type="number" min="0" step="0.1" value={formInsulina.dosis_corta_u ?? ""} onChange={e => actualizarDosisInsulina("dosis_corta_u", e.target.value)} placeholder="Ej: 8" />
               </div>
               <div className="form-group">
