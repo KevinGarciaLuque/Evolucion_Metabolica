@@ -29,7 +29,7 @@ export async function login(req, res) {
       return res.status(401).json({ error: "Credenciales incorrectas" });
 
     const token = jwt.sign(
-      { id: usuario.id, nombre: usuario.nombre, email: usuario.email, rol: usuario.rol, sexo: usuario.sexo ?? null },
+      { id: usuario.id, nombre: usuario.nombre, email: usuario.email, rol: usuario.rol, sexo: usuario.sexo ?? null, mostrar_info_graficas: usuario.mostrar_info_graficas ? 1 : 0 },
       process.env.JWT_SECRET,
       { expiresIn: "8h" }
     );
@@ -45,7 +45,7 @@ export async function login(req, res) {
 
     res.json({
       token,
-      usuario: { id: usuario.id, nombre: usuario.nombre, email: usuario.email, rol: usuario.rol, sexo: usuario.sexo ?? null },
+      usuario: { id: usuario.id, nombre: usuario.nombre, email: usuario.email, rol: usuario.rol, sexo: usuario.sexo ?? null, mostrar_info_graficas: usuario.mostrar_info_graficas ? 1 : 0 },
     });
   } catch (err) {
     console.error(err);
@@ -56,7 +56,7 @@ export async function login(req, res) {
 export async function me(req, res) {
   try {
     const [rows] = await pool.query(
-      "SELECT id, nombre, email, rol, sexo FROM usuarios WHERE id = ?",
+      "SELECT id, nombre, email, rol, sexo, mostrar_info_graficas FROM usuarios WHERE id = ?",
       [req.usuario.id]
     );
     if (rows.length === 0) return res.status(404).json({ error: "Usuario no encontrado" });

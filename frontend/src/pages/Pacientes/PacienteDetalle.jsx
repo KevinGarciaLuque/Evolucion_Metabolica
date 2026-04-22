@@ -9,6 +9,7 @@ import {
 import api from "../../api/axios";
 import Layout from "../../components/Layout";
 import SemaforoISPAD from "../../components/SemaforoISPAD";
+import { useAuth } from "../../context/AuthContext";
 
 // ─── Colores por clasificación ──────────────────────────────────────────────
 const COLORS_CLASIF = { OPTIMO: "#16a34a", MODERADO: "#d97706", ALTO_RIESGO: "#dc2626" };
@@ -39,6 +40,7 @@ export default function PacienteDetalle() {
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
+  const { usuario: yo } = useAuth();
   const [paciente, setPaciente] = useState(null);
   const [historial, setHistorial] = useState([]);
   const [cargando, setCargando]   = useState(true);
@@ -50,6 +52,7 @@ export default function PacienteDetalle() {
   const [editForm, setEditForm] = useState(null);
   const [guardandoEdicion, setGuardandoEdicion] = useState(false);
   const [modalVer, setModalVer] = useState(null);
+  const [modalInfo, setModalInfo] = useState(null); // clave de INFO_GRAFICAS
 
   // ── Tabs ──────────────────────────────────────────────────────────────────
   const [tabActiva, setTabActiva] = useState("info");
@@ -295,6 +298,58 @@ export default function PacienteDetalle() {
   if (!paciente) return <Layout><div className="login-error">Paciente no encontrado</div></Layout>;
 
   const ultimoAnalisis = historial[0];
+
+  // ── Información explicativa de cada gráfica ─────────────────────────────
+  const INFO_GRAFICAS = {
+    tirTarTbr: {
+      titulo: "📊 Comparación TIR / TAR / TBR",
+      items: [
+        { label: "TIR — Tiempo en Rango", desc: "Porcentaje de tiempo que la glucosa estuvo entre 70–180 mg/dL. Es el indicador principal del control glucémico. Objetivo ISPAD: ≥ 70%." },
+        { label: "TAR — Tiempo sobre Rango", desc: "Tiempo con glucosa > 180 mg/dL. Se divide en TAR Alto (181–250) y TAR Muy Alto (> 250 mg/dL). Objetivo: < 25% total." },
+        { label: "TBR — Tiempo bajo Rango", desc: "Tiempo con glucosa < 70 mg/dL. Se divide en TBR Bajo (54–69) y TBR Muy Bajo (< 54 mg/dL). Objetivo: < 4% total." },
+        { label: "Clasificación ISPAD", desc: "Óptimo: TIR ≥ 70% y TBR < 4%. Moderado: TIR 50–69%. Alto Riesgo: TIR < 50%. Basada en consenso ISPAD 2022." },
+      ],
+    },
+    gmiCv: {
+      titulo: "GMI y Coeficiente de Variación (CV)",
+      items: [
+        { label: "GMI — Glucose Management Indicator", desc: "Estima la HbA1c a partir del promedio de glucosa del sensor. Fórmula: GMI (%) = 3.31 + 0.02392 × glucosa promedio (mg/dL). Objetivo: < 7% (refleja HbA1c < 7%)." },
+        { label: "CV — Coeficiente de Variación", desc: "Mide la variabilidad glucémica: cuánto oscila la glucosa respecto a su promedio. Se calcula como (desviación estándar / glucosa promedio) × 100. Objetivo: ≤ 36%. CV > 36% indica alta variabilidad y riesgo de hipoglucemias inadvertidas." },
+      ],
+    },
+    gri: {
+      titulo: "GRI — Glycemia Risk Index",
+      items: [
+        { label: "¿Qué es el GRI?", desc: "Índice compuesto que combina el riesgo de hipoglucemia (TBR) y de hiperglucemia (TAR) en un solo número. Rango 0–100. Fórmula: GRI = (3 × TBR Muy Bajo) + (2.4 × TBR Bajo) + (1.6 × TAR Muy Alto) + (0.8 × TAR Alto)." },
+        { label: "Zonas de riesgo", desc: "Zona A (0–20): riesgo mínimo — ideal. Zona B (20–40): riesgo bajo. Zona C (40–60): riesgo moderado. Zona D (60–80): riesgo alto. Zona E (> 80): riesgo muy alto." },
+        { label: "Interpretación", desc: "A menor GRI, mejor perfil glucémico global. El GRI es útil para comparar períodos y evaluar si los ajustes de tratamiento reducen el riesgo combinado de hipo e hiperglucemia." },
+      ],
+    },
+    evolucionTir: {
+      titulo: "📈 Evolución TIR en el Tiempo",
+      items: [
+        { label: "¿Qué muestra?", desc: "Tendencia del TIR, TAR y TBR a lo largo de todos los registros MCG del paciente, en orden cronológico. Permite ver si el control glucémico mejora, empeora o se mantiene entre consultas." },
+        { label: "¿Cómo interpretarla?", desc: "Una línea TIR ascendente indica mejoría. Si TIR sube y TAR/TBR bajan simultáneamente, el control es óptimo. Si TIR sube pero TBR también sube, puede indicar hipoglucemias frecuentes que 'inflan' el TIR artificialmente." },
+        { label: "Meta", desc: "La línea de referencia verde marca el 70% de TIR objetivo ISPAD. El objetivo clínico es que la línea TIR esté por encima de esa referencia de forma sostenida." },
+      ],
+    },
+    hipoglucemia: {
+      titulo: "⚡ Eventos de Hipoglucemia",
+      items: [
+        { label: "Nº de eventos", desc: "Cantidad de episodios de glucosa < 54 mg/dL (hipoglucemia nivel 2) registrados durante el período del sensor. Son clínicamente significativos porque requieren intervención inmediata." },
+        { label: "Duración (min)", desc: "Tiempo total acumulado en hipoglucemia durante el período. Una duración alta con pocos eventos indica episodios prolongados; muchos eventos cortos sugieren hipoglucemias reactivas frecuentes." },
+        { label: "¿Por qué importa?", desc: "En niños, la hipoglucemia severa puede afectar el desarrollo neurológico. Reducir eventos y duración es prioritario, incluso si eso implica tolerar un TIR menor temporalmente." },
+      ],
+    },
+    gmiHba1c: {
+      titulo: "🔬 GMI vs HbA1c real",
+      items: [
+        { label: "GMI (estimado por sensor)", desc: "Calculado a partir del promedio de glucosa del MCG. Estima la HbA1c sin necesidad de muestra de sangre. Es inmediato pero puede diferir del laboratorio." },
+        { label: "HbA1c real (laboratorio)", desc: "Refleja el promedio de glucosa de los últimos 2–3 meses mediante la hemoglobina glicosilada. Es el estándar de referencia, pero no distingue variabilidad ni hipoglucemias." },
+        { label: "¿Por qué compararlos?", desc: "Si el GMI es menor que la HbA1c real, puede indicar que el sensor no capturó períodos de hiperglucemia (p. ej., uso < 70% del tiempo). Si el GMI es mayor, puede haber discordancia por condiciones que alteran la HbA1c (anemia, hemoglobinopatías). La concordancia validará la fiabilidad del sensor." },
+      ],
+    },
+  };
 
   // Datos para gráficas — orden cronológico
   const chartData = [...historial].reverse().map((a, i) => ({
@@ -552,7 +607,12 @@ export default function PacienteDetalle() {
             {chartData.length > 0 && (
               <>
                 <div className="card" style={{ marginBottom: 16 }}>
-                  <h3>📊 Comparación de Registros MCG — TIR / TAR / TBR</h3>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
+                    <h3 style={{ margin: 0 }}>📊 Comparación de Registros MCG — TIR / TAR / TBR</h3>
+                    {yo?.mostrar_info_graficas ? (
+                      <button onClick={() => setModalInfo("tirTarTbr")} title="¿Cómo se calcula?" style={{ background: "none", border: "1.5px solid #cbd5e1", borderRadius: "50%", width: 26, height: 26, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#6366f1", fontWeight: 700, fontSize: 14, flexShrink: 0 }}>i</button>
+                    ) : null}
+                  </div>
                   <p style={{ fontSize: "0.82rem", color: "#64748b", marginBottom: 12 }}>
                     Cada barra representa un registro de monitoreo. Objetivo: TIR ≥ 70% (verde), TAR ≤ 25%, TBR ≤ 4%.
                   </p>
@@ -590,7 +650,12 @@ export default function PacienteDetalle() {
 
                 <div className="dashboard-row">
                   <div className="card card-wide">
-                    <h3>GMI y CV por registro</h3>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+                      <h3 style={{ margin: 0 }}>GMI y CV por registro</h3>
+                      {yo?.mostrar_info_graficas ? (
+                        <button onClick={() => setModalInfo("gmiCv")} title="¿Cómo se calcula?" style={{ background: "none", border: "1.5px solid #cbd5e1", borderRadius: "50%", width: 26, height: 26, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#6366f1", fontWeight: 700, fontSize: 14, flexShrink: 0 }}>i</button>
+                      ) : null}
+                    </div>
                     <ResponsiveContainer width="100%" height={isMobile ? 165 : 200}>
                       <BarChart data={chartData} margin={{ top: 5, right: isMobile ? 4 : 20, left: isMobile ? -18 : -20, bottom: 5 }}>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} />
@@ -606,7 +671,12 @@ export default function PacienteDetalle() {
                     </ResponsiveContainer>
                   </div>
                   <div className="card">
-                    <h3>GRI por registro</h3>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
+                      <h3 style={{ margin: 0 }}>GRI por registro</h3>
+                      {yo?.mostrar_info_graficas ? (
+                        <button onClick={() => setModalInfo("gri")} title="¿Cómo se calcula?" style={{ background: "none", border: "1.5px solid #cbd5e1", borderRadius: "50%", width: 26, height: 26, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#6366f1", fontWeight: 700, fontSize: 14, flexShrink: 0 }}>i</button>
+                      ) : null}
+                    </div>
                     <p style={{ fontSize: "0.78rem", color: "#64748b", marginBottom: 8 }}>Zona A: 0-20 (ideal) · B: 20-40 · C: 40-60 · D: 60-80 · E: &gt;80</p>
                     <ResponsiveContainer width="100%" height={isMobile ? 165 : 200}>
                       <BarChart data={chartData} margin={{ top: 5, right: isMobile ? 4 : 10, left: isMobile ? -18 : -20, bottom: 5 }}>
@@ -630,7 +700,12 @@ export default function PacienteDetalle() {
 
                 {/* ── Gráfica: Evolución TIR en el tiempo ─────────────────── */}
                 <div className="card" style={{ marginBottom: 16 }}>
-                  <h3>📈 Evolución TIR en el Tiempo</h3>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
+                    <h3 style={{ margin: 0 }}>📈 Evolución TIR en el Tiempo</h3>
+                    {yo?.mostrar_info_graficas ? (
+                      <button onClick={() => setModalInfo("evolucionTir")} title="¿Cómo se calcula?" style={{ background: "none", border: "1.5px solid #cbd5e1", borderRadius: "50%", width: 26, height: 26, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#6366f1", fontWeight: 700, fontSize: 14, flexShrink: 0 }}>i</button>
+                    ) : null}
+                  </div>
                   <p style={{ fontSize: "0.82rem", color: "#64748b", marginBottom: 12 }}>
                     Tendencia del control glucémico registro a registro. Objetivo: TIR ≥ 70%.
                   </p>
@@ -656,7 +731,12 @@ export default function PacienteDetalle() {
                 {/* ── Gráficas: Hipoglucemia y GMI vs HbA1c ───────────────── */}
                 <div className="dashboard-row" style={{ marginBottom: 16 }}>
                   <div className="card">
-                    <h3>⚡ Eventos de Hipoglucemia</h3>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
+                      <h3 style={{ margin: 0 }}>⚡ Eventos de Hipoglucemia</h3>
+                      {yo?.mostrar_info_graficas ? (
+                        <button onClick={() => setModalInfo("hipoglucemia")} title="¿Cómo se calcula?" style={{ background: "none", border: "1.5px solid #cbd5e1", borderRadius: "50%", width: 26, height: 26, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#6366f1", fontWeight: 700, fontSize: 14, flexShrink: 0 }}>i</button>
+                      ) : null}
+                    </div>
                     <p style={{ fontSize: "0.78rem", color: "#64748b", marginBottom: 8 }}>
                       Episodios registrados y duración promedio por análisis
                     </p>
@@ -693,7 +773,12 @@ export default function PacienteDetalle() {
                   </div>
 
                   <div className="card">
-                    <h3>🔬 GMI vs HbA1c post MCG</h3>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
+                      <h3 style={{ margin: 0 }}>🔬 GMI vs HbA1c post MCG</h3>
+                      {yo?.mostrar_info_graficas ? (
+                        <button onClick={() => setModalInfo("gmiHba1c")} title="¿Cómo se calcula?" style={{ background: "none", border: "1.5px solid #cbd5e1", borderRadius: "50%", width: 26, height: 26, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#6366f1", fontWeight: 700, fontSize: 14, flexShrink: 0 }}>i</button>
+                      ) : null}
+                    </div>
                     <p style={{ fontSize: "0.78rem", color: "#64748b", marginBottom: 8 }}>
                       HbA1c estimada por sensor (GMI) vs real por laboratorio
                     </p>
@@ -1340,6 +1425,37 @@ export default function PacienteDetalle() {
 
             <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 8 }}>
               <button className="btn btn-outline" onClick={() => setModalVer(null)}>Cerrar</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Modal información de gráficas ─────────────────────────────── */}
+      {modalInfo && INFO_GRAFICAS[modalInfo] && (
+        <div
+          style={{ position: "fixed", inset: 0, zIndex: 10000, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", padding: "20px 16px" }}
+          onClick={() => setModalInfo(null)}
+        >
+          <div
+            style={{ background: "#fff", borderRadius: 14, padding: "28px 28px", maxWidth: 520, width: "100%", boxShadow: "0 24px 64px rgba(0,0,0,0.28)", maxHeight: "90vh", overflowY: "auto" }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
+              <h3 style={{ margin: 0, color: "#0f172a", fontSize: "1.05rem", lineHeight: 1.4 }}>
+                {INFO_GRAFICAS[modalInfo].titulo}
+              </h3>
+              <button onClick={() => setModalInfo(null)} style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer", color: "#94a3b8", lineHeight: 1, marginLeft: 12, flexShrink: 0 }}>✕</button>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              {INFO_GRAFICAS[modalInfo].items.map((item, i) => (
+                <div key={i} style={{ borderLeft: "3px solid #6366f1", paddingLeft: 14 }}>
+                  <div style={{ fontWeight: 700, color: "#3730a3", fontSize: "0.88rem", marginBottom: 4 }}>{item.label}</div>
+                  <div style={{ color: "#374151", fontSize: "0.84rem", lineHeight: 1.6 }}>{item.desc}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{ marginTop: 24, textAlign: "right" }}>
+              <button className="btn btn-outline" onClick={() => setModalInfo(null)}>Cerrar</button>
             </div>
           </div>
         </div>

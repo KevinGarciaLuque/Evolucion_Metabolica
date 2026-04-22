@@ -27,6 +27,7 @@ function CountUp({ end, duration = 1.2, decimals = 0, suffix = "" }) {
 }
 import api from "../api/axios";
 import Layout from "../components/Layout";
+import { useAuth } from "../context/AuthContext";
 
 const COLORS = ["#3b82f6", "#ec4899"];
 
@@ -132,6 +133,7 @@ function grupoEtario(edad) {
 }
 
 export default function Consolidado() {
+  const { usuario: yo } = useAuth();
   const [todos, setTodos]     = useState([]);
   const [filtros, setFiltros] = useState({ departamento: "", sexo: "", edad_min: "", edad_max: "" });
   const [listaDeptos, setListaDeptos] = useState([]);
@@ -139,6 +141,7 @@ export default function Consolidado() {
   const [mostrarFiltros, setMostrarFiltros] = useState(false);
   const [isMobile, setIsMobile]       = useState(window.innerWidth < 768);
   const [modalDepto, setModalDepto]   = useState(null); // { departamento, pacientes[] }
+  const [modalInfo, setModalInfo]     = useState(null); // clave de INFO_CONSOLIDADO
   const [clsVis, setClsVis] = useState({ OPTIMO: true, MODERADO: true, ALTO_RIESGO: true });
   const navigate = useNavigate();
 
@@ -260,7 +263,6 @@ export default function Consolidado() {
       : d.departamento.length > 22 ? d.departamento.slice(0, 22) + "…" : d.departamento,
   }));
 
-  // ── Modal: pacientes de un departamento ───────────────────────────────
   function abrirModalDepto(departamento) {
     const pacientesMap = {};
     filtrados
@@ -288,6 +290,41 @@ export default function Consolidado() {
     }));
     setModalDepto({ departamento, pacientes });
   }
+
+  // ── Información explicativa de cada gráfica del consolidado ──────────
+  const INFO_CONSOLIDADO = {
+    tirDepto: {
+      titulo: "TIR Promedio por Departamento",
+      items: [
+        { label: "¿Qué muestra?", desc: "Promedio del Tiempo en Rango (TIR) de todos los análisis MCG de pacientes de cada departamento. Permite comparar el control glucémico poblacional por región geográfica." },
+        { label: "Colores", desc: "Verde: TIR ≥ 70% (Objetivo ISPAD). Amarillo: 50–69% (Moderado). Rojo: < 50% (Alto Riesgo). La meta poblacional es que todos los departamentos estén en zona verde." },
+        { label: "Limitación", desc: "Un solo análisis con TIR alto puede elevar el promedio de un departamento con pocos pacientes. Leer junto al número de pacientes registrados." },
+      ],
+    },
+    genero: {
+      titulo: "Comparativa por Género",
+      items: [
+        { label: "¿Qué muestra?", desc: "Promedio del TIR separado por género (niños vs niñas). Permite detectar si existe una brecha de control glucémico entre sexos que requiera intervención diferenciada." },
+        { label: "Interpretación", desc: "Las diferencias pueden estar relacionadas con factores hormonales, adherencia al tratamiento, actividad física o variabilidad en la supervisión parental. Una diferencia > 5% es clínicamente relevante." },
+      ],
+    },
+    grupoEtario: {
+      titulo: "TIR Promedio por Grupo Etario",
+      items: [
+        { label: "¿Qué muestra?", desc: "TIR y GMI promedio agrupados por rango de edad: 0–5, 6–9, 10–12, 13–17 y 18+ años. Permite identificar qué grupos etarios tienen mayor dificultad de control." },
+        { label: "Por qué también el GMI", desc: "Mostrar el GMI junto al TIR permite ver si la glucosa promedio es consistente con el tiempo en rango. Si el GMI es alto pero el TIR también, puede indicar hiperglucemia sostenida sin grandes picos." },
+        { label: "Contexto clínico", desc: "Los adolescentes (13–17) suelen tener mayor variabilidad por cambios hormonales y autonomía. Los niños pequeños (0–5) dependen completamente de los padres para el manejo del sensor." },
+      ],
+    },
+    gmiHba1c: {
+      titulo: "Comparación GMI vs HbA1c por Clasificación ISPAD",
+      items: [
+        { label: "GMI (estimado por sensor)", desc: "Calculado a partir del promedio de glucosa del MCG. Fórmula: GMI = 3.31 + 0.02392 × glucosa promedio. Se promedian todos los análisis del grupo de clasificación." },
+        { label: "HbA1c real (laboratorio)", desc: "Hemoglobina glicosilada medida en laboratorio post-MCG. Se promedia por grupo ISPAD (Optimo, Moderado, Alto Riesgo)." },
+        { label: "¿Por qué agrupar por clasificación?", desc: "Permite validar si el sensor estima correctamente la HbA1c en cada nivel de control. En pacientes de alto riesgo, la discordancia GMI–HbA1c puede revelar uso inconstante del sensor o condiciones hemológicas subyacentes." },
+      ],
+    },
+  };
 
   return (
     <Layout>
@@ -471,7 +508,12 @@ export default function Consolidado() {
         <>
           {/* TIR por departamento — ancho completo */}
           <motion.div className="card" style={{ marginBottom: 20 }} initial="hidden" animate="show" variants={fadeUp}>
-            <h3>TIR Promedio por Departamento</h3>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+              <h3 style={{ margin: 0 }}>TIR Promedio por Departamento</h3>
+              {yo?.mostrar_info_graficas ? (
+                <button onClick={() => setModalInfo("tirDepto")} title="¿Cómo se calcula?" style={{ background: "none", border: "1.5px solid #334155", borderRadius: "50%", width: 26, height: 26, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#6366f1", fontWeight: 700, fontSize: 14, flexShrink: 0 }}>i</button>
+              ) : null}
+            </div>
             <div style={{ display: "flex", gap: 20, marginBottom: 10, flexWrap: "wrap" }}>
               <span style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#64748b" }}>
                 <span style={{ width: 12, height: 12, borderRadius: 3, background: "#76B250", display: "inline-block" }} />
@@ -538,7 +580,12 @@ export default function Consolidado() {
           {/* Género y grupo etario en fila */}
           <motion.div className="dashboard-row" variants={stagger} initial="hidden" animate="show">
             <motion.div className="card" variants={fadeUp}>
-              <h3>Comparativa por Género</h3>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+                <h3 style={{ margin: 0 }}>Comparativa por Género</h3>
+                {yo?.mostrar_info_graficas ? (
+                  <button onClick={() => setModalInfo("genero")} title="¿Cómo se calcula?" style={{ background: "none", border: "1.5px solid #334155", borderRadius: "50%", width: 26, height: 26, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#6366f1", fontWeight: 700, fontSize: 14, flexShrink: 0 }}>i</button>
+                ) : null}
+              </div>
               <ResponsiveContainer width="100%" height={isMobile ? 160 : 200}>
                 <BarChart data={genero} layout="vertical" margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
                   <defs>
@@ -565,7 +612,12 @@ export default function Consolidado() {
             </motion.div>
 
             <motion.div className="card card-wide" variants={fadeUp}>
-              <h3>TIR Promedio por Grupo Etario</h3>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+                <h3 style={{ margin: 0 }}>TIR Promedio por Grupo Etario</h3>
+                {yo?.mostrar_info_graficas ? (
+                  <button onClick={() => setModalInfo("grupoEtario")} title="¿Cómo se calcula?" style={{ background: "none", border: "1.5px solid #334155", borderRadius: "50%", width: 26, height: 26, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#6366f1", fontWeight: 700, fontSize: 14, flexShrink: 0 }}>i</button>
+                ) : null}
+              </div>
               <div style={{ display: "flex", gap: 16, marginBottom: 10, flexWrap: "wrap" }}>
                 <span style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#64748b" }}>
                   <span style={{ width: 12, height: 12, borderRadius: 3, background: "#76B250", display: "inline-block" }} />
@@ -630,7 +682,12 @@ export default function Consolidado() {
 
           {/* GMI vs HbA1c por clasificación */}
           <motion.div className="card" style={{ marginBottom: 20 }} initial="hidden" animate="show" variants={fadeUp}>
-            <h3>Comparación GMI vs HbA1c por Clasificación ISPAD</h3>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
+              <h3 style={{ margin: 0 }}>Comparación GMI vs HbA1c por Clasificación ISPAD</h3>
+              {yo?.mostrar_info_graficas ? (
+                <button onClick={() => setModalInfo("gmiHba1c")} title="¿Cómo se calcula?" style={{ background: "none", border: "1.5px solid #334155", borderRadius: "50%", width: 26, height: 26, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#6366f1", fontWeight: 700, fontSize: 14, flexShrink: 0 }}>i</button>
+              ) : null}
+            </div>
             <p style={{ fontSize: 12, color: "#64748b", marginBottom: 12 }}>
               Promedio de GMI estimado (%) y HbA1c post-MCG (%) agrupados por nivel de control
             </p>
@@ -764,6 +821,39 @@ export default function Consolidado() {
             </div>
           </div>
         </>
+      )}
+      {/* ── Modal información de gráficas del consolidado ──────────────────── */}
+      {modalInfo && INFO_CONSOLIDADO[modalInfo] && (
+        <div
+          style={{ position: "fixed", inset: 0, zIndex: 10000, background: "rgba(0,0,0,0.55)", display: "flex", alignItems: "center", justifyContent: "center", padding: "20px 16px" }}
+          onClick={() => setModalInfo(null)}
+        >
+          <div
+            style={{ background: "#fff", borderRadius: 14, padding: "28px 28px", maxWidth: 520, width: "100%", boxShadow: "0 24px 64px rgba(0,0,0,0.3)", maxHeight: "90vh", overflowY: "auto" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
+              <h3 style={{ margin: 0, color: "#0f172a", fontSize: "1.05rem", lineHeight: 1.4 }}>
+                {INFO_CONSOLIDADO[modalInfo].titulo}
+              </h3>
+              <button onClick={() => setModalInfo(null)} style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer", color: "#94a3b8", lineHeight: 1, marginLeft: 12, flexShrink: 0 }}>✕</button>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              {INFO_CONSOLIDADO[modalInfo].items.map((item, i) => (
+                <div key={i} style={{ borderLeft: "3px solid #6366f1", paddingLeft: 14 }}>
+                  <div style={{ fontWeight: 700, color: "#3730a3", fontSize: "0.88rem", marginBottom: 4 }}>{item.label}</div>
+                  <div style={{ color: "#374151", fontSize: "0.84rem", lineHeight: 1.6 }}>{item.desc}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{ marginTop: 24, textAlign: "right" }}>
+              <button
+                onClick={() => setModalInfo(null)}
+                style={{ padding: "8px 20px", borderRadius: 8, border: "1.5px solid #6366f1", background: "none", color: "#6366f1", fontWeight: 600, cursor: "pointer", fontSize: "0.88rem" }}
+              >Cerrar</button>
+            </div>
+          </div>
+        </div>
       )}
     </Layout>
   );

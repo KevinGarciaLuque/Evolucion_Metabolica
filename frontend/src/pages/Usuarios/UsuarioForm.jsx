@@ -10,6 +10,7 @@ const VACÍO = {
   rol: "doctor",
   sexo: "",
   estado: 1,
+  mostrar_info_graficas: 0,
 };
 
 export default function UsuarioForm() {
@@ -33,6 +34,7 @@ export default function UsuarioForm() {
           rol:      u.rol     || "doctor",
           sexo:     u.sexo    || "",
           estado:   u.estado  ?? 1,
+          mostrar_info_graficas: u.mostrar_info_graficas ?? 0,
         });
       });
     }
@@ -178,6 +180,41 @@ export default function UsuarioForm() {
                 </label>
               </div>
             )}
+
+            {/* Switch: mostrar botones de información en gráficas */}
+            <div className="form-group" style={{ gridColumn: "1 / -1" }}>
+              <label style={{ marginBottom: 10, display: "block" }}>Botones de información en gráficas</label>
+              <div
+                style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 18px", borderRadius: 10, border: "1.5px solid #e2e8f0", background: form.mostrar_info_graficas ? "#eef2ff" : "#f8fafc" }}
+              >
+                <button
+                  type="button"
+                  onClick={() => setForm((f) => ({ ...f, mostrar_info_graficas: f.mostrar_info_graficas ? 0 : 1 }))}
+                  style={{
+                    width: 44, height: 24, borderRadius: 12, border: "none", cursor: "pointer",
+                    background: form.mostrar_info_graficas ? "#6366f1" : "#cbd5e1",
+                    position: "relative", transition: "background 0.2s", flexShrink: 0,
+                  }}
+                  aria-label="Activar botones de información"
+                >
+                  <span style={{
+                    position: "absolute", top: 3,
+                    left: form.mostrar_info_graficas ? 22 : 3,
+                    width: 18, height: 18, borderRadius: "50%",
+                    background: "#fff", transition: "left 0.2s",
+                    boxShadow: "0 1px 4px rgba(0,0,0,0.25)",
+                  }} />
+                </button>
+                <div>
+                  <div style={{ fontWeight: 600, fontSize: "0.88rem", color: form.mostrar_info_graficas ? "#4338ca" : "#64748b" }}>
+                    {form.mostrar_info_graficas ? "✓ Activado" : "Desactivado"}
+                  </div>
+                  <div style={{ fontSize: "0.78rem", color: "#94a3b8", marginTop: 2 }}>
+                    Muestra el botón ⓘ junto a cada gráfica para que el usuario consulte cómo se calculan los indicadores
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
           <div className="form-actions">
