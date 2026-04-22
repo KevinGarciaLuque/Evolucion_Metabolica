@@ -26,13 +26,17 @@ export async function crearInsulina(req, res) {
 
   if (!fecha) return res.status(400).json({ error: "La fecha es obligatoria" });
 
+  const dp = dosis_prolongada_u ? Number(dosis_prolongada_u) : null;
+  const dc = dosis_corta_u      ? Number(dosis_corta_u)      : null;
+  const dt = (dp !== null || dc !== null) ? Number(((dp ?? 0) + (dc ?? 0)).toFixed(2)) : null;
+
   try {
     const [result] = await pool.query(
       `INSERT INTO historial_insulina
         (paciente_id, fecha, insulina_prolongada, insulina_corta,
-         dosis_prolongada, dosis_corta, dosis_prolongada_u, dosis_corta_u,
+         dosis_prolongada, dosis_corta, dosis_prolongada_u, dosis_corta_u, dosis_total_u,
          via_administracion, motivo_cambio, observaciones)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         req.params.id,
         fecha,
@@ -40,8 +44,9 @@ export async function crearInsulina(req, res) {
         insulina_corta      || null,
         dosis_prolongada    || null,
         dosis_corta         || null,
-        dosis_prolongada_u  ? Number(dosis_prolongada_u) : null,
-        dosis_corta_u       ? Number(dosis_corta_u)      : null,
+        dp,
+        dc,
+        dt,
         via_administracion  || "Subcutánea",
         motivo_cambio       || null,
         observaciones       || null,
@@ -61,11 +66,15 @@ export async function actualizarInsulina(req, res) {
     via_administracion, motivo_cambio, observaciones,
   } = req.body;
 
+  const dp = dosis_prolongada_u ? Number(dosis_prolongada_u) : null;
+  const dc = dosis_corta_u      ? Number(dosis_corta_u)      : null;
+  const dt = (dp !== null || dc !== null) ? Number(((dp ?? 0) + (dc ?? 0)).toFixed(2)) : null;
+
   try {
     await pool.query(
       `UPDATE historial_insulina
        SET fecha=?, insulina_prolongada=?, insulina_corta=?,
-           dosis_prolongada=?, dosis_corta=?, dosis_prolongada_u=?, dosis_corta_u=?,
+           dosis_prolongada=?, dosis_corta=?, dosis_prolongada_u=?, dosis_corta_u=?, dosis_total_u=?,
            via_administracion=?, motivo_cambio=?, observaciones=?
        WHERE id=? AND paciente_id=?`,
       [
@@ -74,8 +83,9 @@ export async function actualizarInsulina(req, res) {
         insulina_corta      || null,
         dosis_prolongada    || null,
         dosis_corta         || null,
-        dosis_prolongada_u  ? Number(dosis_prolongada_u) : null,
-        dosis_corta_u       ? Number(dosis_corta_u)      : null,
+        dp,
+        dc,
+        dt,
         via_administracion  || "Subcutánea",
         motivo_cambio       || null,
         observaciones       || null,

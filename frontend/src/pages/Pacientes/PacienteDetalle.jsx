@@ -133,7 +133,7 @@ export default function PacienteDetalle() {
       insulina_prolongada: paciente.tipo_insulina  || "",
       insulina_corta:      paciente.tipo_insulina_2 || "",
       dosis_prolongada: "", dosis_corta: "",
-      dosis_prolongada_u: "", dosis_corta_u: "",
+      dosis_prolongada_u: "", dosis_corta_u: "", dosis_total_u: "",
       via_administracion: "Subcutánea",
       motivo_cambio: "", observaciones: "",
     });
@@ -144,6 +144,16 @@ export default function PacienteDetalle() {
     setFormInsulina({ ...reg, fecha: reg.fecha?.split("T")[0] || reg.fecha });
     setEditInsulina(reg);
     setModalInsulina(true);
+  }
+  // Recalcula dosis_total_u cada vez que cambian los valores numéricos
+  function actualizarDosisInsulina(campo, valor) {
+    setFormInsulina(f => {
+      const next = { ...f, [campo]: valor };
+      const dp = parseFloat(next.dosis_prolongada_u) || 0;
+      const dc = parseFloat(next.dosis_corta_u)      || 0;
+      next.dosis_total_u = (dp + dc) > 0 ? parseFloat((dp + dc).toFixed(2)) : "";
+      return next;
+    });
   }
   async function guardarInsulina() {
     setGuardandoInsulina(true);
@@ -1035,6 +1045,8 @@ export default function PacienteDetalle() {
                     <th>D. Prol.</th>
                     <th className="hide-tablet">Insulina corta</th>
                     <th>D. Corta</th>
+                    <th style={{ color: "#6366f1", fontWeight: 700 }}>DDT (UI)</th>
+                    <th className="hide-mobile">FSI</th>
                     <th className="hide-mobile">Vía</th>
                     <th className="hide-tablet">Motivo cambio</th>
                     <th>Acciones</th>
@@ -1048,6 +1060,20 @@ export default function PacienteDetalle() {
                       <td>{r.dosis_prolongada || "—"}</td>
                       <td className="hide-tablet">{r.insulina_corta || "—"}</td>
                       <td>{r.dosis_corta || "—"}</td>
+                      <td style={{ fontWeight: 700, color: "#6366f1" }}>
+                        {r.dosis_total_u != null
+                          ? `${r.dosis_total_u} UI`
+                          : (r.dosis_prolongada_u != null || r.dosis_corta_u != null)
+                            ? `${parseFloat(((r.dosis_prolongada_u ?? 0) + (r.dosis_corta_u ?? 0)).toFixed(2))} UI`
+                            : "—"}
+                      </td>
+                      <td className="hide-mobile" style={{ fontSize: "0.8rem", color: "#64748b" }}>
+                        {r.dosis_total_u > 0
+                          ? `${Math.round(1700 / r.dosis_total_u)} mg/dL/UI`
+                          : (r.dosis_prolongada_u != null || r.dosis_corta_u != null)
+                            ? (() => { const t = (r.dosis_prolongada_u ?? 0) + (r.dosis_corta_u ?? 0); return t > 0 ? `${Math.round(1700 / t)} mg/dL/UI` : "—"; })()
+                            : "—"}
+                      </td>
                       <td className="hide-mobile">{r.via_administracion || "—"}</td>
                       <td className="hide-tablet" style={{ maxWidth: 180, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.motivo_cambio || "—"}</td>
                       <td>
@@ -1548,11 +1574,29 @@ export default function PacienteDetalle() {
               </div>
               <div className="form-group">
                 <label>Dosis prolongada (UI numérico)</label>
-                <input type="number" min="0" step="0.1" value={formInsulina.dosis_prolongada_u ?? ""} onChange={e => setFormInsulina(f => ({ ...f, dosis_prolongada_u: e.target.value }))} placeholder="Ej: 10" />
+                <input type="number" min="0" step="0.1" value={formInsulina.dosis_prolongada_u ?? ""} onChange={e => actualizarDosisInsulina("dosis_prolongada_u", e.target.value)} placeholder="Ej: 10" />
               </div>
               <div className="form-group">
                 <label>Dosis corta (UI numérico)</label>
-                <input type="number" min="0" step="0.1" value={formInsulina.dosis_corta_u ?? ""} onChange={e => setFormInsulina(f => ({ ...f, dosis_corta_u: e.target.value }))} placeholder="Ej: 8" />
+                <input type="number" min="0" step="0.1" value={formInsulina.dosis_corta_u ?? ""} onChange={e => actualizarDosisInsulina("dosis_corta_u", e.target.value)} placeholder="Ej: 8" />
+              </div>
+              <div className="form-group">
+                <label style={{ color: "#6366f1", fontWeight: 700 }}>DDT — Dosis Diaria Total (UI)</label>
+                <input
+                  type="number" readOnly
+                  value={formInsulina.dosis_total_u ?? ""}
+                  style={{ background: "#f1f5f9", color: "#6366f1", fontWeight: 700, cursor: "not-allowed" }}
+                  title="Calculado automáticamente: prolongada + corta"
+                />
+              </div>
+              <div className="form-group">
+                <label style={{ color: "#64748b" }}>FSI estimado (mg/dL/UI)</label>
+                <input
+                  type="text" readOnly
+                  value={formInsulina.dosis_total_u > 0 ? `${Math.round(1700 / formInsulina.dosis_total_u)} mg/dL/UI` : "—"}
+                  style={{ background: "#f1f5f9", color: "#64748b", cursor: "not-allowed", fontSize: "0.88rem" }}
+                  title="Factor de Sensibilidad a la Insulina: 1700 / DDT"
+                />
               </div>
               <div className="form-group" style={{ gridColumn: "span 2" }}>
                 <label>Motivo del cambio</label>
