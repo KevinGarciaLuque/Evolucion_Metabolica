@@ -12,16 +12,16 @@ function formatearWA(tel) {
   return digits;
 }
 
-// Genera el mensaje pre-escrito según el nivel de HbA1c
+// Genera el mensaje pre-escrito según la clasificación ISPAD del paciente
 function generarMensajeWA(p) {
-  const hba1c = p.hba1c_previo ? parseFloat(p.hba1c_previo) : null;
+  const cls = p.ultima_clasificacion;
   let alerta = "";
-  if (hba1c !== null && hba1c > 9) {
-    alerta = ` Su control reciente de HbA1c es ${hba1c}%, lo cual se clasifica como ALTO RIESGO y requiere atención médica urgente.`;
-  } else if (hba1c !== null && hba1c > 7) {
-    alerta = ` Su control reciente de HbA1c es ${hba1c}%, clasificado como MODERADO y requiere seguimiento.`;
-  } else if (hba1c !== null) {
-    alerta = ` Su control reciente de HbA1c es ${hba1c}%.`;
+  if (cls === "ALTO_RIESGO") {
+    alerta = " Su monitoreo continuo de glucosa indica una clasificación de ALTO RIESGO según criterios ISPAD, lo cual requiere atención médica urgente.";
+  } else if (cls === "MODERADO") {
+    alerta = " Su monitoreo continuo de glucosa indica una clasificación MODERADA según criterios ISPAD y requiere seguimiento médico.";
+  } else if (cls === "OPTIMO") {
+    alerta = " Su monitoreo continuo de glucosa muestra un control ÓPTIMO según criterios ISPAD. ¡Felicitaciones, siga así!";
   }
   return encodeURIComponent(
     `Estimado/a ${p.nombre}, le contactamos del Programa Evolución Metabólica (${p.institucion || "HMEP"}).${alerta} Por favor comuníquese con su médico tratante para coordinar su próxima cita. Gracias.`
@@ -31,12 +31,11 @@ function generarMensajeWA(p) {
 function WhatsAppBtn({ paciente }) {
   const numero = formatearWA(paciente.telefono);
   if (!numero) return null;
-  const url = `https://wa.me/${numero}?text=${generarMensajeWA(paciente)}`;
+  const url = `https://web.whatsapp.com/send?phone=${numero}&text=${generarMensajeWA(paciente)}`;
   return (
     <a
       href={url}
-      target="_blank"
-      rel="noopener noreferrer"
+      onClick={(e) => { e.preventDefault(); window.open(url, "whatsapp"); }}
       className="btn btn-sm btn-whatsapp"
       title={`Contactar por WhatsApp: ${paciente.telefono}`}
     >
