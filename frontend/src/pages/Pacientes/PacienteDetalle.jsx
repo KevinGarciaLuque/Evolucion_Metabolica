@@ -1027,16 +1027,45 @@ export default function PacienteDetalle() {
             <div className="card">
               <div className="card-header-row">
                 <div>
-                  <h3 style={{ margin: 0 }}>💉 a</h3>
+                  <h3 style={{ margin: 0 }}>💉 Historial de Insulina</h3>
                   <p style={{ margin: "4px 0 0", fontSize: "0.78rem", color: "#64748b" }}>
                     Inicio: <strong>{paciente.tipo_insulina || "—"}</strong> (prolongada) · <strong>{paciente.tipo_insulina_2 || "—"}</strong> (corta)
                   </p>
                 </div>
-                <button className="btn btn-primary" style={{ display: "flex", alignItems: "center", gap: 6 }} onClick={abrirNuevaInsulina}>
-                <FiPlus size={15} /> Nuevo registro
-              </button>
-            </div>
-            <div className="table-wrapper">
+              </div>
+
+              {/* ── Fila de acción encima de la tabla ── */}
+              <div
+                onClick={abrirNuevaInsulina}
+                style={{
+                  display: "flex", alignItems: "center", gap: 10,
+                  margin: "12px 0 0", padding: "10px 16px",
+                  background: "linear-gradient(90deg,#eff6ff,#eef2ff)",
+                  border: "1.5px dashed #6366f1", borderRadius: 10,
+                  cursor: "pointer", transition: "box-shadow 0.15s",
+                  userSelect: "none",
+                }}
+                role="button"
+                title="Agregar nuevo registro de insulina"
+                onMouseEnter={e => e.currentTarget.style.boxShadow = "0 2px 12px #6366f133"}
+                onMouseLeave={e => e.currentTarget.style.boxShadow = "none"}
+              >
+                <span style={{
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  width: 28, height: 28, borderRadius: "50%",
+                  background: "#6366f1", color: "#fff", flexShrink: 0,
+                }}>
+                  <FiPlus size={16} />
+                </span>
+                <span style={{ fontWeight: 600, color: "#4338ca", fontSize: "0.9rem" }}>
+                  Nuevo registro de insulina
+                </span>
+                <span style={{ marginLeft: "auto", fontSize: "0.78rem", color: "#94a3b8" }}>
+                  Haz clic para agregar →
+                </span>
+              </div>
+
+            <div className="table-wrapper" style={{ marginTop: 12 }}>
               <table className="tabla">
                 <thead>
                   <tr>
