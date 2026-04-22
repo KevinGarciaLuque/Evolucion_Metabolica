@@ -308,6 +308,9 @@ export default function PacienteDetalle() {
     TA:    Number(a.tiempo_activo) || 0,
     GRI:   Number(a.gri)  || 0,
     clasificacion: a.clasificacion,
+    eventos_hip:  a.eventos_hipoglucemia  != null ? Number(a.eventos_hipoglucemia)  : null,
+    duracion_hip: a.duracion_hipoglucemia != null ? Number(a.duracion_hipoglucemia) : null,
+    hba1c_post:   a.hba1c_post_mcg        != null ? Number(a.hba1c_post_mcg)        : null,
   }));
 
   return (
@@ -622,6 +625,97 @@ export default function PacienteDetalle() {
                         </Bar>
                       </BarChart>
                     </ResponsiveContainer>
+                  </div>
+                </div>
+
+                {/* ── Gráfica: Evolución TIR en el tiempo ─────────────────── */}
+                <div className="card" style={{ marginBottom: 16 }}>
+                  <h3>📈 Evolución TIR en el Tiempo</h3>
+                  <p style={{ fontSize: "0.82rem", color: "#64748b", marginBottom: 12 }}>
+                    Tendencia del control glucémico registro a registro. Objetivo: TIR ≥ 70%.
+                  </p>
+                  <ResponsiveContainer width="100%" height={isMobile ? 200 : 240}>
+                    <LineChart data={chartData} margin={{ top: 8, right: isMobile ? 4 : 24, left: isMobile ? -16 : -10, bottom: 5 }}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                      <XAxis dataKey="label" tick={{ fontSize: 11 }} />
+                      <YAxis domain={[0, 100]} tickFormatter={v => `${v}%`} tick={{ fontSize: 11 }} />
+                      <Tooltip formatter={v => `${Number(v).toFixed(1)}%`} />
+                      <Legend wrapperStyle={{ fontSize: 12 }} />
+                      <ReferenceLine y={70} stroke="#16a34a" strokeDasharray="4 4"
+                        label={{ value: "Meta TIR 70%", fontSize: 10, fill: "#16a34a", position: "insideTopRight" }} />
+                      <Line type="monotone" dataKey="TIR" name="TIR %" stroke={C_OBJETIVO} strokeWidth={2.5}
+                        dot={{ r: 5, fill: C_OBJETIVO }} activeDot={{ r: 7 }} />
+                      <Line type="monotone" dataKey="TAR" name="TAR %" stroke={C_MUY_ALTO} strokeWidth={1.5}
+                        strokeDasharray="4 4" dot={{ r: 3, fill: C_MUY_ALTO }} />
+                      <Line type="monotone" dataKey="TBR" name="TBR %" stroke={C_BAJO} strokeWidth={1.5}
+                        strokeDasharray="4 4" dot={{ r: 3, fill: C_BAJO }} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+
+                {/* ── Gráficas: Hipoglucemia y GMI vs HbA1c ───────────────── */}
+                <div className="dashboard-row" style={{ marginBottom: 16 }}>
+                  <div className="card">
+                    <h3>⚡ Eventos de Hipoglucemia</h3>
+                    <p style={{ fontSize: "0.78rem", color: "#64748b", marginBottom: 8 }}>
+                      Episodios registrados y duración promedio por análisis
+                    </p>
+                    {chartData.some(d => d.eventos_hip != null && d.eventos_hip > 0) ? (
+                      <ResponsiveContainer width="100%" height={isMobile ? 165 : 200}>
+                        <LineChart data={chartData} margin={{ top: 5, right: isMobile ? 4 : 20, left: isMobile ? -18 : -20, bottom: 5 }}>
+                          <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                          <XAxis dataKey="label" tick={{ fontSize: 11 }} />
+                          <YAxis yAxisId="ev" tick={{ fontSize: 11 }}
+                            label={{ value: "eventos", angle: -90, position: "insideLeft", fontSize: 10, fill: "#94a3b8" }} />
+                          <YAxis yAxisId="dur" orientation="right" tick={{ fontSize: 11 }}
+                            label={{ value: "min", angle: 90, position: "insideRight", fontSize: 10, fill: "#94a3b8" }} />
+                          <Tooltip
+                            contentStyle={{ background: "#1e293b", border: "none", borderRadius: 8, fontSize: 12 }}
+                            labelStyle={{ color: "#94a3b8" }}
+                            itemStyle={{ color: "#fff" }}
+                            formatter={(v, name) => [
+                              v != null ? v : "—",
+                              name === "eventos_hip" ? "Nº eventos" : "Duración (min)",
+                            ]}
+                          />
+                          <Legend formatter={n => n === "eventos_hip" ? "Nº eventos" : "Duración (min)"} wrapperStyle={{ fontSize: 12 }} />
+                          <Line yAxisId="ev" type="monotone" dataKey="eventos_hip" name="eventos_hip"
+                            stroke="#dc2626" strokeWidth={2} dot={{ r: 4, fill: "#dc2626" }} activeDot={{ r: 6 }} connectNulls />
+                          <Line yAxisId="dur" type="monotone" dataKey="duracion_hip" name="duracion_hip"
+                            stroke="#f97316" strokeWidth={1.5} strokeDasharray="5 5" dot={{ r: 3, fill: "#f97316" }} connectNulls />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    ) : (
+                      <div style={{ padding: "32px 0", textAlign: "center", color: "#94a3b8", fontSize: "0.85rem" }}>
+                        Sin datos de hipoglucemia registrados
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="card">
+                    <h3>🔬 GMI vs HbA1c post MCG</h3>
+                    <p style={{ fontSize: "0.78rem", color: "#64748b", marginBottom: 8 }}>
+                      HbA1c estimada por sensor (GMI) vs real por laboratorio
+                    </p>
+                    {chartData.some(d => d.hba1c_post != null && d.hba1c_post > 0) ? (
+                      <ResponsiveContainer width="100%" height={isMobile ? 165 : 200}>
+                        <BarChart data={chartData} margin={{ top: 5, right: isMobile ? 4 : 20, left: isMobile ? -18 : -20, bottom: 5 }}>
+                          <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                          <XAxis dataKey="label" tick={{ fontSize: 11 }} />
+                          <YAxis domain={[0, 16]} tickFormatter={v => `${v}%`} tick={{ fontSize: 11 }} />
+                          <Tooltip formatter={v => v != null ? `${Number(v).toFixed(1)}%` : "—"} />
+                          <Legend wrapperStyle={{ fontSize: 12 }} />
+                          <ReferenceLine y={7} stroke="#c27803" strokeDasharray="4 4"
+                            label={{ value: "7%", fontSize: 10, fill: "#c27803" }} />
+                          <Bar dataKey="GMI" name="GMI (estimado)" fill="#c27803" radius={[4,4,0,0]} />
+                          <Bar dataKey="hba1c_post" name="HbA1c real" fill="#6366f1" radius={[4,4,0,0]} />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    ) : (
+                      <div style={{ padding: "32px 0", textAlign: "center", color: "#94a3b8", fontSize: "0.85rem" }}>
+                        Sin HbA1c post MCG registrado aún
+                      </div>
+                    )}
                   </div>
                 </div>
               </>
