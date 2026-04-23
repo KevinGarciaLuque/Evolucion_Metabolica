@@ -2,49 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../../api/axios";
 import Layout from "../../components/Layout";
-
-// Formatea el teléfono para wa.me (código de Honduras: 504)
-function formatearWA(tel) {
-  const digits = (tel || "").replace(/\D/g, "");
-  if (!digits) return null;
-  if (digits.startsWith("504") && digits.length >= 11) return digits;
-  if (digits.length === 8) return `504${digits}`;
-  return digits;
-}
-
-// Genera el mensaje pre-escrito según la clasificación ISPAD del paciente
-function generarMensajeWA(p) {
-  const cls = p.ultima_clasificacion;
-  let alerta = "";
-  if (cls === "ALTO_RIESGO") {
-    alerta = " Su monitoreo continuo de glucosa indica una clasificación de ALTO RIESGO según criterios ISPAD, lo cual requiere atención médica urgente.";
-  } else if (cls === "MODERADO") {
-    alerta = " Su monitoreo continuo de glucosa indica una clasificación MODERADA según criterios ISPAD y requiere seguimiento médico.";
-  } else if (cls === "OPTIMO") {
-    alerta = " Su monitoreo continuo de glucosa muestra un control ÓPTIMO según criterios ISPAD. ¡Felicitaciones, siga así!";
-  }
-  return encodeURIComponent(
-    `Estimado/a ${p.nombre}, le contactamos del Programa Evolución Metabólica (${p.institucion || "HMEP"}).${alerta} Por favor comuníquese con su médico tratante para coordinar su próxima cita. Gracias.`
-  );
-}
-
-function WhatsAppBtn({ paciente }) {
-  const numero = formatearWA(paciente.telefono);
-  if (!numero) return null;
-  const url = `https://web.whatsapp.com/send?phone=${numero}&text=${generarMensajeWA(paciente)}`;
-  return (
-    <a
-      href={url}
-      onClick={(e) => { e.preventDefault(); window.open(url, "whatsapp"); }}
-      className="btn btn-sm btn-whatsapp"
-      title={`Contactar por WhatsApp: ${paciente.telefono}`}
-    >
-      <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
-        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-      </svg>
-    </a>
-  );
-}
+import { IoLogoWhatsapp } from "react-icons/io";
 
 export default function PacientesList() {
   const navigate  = useNavigate();
@@ -57,6 +15,51 @@ export default function PacientesList() {
   });
   const [mostrarFiltros, setMostrarFiltros] = useState(false);
   const [clsVis, setClsVis] = useState({ OPTIMO: true, MODERADO: true, ALTO_RIESGO: true });
+
+  // ── WhatsApp modal ────────────────────────────────────────────────────────
+  const [modalWA,    setModalWA]    = useState(null); // paciente seleccionado
+  const [msgWA,      setMsgWA]      = useState("");
+  const [enviandoWA, setEnviandoWA] = useState(false);
+  const [resultadoWA, setResultadoWA] = useState(null);
+
+  function generarMensajeWA(paciente, clasificacion) {
+    const trato    = paciente.sexo === "F" ? "Estimada" : "Estimado";
+    const hospital = paciente.institucion === "HMEP"
+      ? "Hospital María de Especialidades Pediátricas"
+      : paciente.institucion === "IHSS"
+        ? "Instituto Hondureño de Seguridad Social"
+        : paciente.institucion || "la institución";
+
+    if (clasificacion === "ALTO_RIESGO") {
+      return `${trato} ${paciente.nombre}, le contactamos de la consulta de diabetes de Endocrinología de (${hospital}). Hemos detectado alteraciones en las métricas de tu monitor, vemos alertas con niveles altos en la glucosa, por favor revisa:\n1.- Tu Plan de alimentación\n2.- Cumplimiento de Ejercicio\n3.- Revisa tu dosis de insulina que sean las adecuadas\nSi persiste, por favor comuníquese con su médico tratante para coordinar su próxima cita. Gracias.`;
+    } else if (clasificacion === "MODERADO") {
+      return `${trato} ${paciente.nombre}, le contactamos de la consulta de diabetes de Endocrinología de (${hospital}). Hemos detectado que las métricas de tu monitor se encuentran en un nivel MODERADO. Te recomendamos revisar:\n1.- Tu Plan de alimentación\n2.- Cumplimiento de Ejercicio\n3.- Tu dosis de insulina\nPor favor comuníquese con su médico tratante para seguimiento. Gracias.`;
+    } else if (clasificacion === "OPTIMO") {
+      return `${trato} ${paciente.nombre}, le contactamos de la consulta de diabetes de Endocrinología de (${hospital}). Sus métricas de monitoreo continuo de glucosa muestran un control ÓPTIMO. ¡Felicitaciones, siga con su excelente manejo! Recuerde mantener sus citas de seguimiento. Gracias.`;
+    }
+    return `${trato} ${paciente.nombre}, le contactamos de la consulta de diabetes de Endocrinología de (${hospital}). Por favor comuníquese con su médico tratante para coordinar su próxima cita. Gracias.`;
+  }
+
+  function abrirModalWA(paciente) {
+    setMsgWA(generarMensajeWA(paciente, paciente.ultima_clasificacion));
+    setResultadoWA(null);
+    setModalWA(paciente);
+  }
+
+  async function enviarWA() {
+    if (!msgWA.trim() || !modalWA) return;
+    setEnviandoWA(true);
+    setResultadoWA(null);
+    try {
+      await api.post(`/mensajes/enviar/${modalWA.id}`, { mensaje: msgWA.trim() });
+      setResultadoWA({ ok: true });
+      setMsgWA("");
+    } catch (err) {
+      setResultadoWA({ ok: false, error: err.response?.data?.error || "Error al enviar" });
+    } finally {
+      setEnviandoWA(false);
+    }
+  }
 
   useEffect(() => {
     api.get("/pacientes/departamentos").then((r) => setDeptos(r.data));
@@ -265,7 +268,13 @@ export default function PacientesList() {
                       <div className="acciones">
                         <button className="btn btn-sm btn-outline" onClick={() => navigate(`/pacientes/${p.id}`)}>Ver</button>
                         <button className="btn btn-sm btn-outline" onClick={() => navigate(`/pacientes/${p.id}/editar`)}>Editar</button>
-                        <WhatsAppBtn paciente={p} />
+                        <button
+                          className="btn btn-sm btn-whatsapp"
+                          onClick={() => abrirModalWA(p)}
+                          title={`Enviar WhatsApp a ${p.nombre}`}
+                        >
+                          <IoLogoWhatsapp size={15} />
+                        </button>
                         <button className="btn btn-sm btn-danger" onClick={() => eliminar(p.id)}>Eliminar</button>
                       </div>
                     </td>
@@ -279,6 +288,63 @@ export default function PacientesList() {
           </div>
         )}
       </div>
+
+      {/* ── Modal WhatsApp ─────────────────────────────────────────────── */}
+      {modalWA && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 9999, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
+          <div style={{ background: "#fff", borderRadius: 14, padding: 28, maxWidth: 480, width: "100%", boxShadow: "0 24px 64px rgba(0,0,0,0.25)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+              <h3 style={{ margin: 0, display: "flex", alignItems: "center", gap: 8, color: "#0f172a" }}>
+                <IoLogoWhatsapp size={22} color="#25d366" /> Enviar WhatsApp
+              </h3>
+              <button onClick={() => setModalWA(null)} style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer", color: "#94a3b8" }}>✕</button>
+            </div>
+
+            <p style={{ margin: "0 0 4px", fontSize: "0.82rem", color: "#64748b" }}>
+              Destinatario: <strong style={{ color: "#0f172a" }}>{modalWA.nombre}</strong>
+            </p>
+            <p style={{ margin: "0 0 14px", fontSize: "0.82rem", color: "#64748b" }}>
+              Teléfono: <strong style={{ color: "#0f172a" }}>{modalWA.telefono || "Sin teléfono registrado"}</strong>
+            </p>
+
+            {!modalWA.telefono ? (
+              <div style={{ background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 8, padding: "12px 14px", fontSize: "0.85rem", color: "#dc2626" }}>
+                Este paciente no tiene teléfono registrado. Edítalo para agregarlo.
+              </div>
+            ) : (
+              <>
+                <label style={{ display: "block", fontSize: "0.82rem", fontWeight: 500, color: "#374151", marginBottom: "0.35rem" }}>Mensaje *</label>
+                <textarea
+                  rows={5}
+                  value={msgWA}
+                  onChange={e => setMsgWA(e.target.value)}
+                  style={{ width: "100%", boxSizing: "border-box", padding: "0.6rem 0.75rem", border: "1px solid #d1d5db", borderRadius: 8, fontSize: "0.875rem", resize: "vertical", fontFamily: "inherit", marginBottom: "1rem" }}
+                />
+                {resultadoWA?.ok && (
+                  <div style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: 8, padding: "10px 14px", fontSize: "0.85rem", color: "#16a34a", marginBottom: "0.75rem" }}>
+                    ✅ Mensaje enviado correctamente
+                  </div>
+                )}
+                {resultadoWA?.ok === false && (
+                  <div style={{ background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 8, padding: "10px 14px", fontSize: "0.85rem", color: "#dc2626", marginBottom: "0.75rem" }}>
+                    ❌ {resultadoWA.error}
+                  </div>
+                )}
+                <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+                  <button className="btn btn-outline" onClick={() => setModalWA(null)} disabled={enviandoWA}>Cancelar</button>
+                  <button
+                    onClick={enviarWA}
+                    disabled={enviandoWA || !msgWA.trim()}
+                    style={{ display: "flex", alignItems: "center", gap: 6, background: enviandoWA ? "#86efac" : "#25d366", color: "#fff", border: "none", borderRadius: 8, padding: "8px 20px", fontWeight: 600, cursor: enviandoWA ? "not-allowed" : "pointer" }}
+                  >
+                    <IoLogoWhatsapp size={16} /> {enviandoWA ? "Enviando..." : "Enviar"}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </Layout>
   );
 }

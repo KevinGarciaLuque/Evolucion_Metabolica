@@ -12,7 +12,8 @@ import dashboardRoutes from "./routes/dashboard.routes.js";
 import usuariosRoutes from "./routes/usuarios.routes.js";
 import bitacoraRoutes from "./routes/bitacora.routes.js";
 import clinicoRoutes from "./routes/clinico.routes.js";
-import auditoriaRoutes from "./routes/auditoria.routes.js";
+import auditoriaRoutes  from "./routes/auditoria.routes.js";
+import mensajesRoutes   from "./routes/mensajes.routes.js";
 
 dotenv.config();
 
@@ -48,6 +49,7 @@ app.use("/api/usuarios", usuariosRoutes);
 app.use("/api/bitacora", bitacoraRoutes);
 app.use("/api/pacientes", clinicoRoutes);
 app.use("/api/auditoria", auditoriaRoutes);
+app.use("/api/mensajes",  mensajesRoutes);
 
 // Health check
 app.get("/api/health", (_req, res) => res.json({ status: "ok", timestamp: new Date().toISOString() }));

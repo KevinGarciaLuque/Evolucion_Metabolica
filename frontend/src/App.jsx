@@ -14,6 +14,7 @@ import UsuarioForm     from "./pages/Usuarios/UsuarioForm";
 import BitacoraList    from "./pages/Bitacora/BitacoraList";
 import BitacoraForm    from "./pages/Bitacora/BitacoraForm";
 import Auditoria       from "./pages/Auditoria/Auditoria";
+import MensajesPanel   from "./pages/Mensajes/MensajesPanel";
 
 function App() {
   return (
@@ -35,6 +36,7 @@ function App() {
           <Route path="/bitacora/nueva"    element={<ProtectedRoute><BitacoraForm /></ProtectedRoute>} />
           <Route path="/bitacora/:id/editar" element={<ProtectedRoute><BitacoraForm /></ProtectedRoute>} />
           <Route path="/auditoria"             element={<ProtectedRoute><Auditoria /></ProtectedRoute>} />
+          <Route path="/mensajes"              element={<ProtectedRoute><MensajesPanel /></ProtectedRoute>} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </BrowserRouter>

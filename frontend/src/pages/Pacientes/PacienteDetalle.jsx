@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate, useLocation } from "react-router-dom";
 import { FiTrash2, FiEdit2, FiEye, FiArrowLeft, FiUpload, FiEdit3, FiPlus, FiActivity, FiDroplet, FiBookOpen, FiUser, FiBarChart2, FiSun, FiZap } from "react-icons/fi";
+import { IoLogoWhatsapp } from "react-icons/io";
 import { MdOutlineBiotech } from "react-icons/md";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -85,6 +86,45 @@ export default function PacienteDetalle() {
   const [guardandoAnticuerpos, setGuardandoAnticuerpos] = useState(false);
   const [eliminarAnticuerpos, setEliminarAnticuerpos] = useState(null);
   const [eliminandoAnticuerpos, setEliminandoAnticuerpos] = useState(false);
+
+  // ── WhatsApp individual ───────────────────────────────────────────────────
+  const [modalWhatsApp, setModalWhatsApp]   = useState(false);
+  const [msgWhatsApp,   setMsgWhatsApp]     = useState("");
+  const [enviandoWA,    setEnviandoWA]      = useState(false);
+  const [resultadoWA,   setResultadoWA]     = useState(null);
+
+  function generarMensajeWA(clasificacion) {
+    const trato    = paciente.sexo === "F" ? "Estimada" : "Estimado";
+    const hospital = paciente.institucion === "HMEP"
+      ? "Hospital María de Especialidades Pediátricas"
+      : paciente.institucion === "IHSS"
+        ? "Instituto Hondureño de Seguridad Social"
+        : paciente.institucion || "la institución";
+
+    if (clasificacion === "ALTO_RIESGO") {
+      return `${trato} ${paciente.nombre}, le contactamos de la consulta de diabetes de Endocrinología de (${hospital}). Hemos detectado alteraciones en las métricas de tu monitor, vemos alertas con niveles altos en la glucosa, por favor revisa:\n1.- Tu Plan de alimentación\n2.- Cumplimiento de Ejercicio\n3.- Revisa tu dosis de insulina que sean las adecuadas\nSi persiste, por favor comuníquese con su médico tratante para coordinar su próxima cita. Gracias.`;
+    } else if (clasificacion === "MODERADO") {
+      return `${trato} ${paciente.nombre}, le contactamos de la consulta de diabetes de Endocrinología de (${hospital}). Hemos detectado que las métricas de tu monitor se encuentran en un nivel MODERADO. Te recomendamos revisar:\n1.- Tu Plan de alimentación\n2.- Cumplimiento de Ejercicio\n3.- Tu dosis de insulina\nPor favor comuníquese con su médico tratante para seguimiento. Gracias.`;
+    } else if (clasificacion === "OPTIMO") {
+      return `${trato} ${paciente.nombre}, le contactamos de la consulta de diabetes de Endocrinología de (${hospital}). Sus métricas de monitoreo continuo de glucosa muestran un control ÓPTIMO. ¡Felicitaciones, siga con su excelente manejo! Recuerde mantener sus citas de seguimiento. Gracias.`;
+    }
+    return `${trato} ${paciente.nombre}, le contactamos de la consulta de diabetes de Endocrinología de (${hospital}). Por favor comuníquese con su médico tratante para coordinar su próxima cita. Gracias.`;
+  }
+
+  async function enviarWhatsAppIndividual() {
+    if (!msgWhatsApp.trim()) return;
+    setEnviandoWA(true);
+    setResultadoWA(null);
+    try {
+      await api.post(`/mensajes/enviar/${id}`, { mensaje: msgWhatsApp.trim() });
+      setResultadoWA({ ok: true });
+      setMsgWhatsApp("");
+    } catch (err) {
+      setResultadoWA({ ok: false, error: err.response?.data?.error || "Error al enviar" });
+    } finally {
+      setEnviandoWA(false);
+    }
+  }
 
   async function eliminarAnalisis() {
     setEliminando(true);
@@ -407,6 +447,18 @@ export default function PacienteDetalle() {
           </div>
         </div>
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+          <button
+            onClick={() => { setMsgWhatsApp(generarMensajeWA(ultimoAnalisis?.clasificacion)); setResultadoWA(null); setModalWhatsApp(true); }}
+            style={{
+              display: "flex", alignItems: "center", gap: 6,
+              background: "#25d366", color: "#fff", border: "none",
+              borderRadius: 8, padding: "7px 14px", fontWeight: 600,
+              fontSize: "0.875rem", cursor: "pointer",
+            }}
+            title="Enviar mensaje WhatsApp"
+          >
+            <IoLogoWhatsapp size={17} /> WhatsApp
+          </button>
           <Link to={`/analisis/subir?paciente=${id}`} className="btn btn-primary" style={{ display: "flex", alignItems: "center", gap: 6 }}>
             <FiUpload size={15} /> Subir PDF
           </Link>
@@ -1759,6 +1811,68 @@ export default function PacienteDetalle() {
                 {eliminandoAnticuerpos ? "Eliminando..." : "Sí, eliminar"}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Modal WhatsApp individual ────────────────────────────────────── */}
+      {modalWhatsApp && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 9999, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", padding: "16px" }}>
+          <div style={{ background: "#fff", borderRadius: 14, padding: "28px", maxWidth: 480, width: "100%", boxShadow: "0 24px 64px rgba(0,0,0,0.25)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+              <h3 style={{ margin: 0, display: "flex", alignItems: "center", gap: 8, color: "#0f172a" }}>
+                <IoLogoWhatsapp size={22} color="#25d366" /> Enviar WhatsApp
+              </h3>
+              <button onClick={() => setModalWhatsApp(false)} style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer", color: "#94a3b8" }}>✕</button>
+            </div>
+
+            <p style={{ margin: "0 0 4px", fontSize: "0.82rem", color: "#64748b" }}>
+              Destinatario: <strong style={{ color: "#0f172a" }}>{paciente.nombre}</strong>
+            </p>
+            <p style={{ margin: "0 0 14px", fontSize: "0.82rem", color: "#64748b" }}>
+              Teléfono: <strong style={{ color: "#0f172a" }}>{paciente.telefono || paciente.telefono_tutor || "Sin teléfono registrado"}</strong>
+            </p>
+
+            {!paciente.telefono && !paciente.telefono_tutor ? (
+              <div style={{ background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 8, padding: "12px 14px", fontSize: "0.85rem", color: "#dc2626" }}>
+                Este paciente no tiene teléfono ni teléfono de tutor registrado. Edita el paciente para agregarlo.
+              </div>
+            ) : (
+              <>
+                <label style={{ display: "block", fontSize: "0.82rem", fontWeight: 500, color: "#374151", marginBottom: "0.35rem" }}>
+                  Mensaje *
+                </label>
+                <textarea
+                  rows={5}
+                  value={msgWhatsApp}
+                  onChange={e => setMsgWhatsApp(e.target.value)}
+                  placeholder="Escribe el mensaje aquí…"
+                  style={{ width: "100%", boxSizing: "border-box", padding: "0.6rem 0.75rem", border: "1px solid #d1d5db", borderRadius: 8, fontSize: "0.875rem", resize: "vertical", fontFamily: "inherit", marginBottom: "1rem" }}
+                />
+
+                {resultadoWA?.ok && (
+                  <div style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: 8, padding: "10px 14px", fontSize: "0.85rem", color: "#16a34a", marginBottom: "0.75rem" }}>
+                    ✅ Mensaje enviado correctamente
+                  </div>
+                )}
+                {resultadoWA?.ok === false && (
+                  <div style={{ background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 8, padding: "10px 14px", fontSize: "0.85rem", color: "#dc2626", marginBottom: "0.75rem" }}>
+                    ❌ {resultadoWA.error}
+                  </div>
+                )}
+
+                <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+                  <button className="btn btn-outline" onClick={() => setModalWhatsApp(false)} disabled={enviandoWA}>Cancelar</button>
+                  <button
+                    onClick={enviarWhatsAppIndividual}
+                    disabled={enviandoWA || !msgWhatsApp.trim()}
+                    style={{ display: "flex", alignItems: "center", gap: 6, background: enviandoWA ? "#86efac" : "#25d366", color: "#fff", border: "none", borderRadius: 8, padding: "8px 20px", fontWeight: 600, cursor: enviandoWA ? "not-allowed" : "pointer" }}
+                  >
+                    <IoLogoWhatsapp size={16} /> {enviandoWA ? "Enviando..." : "Enviar"}
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}

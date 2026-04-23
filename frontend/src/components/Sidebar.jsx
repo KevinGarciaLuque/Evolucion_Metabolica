@@ -10,6 +10,7 @@ import {
   HiOutlineUserGroup,
   HiOutlineBookOpen,
   HiOutlineShieldCheck,
+  HiOutlineChatBubbleLeftEllipsis,
 } from "react-icons/hi2";
 import { RiHeartPulseFill } from "react-icons/ri";
 import "./Sidebar.css";
@@ -20,8 +21,7 @@ const menu = [
   { to: "/pacientes",       icon: HiOutlineUsers,                 label: "Pacientes",   rol: null      },
   { to: "/analisis/subir",  icon: HiOutlineDocumentArrowUp,       label: "Subir PDF",   rol: null      },
   { to: "/bitacora",        icon: HiOutlineBookOpen,              label: "Registro Clínico", rol: null },
-  { to: "/usuarios",        icon: HiOutlineUserGroup,             label: "Usuarios",    rol: "admin"   },
-  { to: "/auditoria",       icon: HiOutlineShieldCheck,           label: "Auditoría",   rol: "admin"   },
+  { to: "/usuarios",        icon: HiOutlineUserGroup,             label: "Usuarios",    rol: "admin"   },  { to: "/mensajes",         icon: HiOutlineChatBubbleLeftEllipsis, label: "Mensajes",    rol: "admin"   },  { to: "/auditoria",       icon: HiOutlineShieldCheck,           label: "Auditoría",   rol: "admin"   },
 ];
 
 export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }) {
