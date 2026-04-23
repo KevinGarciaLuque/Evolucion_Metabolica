@@ -15,7 +15,7 @@ function hoy() {
   return new Date().toISOString().split("T")[0];
 }
 
-export default function BitacoraList() {
+export default function ConsultasList() {
   const navigate = useNavigate();
   const [entradas, setEntradas] = useState([]);
   const [cargando, setCargando] = useState(true);
@@ -29,7 +29,7 @@ export default function BitacoraList() {
     if (filtros.fecha_desde)     params.fecha_desde     = filtros.fecha_desde;
     if (filtros.fecha_hasta)     params.fecha_hasta     = filtros.fecha_hasta;
     setCargando(true);
-    api.get("/bitacora", { params })
+    api.get("/consultas", { params })
       .then((r) => setEntradas(r.data))
       .finally(() => setCargando(false));
   }, [filtros]);
@@ -40,7 +40,7 @@ export default function BitacoraList() {
 
   async function eliminar(id) {
     if (!confirm("¿Eliminar este registro clínico?")) return;
-    await api.delete(`/bitacora/${id}`);
+    await api.delete(`/consultas/${id}`);
     setEntradas(entradas.filter((e) => e.id !== id));
   }
 
@@ -48,10 +48,10 @@ export default function BitacoraList() {
     <Layout>
       <div className="page-header">
         <div>
-          <h1>Registro Clínico</h1>
+          <h1>Consultas</h1>
           <p className="page-subtitle">Registro de consultas y seguimiento de pacientes</p>
         </div>
-        <Link to="/bitacora/nueva" className="btn btn-primary">+ Nuevo Registro</Link>
+        <Link to="/consultas/nueva" className="btn btn-primary">+ Nueva Consulta</Link>
       </div>
 
       {/* Filtros */}
@@ -128,7 +128,7 @@ export default function BitacoraList() {
                       <div className="acciones">
                         <button
                           className="btn btn-sm btn-outline"
-                          onClick={() => navigate(`/bitacora/${e.id}/editar`)}
+                          onClick={() => navigate(`/consultas/${e.id}/editar`)}
                         >Editar</button>
                         <button
                           className="btn btn-sm btn-danger"

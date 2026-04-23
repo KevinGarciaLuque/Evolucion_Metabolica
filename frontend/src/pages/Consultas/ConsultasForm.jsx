@@ -12,7 +12,7 @@ const VACÍO = {
   plan_tratamiento: "", proxima_cita: "",
 };
 
-export default function BitacoraForm() {
+export default function ConsultasForm() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -39,7 +39,7 @@ export default function BitacoraForm() {
   // Cuando carga en edición, buscar el nombre del paciente seleccionado
   useEffect(() => {
     if (esEdicion) {
-      api.get(`/bitacora/${id}`).then((r) => {
+      api.get(`/consultas/${id}`).then((r) => {
         const d = r.data;
         if (d.fecha)        d.fecha        = d.fecha.split("T")[0];
         if (d.proxima_cita) d.proxima_cita = d.proxima_cita.split("T")[0];
@@ -88,11 +88,11 @@ export default function BitacoraForm() {
     setGuardando(true);
     try {
       if (esEdicion) {
-        await api.put(`/bitacora/${id}`, form);
+        await api.put(`/consultas/${id}`, form);
       } else {
-        await api.post("/bitacora", form);
+        await api.post("/consultas", form);
       }
-      navigate("/bitacora");
+      navigate("/consultas");
     } catch (err) {
       setError(err.response?.data?.error || "Error al guardar");
     } finally {
@@ -107,13 +107,13 @@ export default function BitacoraForm() {
           <button
             type="button"
             className="back-btn"
-            onClick={() => navigate("/bitacora")}
-            title="Volver a Registro Clínico"
+            onClick={() => navigate("/consultas")}
+            title="Volver a Consultas"
           >
             <FiArrowLeft size={18} />
           </button>
           <div>
-            <h1>{esEdicion ? "Editar Registro Clínico" : "Nuevo Registro Clínico"}</h1>
+            <h1>{esEdicion ? "Editar Consulta" : "Nueva Consulta"}</h1>
             <p className="page-subtitle">Registro de consulta o seguimiento</p>
           </div>
         </div>
@@ -245,7 +245,7 @@ export default function BitacoraForm() {
           </div>
 
           <div className="form-actions">
-            <button type="button" className="btn btn-outline" onClick={() => navigate("/bitacora")}>
+            <button type="button" className="btn btn-outline" onClick={() => navigate("/consultas")}>
               Cancelar
             </button>
             <button type="submit" className="btn btn-primary" disabled={guardando}>

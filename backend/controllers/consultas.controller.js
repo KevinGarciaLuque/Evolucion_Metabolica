@@ -6,7 +6,7 @@ export async function listar(req, res) {
   const { paciente_nombre, paciente_id, fecha_desde, fecha_hasta } = req.query;
   let sql = `
     SELECT b.*, p.nombre AS paciente_nombre, p.dni AS paciente_dni
-    FROM bitacora b
+    FROM consultas b
     JOIN pacientes p ON p.id = b.paciente_id
     WHERE 1=1
   `;
@@ -33,7 +33,7 @@ export async function obtener(req, res) {
   try {
     const [rows] = await pool.query(
       `SELECT b.*, p.nombre AS paciente_nombre, p.dni AS paciente_dni
-       FROM bitacora b
+       FROM consultas b
        JOIN pacientes p ON p.id = b.paciente_id
        WHERE b.id = ?`,
       [req.params.id]
@@ -57,7 +57,7 @@ export async function crear(req, res) {
 
   try {
     const [result] = await pool.query(
-      `INSERT INTO bitacora
+      `INSERT INTO consultas
         (paciente_id, fecha, tipo_consulta, peso, talla, glucosa_ayunas,
          hba1c, tension_arterial, medicamentos, observaciones, plan_tratamiento, proxima_cita, usuario_id)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -84,7 +84,7 @@ export async function actualizar(req, res) {
 
   try {
     const [result] = await pool.query(
-      `UPDATE bitacora SET
+      `UPDATE consultas SET
         fecha = ?, tipo_consulta = ?, peso = ?, talla = ?, glucosa_ayunas = ?,
         hba1c = ?, tension_arterial = ?, medicamentos = ?, observaciones = ?,
         plan_tratamiento = ?, proxima_cita = ?
@@ -108,7 +108,7 @@ export async function actualizar(req, res) {
 /* ── Eliminar ────────────────────────────────────── */
 export async function eliminar(req, res) {
   try {
-    const [result] = await pool.query("DELETE FROM bitacora WHERE id = ?", [req.params.id]);
+    const [result] = await pool.query("DELETE FROM consultas WHERE id = ?", [req.params.id]);
     if (result.affectedRows === 0)
       return res.status(404).json({ error: "Entrada no encontrada" });
     auditarAccion(pool, req, { accion: "eliminar_bitacora", entidad: "bitacora", entidad_id: Number(req.params.id), descripcion: `Eliminó entrada bitácora ID ${req.params.id}` });

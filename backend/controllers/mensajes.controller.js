@@ -175,7 +175,7 @@ export async function enviarIndividual(req, res) {
 
     res.json({ ok: true, paciente: p.nombre, telefono: p.telefono });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Error al enviar mensaje" });
+    console.error("[enviarIndividual]", err);
+    res.status(500).json({ error: err.message || "Error al enviar mensaje" });
   }
 }

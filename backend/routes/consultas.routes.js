@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { listar, obtener, crear, actualizar, eliminar } from "../controllers/bitacora.controller.js";
+import { listar, obtener, crear, actualizar, eliminar } from "../controllers/consultas.controller.js";
 import { verificarToken } from "../middlewares/auth.js";
 
 const router = Router();

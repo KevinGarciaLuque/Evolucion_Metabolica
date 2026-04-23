@@ -11,8 +11,8 @@ import SubirPDF        from "./pages/Analisis/SubirPDF";
 import Consolidado     from "./pages/Consolidado";
 import UsuariosList    from "./pages/Usuarios/UsuariosList";
 import UsuarioForm     from "./pages/Usuarios/UsuarioForm";
-import BitacoraList    from "./pages/Bitacora/BitacoraList";
-import BitacoraForm    from "./pages/Bitacora/BitacoraForm";
+import ConsultasList   from "./pages/Consultas/ConsultasList";
+import ConsultasForm   from "./pages/Consultas/ConsultasForm";
 import Auditoria       from "./pages/Auditoria/Auditoria";
 import MensajesPanel   from "./pages/Mensajes/MensajesPanel";
 
@@ -32,9 +32,9 @@ function App() {
           <Route path="/usuarios"         element={<ProtectedRoute><UsuariosList /></ProtectedRoute>} />
           <Route path="/usuarios/nuevo"   element={<ProtectedRoute><UsuarioForm /></ProtectedRoute>} />
           <Route path="/usuarios/:id/editar" element={<ProtectedRoute><UsuarioForm /></ProtectedRoute>} />
-          <Route path="/bitacora"          element={<ProtectedRoute><BitacoraList /></ProtectedRoute>} />
-          <Route path="/bitacora/nueva"    element={<ProtectedRoute><BitacoraForm /></ProtectedRoute>} />
-          <Route path="/bitacora/:id/editar" element={<ProtectedRoute><BitacoraForm /></ProtectedRoute>} />
+          <Route path="/consultas"             element={<ProtectedRoute><ConsultasList /></ProtectedRoute>} />
+          <Route path="/consultas/nueva"        element={<ProtectedRoute><ConsultasForm /></ProtectedRoute>} />
+          <Route path="/consultas/:id/editar"   element={<ProtectedRoute><ConsultasForm /></ProtectedRoute>} />
           <Route path="/auditoria"             element={<ProtectedRoute><Auditoria /></ProtectedRoute>} />
           <Route path="/mensajes"              element={<ProtectedRoute><MensajesPanel /></ProtectedRoute>} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />

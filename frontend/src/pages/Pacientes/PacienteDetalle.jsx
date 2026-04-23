@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate, useLocation } from "react-router-dom";
-import { FiTrash2, FiEdit2, FiEye, FiArrowLeft, FiUpload, FiEdit3, FiPlus, FiActivity, FiDroplet, FiBookOpen, FiUser, FiBarChart2, FiSun, FiZap } from "react-icons/fi";
+import { FiTrash2, FiEdit2, FiEye, FiArrowLeft, FiUpload, FiEdit3, FiPlus, FiActivity, FiDroplet, FiBookOpen, FiUser, FiBarChart2, FiSun, FiZap, FiClipboard } from "react-icons/fi";
 import { IoLogoWhatsapp } from "react-icons/io";
-import { MdOutlineBiotech } from "react-icons/md";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Legend, BarChart, Bar, Cell, ReferenceLine,
@@ -14,6 +13,15 @@ import { useAuth } from "../../context/AuthContext";
 
 // ─── Colores por clasificación ──────────────────────────────────────────────
 const COLORS_CLASIF = { OPTIMO: "#16a34a", MODERADO: "#d97706", ALTO_RIESGO: "#dc2626" };
+
+// ─── Badges tipo consulta ────────────────────────────────────────────────────
+const TIPO_BADGE = {
+  Presencial:   "badge-green",
+  Telemedicina: "badge-blue",
+  Control:      "badge-yellow",
+  Urgencia:     "badge-red",
+  Otro:         "badge-gray",
+};
 
 // ─── Paleta ISPAD ────────────────────────────────────────────────────────────
 const C_MUY_ALTO  = "#FEBF01"; // TAR Muy Alto  >250 mg/dL
@@ -78,14 +86,8 @@ export default function PacienteDetalle() {
   const [eliminarAlimentacion, setEliminarAlimentacion] = useState(null);
   const [eliminandoAlimentacion, setEliminandoAlimentacion] = useState(false);
 
-  // ── Anticuerpos ───────────────────────────────────────────────────────────
-  const [anticuerpos, setAnticuerpos] = useState([]);
-  const [modalAnticuerpos, setModalAnticuerpos] = useState(false);
-  const [editAnticuerpos, setEditAnticuerpos] = useState(null);
-  const [formAnticuerpos, setFormAnticuerpos] = useState({});
-  const [guardandoAnticuerpos, setGuardandoAnticuerpos] = useState(false);
-  const [eliminarAnticuerpos, setEliminarAnticuerpos] = useState(null);
-  const [eliminandoAnticuerpos, setEliminandoAnticuerpos] = useState(false);
+  // ── Consultas ─────────────────────────────────────────────────────────────
+  const [consultas, setConsultas] = useState([]);
 
   // ── WhatsApp individual ───────────────────────────────────────────────────
   const [modalWhatsApp, setModalWhatsApp]   = useState(false);
@@ -271,51 +273,6 @@ export default function PacienteDetalle() {
     }
   }
 
-  // ── Anticuerpos helpers ───────────────────────────────────────────────────
-  function abrirNuevoAnticuerpos() {
-    setFormAnticuerpos({
-      fecha: new Date().toISOString().split("T")[0],
-      iaa: "", anti_gad65: "", anti_ia2: "", znt8: "", ica: "",
-      observaciones: "", elaborado_por: "",
-    });
-    setEditAnticuerpos(null);
-    setModalAnticuerpos(true);
-  }
-  function abrirEditarAnticuerpos(reg) {
-    setFormAnticuerpos({ ...reg, fecha: reg.fecha?.split("T")[0] || reg.fecha });
-    setEditAnticuerpos(reg);
-    setModalAnticuerpos(true);
-  }
-  async function guardarAnticuerpos() {
-    setGuardandoAnticuerpos(true);
-    try {
-      if (editAnticuerpos) {
-        await api.put(`/pacientes/${id}/anticuerpos/${editAnticuerpos.id}`, formAnticuerpos);
-        setAnticuerpos(list => list.map(r => r.id === editAnticuerpos.id ? { ...r, ...formAnticuerpos } : r));
-      } else {
-        const { data } = await api.post(`/pacientes/${id}/anticuerpos`, formAnticuerpos);
-        setAnticuerpos(list => [{ ...formAnticuerpos, id: data.id }, ...list]);
-      }
-      setModalAnticuerpos(false);
-    } catch {
-      alert("Error al guardar el registro de anticuerpos.");
-    } finally {
-      setGuardandoAnticuerpos(false);
-    }
-  }
-  async function confirmarEliminarAnticuerpos() {
-    setEliminandoAnticuerpos(true);
-    try {
-      await api.delete(`/pacientes/${id}/anticuerpos/${eliminarAnticuerpos.id}`);
-      setAnticuerpos(list => list.filter(r => r.id !== eliminarAnticuerpos.id));
-      setEliminarAnticuerpos(null);
-    } catch {
-      alert("Error al eliminar el registro.");
-    } finally {
-      setEliminandoAnticuerpos(false);
-    }
-  }
-
   useEffect(() => {
     const onResize = () => {
       setIsMobile(window.innerWidth < 768);
@@ -332,14 +289,14 @@ export default function PacienteDetalle() {
       api.get(`/pacientes/${id}/historial`),
       api.get(`/pacientes/${id}/insulina`),
       api.get(`/pacientes/${id}/alimentacion`),
-      api.get(`/pacientes/${id}/anticuerpos`),
+      api.get(`/consultas?paciente_id=${id}`),
       api.get(`/pacientes/${id}/relacion-ic`),
-    ]).then(([p, h, ins, ali, ant, ric]) => {
+    ]).then(([p, h, ins, ali, cons, ric]) => {
       setPaciente(p.data);
       setHistorial(h.data);
       setInsulina(ins.data);
       setAlimentacion(ali.data);
-      setAnticuerpos(ant.data);
+      setConsultas(cons.data);
       setRelacionIC(ric.data);
     }).finally(() => setCargando(false));
   }, [id, location.key]);
@@ -470,11 +427,11 @@ export default function PacienteDetalle() {
       ══════════════════════════════════════════════════════════════════════ */}
       <div className="tab-bar">
         {[
+          { key: "consultas",    label: "Consultas",     icon: <FiClipboard size={14} />, count: consultas.length },
           { key: "info",         label: "Información",  icon: <FiUser size={14} /> },
           { key: "analisis",     label: "Análisis MCG", icon: <FiBarChart2 size={14} />, count: historial.length },
           { key: "insulina",     label: "Insulina",      icon: <FiZap size={14} />,      count: insulina.length },
           { key: "alimentacion", label: "Alimentación",  icon: <FiSun size={14} />,      count: alimentacion.length },
-          { key: "anticuerpos",  label: "Anticuerpos",   icon: <MdOutlineBiotech size={15} />, count: anticuerpos.length },
         ].map(tab => {
           const activa = tabActiva === tab.key;
           return (
@@ -1121,48 +1078,56 @@ export default function PacienteDetalle() {
         )}
 
         {/* ── TAB: ALIMENTACIÓN ─────────────────────────────────────────── */}
-        {tabActiva === "anticuerpos" && (
+        {tabActiva === "consultas" && (
           <div className="card">
             <div className="card-header-row">
-              <h3 style={{ margin: 0 }}>🔬 Historial de Anticuerpos</h3>
-              <button className="btn btn-primary" style={{ display: "flex", alignItems: "center", gap: 6 }} onClick={abrirNuevoAnticuerpos}>
-                <FiPlus size={15} /> Nuevo registro
-              </button>
+              <h3 style={{ margin: 0 }}>📋 Historial de Consultas ({consultas.length})</h3>
+              <Link
+                to={`/consultas/nueva?paciente_id=${id}`}
+                className="btn btn-primary"
+                style={{ display: "flex", alignItems: "center", gap: 6 }}
+              >
+                <FiPlus size={15} /> Nueva consulta
+              </Link>
             </div>
             <div className="table-wrapper">
               <table className="tabla">
                 <thead>
                   <tr>
                     <th>Fecha</th>
-                    <th>IAA</th>
-                    <th className="hide-mobile">Anti-GAD65</th>
-                    <th className="hide-mobile">Anti-IA2</th>
-                    <th className="hide-tablet">ZnT8</th>
-                    <th className="hide-tablet">ICA</th>
-                    <th className="hide-tablet">Elaborado por</th>
+                    <th>Tipo</th>
+                    <th className="hide-mobile">Glucosa ayunas</th>
+                    <th className="hide-mobile">HbA1c</th>
+                    <th className="hide-mobile">Peso</th>
+                    <th className="hide-mobile">Próxima cita</th>
                     <th>Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {anticuerpos.map(r => (
-                    <tr key={r.id}>
-                      <td style={{ whiteSpace: "nowrap", fontSize: "0.82rem" }}>{r.fecha ? new Date(String(r.fecha).substring(0, 10) + "T00:00:00").toLocaleDateString("es-GT", { day: "2-digit", month: "2-digit", year: "2-digit" }) : "—"}</td>
-                      <td>{r.iaa || "—"}</td>
-                      <td className="hide-mobile">{r.anti_gad65 || "—"}</td>
-                      <td className="hide-mobile">{r.anti_ia2 || "—"}</td>
-                      <td className="hide-tablet">{r.znt8 || "—"}</td>
-                      <td className="hide-tablet">{r.ica || "—"}</td>
-                      <td className="hide-tablet">{r.elaborado_por || "—"}</td>
+                  {consultas.map(c => (
+                    <tr key={c.id}>
+                      <td style={{ whiteSpace: "nowrap", fontSize: "0.82rem" }}>{c.fecha?.split("T")[0]}</td>
+                      <td><span className={`badge ${TIPO_BADGE[c.tipo_consulta] || "badge-gray"}`}>{c.tipo_consulta}</span></td>
+                      <td className="hide-mobile">{c.glucosa_ayunas != null ? `${c.glucosa_ayunas} mg/dL` : "—"}</td>
+                      <td className="hide-mobile">{c.hba1c != null ? `${c.hba1c}%` : "—"}</td>
+                      <td className="hide-mobile">{c.peso != null ? `${c.peso} kg` : "—"}</td>
+                      <td className="hide-mobile">{c.proxima_cita?.split("T")[0] || "—"}</td>
                       <td>
                         <div style={{ display: "flex", gap: 4 }}>
-                          <button onClick={() => abrirEditarAnticuerpos(r)} style={{ background: "none", border: "none", cursor: "pointer", color: "#3b82f6", padding: "2px 6px", borderRadius: 4, display: "flex", alignItems: "center" }} title="Editar"><FiEdit2 size={15} /></button>
-                          <button onClick={() => setEliminarAnticuerpos(r)} style={{ background: "none", border: "none", cursor: "pointer", color: "#dc2626", padding: "2px 6px", borderRadius: 4, display: "flex", alignItems: "center" }} title="Eliminar"><FiTrash2 size={15} /></button>
+                          <button
+                            onClick={() => navigate(`/consultas/${c.id}/editar`)}
+                            className="btn btn-sm btn-outline"
+                          >Editar</button>
                         </div>
                       </td>
                     </tr>
                   ))}
-                  {anticuerpos.length === 0 && (
-                    <tr><td colSpan={8} className="empty-cell">Sin registros de anticuerpos. Añade el primero →</td></tr>
+                  {consultas.length === 0 && (
+                    <tr>
+                      <td colSpan={7} className="empty-cell">
+                        Sin consultas registradas. <Link to={`/consultas/nueva?paciente_id=${id}`}>Añadir primera →</Link>
+                      </td>
+                    </tr>
                   )}
                 </tbody>
               </table>
@@ -1739,82 +1704,6 @@ export default function PacienteDetalle() {
       )}
 
       {/* ── Modal anticuerpos (crear / editar) ──────────────────────────── */}
-      {modalAnticuerpos && (
-        <div style={{ position: "fixed", inset: 0, zIndex: 9999, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "flex-start", justifyContent: "center", overflowY: "auto", padding: "24px 16px" }}>
-          <div style={{ background: "#fff", borderRadius: 14, padding: "28px", maxWidth: 640, width: "100%", boxShadow: "0 24px 64px rgba(0,0,0,0.25)" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-              <h3 style={{ margin: 0, color: "#0f172a", display: "flex", alignItems: "center", gap: 8 }}>
-                🔬 {editAnticuerpos ? "Editar registro" : "Nuevo registro de anticuerpos"}
-              </h3>
-              <button onClick={() => setModalAnticuerpos(false)} style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer", color: "#94a3b8" }}>✕</button>
-            </div>
-            <p style={{ fontSize: "0.78rem", color: "#64748b", marginBottom: 16 }}>
-              Ingrese el resultado de cada anticuerpo: <em>Positivo</em>, <em>Negativo</em>, valor numérico (ej. 45 U/mL) o déjelo vacío si no se realizó.
-            </p>
-            <div className="form-grid">
-              <div className="form-group">
-                <label>Fecha *</label>
-                <input type="date" value={formAnticuerpos.fecha || ""} onChange={e => setFormAnticuerpos(f => ({ ...f, fecha: e.target.value }))} />
-              </div>
-              <div className="form-group">
-                <label>Elaborado por</label>
-                <input value={formAnticuerpos.elaborado_por || ""} onChange={e => setFormAnticuerpos(f => ({ ...f, elaborado_por: e.target.value }))} placeholder="Médico, laboratorio…" />
-              </div>
-            </div>
-            <h4 style={{ margin: "16px 0 10px", color: "#334155", fontSize: "0.85rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>Resultados por anticuerpo</h4>
-            <div className="form-grid">
-              <div className="form-group" style={{ gridColumn: "span 2" }}>
-                <label>Anti-insulina (IAA)</label>
-                <input value={formAnticuerpos.iaa || ""} onChange={e => setFormAnticuerpos(f => ({ ...f, iaa: e.target.value }))} placeholder="Positivo / Negativo / 45 U/mL…" />
-              </div>
-              <div className="form-group" style={{ gridColumn: "span 2" }}>
-                <label>Ácido glutámico descarboxilasa (Anti-GAD65)</label>
-                <input value={formAnticuerpos.anti_gad65 || ""} onChange={e => setFormAnticuerpos(f => ({ ...f, anti_gad65: e.target.value }))} placeholder="Positivo / Negativo / valor…" />
-              </div>
-              <div className="form-group" style={{ gridColumn: "span 2" }}>
-                <label>Anti-IA2 (Tirosina Fosfatasa 2 de los islotes)</label>
-                <input value={formAnticuerpos.anti_ia2 || ""} onChange={e => setFormAnticuerpos(f => ({ ...f, anti_ia2: e.target.value }))} placeholder="Positivo / Negativo / valor…" />
-              </div>
-              <div className="form-group" style={{ gridColumn: "span 2" }}>
-                <label>Anticuerpo transportador de Zinc 8 (ZnT8)</label>
-                <input value={formAnticuerpos.znt8 || ""} onChange={e => setFormAnticuerpos(f => ({ ...f, znt8: e.target.value }))} placeholder="Positivo / Negativo / valor…" />
-              </div>
-              <div className="form-group" style={{ gridColumn: "span 2" }}>
-                <label>Anticuerpos de células de islotes (ICA)</label>
-                <input value={formAnticuerpos.ica || ""} onChange={e => setFormAnticuerpos(f => ({ ...f, ica: e.target.value }))} placeholder="Positivo / Negativo / valor…" />
-              </div>
-              <div className="form-group" style={{ gridColumn: "span 2" }}>
-                <label>Observaciones</label>
-                <textarea value={formAnticuerpos.observaciones || ""} onChange={e => setFormAnticuerpos(f => ({ ...f, observaciones: e.target.value }))} rows={3} style={{ width: "100%", resize: "vertical" }} />
-              </div>
-            </div>
-            <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 20 }}>
-              <button className="btn btn-outline" onClick={() => setModalAnticuerpos(false)} disabled={guardandoAnticuerpos}>Cancelar</button>
-              <button className="btn btn-primary" onClick={guardarAnticuerpos} disabled={guardandoAnticuerpos}>
-                {guardandoAnticuerpos ? "Guardando..." : "✔ Guardar"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ── Modal confirmar eliminar anticuerpos ─────────────────────────── */}
-      {eliminarAnticuerpos && (
-        <div style={{ position: "fixed", inset: 0, zIndex: 9999, background: "rgba(0,0,0,0.45)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <div style={{ background: "#fff", borderRadius: 12, padding: "32px 28px", maxWidth: 400, width: "90%", boxShadow: "0 20px 60px rgba(0,0,0,0.25)", textAlign: "center" }}>
-            <FiTrash2 size={36} color="#dc2626" style={{ marginBottom: 12 }} />
-            <h3 style={{ margin: "0 0 8px" }}>Eliminar registro</h3>
-            <p style={{ color: "#64748b", fontSize: 14, marginBottom: 20 }}>¿Eliminar el registro de anticuerpos del <strong>{eliminarAnticuerpos.fecha}</strong>?</p>
-            <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
-              <button className="btn btn-outline" onClick={() => setEliminarAnticuerpos(null)} disabled={eliminandoAnticuerpos}>Cancelar</button>
-              <button onClick={confirmarEliminarAnticuerpos} disabled={eliminandoAnticuerpos} style={{ background: eliminandoAnticuerpos ? "#fca5a5" : "#dc2626", color: "#fff", border: "none", borderRadius: 8, padding: "8px 20px", fontWeight: 600, cursor: "pointer" }}>
-                {eliminandoAnticuerpos ? "Eliminando..." : "Sí, eliminar"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* ── Modal WhatsApp individual ────────────────────────────────────── */}
       {modalWhatsApp && (
         <div style={{ position: "fixed", inset: 0, zIndex: 9999, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", padding: "16px" }}>

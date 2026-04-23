@@ -20,7 +20,7 @@ const menu = [
   { to: "/consolidado",     icon: HiOutlinePresentationChartLine, label: "Consolidado", rol: null      },
   { to: "/pacientes",       icon: HiOutlineUsers,                 label: "Pacientes",   rol: null      },
   { to: "/analisis/subir",  icon: HiOutlineDocumentArrowUp,       label: "Subir PDF",   rol: null      },
-  { to: "/bitacora",        icon: HiOutlineBookOpen,              label: "Registro Clínico", rol: null },
+  { to: "/consultas",       icon: HiOutlineBookOpen,              label: "Consultas", rol: null },
   { to: "/usuarios",        icon: HiOutlineUserGroup,             label: "Usuarios",    rol: "admin"   },  { to: "/mensajes",         icon: HiOutlineChatBubbleLeftEllipsis, label: "Mensajes",    rol: "admin"   },  { to: "/auditoria",       icon: HiOutlineShieldCheck,           label: "Auditoría",   rol: "admin"   },
 ];
 
