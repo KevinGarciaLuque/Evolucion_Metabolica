@@ -1,5 +1,27 @@
 import pool from "../config/db.js";
 import { calcularEdad, auditarAccion } from "../utils/helpers.js";
+import { geocodificar } from "../services/geocoding.js";
+
+export async function listarMapa(req, res) {
+  try {
+    const [rows] = await pool.query(`
+      SELECT p.id, p.nombre, p.departamento, p.municipio, p.sexo,
+             p.edad, p.institucion, p.latitud, p.longitud,
+             (
+               SELECT a.clasificacion FROM analisis a
+               WHERE a.paciente_id = p.id
+               ORDER BY a.fecha DESC LIMIT 1
+             ) AS clasificacion
+      FROM pacientes p
+      WHERE p.estado = 1 AND p.latitud IS NOT NULL AND p.longitud IS NOT NULL
+      ORDER BY p.nombre ASC
+    `);
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Error al obtener datos del mapa" });
+  }
+}
 
 export async function listar(req, res) {
   const { departamento, sexo, edad_min, edad_max, buscar, institucion, con_monitor } = req.query;
@@ -84,6 +106,17 @@ export async function crear(req, res) {
       ]
     );
     auditarAccion(pool, req, { accion: "crear_paciente", entidad: "paciente", entidad_id: result.insertId, descripcion: `Nuevo paciente: ${nombre}` });
+
+    // Geocodificar en background (no bloquea la respuesta)
+    if (municipio || departamento) {
+      geocodificar(municipio, departamento).then(coords => {
+        if (coords) {
+          pool.query("UPDATE pacientes SET latitud=?, longitud=? WHERE id=?",
+            [coords.lat, coords.lng, result.insertId]);
+        }
+      }).catch(() => {});
+    }
+
     res.status(201).json({ id: result.insertId, mensaje: "Paciente creado correctamente" });
   } catch (err) {
     if (err.code === "ER_DUP_ENTRY")
@@ -125,6 +158,17 @@ export async function actualizar(req, res) {
       ]
     );
     auditarAccion(pool, req, { accion: "editar_paciente", entidad: "paciente", entidad_id: Number(req.params.id), descripcion: `Editó paciente: ${nombre}` });
+
+    // Re-geocodificar si cambió municipio/departamento
+    if (municipio || departamento) {
+      geocodificar(municipio, departamento).then(coords => {
+        if (coords) {
+          pool.query("UPDATE pacientes SET latitud=?, longitud=? WHERE id=?",
+            [coords.lat, coords.lng, req.params.id]);
+        }
+      }).catch(() => {});
+    }
+
     res.json({ mensaje: "Paciente actualizado correctamente" });
   } catch (err) {
     console.error(err);

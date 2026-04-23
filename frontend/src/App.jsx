@@ -15,6 +15,7 @@ import ConsultasList   from "./pages/Consultas/ConsultasList";
 import ConsultasForm   from "./pages/Consultas/ConsultasForm";
 import Auditoria       from "./pages/Auditoria/Auditoria";
 import MensajesPanel   from "./pages/Mensajes/MensajesPanel";
+import MapaPacientes   from "./pages/Mapa/MapaPacientes";
 
 function App() {
   return (
@@ -37,6 +38,7 @@ function App() {
           <Route path="/consultas/:id/editar"   element={<ProtectedRoute><ConsultasForm /></ProtectedRoute>} />
           <Route path="/auditoria"             element={<ProtectedRoute><Auditoria /></ProtectedRoute>} />
           <Route path="/mensajes"              element={<ProtectedRoute><MensajesPanel /></ProtectedRoute>} />
+          <Route path="/mapa"                  element={<ProtectedRoute><MapaPacientes /></ProtectedRoute>} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </BrowserRouter>

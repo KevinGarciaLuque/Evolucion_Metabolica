@@ -1,6 +1,6 @@
 import { Router } from "express";
 import {
-  listar, obtener, crear, actualizar, eliminar, historial, departamentos,
+  listar, listarMapa, obtener, crear, actualizar, eliminar, historial, departamentos,
 } from "../controllers/pacientes.controller.js";
 import { verificarToken } from "../middlewares/auth.js";
 
@@ -10,6 +10,7 @@ router.use(verificarToken);
 
 router.get("/",                   listar);
 router.get("/departamentos",      departamentos);
+router.get("/mapa",               listarMapa);
 router.get("/:id",                obtener);
 router.post("/",                  crear);
 router.put("/:id",                actualizar);

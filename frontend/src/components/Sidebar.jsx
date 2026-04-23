@@ -11,6 +11,7 @@ import {
   HiOutlineBookOpen,
   HiOutlineShieldCheck,
   HiOutlineChatBubbleLeftEllipsis,
+  HiOutlineMapPin,
 } from "react-icons/hi2";
 import { RiHeartPulseFill } from "react-icons/ri";
 import "./Sidebar.css";
@@ -20,7 +21,8 @@ const menu = [
   { to: "/consolidado",     icon: HiOutlinePresentationChartLine, label: "Consolidado", rol: null      },
   { to: "/pacientes",       icon: HiOutlineUsers,                 label: "Pacientes",   rol: null      },
   { to: "/analisis/subir",  icon: HiOutlineDocumentArrowUp,       label: "Subir PDF",   rol: null      },
-  { to: "/consultas",       icon: HiOutlineBookOpen,              label: "Consultas", rol: null },
+  { to: "/consultas",       icon: HiOutlineBookOpen,              label: "Consultas",   rol: null      },
+  { to: "/mapa",            icon: HiOutlineMapPin,                label: "Mapa",        rol: null      },
   { to: "/usuarios",        icon: HiOutlineUserGroup,             label: "Usuarios",    rol: "admin"   },  { to: "/mensajes",         icon: HiOutlineChatBubbleLeftEllipsis, label: "Mensajes",    rol: "admin"   },  { to: "/auditoria",       icon: HiOutlineShieldCheck,           label: "Auditoría",   rol: "admin"   },
 ];
 
