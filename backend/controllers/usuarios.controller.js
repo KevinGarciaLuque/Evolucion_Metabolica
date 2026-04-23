@@ -32,7 +32,7 @@ export async function crear(req, res) {
   if (!nombre || !email || !password)
     return res.status(400).json({ error: "Nombre, email y contraseña son obligatorios" });
 
-  const rolesValidos = ["admin", "doctor", "asistente"];
+  const rolesValidos = ["admin", "doctor", "asistente", "enfermera"];
   if (rol && !rolesValidos.includes(rol))
     return res.status(400).json({ error: "Rol inválido" });
 
@@ -61,7 +61,7 @@ export async function actualizar(req, res) {
   if (!nombre || !email)
     return res.status(400).json({ error: "Nombre y email son obligatorios" });
 
-  const rolesValidos = ["admin", "doctor", "asistente"];
+  const rolesValidos = ["admin", "doctor", "asistente", "enfermera"];
   if (rol && !rolesValidos.includes(rol))
     return res.status(400).json({ error: "Rol inválido" });
 

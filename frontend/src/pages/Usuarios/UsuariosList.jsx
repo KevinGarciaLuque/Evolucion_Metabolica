@@ -8,12 +8,14 @@ const ROL_BADGE = {
   admin:     "badge-purple",
   doctor:    "badge-blue",
   asistente: "badge-pink",
+  enfermera: "badge-teal",
 };
 
 const ROL_LABEL = {
   admin:     "Admin",
   doctor:    "Doctor",
   asistente: "Asistente",
+  enfermera: "Enfermera",
 };
 
 export default function UsuariosList() {

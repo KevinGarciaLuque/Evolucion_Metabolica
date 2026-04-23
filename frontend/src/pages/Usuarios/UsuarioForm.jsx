@@ -153,6 +153,7 @@ export default function UsuarioForm() {
                 <option value="admin">Administrador</option>
                 <option value="doctor">Doctor</option>
                 <option value="asistente">Asistente</option>
+                <option value="enfermera">Enfermera</option>
               </select>
             </div>
 

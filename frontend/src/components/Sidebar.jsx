@@ -12,22 +12,38 @@ import {
   HiOutlineShieldCheck,
   HiOutlineChatBubbleLeftEllipsis,
   HiOutlineMapPin,
+  HiOutlineLockOpen,
 } from "react-icons/hi2";
 import { RiHeartPulseFill } from "react-icons/ri";
 import "./Sidebar.css";
 
+// modulo: clave para verificar permiso | rol: restringe a ese rol exacto | null = público
 const menu = [
-  { to: "/dashboard",       icon: HiOutlineSquares2X2,            label: "Dashboard",   rol: null      },
-  { to: "/consolidado",     icon: HiOutlinePresentationChartLine, label: "Consolidado", rol: null      },
-  { to: "/pacientes",       icon: HiOutlineUsers,                 label: "Pacientes",   rol: null      },
-  { to: "/analisis/subir",  icon: HiOutlineDocumentArrowUp,       label: "Subir PDF",   rol: null      },
-  { to: "/consultas",       icon: HiOutlineBookOpen,              label: "Consultas",   rol: null      },
-  { to: "/mapa",            icon: HiOutlineMapPin,                label: "Mapa",        rol: null      },
-  { to: "/usuarios",        icon: HiOutlineUserGroup,             label: "Usuarios",    rol: "admin"   },  { to: "/mensajes",         icon: HiOutlineChatBubbleLeftEllipsis, label: "Mensajes",    rol: "admin"   },  { to: "/auditoria",       icon: HiOutlineShieldCheck,           label: "Auditoría",   rol: "admin"   },
+  { to: "/dashboard",       icon: HiOutlineSquares2X2,            label: "Dashboard",   modulo: "dashboard"   },
+  { to: "/consolidado",     icon: HiOutlinePresentationChartLine, label: "Consolidado", modulo: "consolidado" },
+  { to: "/pacientes",       icon: HiOutlineUsers,                 label: "Pacientes",   modulo: "pacientes"   },
+  { to: "/analisis/subir",  icon: HiOutlineDocumentArrowUp,       label: "Subir PDF",   modulo: "analisis"    },
+  { to: "/consultas",       icon: HiOutlineBookOpen,              label: "Consultas",   modulo: "consultas"   },
+  { to: "/mapa",            icon: HiOutlineMapPin,                label: "Mapa",        modulo: "mapa"        },
+  { to: "/permisos",        icon: HiOutlineLockOpen,              label: "Permisos",    modulo: null, rol: "admin" },
+  { to: "/usuarios",        icon: HiOutlineUserGroup,             label: "Usuarios",    modulo: null, rol: "admin" },
+  { to: "/mensajes",        icon: HiOutlineChatBubbleLeftEllipsis, label: "Mensajes",   modulo: null, rol: "admin" },
+  { to: "/auditoria",       icon: HiOutlineShieldCheck,           label: "Auditoría",   modulo: null, rol: "admin" },
 ];
 
 export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }) {
-  const { usuario } = useAuth();
+  const { usuario, permisos } = useAuth();
+
+  const itemsVisibles = menu.filter(({ rol, modulo }) => {
+    // Ítem exclusivo de un rol (admin)
+    if (rol) return usuario?.rol === rol;
+    // Admin ve todo lo que no tenga rol restringido
+    if (usuario?.rol === "admin") return true;
+    // Usuarios sin permisos configurados aún → acceso total a módulos públicos
+    if (permisos === null) return true;
+    // Verificar permiso específico
+    return modulo ? permisos.includes(modulo) : true;
+  });
 
   return (
     <aside className={`sidebar${isOpen ? " sidebar--open" : ""}${collapsed ? " sidebar--collapsed" : ""}`}>
@@ -56,7 +72,7 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
         </div>
 
         <nav className="sidebar-nav">
-          {menu.filter(({ rol }) => !rol || usuario?.rol === rol).map(({ to, icon: Icon, label }) => (
+          {itemsVisibles.map(({ to, icon: Icon, label }) => (
             <NavLink
               key={to}
               to={to}
