@@ -1,0 +1,181 @@
+/* ─── Contenedor principal ───────────────────────────────────────────────── */
+.mensajes-page {
+  padding: 1.5rem;
+  max-width: 1100px;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+  overflow-x: hidden;
+}
+
+/* ─── Encabezado ─────────────────────────────────────────────────────────── */
+.mensajes-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  min-width: 0;
+}
+
+.mensajes-header > div {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.mensajes-header p,
+.mensajes-header h1 {
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+/* ─── Tarjeta genérica ───────────────────────────────────────────────────── */
+.mensajes-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+.mensajes-card-body {
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+/* ─── Switches de clasificación ──────────────────────────────────────────── */
+.mensajes-switches {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.25rem;
+}
+
+.mensajes-switch-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.45rem 1rem;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+/* ─── Fila de acción (botón + resultado) ─────────────────────────────────── */
+.mensajes-accion-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.mensajes-resultado {
+  display: flex;
+  gap: 0.75rem;
+  font-size: 0.875rem;
+  flex-wrap: wrap;
+}
+
+/* ─── Cabecera historial ─────────────────────────────────────────────────── */
+.mensajes-hist-header {
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #f3f4f6;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* ─── Tabla historial ────────────────────────────────────────────────────── */
+.mensajes-tabla-wrap {
+  overflow-x: auto;
+  overflow-y: auto;
+  max-height: 420px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.mensajes-tabla {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.855rem;
+  min-width: 640px; /* fuerza scroll horizontal en móvil en vez de romper */
+}
+
+/* ─── Paginación ─────────────────────────────────────────────────────────── */
+.mensajes-paginacion {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  flex-wrap: wrap;
+}
+
+/* ─── Tablet ─────────────────────────────────────────────────────────────── */
+@media (max-width: 1024px) {
+  .mensajes-page {
+    padding: 1.25rem;
+  }
+}
+
+/* ─── Móvil ──────────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .mensajes-page {
+    /* El layout-main ya provee padding lateral en móvil */
+    padding: 1rem 0;
+  }
+
+  .mensajes-card-body {
+    padding: 1rem;
+  }
+
+  .mensajes-hist-header {
+    padding: 0.85rem 1rem;
+  }
+
+  /* Switches en columna en pantallas muy pequeñas */
+  .mensajes-switches {
+    gap: 0.5rem;
+  }
+
+  .mensajes-switch-btn {
+    font-size: 0.8rem;
+    padding: 0.4rem 0.8rem;
+  }
+
+  /* Botón de enviar ocupa todo el ancho */
+  .mensajes-accion-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .mensajes-btn-enviar {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .mensajes-resultado {
+    width: 100%;
+  }
+
+  /* Label + restaurar en columna */
+  .mensajes-label-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.4rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .mensajes-switches {
+    flex-direction: column;
+  }
+
+  .mensajes-switch-btn {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}

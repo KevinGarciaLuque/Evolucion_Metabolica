@@ -926,8 +926,8 @@ export default function PacienteDetalle() {
                   const minVal  = Math.min(...validos.map(r => Number(r.icr)));
                   const maxVal  = Math.max(...validos.map(r => Number(r.icr)));
                   const cards   = [
-                    { label: "ICR actual",  value: ultimo ? `${ultimo.icr} g/UI` : "—",  color: "#6366f1", bg: "#ede9fe" },
-                    { label: "Promedio",    value: `${prom.toFixed(1)} g/UI`,              color: "#0ea5e9", bg: "#f0f9ff" },
+                    { label: "ICR actual",  value: ultimo ? `${Math.round(Number(ultimo.icr))} g/UI` : "—",  color: "#6366f1", bg: "#ede9fe" },
+                    { label: "Promedio",    value: `${Math.round(prom)} g/UI`,              color: "#0ea5e9", bg: "#f0f9ff" },
                     { label: "Mínimo",      value: `${minVal} g/UI`,                       color: "#dc2626", bg: "#fef2f2" },
                     { label: "Máximo",      value: `${maxVal} g/UI`,                       color: "#16a34a", bg: "#f0fdf4" },
                   ];
@@ -972,9 +972,9 @@ export default function PacienteDetalle() {
                   <LineChart
                     data={relacionIC.filter(r => r.icr != null).map(r => ({
                       fecha:    String(r.fecha).substring(0, 10),
-                      icr:      Number(r.icr),
-                      cho:      r.carbohidratos_g != null ? Number(r.carbohidratos_g) : null,
-                      insulina: r.dosis_corta_u  != null ? Number(r.dosis_corta_u)   : null,
+                      icr:      Math.round(Number(r.icr)),
+                      cho:      r.carbohidratos_g != null ? Math.round(Number(r.carbohidratos_g)) : null,
+                      insulina: r.dosis_corta_u  != null ? Math.round(Number(r.dosis_corta_u))   : null,
                     }))}
                     margin={{ top: 8, right: 20, left: 0, bottom: 0 }}
                   >
@@ -1039,14 +1039,14 @@ export default function PacienteDetalle() {
                       <tr key={r.id}>
                         <td style={{ whiteSpace: "nowrap", fontSize: "0.82rem" }}>{r.fecha ? new Date(String(r.fecha).substring(0, 10) + "T00:00:00").toLocaleDateString("es-GT", { day: "2-digit", month: "2-digit", year: "2-digit" }) : "—"}</td>
                         <td className="hide-tablet">{r.insulina_prolongada || "—"}</td>
-                        <td>{r.dosis_prolongada_u != null ? `${r.dosis_prolongada_u} UI` : "—"}</td>
+                        <td>{r.dosis_prolongada_u != null ? `${Math.round(Number(r.dosis_prolongada_u))} UI` : "—"}</td>
                         <td className="hide-tablet">{r.insulina_corta || "—"}</td>
-                        <td>{r.dosis_corta_u != null ? `${r.dosis_corta_u} UI` : "—"}</td>
+                        <td>{r.dosis_corta_u != null ? `${Math.round(Number(r.dosis_corta_u))} UI` : "—"}</td>
                         <td style={{ fontWeight: 700, color: "#6366f1" }}>
                           {r.dosis_total_u != null
-                            ? `${r.dosis_total_u} UI`
+                            ? `${Math.round(Number(r.dosis_total_u))} UI`
                             : (r.dosis_prolongada_u != null || r.dosis_corta_u != null)
-                              ? `${parseFloat(((r.dosis_prolongada_u ?? 0) + (r.dosis_corta_u ?? 0)).toFixed(2))} UI`
+                              ? `${Math.round((r.dosis_prolongada_u ?? 0) + (r.dosis_corta_u ?? 0))} UI`
                               : "—"}
                         </td>
                         <td className="hide-mobile" style={{ fontSize: "0.8rem", color: "#64748b" }}>

@@ -5,6 +5,7 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import api from "../../api/axios";
 import Layout from "../../components/Layout";
+import "./MapaPacientes.css";
 
 // ─── Fix iconos Leaflet con Vite ─────────────────────────────────────────────
 delete L.Icon.Default.prototype._getIconUrl;
@@ -84,8 +85,8 @@ export default function MapaPacientes() {
 
       {/* Leyenda / filtros */}
       <div className="card" style={{ marginBottom: 16 }}>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center" }}>
-          <span style={{ fontSize: "0.82rem", color: "#64748b", fontWeight: 600 }}>Filtrar:</span>
+        <div className="mapa-filtros">
+          <span className="mapa-filtro-label">Filtrar:</span>
           {[
             { key: "TODOS",      label: `Todos (${pacientes.length})`,                         color: "#6366f1" },
             { key: "OPTIMO",     label: `Óptimo (${conteos.OPTIMO || 0})`,                     color: COLORES.OPTIMO },
@@ -130,7 +131,7 @@ export default function MapaPacientes() {
           </p>
         </div>
       ) : (
-        <div style={{ borderRadius: 12, overflow: "hidden", boxShadow: "0 2px 12px rgba(0,0,0,0.1)", height: "70vh" }}>
+        <div className="mapa-wrapper">
           <MapContainer
             center={CENTRO_HN}
             zoom={7}

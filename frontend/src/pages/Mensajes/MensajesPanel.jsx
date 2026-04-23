@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import api from "../../api/axios";
 import Layout from "../../components/Layout";
 import { HiOutlineChatBubbleLeftEllipsis, HiOutlinePaperAirplane, HiOutlineCheckCircle, HiOutlineXCircle, HiArrowPath } from "react-icons/hi2";
+import "./MensajesPanel.css";
 
 function formatFecha(iso) {
   if (!iso) return "—";
@@ -88,10 +89,10 @@ export default function MensajesPanel() {
 
   return (
     <Layout>
-      <div style={{ padding: "1.5rem", maxWidth: 1100, margin: "0 auto" }}>
+      <div className="mensajes-page">
 
         {/* Encabezado */}
-        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1.5rem" }}>
+        <div className="mensajes-header">
           <HiOutlineChatBubbleLeftEllipsis size={28} color="var(--color-primary, #2563eb)" />
           <div>
             <h1 style={{ margin: 0, fontSize: "1.4rem", fontWeight: 700 }}>Mensajes WhatsApp</h1>
@@ -102,11 +103,7 @@ export default function MensajesPanel() {
         </div>
 
         {/* Tarjeta de envío masivo */}
-        <div style={{
-          background: "#fff", border: "1px solid #e5e7eb", borderRadius: 12,
-          padding: "1.25rem 1.5rem", marginBottom: "1.5rem",
-          boxShadow: "0 1px 4px rgba(0,0,0,.06)"
-        }}>
+        <div className="mensajes-card mensajes-card-body">
           <h2 style={{ fontSize: "1rem", fontWeight: 600, marginBottom: "0.2rem", color: "#111827" }}>
             Envío masivo por clasificación TIR
           </h2>
@@ -115,21 +112,19 @@ export default function MensajesPanel() {
           </p>
 
           {/* Switches de clasificación */}
-          <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap", marginBottom: "1.25rem" }}>
+          <div className="mensajes-switches">
             {Object.entries(CLASIFICACIONES).map(([key, cfg]) => {
               const activo = clasificacionSel === key;
               return (
                 <button
                   key={key}
                   onClick={() => { setClasificacionSel(key); setResultado(null); setError(null); }}
+                  className="mensajes-switch-btn"
                   style={{
-                    display: "flex", alignItems: "center", gap: "0.55rem",
-                    padding: "0.45rem 1rem", borderRadius: 20, cursor: "pointer",
                     border: `2px solid ${activo ? cfg.color : "#d1d5db"}`,
                     background: activo ? cfg.color + "18" : "#fff",
                     color: activo ? cfg.color : "#6b7280",
-                    fontWeight: activo ? 700 : 500, fontSize: "0.85rem",
-                    transition: "all 0.15s",
+                    fontWeight: activo ? 700 : 500,
                   }}
                 >
                   <span style={{
@@ -151,7 +146,7 @@ export default function MensajesPanel() {
 
           {/* Mensaje editable */}
           <div style={{ marginBottom: "1.1rem" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.35rem" }}>
+            <div className="mensajes-label-row" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.35rem" }}>
               <label style={{ fontSize: "0.78rem", fontWeight: 600, color: CLASIFICACIONES[clasificacionSel].color }}>
                 Mensaje — {CLASIFICACIONES[clasificacionSel].label}
               </label>
@@ -160,7 +155,7 @@ export default function MensajesPanel() {
                 style={{
                   fontSize: "0.72rem", color: "#6b7280", background: "none",
                   border: "1px solid #d1d5db", borderRadius: 6, padding: "0.2rem 0.6rem",
-                  cursor: "pointer",
+                  cursor: "pointer", whiteSpace: "nowrap",
                 }}
               >
                 Restaurar original
@@ -176,16 +171,16 @@ export default function MensajesPanel() {
                 borderRadius: 8, fontSize: "0.815rem", fontFamily: "inherit",
                 lineHeight: 1.6, resize: "vertical",
                 background: CLASIFICACIONES[clasificacionSel].bgLight,
-                color: "#1f2937",
-                outline: "none",
+                color: "#1f2937", outline: "none",
               }}
             />
           </div>
 
-          <div style={{ display: "flex", alignItems: "center", gap: "1rem", flexWrap: "wrap" }}>
+          <div className="mensajes-accion-row">
             <button
               onClick={handleEnviarMasivo}
               disabled={enviando}
+              className="mensajes-btn-enviar"
               style={{
                 display: "flex", alignItems: "center", gap: "0.5rem",
                 background: CLASIFICACIONES[clasificacionSel].color,
@@ -202,7 +197,7 @@ export default function MensajesPanel() {
             </button>
 
             {resultado && (
-              <div style={{ display: "flex", gap: "0.75rem", fontSize: "0.875rem" }}>
+              <div className="mensajes-resultado">
                 <span style={{ display: "flex", alignItems: "center", gap: "0.3rem", color: "#16a34a", fontWeight: 600 }}>
                   <HiOutlineCheckCircle size={16} /> {resultado.enviados} enviados
                 </span>
@@ -221,14 +216,8 @@ export default function MensajesPanel() {
         </div>
 
         {/* Historial */}
-        <div style={{
-          background: "#fff", border: "1px solid #e5e7eb", borderRadius: 12,
-          overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,.06)"
-        }}>
-          <div style={{
-            padding: "1rem 1.5rem", borderBottom: "1px solid #f3f4f6",
-            display: "flex", justifyContent: "space-between", alignItems: "center"
-          }}>
+        <div className="mensajes-card" style={{ overflow: "hidden" }}>
+          <div className="mensajes-hist-header">
             <h2 style={{ margin: 0, fontSize: "1rem", fontWeight: 600, color: "#111827" }}>
               Historial de mensajes <span style={{ color: "#6b7280", fontWeight: 400 }}>({total})</span>
             </h2>
@@ -248,8 +237,8 @@ export default function MensajesPanel() {
               No hay mensajes enviados aún.
             </p>
           ) : (
-            <div style={{ overflowX: "auto", overflowY: "auto", maxHeight: 420 }}>
-              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.855rem" }}>
+            <div className="mensajes-tabla-wrap">
+              <table className="mensajes-tabla">
                 <thead>
                   <tr style={{ background: "#f9fafb", borderBottom: "1px solid #e5e7eb" }}>
                     {["Fecha", "Paciente", "Teléfono", "Mensaje", "Estado", "Enviado por"].map(h => (
@@ -265,7 +254,7 @@ export default function MensajesPanel() {
                       <td style={{ padding: "0.65rem 1rem", whiteSpace: "nowrap", color: "#6b7280" }}>{formatFecha(m.fecha)}</td>
                       <td style={{ padding: "0.65rem 1rem", fontWeight: 500 }}>{m.paciente_nombre}</td>
                       <td style={{ padding: "0.65rem 1rem", color: "#6b7280" }}>{m.telefono}</td>
-                      <td style={{ padding: "0.65rem 1rem", maxWidth: 320 }}>
+                      <td style={{ padding: "0.65rem 1rem", maxWidth: 280 }}>
                         <span style={{
                           display: "-webkit-box", WebkitLineClamp: 2,
                           WebkitBoxOrient: "vertical", overflow: "hidden"
@@ -306,7 +295,7 @@ export default function MensajesPanel() {
 
           {/* Paginación */}
           {totalPaginas > 1 && (
-            <div style={{ display: "flex", justifyContent: "center", gap: "0.5rem", padding: "1rem" }}>
+            <div className="mensajes-paginacion">
               <button
                 onClick={() => cargarHistorial(pagina - 1)}
                 disabled={pagina === 1}

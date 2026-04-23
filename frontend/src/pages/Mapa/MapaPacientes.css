@@ -1,0 +1,75 @@
+/* ─── Wrapper del mapa ───────────────────────────────────────────────────── */
+.mapa-wrapper {
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  height: 70vh;
+  min-height: 420px;
+  /* isolation: isolate contiene los z-index internos de Leaflet
+     e impide que tapen el sidebar / topbar */
+  isolation: isolate;
+  position: relative;
+}
+
+/* ─── Forzar que Leaflet no salga de su stacking context ─────────────────── */
+.mapa-wrapper .leaflet-pane,
+.mapa-wrapper .leaflet-control,
+.mapa-wrapper .leaflet-top,
+.mapa-wrapper .leaflet-bottom {
+  z-index: auto;
+}
+.mapa-wrapper .leaflet-map-pane       { z-index: 2; }
+.mapa-wrapper .leaflet-tile-pane      { z-index: 1; }
+.mapa-wrapper .leaflet-overlay-pane   { z-index: 4; }
+.mapa-wrapper .leaflet-shadow-pane    { z-index: 5; }
+.mapa-wrapper .leaflet-marker-pane    { z-index: 6; }
+.mapa-wrapper .leaflet-tooltip-pane   { z-index: 7; }
+.mapa-wrapper .leaflet-popup-pane     { z-index: 8; }
+.mapa-wrapper .leaflet-control-container { z-index: 9; }
+
+/* ─── Filtros del mapa ───────────────────────────────────────────────────── */
+.mapa-filtros {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.mapa-filtro-label {
+  font-size: 0.82rem;
+  color: #64748b;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+/* ─── Tablet ─────────────────────────────────────────────────────────────── */
+@media (max-width: 1024px) {
+  .mapa-wrapper {
+    height: 60vh;
+    min-height: 380px;
+  }
+}
+
+/* ─── Móvil ──────────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .mapa-wrapper {
+    height: 55vmax;
+    min-height: 300px;
+    border-radius: 10px;
+  }
+
+  .mapa-filtros {
+    gap: 6px;
+  }
+
+  .mapa-filtro-label {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .mapa-wrapper {
+    height: 65vw;
+    min-height: 260px;
+  }
+}
