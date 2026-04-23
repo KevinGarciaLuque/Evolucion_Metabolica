@@ -928,8 +928,8 @@ export default function PacienteDetalle() {
                   const cards   = [
                     { label: "ICR actual",  value: ultimo ? `${Math.round(Number(ultimo.icr))} g/UI` : "—",  color: "#6366f1", bg: "#ede9fe" },
                     { label: "Promedio",    value: `${Math.round(prom)} g/UI`,              color: "#0ea5e9", bg: "#f0f9ff" },
-                    { label: "Mínimo",      value: `${minVal} g/UI`,                       color: "#dc2626", bg: "#fef2f2" },
-                    { label: "Máximo",      value: `${maxVal} g/UI`,                       color: "#16a34a", bg: "#f0fdf4" },
+                    { label: "Mínimo",      value: `${Math.round(minVal)} g/UI`,            color: "#dc2626", bg: "#fef2f2" },
+                    { label: "Máximo",      value: `${Math.round(maxVal)} g/UI`,            color: "#16a34a", bg: "#f0fdf4" },
                   ];
                   return (
                     <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 20 }}>
