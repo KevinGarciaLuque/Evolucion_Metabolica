@@ -9,6 +9,7 @@ const MODULOS = [
   { key: "analisis",    label: "Subir PDF" },
   { key: "consultas",   label: "Consultas" },
   { key: "mapa",        label: "Mapa" },
+  { key: "mensajes",    label: "Mensajes" },
 ];
 
 const ROL_BADGE = {

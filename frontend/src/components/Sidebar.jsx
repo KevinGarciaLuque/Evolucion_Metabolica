@@ -25,9 +25,9 @@ const menu = [
   { to: "/analisis/subir",  icon: HiOutlineDocumentArrowUp,       label: "Subir PDF",   modulo: "analisis"    },
   { to: "/consultas",       icon: HiOutlineBookOpen,              label: "Consultas",   modulo: "consultas"   },
   { to: "/mapa",            icon: HiOutlineMapPin,                label: "Mapa",        modulo: "mapa"        },
+  { to: "/mensajes",        icon: HiOutlineChatBubbleLeftEllipsis, label: "Mensajes",   modulo: "mensajes"    },
   { to: "/permisos",        icon: HiOutlineLockOpen,              label: "Permisos",    modulo: null, rol: "admin" },
   { to: "/usuarios",        icon: HiOutlineUserGroup,             label: "Usuarios",    modulo: null, rol: "admin" },
-  { to: "/mensajes",        icon: HiOutlineChatBubbleLeftEllipsis, label: "Mensajes",   modulo: null, rol: "admin" },
   { to: "/auditoria",       icon: HiOutlineShieldCheck,           label: "Auditoría",   modulo: null, rol: "admin" },
 ];
 

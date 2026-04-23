@@ -9,10 +9,11 @@ const RUTA_MODULO = {
   "/analisis/subir": "analisis",
   "/consultas":      "consultas",
   "/mapa":           "mapa",
+  "/mensajes":       "mensajes",
 };
 
 // Rutas exclusivas del admin (no configurables vía permisos)
-const RUTAS_ADMIN = ["/usuarios", "/auditoria", "/mensajes", "/permisos"];
+const RUTAS_ADMIN = ["/usuarios", "/auditoria", "/permisos"];
 
 export default function ProtectedRoute({ children }) {
   const { usuario, permisos, cargando } = useAuth();

@@ -1,7 +1,7 @@
 import pool from "../config/db.js";
 
 export const MODULOS_VALIDOS = [
-  "dashboard", "consolidado", "pacientes", "analisis", "consultas", "mapa",
+  "dashboard", "consolidado", "pacientes", "analisis", "consultas", "mapa", "mensajes",
 ];
 
 // GET /api/permisos — admin: lista todos los usuarios no-admin con sus módulos
