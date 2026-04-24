@@ -15,6 +15,7 @@
   box-shadow: 4px 0 32px rgba(0, 0, 0, 0.55);
   transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
               transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: width;
   overflow: visible; /* para que el botón asoma al borde */
 }
 
@@ -61,6 +62,7 @@
   padding: 22px 18px 20px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   flex-shrink: 0;
+  transition: padding 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .sidebar-logo-wrap {
@@ -139,6 +141,10 @@
   font-size: 10px;
   color: rgba(255,255,255,0.30);
   white-space: nowrap;
+  max-height: 20px;
+  opacity: 1;
+  overflow: hidden;
+  transition: opacity 0.2s ease, max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1), margin 0.3s ease;
 }
 .sidebar-version-copy {
   font-size: 10px;
@@ -146,15 +152,28 @@
   color: rgba(255,255,255,0.40);
   white-space: nowrap;
   margin-top: 4px;
+  max-height: 20px;
+  opacity: 1;
+  overflow: hidden;
+  transition: opacity 0.2s ease, max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1), margin 0.3s ease;
 }
 .sidebar-version-rights {
   font-size: 9px;
   color: rgba(255,255,255,0.22);
   white-space: nowrap;
+  max-height: 20px;
+  opacity: 1;
+  overflow: hidden;
+  transition: opacity 0.2s ease, max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1), margin 0.3s ease;
 }
 .sidebar--collapsed .sidebar-version-name,
 .sidebar--collapsed .sidebar-version-copy,
-.sidebar--collapsed .sidebar-version-rights { display: none; }
+.sidebar--collapsed .sidebar-version-rights {
+  opacity: 0;
+  max-height: 0;
+  margin: 0;
+  pointer-events: none;
+}
 .sidebar--collapsed .sidebar-version-label { font-size: 10px; }
 
 .sidebar-link {
@@ -167,7 +186,9 @@
   text-decoration: none;
   font-size: 0.875rem;
   font-weight: 500;
-  transition: background 0.18s ease, color 0.18s ease;
+  transition: background 0.18s ease, color 0.18s ease,
+              padding 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              gap 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   white-space: nowrap;
   overflow: hidden;
@@ -245,6 +266,7 @@
 .sidebar--collapsed .sidebar-link {
   justify-content: center;
   padding: 10px;
+  gap: 0;
 }
 
 /* ================================================
@@ -276,6 +298,31 @@
   .sidebar-collapse-btn {
     display: none;
   }
+
+  /* En móvil, nunca colapsar — mostrar siempre etiquetas y layout normal */
+  .sidebar--collapsed .sidebar-link-label,
+  .sidebar--collapsed .sidebar-brand-text {
+    opacity: 1 !important;
+    max-width: 160px !important;
+    pointer-events: auto !important;
+  }
+  .sidebar--collapsed .sidebar-link {
+    justify-content: flex-start !important;
+    padding: 10px 13px !important;
+    gap: 12px !important;
+  }
+  .sidebar--collapsed .sidebar-brand {
+    justify-content: flex-start !important;
+    padding: 22px 18px 20px !important;
+  }
+  .sidebar--collapsed .sidebar-version-name,
+  .sidebar--collapsed .sidebar-version-copy,
+  .sidebar--collapsed .sidebar-version-rights {
+    opacity: 1 !important;
+    max-height: 20px !important;
+    pointer-events: auto !important;
+  }
+
   .sidebar-version {
     display: flex !important;
     opacity: 1 !important;

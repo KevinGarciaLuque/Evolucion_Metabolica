@@ -181,6 +181,7 @@ export default function SubirPDF() {
   const [filtroPaciente, setFiltroPaciente] = useState("");
   const [pacienteNombre, setPacienteNombre] = useState("");
   const [dropdownAbierto, setDropdownAbierto] = useState(false);
+  const [hoveringZone, setHoveringZone]       = useState(false);
   const inputRef = useRef();
   const busquedaRef = useRef();
 
@@ -295,14 +296,129 @@ export default function SubirPDF() {
     return (
       <Layout>
         <div className="exito-container">
-          <span className="exito-icon">✅</span>
-          <h2>¡Análisis guardado exitosamente!</h2>
-          <p>Los datos del reporte Syai X1 han sido registrados en el historial del paciente.</p>
-          <div style={{ display: "flex", gap: 12, justifyContent: "center", marginTop: 24, flexWrap: "wrap" }}>
-            <button className="btn btn-primary"   onClick={() => navigate(`/pacientes/${pacienteId}`)}>Ver paciente</button>
-            <button className="btn btn-outline"   onClick={() => { setEtapa("subir"); setArchivo(null); setForm(null); setPacienteId(pacientePreseleccionado || ""); }}>Subir otro PDF</button>
-            <button className="btn btn-secondary" onClick={() => navigate("/dashboard")}>Ir al Dashboard</button>
+          {/* Fondo de partículas decorativas */}
+          <div className="exito-bg">
+            {[...Array(6)].map((_, i) => (
+              <motion.div
+                key={i}
+                className="exito-orb"
+                style={{
+                  left: `${[10,25,55,70,85,40][i]}%`,
+                  top: `${[20,70,15,65,30,80][i]}%`,
+                  width: [120,80,160,100,140,90][i],
+                  height: [120,80,160,100,140,90][i],
+                  background: i % 2 === 0
+                    ? "radial-gradient(circle, rgba(96,165,250,0.18) 0%, transparent 70%)"
+                    : "radial-gradient(circle, rgba(124,58,237,0.15) 0%, transparent 70%)",
+                }}
+                animate={{ scale: [1, 1.3, 1], opacity: [0.5, 0.9, 0.5] }}
+                transition={{ duration: 3 + i * 0.5, repeat: Infinity, ease: "easeInOut", delay: i * 0.4 }}
+              />
+            ))}
           </div>
+
+          <motion.div
+            className="exito-card"
+            initial={{ opacity: 0, y: 40, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ type: "spring", stiffness: 280, damping: 22 }}
+          >
+            {/* Ícono animado */}
+            <div className="exito-icon-wrap">
+              <motion.div
+                className="exito-ring exito-ring-1"
+                animate={{ scale: [1, 1.5, 1], opacity: [0.4, 0, 0.4] }}
+                transition={{ duration: 2.2, repeat: Infinity, ease: "easeOut" }}
+              />
+              <motion.div
+                className="exito-ring exito-ring-2"
+                animate={{ scale: [1, 1.8, 1], opacity: [0.2, 0, 0.2] }}
+                transition={{ duration: 2.2, repeat: Infinity, ease: "easeOut", delay: 0.3 }}
+              />
+              <motion.div
+                className="exito-check-circle"
+                initial={{ scale: 0, rotate: -30 }}
+                animate={{ scale: 1, rotate: 0 }}
+                transition={{ type: "spring", stiffness: 400, damping: 18, delay: 0.15 }}
+              >
+                <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+                  <motion.path
+                    d="M8 18l7 7 13-13"
+                    stroke="#fff"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    initial={{ pathLength: 0 }}
+                    animate={{ pathLength: 1 }}
+                    transition={{ duration: 0.5, delay: 0.4, ease: "easeOut" }}
+                  />
+                </svg>
+              </motion.div>
+            </div>
+
+            {/* Texto */}
+            <motion.div
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.35 }}
+            >
+              <h2 className="exito-titulo">¡Análisis guardado exitosamente!</h2>
+              <p className="exito-subtitulo">
+                Los datos del reporte Syai X1 han sido registrados<br />en el historial de <strong>{pacienteNombre}</strong>
+              </p>
+            </motion.div>
+
+            {/* Divider */}
+            <motion.div
+              initial={{ scaleX: 0 }}
+              animate={{ scaleX: 1 }}
+              transition={{ delay: 0.55, duration: 0.5 }}
+              style={{ height: 1, background: "linear-gradient(90deg, transparent, #e2e8f0, transparent)", margin: "8px 0 24px" }}
+            />
+
+            {/* Botones */}
+            <motion.div
+              className="exito-actions"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.65 }}
+            >
+              <motion.button
+                whileHover={{ scale: 1.04, boxShadow: "0 0 28px rgba(124,58,237,0.5)" }}
+                whileTap={{ scale: 0.97 }}
+                onClick={() => navigate(`/pacientes/${pacienteId}`)}
+                className="exito-btn-primary"
+              >
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
+                  <circle cx="8" cy="5.5" r="2.5" stroke="#fff" strokeWidth="1.5"/>
+                  <path d="M2.5 13.5c0-3.038 2.462-5.5 5.5-5.5s5.5 2.462 5.5 5.5" stroke="#fff" strokeWidth="1.5" strokeLinecap="round"/>
+                </svg>
+                Ver paciente
+              </motion.button>
+
+              <motion.button
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
+                onClick={() => { setEtapa("subir"); setArchivo(null); setForm(null); setPacienteId(pacientePreseleccionado || ""); setPacienteNombre(""); }}
+                className="exito-btn-outline"
+              >
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
+                  <path d="M8 2v7M5 5l3-3 3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M3 10v3h10v-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                Subir otro PDF
+              </motion.button>
+
+              <motion.button
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
+                onClick={() => navigate("/dashboard")}
+                className="exito-btn-ghost"
+              >
+                Dashboard
+              </motion.button>
+            </motion.div>
+          </motion.div>
         </div>
       </Layout>
     );
@@ -331,127 +447,354 @@ export default function SubirPDF() {
 
       {etapa === "subir" && (
         <div className="upload-container">
-          <div className="card">
-            <div className="form-group" style={{ position: "relative" }}>
-              <label>Paciente *</label>
-              <div style={{ position: "relative" }}>
-                <input
-                  ref={busquedaRef}
-                  type="text"
-                  placeholder="Buscar por nombre o DNI..."
-                  value={pacienteNombre || filtroPaciente}
-                  autoComplete="off"
-                  onChange={(e) => {
-                    setFiltroPaciente(e.target.value);
-                    setPacienteNombre("");
-                    setPacienteId("");
-                    setDropdownAbierto(true);
-                  }}
-                  onFocus={() => setDropdownAbierto(true)}
-                  onBlur={() => setTimeout(() => setDropdownAbierto(false), 180)}
-                  style={{
-                    paddingRight: pacienteId ? 36 : 12,
-                    borderColor: pacienteId ? "#22c55e" : undefined,
-                  }}
-                />
-                {pacienteId && (
-                  <span style={{
-                    position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)",
-                    color: "#22c55e", fontSize: 18, pointerEvents: "none",
-                  }}>✓</span>
+          <div className="ai-card-wrapper">
+            <div className="ai-spin-border" />
+            <div className="card">
+
+            {/* ── Paso 1: Paciente ── */}
+            <div className="step-row">
+              <div className={`step-badge ${pacienteId ? "step-done" : "step-active"}`}>
+                {pacienteId
+                  ? <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2.5 7l3 3 6-6" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  : <span>1</span>
+                }
+              </div>
+              <div style={{ flex: 1 }}>
+                <p className="step-label">
+                  Seleccionar paciente
+                  {pacienteId && (
+                    <>
+                      <span className="step-check-pill">✓ {pacienteNombre}</span>
+                      <button
+                        onClick={() => { setPacienteId(""); setPacienteNombre(""); setFiltroPaciente(""); setArchivo(null); }}
+                        style={{
+                          background: "none", border: "1px solid #e2e8f0", borderRadius: 8,
+                          padding: "2px 10px", fontSize: 12, color: "#94a3b8",
+                          cursor: "pointer", fontWeight: 500, lineHeight: 1.5,
+                          transition: "border-color 0.2s, color 0.2s",
+                        }}
+                        onMouseEnter={e => { e.currentTarget.style.borderColor = "#f87171"; e.currentTarget.style.color = "#ef4444"; }}
+                        onMouseLeave={e => { e.currentTarget.style.borderColor = "#e2e8f0"; e.currentTarget.style.color = "#94a3b8"; }}
+                      >
+                        Limpiar
+                      </button>
+                    </>
+                  )}
+                </p>
+                <div className="form-group" style={{ position: "relative", marginBottom: 0 }}>
+                  <div style={{ position: "relative" }}>
+                    <input
+                      ref={busquedaRef}
+                      type="text"
+                      placeholder="Buscar por nombre o DNI..."
+                      value={pacienteNombre || filtroPaciente}
+                      autoComplete="off"
+                      onChange={(e) => {
+                        setFiltroPaciente(e.target.value);
+                        setPacienteNombre("");
+                        setPacienteId("");
+                        setDropdownAbierto(true);
+                      }}
+                      onFocus={() => setDropdownAbierto(true)}
+                      onBlur={() => setTimeout(() => setDropdownAbierto(false), 180)}
+                      style={{
+                        borderColor: pacienteId ? "#22c55e" : undefined,
+                        background: pacienteId ? "#f0fdf4" : undefined,
+                      }}
+                    />
+                  </div>
+
+                  <AnimatePresence>
+                    {dropdownAbierto && filtroPaciente && !pacienteId && (() => {
+                      const resultados = pacientes.filter((p) => {
+                        const q = filtroPaciente.toLowerCase();
+                        return (
+                          p.nombre.toLowerCase().includes(q) ||
+                          (p.dni && String(p.dni).toLowerCase().includes(q))
+                        );
+                      });
+                      return (
+                        <motion.ul
+                          initial={{ opacity: 0, y: -6 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -6 }}
+                          transition={{ duration: 0.15 }}
+                          style={{
+                            position: "absolute", top: "100%", left: 0, right: 0,
+                            zIndex: 999, margin: 0, padding: 0, listStyle: "none",
+                            background: "#fff", border: "1px solid #e2e8f0",
+                            borderRadius: 8, boxShadow: "0 8px 24px rgba(0,0,0,0.12)",
+                            maxHeight: 220, overflowY: "auto",
+                          }}
+                        >
+                          {resultados.length === 0 ? (
+                            <li style={{ padding: "10px 14px", color: "#94a3b8", fontSize: 13 }}>Sin resultados</li>
+                          ) : resultados.map((p) => (
+                            <li
+                              key={p.id}
+                              onMouseDown={() => {
+                                setPacienteId(p.id);
+                                setPacienteNombre(p.nombre);
+                                setFiltroPaciente("");
+                                setDropdownAbierto(false);
+                              }}
+                              style={{
+                                padding: "10px 14px", cursor: "pointer",
+                                borderBottom: "1px solid #f1f5f9",
+                                fontSize: 14,
+                              }}
+                              onMouseEnter={(e) => e.currentTarget.style.background = "#f0f9ff"}
+                              onMouseLeave={(e) => e.currentTarget.style.background = "#fff"}
+                            >
+                              <span style={{ fontWeight: 500 }}>{p.nombre}</span>
+                              {p.dni && <span style={{ color: "#64748b", fontSize: 12, marginLeft: 8 }}>DNI: {p.dni}</span>}
+                              <span style={{ color: "#94a3b8", fontSize: 12, marginLeft: 8 }}>{p.edad} años</span>
+                            </li>
+                          ))}
+                        </motion.ul>
+                      );
+                    })()}
+                  </AnimatePresence>
+                </div>
+              </div>
+            </div>
+
+            {/* Conector */}
+            <div className="step-connector">
+              <div className={`step-connector-line ${pacienteId ? "step-connector-done" : ""}`} />
+            </div>
+
+            {/* ── Paso 2: PDF ── */}
+            <div className="step-row">
+              <div className={`step-badge ${archivo ? "step-done" : pacienteId ? "step-active" : "step-locked"}`}>
+                {archivo
+                  ? <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2.5 7l3 3 6-6" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  : <span>2</span>
+                }
+              </div>
+              <div style={{ flex: 1 }}>
+                <p className={`step-label ${!pacienteId ? "step-label-locked" : ""}`}>
+                  Cargar PDF del monitor
+                </p>
+
+                <AnimatePresence>
+                  {pacienteId && (
+                    <motion.div
+                      key="drop-step"
+                      initial={{ opacity: 0, y: -12, scaleY: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scaleY: 1 }}
+                      exit={{ opacity: 0, y: -8 }}
+                      transition={{ type: "spring", stiffness: 300, damping: 26 }}
+                      style={{ transformOrigin: "top" }}
+                    >
+                      <div
+                        className={`drop-zone ${arrastrado ? "arrastrado" : ""} ${archivo ? "con-archivo" : ""} ${hoveringZone && !archivo ? "hovering-ai" : ""}`}
+                        onDragOver={onDragOver}
+                        onDragLeave={onDragLeave}
+                        onDrop={onDrop}
+                        onClick={() => inputRef.current.click()}
+                        onMouseEnter={() => !archivo && setHoveringZone(true)}
+                        onMouseLeave={() => setHoveringZone(false)}
+                      >
+                        <input
+                          ref={inputRef} type="file" accept="application/pdf"
+                          style={{ display: "none" }}
+                          onChange={(e) => { if (e.target.files[0]) setArchivo(e.target.files[0]); }}
+                        />
+                        {archivo ? (
+                          <>
+                            <motion.div
+                              initial={{ scale: 0 }}
+                              animate={{ scale: 1 }}
+                              transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                            >
+                              <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+                                <rect width="48" height="48" rx="12" fill="#dcfce7" />
+                                <path d="M14 24l7 7 13-13" stroke="#16a34a" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                              </svg>
+                            </motion.div>
+                            <p className="drop-filename" style={{ marginTop: 10 }}>{archivo.name}</p>
+                            <p className="drop-hint">Clic para cambiar</p>
+                          </>
+                        ) : (
+                          <>
+                            <AnimatePresence>
+                              {hoveringZone && (
+                                <motion.div
+                                  key="scan-overlay"
+                                  initial={{ opacity: 0 }}
+                                  animate={{ opacity: 1 }}
+                                  exit={{ opacity: 0 }}
+                                  transition={{ duration: 0.3 }}
+                                  style={{
+                                    position: "absolute", inset: 0,
+                                    borderRadius: "inherit",
+                                    overflow: "hidden",
+                                    pointerEvents: "none",
+                                    zIndex: 0,
+                                  }}
+                                >
+                                  <motion.div
+                                    animate={{ y: ["-10%", "110%"] }}
+                                    transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut", repeatDelay: 0.3 }}
+                                    style={{
+                                      position: "absolute",
+                                      left: 0, right: 0,
+                                      height: "28%",
+                                      background: "linear-gradient(180deg, transparent 0%, rgba(99,102,241,0.07) 30%, rgba(124,58,237,0.14) 50%, rgba(96,165,250,0.07) 70%, transparent 100%)",
+                                    }}
+                                  />
+                                  <motion.div
+                                    animate={{ opacity: [0, 0.6, 0] }}
+                                    transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut", repeatDelay: 0.1 }}
+                                    style={{
+                                      position: "absolute", inset: 0,
+                                      background: "radial-gradient(ellipse at 20% 50%, rgba(96,165,250,0.1) 0%, transparent 60%), radial-gradient(ellipse at 80% 50%, rgba(124,58,237,0.1) 0%, transparent 60%)",
+                                    }}
+                                  />
+                                </motion.div>
+                              )}
+                            </AnimatePresence>
+                            <motion.span
+                              className="drop-icon"
+                              animate={{
+                                y: [0, -8, 0],
+                                filter: [
+                                  "drop-shadow(0 0 0px #60a5fa)",
+                                  "drop-shadow(0 0 18px #7c3aed) drop-shadow(0 0 32px #60a5fa)",
+                                  "drop-shadow(0 0 0px #60a5fa)",
+                                ],
+                              }}
+                              transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
+                              style={{ display: "inline-block", position: "relative", zIndex: 1 }}
+                            >
+                              <svg width="56" height="56" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <defs>
+                                  <linearGradient id="uploadGrad" x1="0" y1="0" x2="56" y2="56" gradientUnits="userSpaceOnUse">
+                                    <stop stopColor="#60a5fa" />
+                                    <stop offset="1" stopColor="#7c3aed" />
+                                  </linearGradient>
+                                  <linearGradient id="uploadGrad2" x1="0" y1="0" x2="56" y2="56" gradientUnits="userSpaceOnUse">
+                                    <stop stopColor="#93c5fd" />
+                                    <stop offset="1" stopColor="#a78bfa" />
+                                  </linearGradient>
+                                </defs>
+                                <rect width="56" height="56" rx="14" fill="url(#uploadGrad)" opacity="0.15" />
+                                <path
+                                  d="M38.5 34c2.485 0 4.5-2.015 4.5-4.5 0-2.3-1.73-4.2-3.977-4.462A7.5 7.5 0 0 0 21.5 26.5c0 .17.007.338.02.505A5.5 5.5 0 0 0 17.5 32.5 5.5 5.5 0 0 0 23 38h15.5"
+                                  stroke="url(#uploadGrad)"
+                                  strokeWidth="2"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  fill="none"
+                                />
+                                <motion.g
+                                  animate={{ y: [0, -3, 0] }}
+                                  transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
+                                >
+                                  <path d="M28 44V32" stroke="url(#uploadGrad2)" strokeWidth="2.2" strokeLinecap="round" />
+                                  <path d="M23 37l5-5 5 5" stroke="url(#uploadGrad2)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+                                </motion.g>
+                              </svg>
+                            </motion.span>
+                            <p className="drop-text" style={{ position: "relative", zIndex: 1 }}>Arrastra el PDF aquí o haz clic para seleccionar</p>
+                            <p className="drop-hint" style={{ position: "relative", zIndex: 1 }}>Reporte generado por el monitor Syai X1 · Max 20 MB</p>
+                          </>
+                        )}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {!pacienteId && (
+                  <div className="drop-zone-locked">
+                    <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+                      <rect width="28" height="28" rx="8" fill="#f1f5f9" />
+                      <path d="M10 13v-2a4 4 0 0 1 8 0v2" stroke="#94a3b8" strokeWidth="1.6" strokeLinecap="round"/>
+                      <rect x="8" y="13" width="12" height="8" rx="2.5" fill="#e2e8f0" stroke="#cbd5e1" strokeWidth="1.2"/>
+                      <circle cx="14" cy="17" r="1.2" fill="#94a3b8"/>
+                    </svg>
+                    <p style={{ color: "#94a3b8", fontSize: 13, margin: "8px 0 0" }}>Selecciona primero un paciente</p>
+                  </div>
                 )}
               </div>
-
-              <AnimatePresence>
-                {dropdownAbierto && filtroPaciente && !pacienteId && (() => {
-                  const resultados = pacientes.filter((p) => {
-                    const q = filtroPaciente.toLowerCase();
-                    return (
-                      p.nombre.toLowerCase().includes(q) ||
-                      (p.dni && String(p.dni).toLowerCase().includes(q))
-                    );
-                  });
-                  return (
-                    <motion.ul
-                      initial={{ opacity: 0, y: -6 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -6 }}
-                      transition={{ duration: 0.15 }}
-                      style={{
-                        position: "absolute", top: "100%", left: 0, right: 0,
-                        zIndex: 999, margin: 0, padding: 0, listStyle: "none",
-                        background: "#fff", border: "1px solid #e2e8f0",
-                        borderRadius: 8, boxShadow: "0 8px 24px rgba(0,0,0,0.12)",
-                        maxHeight: 220, overflowY: "auto",
-                      }}
-                    >
-                      {resultados.length === 0 ? (
-                        <li style={{ padding: "10px 14px", color: "#94a3b8", fontSize: 13 }}>Sin resultados</li>
-                      ) : resultados.map((p) => (
-                        <li
-                          key={p.id}
-                          onMouseDown={() => {
-                            setPacienteId(p.id);
-                            setPacienteNombre(p.nombre);
-                            setFiltroPaciente("");
-                            setDropdownAbierto(false);
-                          }}
-                          style={{
-                            padding: "10px 14px", cursor: "pointer",
-                            borderBottom: "1px solid #f1f5f9",
-                            fontSize: 14,
-                          }}
-                          onMouseEnter={(e) => e.currentTarget.style.background = "#f0f9ff"}
-                          onMouseLeave={(e) => e.currentTarget.style.background = "#fff"}
-                        >
-                          <span style={{ fontWeight: 500 }}>{p.nombre}</span>
-                          {p.dni && <span style={{ color: "#64748b", fontSize: 12, marginLeft: 8 }}>DNI: {p.dni}</span>}
-                          <span style={{ color: "#94a3b8", fontSize: 12, marginLeft: 8 }}>{p.edad} años</span>
-                        </li>
-                      ))}
-                    </motion.ul>
-                  );
-                })()}
-              </AnimatePresence>
             </div>
 
-            <div
-              className={`drop-zone ${arrastrado ? "arrastrado" : ""} ${archivo ? "con-archivo" : ""}`}
-              onDragOver={onDragOver}
-              onDragLeave={onDragLeave}
-              onDrop={onDrop}
-              onClick={() => inputRef.current.click()}
-            >
-              <input
-                ref={inputRef} type="file" accept="application/pdf"
-                style={{ display: "none" }}
-                onChange={(e) => { if (e.target.files[0]) setArchivo(e.target.files[0]); }}
-              />
-              {archivo ? (
-                <>
-                  <span className="drop-icon">📄</span>
-                  <p className="drop-filename">{archivo.name}</p>
-                  <p className="drop-hint">Clic para cambiar</p>
-                </>
-              ) : (
-                <>
-                  <span className="drop-icon">⬆️</span>
-                  <p className="drop-text">Arrastra el PDF aquí o haz clic para seleccionar</p>
-                  <p className="drop-hint">Reporte generado por el monitor Syai X1 · Max 20 MB</p>
-                </>
+            <div className="form-actions" style={{ marginTop: 8 }}>
+              {archivo && (
+                <button
+                  className="btn btn-outline"
+                  onClick={() => setArchivo(null)}
+                >
+                  Cancelar
+                </button>
               )}
-            </div>
-
-            <div className="form-actions">
-              <button className="btn btn-outline" onClick={() => navigate(-1)}>Cancelar</button>
-              <button
-                className="btn btn-primary"
+              <motion.button
                 onClick={subirPDF}
                 disabled={subiendo || !archivo || !pacienteId}
+                whileHover={!subiendo && archivo && pacienteId ? { scale: 1.03, boxShadow: "0 0 28px rgba(124,58,237,0.55), 0 0 60px rgba(96,165,250,0.25)" } : {}}
+                whileTap={!subiendo && archivo && pacienteId ? { scale: 0.97 } : {}}
+                transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                style={{
+                  position: "relative",
+                  overflow: "hidden",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10,
+                  padding: "11px 28px",
+                  borderRadius: 12,
+                  border: "none",
+                  cursor: subiendo || !archivo || !pacienteId ? "not-allowed" : "pointer",
+                  background: subiendo || !archivo || !pacienteId
+                    ? "linear-gradient(135deg, #94a3b8, #64748b)"
+                    : "linear-gradient(135deg, #3b82f6 0%, #7c3aed 60%, #6d28d9 100%)",
+                  color: "#fff",
+                  fontWeight: 600,
+                  fontSize: 14,
+                  letterSpacing: "0.2px",
+                  boxShadow: subiendo || !archivo || !pacienteId
+                    ? "none"
+                    : "0 4px 20px rgba(124,58,237,0.35)",
+                  transition: "background 0.3s, box-shadow 0.3s",
+                }}
               >
-                {subiendo ? "⏳ Procesando PDF..." : "🔍 Analizar PDF"}
-              </button>
+                {/* Shimmer sweep */}
+                {!subiendo && archivo && pacienteId && (
+                  <motion.span
+                    animate={{ x: ["-120%", "220%"] }}
+                    transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut", repeatDelay: 1 }}
+                    style={{
+                      position: "absolute",
+                      top: 0, left: 0,
+                      width: "50%", height: "100%",
+                      background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent)",
+                      transform: "skewX(-15deg)",
+                      pointerEvents: "none",
+                    }}
+                  />
+                )}
+
+                {/* Ícono */}
+                {subiendo ? (
+                  <motion.svg
+                    width="16" height="16" viewBox="0 0 16 16" fill="none"
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                  >
+                    <circle cx="8" cy="8" r="6" stroke="rgba(255,255,255,0.3)" strokeWidth="2" />
+                    <path d="M8 2a6 6 0 0 1 6 6" stroke="#fff" strokeWidth="2" strokeLinecap="round" />
+                  </motion.svg>
+                ) : (
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <path d="M8 1l1.5 3.5L13 6l-2.5 2.5.6 3.5L8 10.5 4.9 12l.6-3.5L3 6l3.5-1.5L8 1z"
+                      stroke="#fff" strokeWidth="1.4" strokeLinejoin="round" fill="rgba(255,255,255,0.25)" />
+                  </svg>
+                )}
+
+                <span>{subiendo ? "Analizando..." : "Analizar PDF con IA"}</span>
+              </motion.button>
             </div>
+          </div>
           </div>
         </div>
       )}

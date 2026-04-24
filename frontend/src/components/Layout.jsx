@@ -7,7 +7,7 @@ import "./Layout.css";
 
 export default function Layout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [collapsed, setCollapsed]     = useState(false);
+  const [collapsed, setCollapsed]     = useState(() => localStorage.getItem("sidebar_collapsed") === "true");
   const [menuOpen, setMenuOpen]       = useState(false);
   const [infoOpen, setInfoOpen]       = useState(false);
   const { usuario, logout }           = useAuth();
@@ -97,7 +97,11 @@ export default function Layout({ children }) {
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
         collapsed={collapsed}
-        onToggleCollapse={() => setCollapsed((c) => !c)}
+        onToggleCollapse={() => setCollapsed((c) => {
+          const next = !c;
+          localStorage.setItem("sidebar_collapsed", String(next));
+          return next;
+        })}
       />
 
       <main className={`layout-main${collapsed ? " layout-main--collapsed" : ""}`}>

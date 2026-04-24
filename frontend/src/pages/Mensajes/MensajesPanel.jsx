@@ -19,19 +19,19 @@ const CLASIFICACIONES = {
     label: "Alto Riesgo",
     color: "#ef4444",
     bgLight: "#fee2e2",
-    preview: `Estimado/a {nombre}, le contactamos de la consulta de diabetes de Endocrinología de (Hospital María de Especialidades Pediátricas). Hemos detectado alteraciones en las métricas de tu monitor, vemos alertas con niveles altos en la glucosa, por favor revisa:\n1.- Tu Plan de alimentación\n2.- Cumplimiento de Ejercicio\n3.- Revisa tu dosis de insulina que sean las adecuadas\nSi persiste, por favor comuníquese con su médico tratante para coordinar su próxima cita. Gracias.`,
+    preview: `🏥 *Hospital María, Especialidades Pediátricas*\n_Consulta de Diabetes · Endocrinología_\n\n━━━━━━━━━━━━━━━━━━━━\n\nEstimado/a *{nombre}*, 👋\n\nHemos revisado las métricas de tu monitor de glucosa y hemos detectado ⚠️ *alertas con niveles elevados* que requieren tu atención.\n\nPor favor, revisa los siguientes puntos:\n\n1️⃣ 🥗 *Plan de alimentación* — Verifica que estés siguiendo las indicaciones nutricionales.\n2️⃣ 🏃 *Cumplimiento de ejercicio* — El ejercicio regular ayuda a estabilizar la glucosa.\n3️⃣ 💉 *Dosis de insulina* — Asegúrate de que las dosis sean las indicadas por tu médico.\n\n📌 Si los niveles persisten elevados, por favor comunícate con tu médico tratante para coordinar tu próxima cita.\n\n¡Tu salud es nuestra prioridad! 💙\n\n━━━━━━━━━━━━━━━━━━━━\n_Este mensaje es informativo. En caso de emergencia, acude a tu doctor._`,
   },
   MODERADO: {
     label: "Moderado",
     color: "#d97706",
     bgLight: "#fef3c7",
-    preview: `Estimado/a {nombre}, le contactamos de la consulta de diabetes de Endocrinología de (Hospital María de Especialidades Pediátricas). Hemos detectado que las métricas de tu monitor se encuentran en un nivel MODERADO. Te recomendamos revisar:\n1.- Tu Plan de alimentación\n2.- Cumplimiento de Ejercicio\n3.- Tu dosis de insulina\nPor favor comuníquese con su médico tratante para seguimiento. Gracias.`,
+    preview: `🏥 *Hospital María, Especialidades Pediátricas*\n_Consulta de Diabetes · Endocrinología_\n\n━━━━━━━━━━━━━━━━━━━━\n\nEstimado/a *{nombre}*, 👋\n\nHemos revisado las métricas de tu monitor de glucosa y observamos que tu control se encuentra en un nivel 🟡 *MODERADO*.\n\nTe recomendamos prestar atención a:\n\n1️⃣ 🥗 *Plan de alimentación* — Mantén una dieta equilibrada según tus indicaciones.\n2️⃣ 🏃 *Cumplimiento de ejercicio* — El ejercicio regular es clave para un buen control.\n3️⃣ 💉 *Dosis de insulina* — Verifica que estés administrando las dosis correctas.\n\n📅 Por favor, comunícate con tu médico tratante para dar seguimiento y mejorar tu control glucémico.\n\n¡Pequeños cambios hacen grandes diferencias! 💛\n\n━━━━━━━━━━━━━━━━━━━━\n_Este mensaje es informativo. En caso de emergencia, acude a tu doctor._`,
   },
   OPTIMO: {
     label: "TIR Óptimo",
     color: "#16a34a",
     bgLight: "#dcfce7",
-    preview: `Estimado/a {nombre}, le contactamos de la consulta de diabetes de Endocrinología de (Hospital María de Especialidades Pediátricas). Sus métricas de monitoreo continuo de glucosa muestran un control ÓPTIMO. ¡Felicitaciones, siga con su excelente manejo! Recuerde mantener sus citas de seguimiento. Gracias.`,
+    preview: `🏥 *Hospital María, Especialidades Pediátricas*\n_Consulta de Diabetes · Endocrinología_\n\n━━━━━━━━━━━━━━━━━━━━\n\nEstimado/a *{nombre}*, 👋\n\n¡Tenemos excelentes noticias! 🎉 Las métricas de tu monitor de glucosa muestran un control ✅ *ÓPTIMO*.\n\n🌟 *¡Felicitaciones por tu esfuerzo y dedicación!* Seguir así marca una gran diferencia en tu salud a largo plazo.\n\nRecuerda continuar con:\n\n✔️ Tu plan de alimentación\n✔️ Tu rutina de ejercicio\n✔️ La administración correcta de insulina\n📅 Tus citas de seguimiento programadas\n\n¡Sigue adelante, vas por el camino correcto! 💚\n\n━━━━━━━━━━━━━━━━━━━━\n_Este mensaje es informativo. En caso de emergencia, acude a tu doctor._`,
   },
 };
 

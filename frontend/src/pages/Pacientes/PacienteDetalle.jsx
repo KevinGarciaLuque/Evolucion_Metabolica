@@ -1,4 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 import { useParams, Link, useNavigate, useLocation } from "react-router-dom";
 import { FiTrash2, FiEdit2, FiEye, FiArrowLeft, FiUpload, FiEdit3, FiPlus, FiActivity, FiDroplet, FiBookOpen, FiUser, FiBarChart2, FiSun, FiZap, FiClipboard } from "react-icons/fi";
 import { IoLogoWhatsapp } from "react-icons/io";
@@ -10,6 +12,7 @@ import api from "../../api/axios";
 import Layout from "../../components/Layout";
 import SemaforoISPAD from "../../components/SemaforoISPAD";
 import { useAuth } from "../../context/AuthContext";
+import { calcularZScores, calcularEdadMeses } from "../../utils/who_zscore";
 
 // ─── Colores por clasificación ──────────────────────────────────────────────
 const COLORS_CLASIF = { OPTIMO: "#16a34a", MODERADO: "#d97706", ALTO_RIESGO: "#dc2626" };
@@ -89,6 +92,18 @@ export default function PacienteDetalle() {
   // ── Consultas ─────────────────────────────────────────────────────────────
   const [consultas, setConsultas] = useState([]);
 
+  // ── Crecimiento ───────────────────────────────────────────────────────────
+  const [crecimiento, setCrecimiento] = useState([]);
+  const [modalCrecimiento, setModalCrecimiento] = useState(false);
+  const [editCrecimiento, setEditCrecimiento] = useState(null);
+  const [formCrec, setFormCrec] = useState({});
+  const [guardandoCrec, setGuardandoCrec] = useState(false);
+  const [eliminarCrec, setEliminarCrec] = useState(null);
+  const [eliminandoCrec, setEliminandoCrec] = useState(false);
+  const [tabGraficaCrec, setTabGraficaCrec] = useState("peso_edad");
+  // Referencia OMS a mostrar: "0_5" (0-5 años) o "5_19" (5-19 años)
+  const [refOMS, setRefOMS] = useState("0_5");
+
   // ── WhatsApp individual ───────────────────────────────────────────────────
   const [modalWhatsApp, setModalWhatsApp]   = useState(false);
   const [msgWhatsApp,   setMsgWhatsApp]     = useState("");
@@ -104,13 +119,13 @@ export default function PacienteDetalle() {
         : paciente.institucion || "la institución";
 
     if (clasificacion === "ALTO_RIESGO") {
-      return `${trato} ${paciente.nombre}, le contactamos de la consulta de diabetes de Endocrinología de (${hospital}). Hemos detectado alteraciones en las métricas de tu monitor, vemos alertas con niveles altos en la glucosa, por favor revisa:\n1.- Tu Plan de alimentación\n2.- Cumplimiento de Ejercicio\n3.- Revisa tu dosis de insulina que sean las adecuadas\nSi persiste, por favor comuníquese con su médico tratante para coordinar su próxima cita. Gracias.`;
+      return `🏥 *${hospital}*\n_Consulta de Diabetes · Endocrinología_\n\n━━━━━━━━━━━━━━━━━━━━\n\n${trato} *${paciente.nombre}*, 👋\n\nHemos revisado las métricas de tu monitor de glucosa y hemos detectado ⚠️ *alertas con niveles elevados* que requieren tu atención.\n\nPor favor, revisa los siguientes puntos:\n\n1️⃣ 🥗 *Plan de alimentación* — Verifica que estés siguiendo las indicaciones nutricionales.\n2️⃣ 🏃 *Cumplimiento de ejercicio* — El ejercicio regular ayuda a estabilizar la glucosa.\n3️⃣ 💉 *Dosis de insulina* — Asegúrate de que las dosis sean las indicadas por tu médico.\n\n📌 Si los niveles persisten elevados, por favor comunícate con tu médico tratante para coordinar tu próxima cita.\n\n¡Tu salud es nuestra prioridad! 💙\n\n━━━━━━━━━━━━━━━━━━━━\n_Este mensaje es informativo. En caso de emergencia, acude a tu doctor._`;
     } else if (clasificacion === "MODERADO") {
-      return `${trato} ${paciente.nombre}, le contactamos de la consulta de diabetes de Endocrinología de (${hospital}). Hemos detectado que las métricas de tu monitor se encuentran en un nivel MODERADO. Te recomendamos revisar:\n1.- Tu Plan de alimentación\n2.- Cumplimiento de Ejercicio\n3.- Tu dosis de insulina\nPor favor comuníquese con su médico tratante para seguimiento. Gracias.`;
+      return `🏥 *${hospital}*\n_Consulta de Diabetes · Endocrinología_\n\n━━━━━━━━━━━━━━━━━━━━\n\n${trato} *${paciente.nombre}*, 👋\n\nHemos revisado las métricas de tu monitor de glucosa y observamos que tu control se encuentra en un nivel 🟡 *MODERADO*.\n\nTe recomendamos prestar atención a:\n\n1️⃣ 🥗 *Plan de alimentación* — Mantén una dieta equilibrada según tus indicaciones.\n2️⃣ 🏃 *Cumplimiento de ejercicio* — El ejercicio regular es clave para un buen control.\n3️⃣ 💉 *Dosis de insulina* — Verifica que estés administrando las dosis correctas.\n\n📅 Por favor, comunícate con tu médico tratante para dar seguimiento y mejorar tu control glucémico.\n\n¡Pequeños cambios hacen grandes diferencias! 💛\n\n━━━━━━━━━━━━━━━━━━━━\n_Este mensaje es informativo. En caso de emergencia, acude a tu doctor._`;
     } else if (clasificacion === "OPTIMO") {
-      return `${trato} ${paciente.nombre}, le contactamos de la consulta de diabetes de Endocrinología de (${hospital}). Sus métricas de monitoreo continuo de glucosa muestran un control ÓPTIMO. ¡Felicitaciones, siga con su excelente manejo! Recuerde mantener sus citas de seguimiento. Gracias.`;
+      return `🏥 *${hospital}*\n_Consulta de Diabetes · Endocrinología_\n\n━━━━━━━━━━━━━━━━━━━━\n\n${trato} *${paciente.nombre}*, 👋\n\n¡Tenemos excelentes noticias! 🎉 Las métricas de tu monitor de glucosa muestran un control ✅ *ÓPTIMO*.\n\n🌟 *¡Felicitaciones por tu esfuerzo y dedicación!* Seguir así marca una gran diferencia en tu salud a largo plazo.\n\nRecuerda continuar con:\n\n✔️ Tu plan de alimentación\n✔️ Tu rutina de ejercicio\n✔️ La administración correcta de insulina\n📅 Tus citas de seguimiento programadas\n\n¡Sigue adelante, vas por el camino correcto! 💚\n\n━━━━━━━━━━━━━━━━━━━━\n_Este mensaje es informativo. En caso de emergencia, acude a tu doctor._`;
     }
-    return `${trato} ${paciente.nombre}, le contactamos de la consulta de diabetes de Endocrinología de (${hospital}). Por favor comuníquese con su médico tratante para coordinar su próxima cita. Gracias.`;
+    return `🏥 *${hospital}*\n_Consulta de Diabetes · Endocrinología_\n\n${trato} *${paciente.nombre}*, 👋\n\nPor favor comunícate con tu médico tratante para coordinar tu próxima cita. 📅\n\n¡Tu salud es nuestra prioridad! 💙`;
   }
 
   async function enviarWhatsAppIndividual() {
@@ -273,6 +288,83 @@ export default function PacienteDetalle() {
     }
   }
 
+  // ── Crecimiento helpers ───────────────────────────────────────────────────
+  function abrirNuevoCrec() {
+    const edadMeses = calcularEdadMeses(paciente?.fecha_nacimiento, null);
+    setFormCrec({
+      fecha: new Date().toISOString().split("T")[0],
+      peso_kg: "", talla_cm: "", pc_cm: "",
+      edad_meses: edadMeses ?? "",
+      observaciones: "",
+    });
+    setEditCrecimiento(null);
+    setModalCrecimiento(true);
+  }
+  function abrirEditarCrec(reg) {
+    setFormCrec({ ...reg, fecha: reg.fecha?.split("T")[0] || reg.fecha });
+    setEditCrecimiento(reg);
+    setModalCrecimiento(true);
+  }
+  function cambiarFormCrec(e) {
+    const { name, value } = e.target;
+    setFormCrec(f => {
+      const next = { ...f, [name]: value };
+      // Recalcular edad_meses cuando cambia la fecha
+      if (name === "fecha" && paciente?.fecha_nacimiento) {
+        next.edad_meses = calcularEdadMeses(paciente.fecha_nacimiento, value) ?? "";
+      }
+      return next;
+    });
+  }
+  // Z-scores calculados en tiempo real para previsualización
+  const zPreview = (() => {
+    if (!formCrec.peso_kg && !formCrec.talla_cm && !formCrec.pc_cm) return null;
+    return calcularZScores({
+      peso_kg:    formCrec.peso_kg   || null,
+      talla_cm:   formCrec.talla_cm  || null,
+      pc_cm:      formCrec.pc_cm     || null,
+      edad_meses: formCrec.edad_meses,
+    }, paciente?.sexo || "M");
+  })();
+
+  async function guardarCrec() {
+    setGuardandoCrec(true);
+    try {
+      // Calcular z-scores antes de guardar
+      const zs = calcularZScores({
+        peso_kg:    formCrec.peso_kg   || null,
+        talla_cm:   formCrec.talla_cm  || null,
+        pc_cm:      formCrec.pc_cm     || null,
+        edad_meses: formCrec.edad_meses,
+      }, paciente?.sexo || "M");
+      const payload = { ...formCrec, ...zs };
+      if (editCrecimiento) {
+        const { data } = await api.put(`/pacientes/${id}/crecimiento/${editCrecimiento.id}`, payload);
+        setCrecimiento(list => list.map(r => r.id === editCrecimiento.id ? { ...r, ...payload, ...data } : r));
+      } else {
+        const { data } = await api.post(`/pacientes/${id}/crecimiento`, payload);
+        setCrecimiento(list => [{ ...payload, id: data.id, ...data }, ...list]);
+      }
+      setModalCrecimiento(false);
+    } catch {
+      alert("Error al guardar el registro de crecimiento.");
+    } finally {
+      setGuardandoCrec(false);
+    }
+  }
+  async function confirmarEliminarCrec() {
+    setEliminandoCrec(true);
+    try {
+      await api.delete(`/pacientes/${id}/crecimiento/${eliminarCrec.id}`);
+      setCrecimiento(list => list.filter(r => r.id !== eliminarCrec.id));
+      setEliminarCrec(null);
+    } catch {
+      alert("Error al eliminar el registro.");
+    } finally {
+      setEliminandoCrec(false);
+    }
+  }
+
   useEffect(() => {
     const onResize = () => {
       setIsMobile(window.innerWidth < 768);
@@ -291,13 +383,15 @@ export default function PacienteDetalle() {
       api.get(`/pacientes/${id}/alimentacion`),
       api.get(`/consultas?paciente_id=${id}`),
       api.get(`/pacientes/${id}/relacion-ic`),
-    ]).then(([p, h, ins, ali, cons, ric]) => {
+      api.get(`/pacientes/${id}/crecimiento`),
+    ]).then(([p, h, ins, ali, cons, ric, crec]) => {
       setPaciente(p.data);
       setHistorial(h.data);
       setInsulina(ins.data);
       setAlimentacion(ali.data);
       setConsultas(cons.data);
       setRelacionIC(ric.data);
+      setCrecimiento(crec.data);
     }).finally(() => setCargando(false));
   }, [id, location.key]);
 
@@ -427,11 +521,12 @@ export default function PacienteDetalle() {
       ══════════════════════════════════════════════════════════════════════ */}
       <div className="tab-bar">
         {[
-          { key: "consultas",    label: "Consultas",     icon: <FiClipboard size={14} />, count: consultas.length },
-          { key: "info",         label: "Información",  icon: <FiUser size={14} /> },
-          { key: "analisis",     label: "Análisis MCG", icon: <FiBarChart2 size={14} />, count: historial.length },
-          { key: "insulina",     label: "Insulina",      icon: <FiZap size={14} />,      count: insulina.length },
-          { key: "alimentacion", label: "Alimentación",  icon: <FiSun size={14} />,      count: alimentacion.length },
+          { key: "consultas",    label: "Consultas",          icon: <FiClipboard size={14} />, count: consultas.length },
+          { key: "info",         label: "Información",        icon: <FiUser size={14} /> },
+          { key: "analisis",     label: "Análisis MCG",       icon: <FiBarChart2 size={14} />, count: historial.length },
+          { key: "crecimiento",  label: "Curvas Crecimiento", icon: <FiActivity size={14} />, count: crecimiento.length },
+          { key: "insulina",     label: "Insulina",           icon: <FiZap size={14} />,      count: insulina.length },
+          { key: "alimentacion", label: "Alimentación",       icon: <FiSun size={14} />,      count: alimentacion.length },
         ].map(tab => {
           const activa = tabActiva === tab.key;
           return (
@@ -1135,6 +1230,23 @@ export default function PacienteDetalle() {
           </div>
         )}
 
+        {/* ── TAB: CURVAS DE CRECIMIENTO ─────────────────────────────── */}
+        {tabActiva === "crecimiento" && (
+          <TabCrecimiento
+            paciente={paciente}
+            crecimiento={crecimiento}
+            isMobile={isMobile}
+            isTablet={isTablet}
+            tabGrafica={tabGraficaCrec}
+            setTabGrafica={setTabGraficaCrec}
+            refOMS={refOMS}
+            setRefOMS={setRefOMS}
+            onNuevo={abrirNuevoCrec}
+            onEditar={abrirEditarCrec}
+            onEliminar={setEliminarCrec}
+          />
+        )}
+
         {tabActiva === "alimentacion" && (
           <div className="card">
             <div className="card-header-row">
@@ -1186,6 +1298,132 @@ export default function PacienteDetalle() {
           </div>
         )}
       </div>
+
+      {/* ── Modal crecimiento: crear / editar ──────────────────────── */}
+      {modalCrecimiento && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 9999, background: "rgba(0,0,0,0.55)", display: "flex", alignItems: "flex-start", justifyContent: "center", overflowY: "auto", padding: "16px" }}>
+          <div style={{ background: "#fff", borderRadius: 16, padding: isMobile ? "20px 16px" : "28px 28px", maxWidth: 560, width: "100%", boxShadow: "0 24px 64px rgba(0,0,0,0.25)", marginTop: isMobile ? 8 : 24 }}>
+            {/* Header */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <span style={{ fontSize: 22 }}>📏</span>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: "1rem", color: "#0f172a" }}>
+                    {editCrecimiento ? "Editar medición" : "Registrar medición"}
+                  </h3>
+                  {paciente?.fecha_nacimiento && formCrec.edad_meses !== "" && (
+                    <p style={{ margin: 0, fontSize: "0.75rem", color: "#6366f1", fontWeight: 600 }}>
+                      Edad: {formCrec.edad_meses} {Number(formCrec.edad_meses) === 1 ? "mes" : "meses"}
+                    </p>
+                  )}
+                </div>
+              </div>
+              <button onClick={() => setModalCrecimiento(false)} style={{ background: "none", border: "none", fontSize: 22, cursor: "pointer", color: "#94a3b8", lineHeight: 1, padding: "0 4px" }}>✕</button>
+            </div>
+
+            {/* Fila: Fecha */}
+            <div style={{ marginBottom: 14 }}>
+              <label style={{ display: "block", fontSize: "0.78rem", fontWeight: 600, color: "#374151", marginBottom: 4 }}>FECHA *</label>
+              <input type="date" name="fecha" value={formCrec.fecha || ""} onChange={cambiarFormCrec}
+                style={{ width: "100%", boxSizing: "border-box", padding: "0.6rem 0.8rem", border: "1.5px solid #e2e8f0", borderRadius: 8, fontSize: "0.95rem" }} />
+            </div>
+
+            {/* Fila: Peso + Talla + PC */}
+            <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "1fr 1fr 1fr", gap: 12, marginBottom: 14 }}>
+              <div>
+                <label style={{ display: "block", fontSize: "0.78rem", fontWeight: 600, color: "#374151", marginBottom: 4 }}>PESO (KG)</label>
+                <input type="number" step="0.001" name="peso_kg" value={formCrec.peso_kg ?? ""} onChange={cambiarFormCrec} min={0} placeholder="Ej: 7.5"
+                  style={{ width: "100%", boxSizing: "border-box", padding: "0.6rem 0.8rem", border: "1.5px solid #e2e8f0", borderRadius: 8, fontSize: "0.95rem" }} />
+              </div>
+              <div>
+                <label style={{ display: "block", fontSize: "0.78rem", fontWeight: 600, color: "#374151", marginBottom: 4 }}>TALLA (CM)</label>
+                <input type="number" step="0.1" name="talla_cm" value={formCrec.talla_cm ?? ""} onChange={cambiarFormCrec} min={0} placeholder="Ej: 68.5"
+                  style={{ width: "100%", boxSizing: "border-box", padding: "0.6rem 0.8rem", border: "1.5px solid #e2e8f0", borderRadius: 8, fontSize: "0.95rem" }} />
+              </div>
+              <div style={isMobile ? { gridColumn: "span 2" } : {}}>
+                <label style={{ display: "block", fontSize: "0.78rem", fontWeight: 600, color: "#374151", marginBottom: 4 }}>P. CEFÁLICO (CM)</label>
+                <input type="number" step="0.1" name="pc_cm" value={formCrec.pc_cm ?? ""} onChange={cambiarFormCrec} min={0} placeholder="Ej: 43.2"
+                  style={{ width: "100%", boxSizing: "border-box", padding: "0.6rem 0.8rem", border: "1.5px solid #e2e8f0", borderRadius: 8, fontSize: "0.95rem" }} />
+              </div>
+            </div>
+
+            {/* Preview Z-scores calculados automáticamente */}
+            {zPreview && Object.keys(zPreview).some(k => k.startsWith("zscore")) && (
+              <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 10, padding: "12px 14px", marginBottom: 14 }}>
+                <div style={{ fontSize: "0.72rem", fontWeight: 700, color: "#64748b", letterSpacing: "0.06em", marginBottom: 8 }}>
+                  📊 Z-SCORES OMS CALCULADOS AUTOMÁTICAMENTE
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(120px, 1fr))", gap: 8 }}>
+                  {[
+                    { key: "zscore_peso_edad",  label: "Peso/Edad",   est: "estado_peso_edad" },
+                    { key: "zscore_talla_edad", label: "Talla/Edad",  est: "estado_talla_edad" },
+                    { key: "zscore_imc_edad",   label: "IMC/Edad",    est: "estado_imc_edad" },
+                    { key: "zscore_pc_edad",    label: "P.C./Edad",   est: "estado_pc_edad" },
+                  ].filter(c => zPreview[c.key] != null).map(c => {
+                    const z = zPreview[c.key];
+                    const est = zPreview[c.est];
+                    const col = !est ? "#94a3b8" : est.includes("severa") || est.includes("Obesi") || est.includes("Micro") || est.includes("Macro") ? "#dc2626" : est.includes("oderad") || est.includes("riesgo") || est.includes("baja") || est.includes("Delga") ? "#d97706" : "#16a34a";
+                    return (
+                      <div key={c.key} style={{ background: "#fff", borderRadius: 8, padding: "8px 10px", border: `1.5px solid ${col}20` }}>
+                        <div style={{ fontSize: "0.68rem", color: "#94a3b8", marginBottom: 2 }}>{c.label}</div>
+                        <div style={{ fontSize: "1.05rem", fontWeight: 700, color: col }}>{z}</div>
+                        {est && <div style={{ fontSize: "0.62rem", color: col, fontWeight: 600, marginTop: 1, lineHeight: 1.2 }}>{est}</div>}
+                      </div>
+                    );
+                  })}
+                  {zPreview.imc != null && (
+                    <div style={{ background: "#fff", borderRadius: 8, padding: "8px 10px", border: "1.5px solid #6366f120" }}>
+                      <div style={{ fontSize: "0.68rem", color: "#94a3b8", marginBottom: 2 }}>IMC</div>
+                      <div style={{ fontSize: "1.05rem", fontWeight: 700, color: "#6366f1" }}>{zPreview.imc}</div>
+                      <div style={{ fontSize: "0.62rem", color: "#94a3b8" }}>kg/m²</div>
+                    </div>
+                  )}
+                </div>
+                {Number(formCrec.edad_meses) > 60 && (
+                  <p style={{ margin: "8px 0 0", fontSize: "0.72rem", color: "#f59e0b" }}>
+                    ⚠️ Edad &gt; 60 meses — se aplican estándares OMS 0–5 años. Para 5–19 años usa tablas específicas.
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* Notas */}
+            <div style={{ marginBottom: 20 }}>
+              <label style={{ display: "block", fontSize: "0.78rem", fontWeight: 600, color: "#374151", marginBottom: 4 }}>NOTAS</label>
+              <textarea name="observaciones" value={formCrec.observaciones || ""} onChange={cambiarFormCrec} rows={2}
+                placeholder="Observaciones opcionales..."
+                style={{ width: "100%", boxSizing: "border-box", padding: "0.6rem 0.8rem", border: "1.5px solid #e2e8f0", borderRadius: 8, fontSize: "0.875rem", resize: "vertical", fontFamily: "inherit" }} />
+            </div>
+
+            <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+              <button className="btn btn-outline" onClick={() => setModalCrecimiento(false)} disabled={guardandoCrec}>Cancelar</button>
+              <button className="btn btn-primary" onClick={guardarCrec} disabled={guardandoCrec || !formCrec.fecha}
+                style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                {guardandoCrec ? "Guardando…" : <><span>💾</span> Guardar</>}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Modal confirmar eliminar crecimiento ────────────────────── */}
+      {eliminarCrec && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 9999, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
+          <div style={{ background: "#fff", borderRadius: 14, padding: "28px", maxWidth: 380, width: "100%", textAlign: "center" }}>
+            <div style={{ fontSize: 40, marginBottom: 12 }}>🗑️</div>
+            <h3 style={{ margin: "0 0 8px" }}>¿Eliminar registro?</h3>
+            <p style={{ color: "#64748b", fontSize: "0.88rem", marginBottom: 20 }}>
+              Registro del {eliminarCrec.fecha?.split("T")[0] || eliminarCrec.fecha}. Esta acción no se puede deshacer.
+            </p>
+            <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
+              <button className="btn btn-outline" onClick={() => setEliminarCrec(null)} disabled={eliminandoCrec}>Cancelar</button>
+              <button onClick={confirmarEliminarCrec} disabled={eliminandoCrec} style={{ background: eliminandoCrec ? "#fca5a5" : "#dc2626", color: "#fff", border: "none", borderRadius: 8, padding: "8px 20px", fontWeight: 600, cursor: "pointer" }}>
+                {eliminandoCrec ? "Eliminando…" : "Eliminar"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modal editar análisis */}
       {modalEditar && editForm && (
@@ -1766,6 +2004,1202 @@ export default function PacienteDetalle() {
         </div>
       )}
     </Layout>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TAB CURVAS DE CRECIMIENTO
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Curvas OMS simplificadas: percentiles 3, 15, 50, 85, 97 por edad en meses
+// Datos representativos para las 5 gráficas (0-60 meses para niños y niñas mixto)
+// Se usan como líneas de referencia en las gráficas de evolución del paciente
+
+const OMS_CURVES = {
+  // PESO/EDAD (kg) — 0-60 meses, promedio niño+niña
+  peso_edad: {
+    etiqueta: "Peso / Edad",
+    unidad: "kg",
+    campo: "peso_kg",
+    xLabel: "Edad (meses)",
+    yDomain: [0, 30],
+    color: "#6366f1",
+    refs: [
+      { label: "Normal (±1 DE)", color: "#10b981" },
+      { label: "Riesgo (±2 DE)",  color: "#f59e0b" },
+      { label: "Alerta (±3 DE)",  color: "#ef4444" },
+    ],
+    // [edadMeses, p3, p15, p50, p85, p97]
+    puntos: [
+      [0, 2.5, 2.9, 3.3, 3.9, 4.3],
+      [3, 4.9, 5.5, 6.2, 7.0, 7.7],
+      [6, 6.1, 6.9, 7.9, 8.8, 9.7],
+      [9, 7.2, 8.1, 9.2, 10.2, 11.1],
+      [12, 7.8, 8.9, 10.2, 11.3, 12.3],
+      [18, 8.8, 10.1, 11.5, 12.8, 13.9],
+      [24, 9.7, 11.1, 12.7, 14.1, 15.3],
+      [30, 10.5, 12.0, 13.8, 15.4, 16.8],
+      [36, 11.2, 12.9, 14.9, 16.7, 18.3],
+      [48, 12.7, 14.7, 17.0, 19.3, 21.2],
+      [60, 14.1, 16.4, 19.2, 21.9, 24.2],
+    ],
+  },
+  // TALLA/EDAD (cm)
+  talla_edad: {
+    etiqueta: "Talla / Edad",
+    unidad: "cm",
+    campo: "talla_cm",
+    xLabel: "Edad (meses)",
+    yDomain: [40, 130],
+    color: "#0ea5e9",
+    refs: [
+      { label: "Normal (±1 DE)", color: "#10b981" },
+      { label: "Riesgo (±2 DE)",  color: "#f59e0b" },
+      { label: "Alerta (±3 DE)",  color: "#ef4444" },
+    ],
+    puntos: [
+      [0, 45.5, 47.5, 49.9, 52.3, 54.0],
+      [3, 56.7, 58.9, 61.4, 63.9, 65.8],
+      [6, 63.0, 65.3, 67.6, 70.3, 72.0],
+      [9, 68.0, 70.3, 72.7, 75.2, 77.1],
+      [12, 71.8, 74.2, 76.8, 79.5, 81.5],
+      [18, 78.3, 80.9, 83.6, 86.4, 88.3],
+      [24, 82.5, 85.4, 88.3, 91.3, 93.4],
+      [30, 86.6, 89.6, 92.9, 96.0, 98.3],
+      [36, 89.7, 92.9, 96.4, 99.7, 102.2],
+      [48, 95.8, 99.4, 103.3, 107.1, 109.8],
+      [60, 101.4, 105.3, 109.4, 113.6, 116.5],
+    ],
+  },
+  // IMC/EDAD (kg/m²)
+  imc_edad: {
+    etiqueta: "IMC / Edad",
+    unidad: "kg/m²",
+    campo: "imc",
+    xLabel: "Edad (meses)",
+    yDomain: [10, 24],
+    color: "#8b5cf6",
+    refs: [
+      { label: "Normal (±1 DE)", color: "#10b981" },
+      { label: "Riesgo (±2 DE)",  color: "#f59e0b" },
+      { label: "Alerta (±3 DE)",  color: "#ef4444" },
+    ],
+    puntos: [
+      [0, 11.1, 12.2, 13.4, 14.8, 15.7],
+      [3, 13.0, 14.2, 15.7, 17.3, 18.4],
+      [6, 14.0, 15.2, 16.6, 18.1, 19.3],
+      [9, 14.2, 15.4, 16.7, 18.2, 19.2],
+      [12, 14.1, 15.2, 16.6, 18.0, 19.0],
+      [18, 13.9, 15.0, 16.4, 17.8, 18.8],
+      [24, 13.8, 14.9, 16.3, 17.7, 18.8],
+      [36, 13.5, 14.7, 16.0, 17.5, 18.7],
+      [48, 13.2, 14.4, 15.7, 17.3, 18.7],
+      [60, 13.0, 14.2, 15.5, 17.2, 18.7],
+    ],
+  },
+  // PESO/TALLA (kg por cm)
+  peso_talla: {
+    etiqueta: "Peso / Talla",
+    unidad: "kg",
+    campo: "peso_kg",
+    xLabel: "Talla (cm)",
+    xCampo: "talla_cm",
+    yDomain: [2, 30],
+    color: "#f59e0b",
+    refs: [
+      { label: "Normal (±1 DE)", color: "#10b981" },
+      { label: "Riesgo (±2 DE)",  color: "#f59e0b" },
+      { label: "Alerta (±3 DE)",  color: "#ef4444" },
+    ],
+    // [tallaCm, p3, p15, p50, p85, p97]
+    puntos: [
+      [45, 1.9, 2.1, 2.4, 2.7, 3.0],
+      [50, 2.7, 3.0, 3.4, 3.9, 4.2],
+      [55, 3.6, 4.0, 4.5, 5.2, 5.7],
+      [60, 5.0, 5.5, 6.2, 7.1, 7.8],
+      [65, 6.1, 6.8, 7.6, 8.6, 9.4],
+      [70, 7.1, 7.8, 8.7, 9.8, 10.6],
+      [75, 8.0, 8.8, 9.9, 11.0, 12.0],
+      [80, 8.9, 9.8, 11.0, 12.3, 13.4],
+      [85, 9.8, 10.9, 12.2, 13.7, 15.0],
+      [90, 10.8, 12.0, 13.5, 15.2, 16.7],
+      [95, 11.8, 13.1, 14.8, 16.7, 18.5],
+      [100, 12.9, 14.4, 16.3, 18.5, 20.5],
+      [110, 15.4, 17.3, 19.7, 22.5, 25.2],
+    ],
+  },
+  // PERÍMETRO CEFÁLICO/EDAD (cm)
+  pc_edad: {
+    etiqueta: "Per. Cefálico / Edad",
+    unidad: "cm",
+    campo: "pc_cm",
+    xLabel: "Edad (meses)",
+    yDomain: [28, 56],
+    color: "#ec4899",
+    refs: [
+      { label: "Normal (±1 DE)", color: "#10b981" },
+      { label: "Riesgo (±2 DE)",  color: "#f59e0b" },
+      { label: "Alerta (±3 DE)",  color: "#ef4444" },
+    ],
+    puntos: [
+      [0, 31.5, 32.7, 34.0, 35.4, 36.4],
+      [3, 37.2, 38.4, 39.8, 41.2, 42.2],
+      [6, 40.5, 41.7, 43.0, 44.4, 45.4],
+      [9, 42.5, 43.7, 45.0, 46.3, 47.3],
+      [12, 43.8, 45.0, 46.3, 47.6, 48.6],
+      [18, 45.5, 46.7, 47.9, 49.2, 50.2],
+      [24, 46.5, 47.7, 49.0, 50.2, 51.2],
+      [36, 47.5, 48.7, 49.9, 51.2, 52.1],
+      [48, 48.2, 49.4, 50.5, 51.8, 52.8],
+      [60, 48.7, 49.9, 51.0, 52.3, 53.3],
+    ],
+  },
+};
+
+// ── WHO Growth Reference 2007 (5–19 años) ─────────────────────────────────
+const OMS_CURVES_5_19 = {
+  // PESO/EDAD (kg) — 5-10 años (WHO 2007 solo hasta 10a para peso)
+  peso_edad: {
+    etiqueta: "Peso / Edad",
+    unidad: "kg",
+    campo: "peso_kg",
+    xLabel: "Edad",
+    yDomain: [10, 80],
+    color: "#6366f1",
+    nota: "⚠️ Solo hasta 10a (OMS) · WHO Growth Ref. 2007",
+    puntos: [
+      [60, 13.9, 16.1, 18.9, 21.6, 24.0],
+      [66, 14.8, 17.2, 20.2, 23.3, 26.0],
+      [72, 15.7, 18.3, 21.7, 25.3, 28.4],
+      [78, 16.6, 19.5, 23.3, 27.4, 31.1],
+      [84, 17.6, 20.8, 25.0, 29.8, 34.3],
+      [90, 18.6, 22.1, 26.8, 32.4, 37.9],
+      [96, 19.7, 23.6, 28.8, 35.4, 42.4],
+      [102, 20.8, 25.1, 31.0, 38.6, 47.3],
+      [108, 22.0, 26.7, 33.3, 42.1, 52.8],
+      [114, 23.3, 28.4, 35.8, 45.7, 58.9],
+      [120, 24.7, 30.2, 38.5, 49.8, 65.5],
+    ],
+  },
+  // TALLA/EDAD (cm) — 5-19 años (WHO 2007)
+  talla_edad: {
+    etiqueta: "Talla / Edad",
+    unidad: "cm",
+    campo: "talla_cm",
+    xLabel: "Edad",
+    yDomain: [95, 210],
+    color: "#0ea5e9",
+    nota: "📐 Estatura — WHO Growth Ref. 2007 (5–19 años)",
+    puntos: [
+      [60,  101.5, 105.4, 109.5, 113.7, 116.7],
+      [72,  107.4, 111.5, 116.0, 120.4, 123.7],
+      [84,  113.2, 117.6, 122.5, 127.2, 130.8],
+      [96,  119.0, 123.8, 129.0, 134.0, 137.9],
+      [108, 124.5, 129.8, 135.4, 140.7, 145.0],
+      [120, 130.0, 135.9, 142.0, 147.7, 152.3],
+      [132, 135.6, 142.0, 148.5, 154.9, 159.9],
+      [144, 141.2, 148.2, 155.3, 162.3, 167.7],
+      [156, 147.0, 154.5, 162.0, 169.6, 175.5],
+      [168, 152.5, 160.6, 168.5, 176.6, 183.0],
+      [180, 157.7, 166.1, 174.2, 182.7, 189.4],
+      [192, 162.1, 170.8, 179.0, 187.8, 194.7],
+      [204, 165.6, 174.3, 182.6, 191.5, 198.5],
+      [216, 168.1, 176.9, 185.2, 194.2, 201.1],
+      [228, 169.7, 178.6, 187.0, 196.0, 202.9],
+    ],
+  },
+  // IMC/EDAD (kg/m²) — 5-19 años (WHO 2007)
+  imc_edad: {
+    etiqueta: "IMC / Edad",
+    unidad: "kg/m²",
+    campo: "imc",
+    xLabel: "Edad",
+    yDomain: [10, 40],
+    color: "#8b5cf6",
+    nota: "📐 IMC — WHO Growth Ref. 2007 (5–19 años)",
+    puntos: [
+      [60,  12.9, 14.2, 15.5, 17.3, 18.9],
+      [72,  12.6, 13.9, 15.2, 17.1, 18.8],
+      [84,  12.5, 13.8, 15.1, 17.1, 18.9],
+      [96,  12.5, 13.8, 15.3, 17.4, 19.7],
+      [108, 12.7, 14.0, 15.7, 18.0, 20.8],
+      [120, 12.9, 14.3, 16.2, 18.9, 22.0],
+      [132, 13.3, 14.7, 16.8, 19.9, 23.5],
+      [144, 13.7, 15.3, 17.6, 21.1, 25.2],
+      [156, 14.2, 15.9, 18.4, 22.3, 27.0],
+      [168, 14.7, 16.6, 19.3, 23.6, 28.9],
+      [180, 15.2, 17.2, 20.2, 24.8, 30.7],
+      [192, 15.7, 17.8, 21.1, 25.9, 32.4],
+      [204, 16.1, 18.4, 21.9, 27.0, 33.9],
+      [216, 16.5, 18.9, 22.7, 28.0, 35.3],
+      [228, 16.9, 19.4, 23.5, 29.0, 36.7],
+    ],
+  },
+  // Peso/Talla y PC — reutiliza datos 0-5 (no hay referencia WHO 5-19 para estos)
+  peso_talla: null,
+  pc_edad:    null,
+};
+
+function colorEstado(estado) {
+  if (!estado) return "#94a3b8";
+  const s = estado.toLowerCase();
+  if (s.includes("severa") || s.includes("muy alto") || s.includes("alto riesgo") || s.includes("obesi") || s.includes("macro") || s.includes("micro")) return "#dc2626";
+  if (s.includes("moderada") || s.includes("riesgo") || s.includes("sobrepeso") || s.includes("baja") || s.includes("delgadez")) return "#d97706";
+  if (s.includes("normal")) return "#16a34a";
+  return "#6366f1";
+}
+
+function BadgeEstado({ estado }) {
+  if (!estado) return <span style={{ color: "#94a3b8", fontSize: "0.78rem" }}>Sin datos</span>;
+  const color = colorEstado(estado);
+  const bg = color === "#dc2626" ? "#fef2f2" : color === "#d97706" ? "#fffbeb" : color === "#16a34a" ? "#f0fdf4" : "#ede9fe";
+  return (
+    <span style={{ background: bg, color, borderRadius: 6, padding: "2px 8px", fontSize: "0.72rem", fontWeight: 700, whiteSpace: "nowrap" }}>
+      {estado.toUpperCase()}
+    </span>
+  );
+}
+
+function TabCrecimiento({ paciente, crecimiento, isMobile, isTablet, tabGrafica, setTabGrafica, refOMS, setRefOMS, onNuevo, onEditar, onEliminar }) {
+  const tabs5 = [
+    { key: "peso_edad",  label: isMobile ? "Peso" : "Peso / Edad" },
+    { key: "talla_edad", label: isMobile ? "Talla" : "Talla / Edad" },
+    { key: "peso_talla", label: isMobile ? "P/Talla" : "Peso / Talla" },
+    { key: "imc_edad",   label: "IMC" },
+    { key: "pc_edad",    label: isMobile ? "P.C." : "Per. Cefálico" },
+  ];
+
+  const [dropPrint, setDropPrint] = useState(false);
+  const [dropDL,    setDropDL]    = useState(false);
+  const [generandoPDF, setGenerandoPDF] = useState(false);
+  const chartRef = useRef(null);
+
+  // Seleccionar dataset según referencia activa (fallback a 0-5 si no hay datos 5-19)
+  const curva = (refOMS === "5_19" && OMS_CURVES_5_19[tabGrafica])
+    ? OMS_CURVES_5_19[tabGrafica]
+    : OMS_CURVES[tabGrafica];
+
+  // Formateador de ticks x para 5-19 años (meses → "5a", "6a"…)
+  const xTickFmt = refOMS === "5_19" ? (v => `${Math.floor(v / 12)}a`) : undefined;
+
+  // Dominio fijo del eje X para que 5-19 siempre muestre el rango completo
+  const xDomain = (() => {
+    if (refOMS !== "5_19" || curva.xCampo) return ["dataMin", "dataMax"];
+    // peso_edad WHO 2007 solo tiene datos hasta 120m (10a)
+    const maxX = (OMS_CURVES_5_19[tabGrafica]?.puntos?.at(-1)?.[0]) ?? 228;
+    return [60, maxX];
+  })();
+  const xTickCount = (() => {
+    if (isMobile) return 5;
+    if (refOMS !== "5_19" || curva.xCampo) return 9;
+    const [xMin, xMax] = xDomain;
+    return Math.floor((xMax - xMin) / 12) + 1;
+  })();
+
+  // ── Helpers z-score ──────────────────────────────────────────────────────
+  const indicadorActivo = tabGrafica === "peso_edad" ? "zscore_peso_edad"
+    : tabGrafica === "talla_edad" ? "zscore_talla_edad"
+    : tabGrafica === "imc_edad"   ? "zscore_imc_edad"
+    : tabGrafica === "pc_edad"    ? "zscore_pc_edad"
+    : null;
+  const estadoActivo = tabGrafica === "peso_edad" ? "estado_peso_edad"
+    : tabGrafica === "talla_edad" ? "estado_talla_edad"
+    : tabGrafica === "imc_edad"   ? "estado_imc_edad"
+    : tabGrafica === "pc_edad"    ? "estado_pc_edad"
+    : null;
+  const percentilActivo = tabGrafica === "peso_edad" ? "percentil_peso_edad"
+    : tabGrafica === "talla_edad" ? "percentil_talla_edad"
+    : tabGrafica === "imc_edad"   ? "percentil_imc_edad"
+    : tabGrafica === "pc_edad"    ? "percentil_pc_edad"
+    : null;
+
+  // ── Chart data builder ───────────────────────────────────────────────────
+  const buildChartData = useCallback((curvaObj) => {
+    const pts = [...crecimiento]
+      .filter(r => r[curvaObj.campo] != null)
+      .sort((a, b) => new Date(a.fecha) - new Date(b.fecha))
+      .map(r => {
+        const x = curvaObj.xCampo ? Number(r[curvaObj.xCampo]) : Number(r.edad_meses);
+        return { x, y: Number(r[curvaObj.campo]), fecha: r.fecha?.split("T")[0] || r.fecha };
+      })
+      .filter(p => !isNaN(p.x) && !isNaN(p.y) && p.x >= 0);
+
+    const [p3s, p15s, p50s, p85s, p97s] = [[], [], [], [], []];
+    curvaObj.puntos.forEach(([xVal, p3, p15, p50, p85, p97]) => {
+      p3s.push({ x: xVal, y: p3 }); p15s.push({ x: xVal, y: p15 });
+      p50s.push({ x: xVal, y: p50 }); p85s.push({ x: xVal, y: p85 });
+      p97s.push({ x: xVal, y: p97 });
+    });
+    const interp = (puntos, x) => {
+      if (!puntos.length) return null;
+      const a2 = puntos.filter(p => p.x <= x), b2 = puntos.filter(p => p.x >= x);
+      if (!a2.length) return puntos[0].y;
+      if (!b2.length) return puntos[puntos.length - 1].y;
+      const p1 = a2[a2.length - 1], p2 = b2[0];
+      if (p1.x === p2.x) return p1.y;
+      return p1.y + (p2.y - p1.y) * (x - p1.x) / (p2.x - p1.x);
+    };
+    const allX = [...new Set([...curvaObj.puntos.map(p => p[0]), ...pts.map(p => p.x)])].sort((a, b) => a - b);
+    return allX.map(x => {
+      const pt = pts.find(p => p.x === x);
+      return {
+        x,
+        p3:  parseFloat(interp(p3s, x)?.toFixed(2)),
+        p15: parseFloat(interp(p15s, x)?.toFixed(2)),
+        p50: parseFloat(interp(p50s, x)?.toFixed(2)),
+        p85: parseFloat(interp(p85s, x)?.toFixed(2)),
+        p97: parseFloat(interp(p97s, x)?.toFixed(2)),
+        paciente: pt ? parseFloat(pt.y.toFixed(3)) : undefined,
+        fecha: pt?.fecha,
+      };
+    });
+  }, [crecimiento]);
+
+  const puntosPaciente = [...crecimiento]
+    .filter(r => r[curva.campo] != null)
+    .sort((a, b) => new Date(a.fecha) - new Date(b.fecha))
+    .map(r => {
+      const x = curva.xCampo ? Number(r[curva.xCampo]) : Number(r.edad_meses);
+      const y = Number(r[curva.campo]);
+      return { x, y, fecha: r.fecha?.split("T")[0] || r.fecha, id: r.id };
+    })
+    .filter(p => !isNaN(p.x) && !isNaN(p.y) && p.x >= 0);
+
+  const chartData = buildChartData(curva);
+
+  const chartHeight = isMobile ? 200 : isTablet ? 240 : 290;
+  const chartLeft   = isMobile ? -24 : -10;
+  const chartRight  = isMobile ? 4 : 12;
+
+  // ── Generar HTML para impresión/PDF ──────────────────────────────────────
+  function buildPrintHTML(titulo, chartImgBase64, curvaObj, modo) {
+    const fecha = new Date().toLocaleDateString("es-GT", { day: "2-digit", month: "long", year: "numeric" });
+    const sexoLabel = paciente.sexo === "F" ? "Femenino" : "Masculino";
+    const edadLabel = (() => {
+      if (!paciente.fecha_nacimiento) return "—";
+      const n = new Date(paciente.fecha_nacimiento);
+      const hoy = new Date();
+      const y = hoy.getFullYear() - n.getFullYear();
+      const m = hoy.getMonth() - n.getMonth();
+      return m < 0 ? `${y - 1} años ${12 + m} meses` : `${y} años ${m} meses`;
+    })();
+
+    const tablaHistorial = [...crecimiento].reverse().map(r => {
+      const fmtFecha = r.fecha ? new Date(String(r.fecha).substring(0, 10) + "T00:00:00").toLocaleDateString("es-GT", { day: "2-digit", month: "2-digit", year: "numeric" }) : "—";
+      const edad = r.edad_meses != null ? (r.edad_meses < 24 ? `${r.edad_meses}m` : `${Math.floor(r.edad_meses / 12)}a ${r.edad_meses % 12}m`) : "—";
+      const zCol = (campo, estado) => {
+        const v = r[campo]; if (v == null) return "<td style='color:#cbd5e1'>—</td>";
+        const col = colorEstadoStr(r[estado]);
+        return `<td style="font-weight:700;color:${col}">${Number(v).toFixed(2)}</td>`;
+      };
+      return `<tr>
+        <td>${fmtFecha}</td><td>${edad}</td>
+        <td>${r.peso_kg != null ? Number(r.peso_kg).toFixed(2) : "—"}</td>
+        <td>${r.talla_cm != null ? Number(r.talla_cm).toFixed(1) : "—"}</td>
+        <td>${r.imc != null ? Number(r.imc).toFixed(1) : "—"}</td>
+        <td>${r.pc_cm != null ? Number(r.pc_cm).toFixed(1) : "—"}</td>
+        ${zCol("zscore_peso_edad","estado_peso_edad")}
+        ${zCol("zscore_talla_edad","estado_talla_edad")}
+        ${zCol("zscore_imc_edad","estado_imc_edad")}
+        ${zCol("zscore_pc_edad","estado_pc_edad")}
+      </tr>`;
+    }).join("");
+
+    return `<!DOCTYPE html><html lang="es"><head>
+      <meta charset="UTF-8">
+      <title>Curva de Crecimiento — ${paciente.nombre}</title>
+      <style>
+        @page { size: A4 landscape; margin: 15mm 15mm 20mm; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 10px; color: #1e293b; background: #fff; }
+        .header { display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 10px; border-bottom: 3px solid #6366f1; margin-bottom: 14px; }
+        .header-left h1 { font-size: 18px; font-weight: 800; color: #4f46e5; margin-bottom: 2px; }
+        .header-left p { font-size: 10px; color: #64748b; }
+        .header-right { text-align: right; font-size: 9px; color: #64748b; }
+        .header-right strong { display: block; font-size: 11px; color: #1e293b; }
+        .badge { display: inline-block; padding: 2px 8px; border-radius: 99px; font-size: 9px; font-weight: 700; }
+        .badge-ok   { background: #dcfce7; color: #15803d; }
+        .badge-warn { background: #fef9c3; color: #a16207; }
+        .badge-bad  { background: #fee2e2; color: #b91c1c; }
+        .info-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; margin-bottom: 14px; }
+        .info-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 10px; }
+        .info-card .label { font-size: 8.5px; color: #94a3b8; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 3px; }
+        .info-card .value { font-size: 13px; font-weight: 700; color: #0f172a; }
+        .info-card .sub { font-size: 8px; color: #64748b; margin-top: 2px; }
+        .chart-wrap { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 8px; margin-bottom: 14px; }
+        .chart-wrap img { width: 100%; display: block; }
+        .leyenda { display: flex; gap: 14px; align-items: center; margin-bottom: 8px; font-size: 9px; }
+        .leyenda span { display: flex; align-items: center; gap: 4px; }
+        .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+        table { width: 100%; border-collapse: collapse; font-size: 9px; }
+        thead tr { background: #4f46e5; color: #fff; }
+        thead th { padding: 6px 8px; text-align: left; font-weight: 700; font-size: 8.5px; letter-spacing: .03em; }
+        tbody tr:nth-child(even) { background: #f8fafc; }
+        tbody td { padding: 5px 8px; border-bottom: 1px solid #f1f5f9; }
+        .footer { position: fixed; bottom: 0; left: 0; right: 0; padding: 6px 15mm; font-size: 8px; color: #94a3b8; display: flex; justify-content: space-between; border-top: 1px solid #e2e8f0; background: #fff; }
+        .section-title { font-size: 11px; font-weight: 700; color: #4f46e5; margin-bottom: 6px; padding-bottom: 4px; border-bottom: 1.5px solid #e2e8f0; }
+        @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+      </style>
+    </head><body>
+      <div class="header">
+        <div class="header-left">
+          <h1>📏 Curvas de Crecimiento OMS</h1>
+          <p>${titulo} · Referencia ${refOMS === "5_19" ? "WHO 2007 (5–19 años)" : "OMS 2006 (0–5 años)"}</p>
+        </div>
+        <div class="header-right">
+          <strong>${paciente.nombre || "—"}</strong>
+          Exp: ${paciente.numero_expediente || "—"} · ${paciente.institucion || "—"}<br>
+          Impreso: ${fecha}
+        </div>
+      </div>
+
+      <div class="info-grid">
+        <div class="info-card"><div class="label">Paciente</div><div class="value" style="font-size:11px">${paciente.nombre || "—"}</div><div class="sub">Sexo: ${sexoLabel}</div></div>
+        <div class="info-card"><div class="label">Edad</div><div class="value">${edadLabel}</div><div class="sub">Nac: ${paciente.fecha_nacimiento ? new Date(paciente.fecha_nacimiento).toLocaleDateString("es-GT") : "—"}</div></div>
+        <div class="info-card"><div class="label">Mediciones</div><div class="value">${crecimiento.length}</div><div class="sub">Total registros</div></div>
+        <div class="info-card"><div class="label">Expediente</div><div class="value">${paciente.numero_expediente || "—"}</div><div class="sub">${paciente.institucion || "—"}</div></div>
+      </div>
+
+      ${Array.isArray(chartImgBase64) ? chartImgBase64.map(({ img, curvaObj: co }) => `
+        <div style="page-break-inside:avoid;margin-bottom:18px">
+          <div class="section-title">${co.etiqueta} — ${paciente.sexo === "F" ? "Niñas" : "Niños"}</div>
+          <div class="leyenda">
+            <span><span style="display:inline-block;width:20px;height:2px;background:#10b981;border-radius:2px"></span> Mediana (P50)</span>
+            <span><span style="display:inline-block;width:20px;height:2px;background:#f59e0b;border-radius:2px;border-top:1px dashed #f59e0b"></span> ±2 DE (P15/P85)</span>
+            <span><span style="display:inline-block;width:20px;height:2px;background:#ef4444;border-radius:2px;border-top:1px dashed #ef4444"></span> ±3 DE (P3/P97)</span>
+            <span><span class="dot" style="background:${co.color}"></span> ${paciente.nombre?.split(" ")[0] || "Paciente"}</span>
+          </div>
+          <div class="chart-wrap"><img src="${img}" /></div>
+        </div>
+      `).join("") : chartImgBase64 ? `
+      <div class="section-title">${curvaObj.etiqueta} — ${paciente.sexo === "F" ? "Niñas" : "Niños"}</div>
+      <div class="leyenda">
+        <span><span style="display:inline-block;width:20px;height:2px;background:#10b981;border-radius:2px"></span> Mediana (P50)</span>
+        <span><span style="display:inline-block;width:20px;height:2px;background:#f59e0b;border-radius:2px;border-top:1px dashed #f59e0b"></span> ±2 DE (P15/P85)</span>
+        <span><span style="display:inline-block;width:20px;height:2px;background:#ef4444;border-radius:2px;border-top:1px dashed #ef4444"></span> ±3 DE (P3/P97)</span>
+        <span><span class="dot" style="background:${curvaObj.color}"></span> ${paciente.nombre?.split(" ")[0] || "Paciente"}</span>
+      </div>
+      <div class="chart-wrap"><img src="${chartImgBase64}" /></div>
+      ` : ""}
+
+      <div class="section-title">🗓️ Historial de Mediciones</div>
+      <table>
+        <thead><tr>
+          <th>Fecha</th><th>Edad</th><th>Peso (kg)</th><th>Talla (cm)</th><th>IMC</th><th>P.C. (cm)</th>
+          <th>Z Peso/Edad</th><th>Z Talla/Edad</th><th>Z IMC/Edad</th><th>Z P.C./Edad</th>
+        </tr></thead>
+        <tbody>${tablaHistorial || "<tr><td colspan='10' style='text-align:center;color:#94a3b8;padding:12px'>Sin mediciones</td></tr>"}</tbody>
+      </table>
+
+      <div class="footer">
+        <span>Evolucion Metabólica · Curvas de Crecimiento OMS</span>
+        <span>${paciente.nombre} · ${fecha}</span>
+      </div>
+    </body></html>`;
+  }
+
+  // ── Reporte consolidado (5 curvas + resumen + historial) ──────────────────
+  function buildConsolidadoHTML(chartImgs) {
+    const fecha = new Date().toLocaleDateString("es-GT", { day: "2-digit", month: "long", year: "numeric" });
+    const sexoLabel = paciente.sexo === "F" ? "femenino" : "masculino";
+    const u = crecimiento.length > 0 ? crecimiento[0] : null;
+    const edadStr = (() => {
+      if (!paciente.fecha_nacimiento) return "—";
+      const n = new Date(paciente.fecha_nacimiento + "T00:00:00"), hoy = new Date();
+      let y = hoy.getFullYear() - n.getFullYear(), m = hoy.getMonth() - n.getMonth();
+      if (m < 0) { y--; m += 12; }
+      if (hoy.getDate() < n.getDate()) { m--; if (m < 0) { y--; m += 11; } }
+      return `${y} años, ${m} meses`;
+    })();
+    const fechaNacStr = paciente.fecha_nacimiento
+      ? new Date(paciente.fecha_nacimiento + "T00:00:00").toLocaleDateString("es-GT", { day: "2-digit", month: "short", year: "numeric" }) : "—";
+    const ultimaFechaStr = u?.fecha ? new Date(String(u.fecha).substring(0, 10) + "T00:00:00").toLocaleDateString("es-GT") : "—";
+    const zPTu = (u && u.peso_kg && u.talla_cm) ? calcularZScores({ peso_kg: u.peso_kg, talla_cm: u.talla_cm, edad_meses: u.edad_meses }, paciente.sexo) : null;
+
+    const colZ = (est) => {
+      if (!est) return "#64748b";
+      const s = est.toLowerCase();
+      if (s.includes("severa") || s.includes("obesi")) return "#dc2626";
+      if (s.includes("moderada") || s.includes("riesgo") || s.includes("sobrepeso") || s.includes("baja")) return "#d97706";
+      if (s.includes("normal")) return "#16a34a";
+      return "#6366f1";
+    };
+    const badgeEst = (est) => {
+      if (!est) return "<span style='color:#94a3b8'>—</span>";
+      const col = colZ(est);
+      const bg  = col === "#dc2626" ? "#fef2f2" : col === "#d97706" ? "#fffbeb" : col === "#16a34a" ? "#f0fdf4" : "#ede9fe";
+      return `<span style="background:${bg};color:${col};border:1.5px solid ${col}40;padding:2px 8px;border-radius:99px;font-size:8px;font-weight:700">${est.toUpperCase()}</span>`;
+    };
+
+    const summaryIndicators = u ? [
+      { label: "Peso / Edad",          val: u.peso_kg  ? `${Number(u.peso_kg).toFixed(1)} kg`   : "—", z: u.zscore_peso_edad,       p: u.percentil_peso_edad,      est: u.estado_peso_edad },
+      { label: "Talla / Edad",         val: u.talla_cm ? `${Number(u.talla_cm).toFixed(1)} cm`  : "—", z: u.zscore_talla_edad,      p: u.percentil_talla_edad,     est: u.estado_talla_edad },
+      { label: "Peso / Talla",         val: u.peso_kg  ? `${Number(u.peso_kg).toFixed(1)} kg`   : "—", z: zPTu?.zscore_peso_talla,  p: zPTu?.percentil_peso_talla, est: zPTu?.estado_peso_talla },
+      { label: "IMC / Edad",           val: u.imc      ? `${Number(u.imc).toFixed(1)} kg/m²`    : "—", z: u.zscore_imc_edad,        p: u.percentil_imc_edad,       est: u.estado_imc_edad },
+      { label: "Per. Cefálico / Edad", val: u.pc_cm    ? `${Number(u.pc_cm).toFixed(1)} cm`     : "—", z: u.zscore_pc_edad,         p: u.percentil_pc_edad,        est: u.estado_pc_edad },
+    ] : [];
+    const summaryHTML = summaryIndicators.map(ind => `
+      <tr style="border-bottom:1px solid #f1f5f9">
+        <td style="font-weight:600;padding:8px 12px;font-size:10px">${ind.label}</td>
+        <td style="padding:8px 12px;font-size:10px">${ind.val}</td>
+        <td style="padding:8px 12px;font-weight:700;color:${colZ(ind.est)};font-size:10px">${ind.z != null ? Number(ind.z).toFixed(2) : "—"}</td>
+        <td style="padding:8px 12px;font-size:10px">${ind.p || "—"}</td>
+        <td style="padding:8px 12px">${badgeEst(ind.est)}</td>
+      </tr>`).join("");
+
+    const chartLabelMap = { peso_edad: "P/E", talla_edad: "T/E", peso_talla: "P/T", imc_edad: "IMC/E", pc_edad: "PC/E" };
+    const ninoLabel = paciente.sexo === "F" ? "Niñas" : "Niños";
+    const chartBoxes = chartImgs.map(({ img, curvaObj: co, key }) => `
+      <div style="border:1px solid #e2e8f0;border-radius:8px;padding:10px;background:#fff">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+          <span style="background:#f1f5f9;color:#64748b;font-size:7.5px;font-weight:700;padding:2px 5px;border-radius:3px">${chartLabelMap[key] || ""}</span>
+          <span style="font-size:10px;font-weight:700;color:#0f172a">${co.etiqueta} — ${ninoLabel}</span>
+        </div>
+        <img src="${img}" style="width:100%;display:block;border-radius:4px" />
+      </div>`);
+    const chartGridRows = [];
+    for (let i = 0; i < chartBoxes.length; i += 2) {
+      chartGridRows.push(`<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;page-break-inside:avoid">${chartBoxes[i]}${chartBoxes[i + 1] || "<div></div>"}</div>`);
+    }
+
+    const histRows = [...crecimiento].reverse().map((r, idx) => {
+      const zPTr = (r.peso_kg && r.talla_cm) ? calcularZScores({ peso_kg: r.peso_kg, talla_cm: r.talla_cm, edad_meses: r.edad_meses }, paciente.sexo) : null;
+      const fmtF = r.fecha ? new Date(String(r.fecha).substring(0, 10) + "T00:00:00").toLocaleDateString("es-GT") : "—";
+      const ed   = r.edad_meses != null ? (r.edad_meses < 24 ? `${r.edad_meses}m` : `${Math.floor(r.edad_meses / 12)}a ${r.edad_meses % 12}m`) : "—";
+      const zc   = (v, est) => v != null ? `<td style="font-weight:700;color:${colZ(est)};padding:5px 7px">${Number(v).toFixed(2)}</td>` : `<td style="color:#cbd5e1;padding:5px 7px">—</td>`;
+      const bg   = idx % 2 === 1 ? "background:#f8fafc" : "";
+      return `<tr style="${bg}">
+        <td style="padding:5px 7px;white-space:nowrap;font-size:8.5px">${fmtF}</td>
+        <td style="padding:5px 7px;white-space:nowrap;font-size:8.5px">${ed}</td>
+        <td style="padding:5px 7px;font-size:8.5px">${r.peso_kg  != null ? Number(r.peso_kg).toFixed(3)  : "—"}</td>
+        <td style="padding:5px 7px;font-size:8.5px">${r.talla_cm != null ? Number(r.talla_cm).toFixed(2) : "—"}</td>
+        <td style="padding:5px 7px;font-size:8.5px">${r.imc      != null ? Number(r.imc).toFixed(1)      : "—"}</td>
+        <td style="padding:5px 7px;font-size:8.5px">${r.pc_cm    != null ? Number(r.pc_cm).toFixed(1)    : "—"}</td>
+        ${zc(r.zscore_peso_edad, r.estado_peso_edad)}
+        ${zc(r.zscore_talla_edad, r.estado_talla_edad)}
+        ${zc(zPTr?.zscore_peso_talla, zPTr?.estado_peso_talla)}
+        ${zc(r.zscore_imc_edad, r.estado_imc_edad)}
+        ${zc(r.zscore_pc_edad, r.estado_pc_edad)}
+        <td style="padding:5px 7px;font-size:8px;color:#64748b;font-style:italic;max-width:160px">${r.observaciones || ""}</td>
+      </tr>`;
+    }).join("");
+
+    const sectionTitle = (txt) => `<div style="font-size:9.5px;font-weight:700;color:#4f46e5;letter-spacing:.04em;text-transform:uppercase;padding:6px 10px;background:#f8fafc;border-left:3px solid #6366f1;margin-bottom:10px">${txt}</div>`;
+
+    return `<!DOCTYPE html><html lang="es"><head>
+      <meta charset="UTF-8">
+      <title>Reporte Consolidado — Curvas de Crecimiento OMS</title>
+      <style>
+        @page { size: A4; margin: 12mm 15mm 18mm; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 10px; color: #1e293b; background: #fff; }
+        @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+      </style>
+    </head><body>
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:10px;border-bottom:3px solid #6366f1;margin-bottom:14px">
+        <div>
+          <div style="font-size:17px;font-weight:800;color:#4f46e5">✏️ Reporte Consolidado — Curvas de Crecimiento OMS</div>
+          <div style="font-size:9.5px;color:#64748b;margin-top:3px">Paciente ${sexoLabel} · ${crecimiento.length} medicion${crecimiento.length !== 1 ? "es" : ""} registradas</div>
+        </div>
+        <div style="text-align:right;font-size:9px;color:#64748b;line-height:1.7">
+          <div style="font-size:11px;font-weight:700;color:#4f46e5">Generado: ${fecha}</div>
+          <div>F. Nac: ${fechaNacStr}</div>
+          <div>Edad actual: ${edadStr}</div>
+        </div>
+      </div>
+      ${u ? `
+        ${sectionTitle(`RESUMEN — ÚLTIMA MEDICIÓN (${ultimaFechaStr})`)}
+        <table style="width:100%;border-collapse:collapse;margin-bottom:16px">
+          <thead><tr>
+            <th style="padding:6px 12px;text-align:left;font-size:8px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;border-bottom:1.5px solid #e2e8f0">INDICADOR</th>
+            <th style="padding:6px 12px;text-align:left;font-size:8px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;border-bottom:1.5px solid #e2e8f0">VALOR</th>
+            <th style="padding:6px 12px;text-align:left;font-size:8px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;border-bottom:1.5px solid #e2e8f0">Z-SCORE</th>
+            <th style="padding:6px 12px;text-align:left;font-size:8px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;border-bottom:1.5px solid #e2e8f0">PERCENTIL</th>
+            <th style="padding:6px 12px;text-align:left;font-size:8px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;border-bottom:1.5px solid #e2e8f0">ESTADO</th>
+          </tr></thead>
+          <tbody>${summaryHTML}</tbody>
+        </table>` : ""}
+      ${sectionTitle("CURVAS DE CRECIMIENTO — ESTÁNDARES OMS")}
+      <div style="display:flex;gap:14px;align-items:center;margin-bottom:10px;font-size:8.5px;flex-wrap:wrap">
+        <span style="display:flex;align-items:center;gap:5px"><span style="display:inline-block;width:18px;height:2px;background:#10b981"></span> Normal (±1 DE)</span>
+        <span style="display:flex;align-items:center;gap:5px"><span style="display:inline-block;width:18px;height:2px;background:#f59e0b"></span> Riesgo (±2 DE)</span>
+        <span style="display:flex;align-items:center;gap:5px"><span style="display:inline-block;width:18px;height:2px;background:#ef4444"></span> Alerta (±3 DE)</span>
+        <span style="display:flex;align-items:center;gap:5px"><span style="display:inline-block;width:8px;height:8px;background:#6366f1;border-radius:50%"></span> Paciente</span>
+      </div>
+      ${chartGridRows.join("")}
+      ${sectionTitle("HISTORIAL COMPLETO DE MEDICIONES")}
+      <table style="width:100%;border-collapse:collapse;font-size:8.5px">
+        <thead><tr style="background:#4f46e5;color:#fff">
+          <th style="padding:6px 8px;text-align:left;font-size:8px">FECHA</th>
+          <th style="padding:6px 8px;text-align:left;font-size:8px">EDAD</th>
+          <th style="padding:6px 8px;text-align:left;font-size:8px">PESO(KG)</th>
+          <th style="padding:6px 8px;text-align:left;font-size:8px">TALLA(CM)</th>
+          <th style="padding:6px 8px;text-align:left;font-size:8px">IMC</th>
+          <th style="padding:6px 8px;text-align:left;font-size:8px">P.C.(CM)</th>
+          <th style="padding:6px 8px;text-align:left;font-size:8px">Z P/E</th>
+          <th style="padding:6px 8px;text-align:left;font-size:8px">Z T/E</th>
+          <th style="padding:6px 8px;text-align:left;font-size:8px">Z P/T</th>
+          <th style="padding:6px 8px;text-align:left;font-size:8px">Z IMC</th>
+          <th style="padding:6px 8px;text-align:left;font-size:8px">Z PC</th>
+          <th style="padding:6px 8px;text-align:left;font-size:8px">NOTAS</th>
+        </tr></thead>
+        <tbody>${histRows}</tbody>
+      </table>
+      <div style="position:fixed;bottom:0;left:0;right:0;padding:5px 15mm;font-size:8px;color:#94a3b8;display:flex;justify-content:space-between;border-top:1px solid #e2e8f0;background:#fff">
+        <span>Estándares de Crecimiento OMS — Organización Mundial de la Salud</span>
+        <span>Generado el ${fecha}</span>
+      </div>
+    </body></html>`;
+  }
+
+  function colorEstadoStr(estado) {
+    if (!estado) return "#94a3b8";
+    const s = estado.toLowerCase();
+    if (s.includes("severa") || s.includes("muy alto") || s.includes("obesi")) return "#dc2626";
+    if (s.includes("moderada") || s.includes("riesgo") || s.includes("sobrepeso") || s.includes("baja")) return "#d97706";
+    if (s.includes("normal")) return "#16a34a";
+    return "#6366f1";
+  }
+
+  // ── Capturar gráfica actual (SVG → Canvas para recharts) ───────────────────
+  async function capturarGrafica() {
+    if (!chartRef.current) return null;
+    try {
+      const svgEl = chartRef.current.querySelector("svg");
+      if (svgEl) {
+        const { width, height } = svgEl.getBoundingClientRect();
+        if (width > 0 && height > 0) {
+          return await new Promise((resolve) => {
+            const canvas = document.createElement("canvas");
+            canvas.width  = Math.round(width  * 2);
+            canvas.height = Math.round(height * 2);
+            const ctx = canvas.getContext("2d");
+            ctx.fillStyle = "#ffffff";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            const serialized = new XMLSerializer().serializeToString(svgEl);
+            const blob = new Blob([serialized], { type: "image/svg+xml;charset=utf-8" });
+            const url  = URL.createObjectURL(blob);
+            const img  = new Image();
+            img.onload  = () => { ctx.drawImage(img, 0, 0, canvas.width, canvas.height); URL.revokeObjectURL(url); resolve(canvas.toDataURL("image/png")); };
+            img.onerror = () => { URL.revokeObjectURL(url); resolve(null); };
+            img.src = url;
+          });
+        }
+      }
+      // Fallback a html2canvas
+      const canvas = await html2canvas(chartRef.current, { scale: 2, backgroundColor: "#ffffff", logging: false, useCORS: true, allowTaint: true });
+      return canvas.toDataURL("image/png");
+    } catch { return null; }
+  }
+
+  // Captura las 5 curvas ciclando los tabs
+  async function capturarTodasLasGraficas() {
+    const keys = ["peso_edad", "talla_edad", "peso_talla", "imc_edad", "pc_edad"];
+    const tabOriginal = tabGrafica;
+    const resultado = [];
+    for (const key of keys) {
+      const co = (refOMS === "5_19" && OMS_CURVES_5_19[key]) ? OMS_CURVES_5_19[key] : OMS_CURVES[key];
+      if (!co) continue;
+      setTabGrafica(key);
+      await new Promise(r => setTimeout(r, 1000));
+      const img = await capturarGrafica();
+      if (img) resultado.push({ img, curvaObj: co, key });
+    }
+    setTabGrafica(tabOriginal);
+    await new Promise(r => setTimeout(r, 600));
+    return resultado;
+  }
+
+  // ── Imprimir ─────────────────────────────────────────────────────────────
+  async function imprimir(modo) {
+    setDropPrint(false);
+    setGenerandoPDF(true);
+    // Abrir la ventana ANTES del await para evitar que el popup blocker la bloquee
+    const win = window.open("", "_blank", "width=900,height=1100");
+    if (!win) { alert("El navegador bloqueó la ventana emergente. Permite popups para este sitio."); setGenerandoPDF(false); return; }
+    win.document.write("<html><body><p style='font-family:sans-serif;padding:40px;color:#64748b'>⏳ Generando reporte, por favor espera...</p></body></html>");
+    try {
+      let imgBase64 = null;
+      if (modo === "curva") {
+        imgBase64 = await capturarGrafica();
+      } else if (modo === "consolidado") {
+        imgBase64 = await capturarTodasLasGraficas();
+      }
+      const titulo = modo === "curva" ? curva.etiqueta : "Consolidado — Todas las curvas";
+      const html = modo === "consolidado"
+        ? buildConsolidadoHTML(imgBase64 || [])
+        : buildPrintHTML(titulo, imgBase64, curva, modo);
+      win.document.open();
+      win.document.write(html);
+      win.document.close();
+      win.focus();
+      setTimeout(() => { win.print(); }, 1200);
+    } catch (err) {
+      win.close();
+      console.error(err);
+    } finally { setGenerandoPDF(false); }
+  }
+
+  // ── Descargar PDF ─────────────────────────────────────────────────────────
+  async function descargarPDF(modo) {
+    setDropDL(false);
+    setGenerandoPDF(true);
+    try {
+      let imgBase64 = null;
+      if (modo === "curva") {
+        imgBase64 = await capturarGrafica();
+      } else if (modo === "consolidado") {
+        imgBase64 = await capturarTodasLasGraficas();
+      }
+      const titulo = modo === "curva" ? curva.etiqueta : "Consolidado";
+      const html = modo === "consolidado"
+        ? buildConsolidadoHTML(imgBase64 || [])
+        : buildPrintHTML(titulo, imgBase64, curva, modo);
+
+      const isPortrait = modo === "consolidado";
+      const ifrW = isPortrait ? 900 : 1200;
+      const ifrm = document.createElement("iframe");
+      ifrm.style.cssText = `position:fixed;top:-9999px;left:-9999px;width:${ifrW}px;height:10000px;border:none;visibility:hidden;`;
+      document.body.appendChild(ifrm);
+      ifrm.contentDocument.write(html);
+      ifrm.contentDocument.close();
+
+      await new Promise(r => setTimeout(r, 1500));
+      const fullH = ifrm.contentDocument.body.scrollHeight || 1400;
+      ifrm.style.height = fullH + "px";
+      await new Promise(r => setTimeout(r, 300));
+
+      const canvasPDF = await html2canvas(ifrm.contentDocument.body, {
+        scale: 1.6, backgroundColor: "#ffffff", logging: false,
+        width: ifrW, height: fullH, windowWidth: ifrW, windowHeight: fullH,
+      });
+      document.body.removeChild(ifrm);
+
+      const imgData = canvasPDF.toDataURL("image/png");
+      const pdf = new jsPDF({ orientation: isPortrait ? "portrait" : "landscape", unit: "mm", format: "a4" });
+      const pW = pdf.internal.pageSize.getWidth();
+      const pH = pdf.internal.pageSize.getHeight();
+      const ratio = canvasPDF.width / canvasPDF.height;
+      const h = pW / ratio;
+
+      if (h <= pH) {
+        pdf.addImage(imgData, "PNG", 0, 0, pW, h);
+      } else {
+        // Múltiples páginas si el contenido es largo
+        let y = 0;
+        const srcH = canvasPDF.height;
+        const sliceH = Math.floor(canvasPDF.width * (pH / pW));
+        while (y < srcH) {
+          const sliceCanvas = document.createElement("canvas");
+          sliceCanvas.width = canvasPDF.width;
+          sliceCanvas.height = Math.min(sliceH, srcH - y);
+          const ctx = sliceCanvas.getContext("2d");
+          ctx.drawImage(canvasPDF, 0, -y);
+          pdf.addImage(sliceCanvas.toDataURL("image/png"), "PNG", 0, 0, pW, pH);
+          y += sliceH;
+          if (y < srcH) pdf.addPage();
+        }
+      }
+
+      const nombre = (paciente.nombre || "paciente").replace(/\s+/g, "_");
+      pdf.save(`crecimiento_${modo === "curva" ? tabGrafica : "consolidado"}_${nombre}.pdf`);
+    } catch (err) {
+      alert("Error al generar el PDF. Intenta de nuevo.");
+      console.error(err);
+    } finally { setGenerandoPDF(false); }
+  }
+
+  // ── CSV ───────────────────────────────────────────────────────────────────
+  function descargarCSV() {
+    const enc = ["Fecha","Edad_meses","Peso_kg","Talla_cm","IMC","PC_cm",
+      "Z_Peso_Edad","Z_Talla_Edad","Z_IMC_Edad","Z_PC_Edad",
+      "Estado_Peso","Estado_Talla","Estado_IMC","Estado_PC"];
+    const filas = [...crecimiento].reverse().map(r => [
+      r.fecha?.split("T")[0] ?? "", r.edad_meses ?? "",
+      r.peso_kg ?? "", r.talla_cm ?? "", r.imc ?? "", r.pc_cm ?? "",
+      r.zscore_peso_edad ?? "", r.zscore_talla_edad ?? "",
+      r.zscore_imc_edad ?? "", r.zscore_pc_edad ?? "",
+      r.estado_peso_edad ?? "", r.estado_talla_edad ?? "",
+      r.estado_imc_edad ?? "", r.estado_pc_edad ?? "",
+    ]);
+    const csv = [enc, ...filas].map(f => f.join(",")).join("\n");
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement("a");
+    a.href = url;
+    a.download = `crecimiento_${(paciente.nombre || "paciente").replace(/\s+/g, "_")}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    setDropDL(false);
+  }
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+
+      {/* ── Header ─────────────────────────────────────────────────── */}
+      <div className="card" style={{ padding: isMobile ? "14px 14px" : "16px 20px" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 10 }}>
+          <div>
+            <h3 style={{ margin: "0 0 2px", fontSize: isMobile ? "0.95rem" : "1.05rem" }}>
+              📏 Curvas de Crecimiento OMS
+            </h3>
+            <p style={{ margin: 0, fontSize: "0.75rem", color: "#64748b" }}>
+              Estándares OMS · {crecimiento.length} {crecimiento.length === 1 ? "medición" : "mediciones"}
+            </p>
+          </div>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+            {/* Toggle referencia OMS */}
+            <div style={{ display: "flex", border: "1.5px solid #e2e8f0", borderRadius: 8, overflow: "hidden" }}>
+              {[{ k: "0_5", label: "0-5 años" }, { k: "5_19", label: "5-19 años" }].map(r => (
+                <button key={r.k} onClick={() => setRefOMS(r.k)} style={{
+                  padding: isMobile ? "4px 8px" : "5px 12px",
+                  fontSize: isMobile ? "0.7rem" : "0.78rem",
+                  fontWeight: refOMS === r.k ? 700 : 500,
+                  background: refOMS === r.k ? "#6366f1" : "#fff",
+                  color: refOMS === r.k ? "#fff" : "#64748b",
+                  border: "none", cursor: "pointer", whiteSpace: "nowrap",
+                }}>
+                  {isMobile ? r.label.replace(" años", "a") : `REF. OMS: ${r.label}`}
+                </button>
+              ))}
+            </div>
+
+            {/* Imprimir */}
+            <div style={{ position: "relative" }}>
+              <button
+                disabled={generandoPDF}
+                onClick={() => { setDropPrint(v => !v); setDropDL(false); }}
+                style={{ display: "flex", alignItems: "center", gap: 5, border: "1.5px solid #e2e8f0", borderRadius: 8, background: "#fff", cursor: generandoPDF ? "wait" : "pointer", padding: isMobile ? "4px 8px" : "5px 12px", fontSize: isMobile ? "0.7rem" : "0.78rem", color: "#374151", fontWeight: 500, whiteSpace: "nowrap", opacity: generandoPDF ? 0.6 : 1 }}
+              >
+                🖨️ {!isMobile && "Imprimir"} <span style={{ fontSize: "0.6rem", color: "#94a3b8", marginLeft: 2 }}>▾</span>
+              </button>
+              {dropPrint && (
+                <div style={{ position: "absolute", top: "calc(100% + 4px)", right: 0, background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, boxShadow: "0 4px 16px rgba(0,0,0,0.12)", zIndex: 50, minWidth: 220 }}>
+                  <div style={{ padding: "6px 14px 4px", fontSize: "0.68rem", color: "#94a3b8", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em" }}>Imprimir</div>
+                  <button onClick={() => imprimir("curva")} style={{ display: "block", width: "100%", textAlign: "left", padding: "9px 14px", border: "none", background: "none", cursor: "pointer", fontSize: "0.82rem", color: "#374151" }}>
+                    📈 Curva seleccionada ({curva.etiqueta})
+                  </button>
+                  <button onClick={() => imprimir("consolidado")} style={{ display: "block", width: "100%", textAlign: "left", padding: "9px 14px", border: "none", background: "none", cursor: "pointer", fontSize: "0.82rem", color: "#374151", borderTop: "1px solid #f1f5f9" }}>
+                    📋 Consolidado (todas las curvas)
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Descargar */}
+            <div style={{ position: "relative" }}>
+              <button
+                disabled={generandoPDF}
+                onClick={() => { setDropDL(v => !v); setDropPrint(false); }}
+                style={{ display: "flex", alignItems: "center", gap: 5, border: "1.5px solid #e2e8f0", borderRadius: 8, background: "#fff", cursor: generandoPDF ? "wait" : "pointer", padding: isMobile ? "4px 8px" : "5px 12px", fontSize: isMobile ? "0.7rem" : "0.78rem", color: "#374151", fontWeight: 500, whiteSpace: "nowrap", opacity: generandoPDF ? 0.6 : 1 }}
+              >
+                {generandoPDF ? "⏳" : "⬇️"} {!isMobile && (generandoPDF ? "Generando..." : "Descargar")} <span style={{ fontSize: "0.6rem", color: "#94a3b8", marginLeft: 2 }}>▾</span>
+              </button>
+              {dropDL && (
+                <div style={{ position: "absolute", top: "calc(100% + 4px)", right: 0, background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, boxShadow: "0 4px 16px rgba(0,0,0,0.12)", zIndex: 50, minWidth: 240 }}>
+                  <div style={{ padding: "6px 14px 4px", fontSize: "0.68rem", color: "#94a3b8", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em" }}>Descargar PDF</div>
+                  <button onClick={() => descargarPDF("curva")} style={{ display: "block", width: "100%", textAlign: "left", padding: "9px 14px", border: "none", background: "none", cursor: "pointer", fontSize: "0.82rem", color: "#374151" }}>
+                    📈 Curva seleccionada ({curva.etiqueta})
+                  </button>
+                  <button onClick={() => descargarPDF("consolidado")} style={{ display: "block", width: "100%", textAlign: "left", padding: "9px 14px", border: "none", background: "none", cursor: "pointer", fontSize: "0.82rem", color: "#374151", borderTop: "1px solid #f1f5f9" }}>
+                    📋 Consolidado (todas las curvas)
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <button
+              className="btn btn-primary"
+              style={{ display: "flex", alignItems: "center", gap: 5, padding: isMobile ? "6px 12px" : "7px 16px", fontSize: isMobile ? "0.8rem" : "0.85rem" }}
+              onClick={onNuevo}
+            >
+              <FiPlus size={14} /> {isMobile ? "Nueva" : "Nueva medición"}
+            </button>
+          </div>
+        </div>
+
+        {/* Nota referencia 5-19 */}
+        {refOMS === "5_19" && curva?.nota && (
+          <p style={{ margin: "6px 0 0", fontSize: "0.72rem", color: "#f59e0b", fontWeight: 600 }}>
+            {curva.nota}
+          </p>
+        )}
+
+        {/* Tarjetas resumen última medición */}
+        {crecimiento.length > 0 && (() => {
+          const u = crecimiento[0];
+          const zPT = (u.peso_kg && u.talla_cm)
+            ? calcularZScores({ peso_kg: u.peso_kg, talla_cm: u.talla_cm, edad_meses: u.edad_meses }, paciente.sexo)
+            : null;
+          const cards = [
+            { label: "PESO/EDAD",  val: u.peso_kg  ? `${Number(u.peso_kg).toFixed(1)} kg`   : "—", z: u.zscore_peso_edad,  est: u.estado_peso_edad,  p: u.percentil_peso_edad },
+            { label: "TALLA/EDAD", val: u.talla_cm ? `${Number(u.talla_cm).toFixed(1)} cm`  : "—", z: u.zscore_talla_edad, est: u.estado_talla_edad, p: u.percentil_talla_edad },
+            { label: "PESO/TALLA", val: u.peso_kg  ? `${Number(u.peso_kg).toFixed(1)} kg`   : "—", z: zPT?.zscore_peso_talla, est: zPT?.estado_peso_talla, p: zPT?.percentil_peso_talla },
+            { label: "IMC/EDAD",   val: u.imc      ? `${Number(u.imc).toFixed(1)} kg/m²`    : "—", z: u.zscore_imc_edad,   est: u.estado_imc_edad,   p: u.percentil_imc_edad },
+            { label: "P.C./EDAD",  val: u.pc_cm    ? `${Number(u.pc_cm).toFixed(1)} cm`     : "—", z: u.zscore_pc_edad,    est: u.estado_pc_edad,    p: u.percentil_pc_edad },
+          ];
+          return (
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(130px, 1fr))", gap: 8, marginTop: 14 }}>
+              {cards.map(c => {
+                const col = colorEstado(c.est);
+                const bg  = col === "#dc2626" ? "#fef2f2" : col === "#d97706" ? "#fffbeb" : col === "#16a34a" ? "#f0fdf4" : "#ede9fe";
+                return (
+                  <div key={c.label} style={{ border: `2px solid ${col}30`, borderRadius: 10, padding: "9px 12px", background: bg }}>
+                    <div style={{ fontSize: "0.64rem", color: "#94a3b8", fontWeight: 700, letterSpacing: "0.05em", marginBottom: 3 }}>{c.label}</div>
+                    <div style={{ fontSize: "1.05rem", fontWeight: 700, color: "#0f172a", lineHeight: 1.2 }}>{c.val}</div>
+                    {c.z != null && (
+                      <div style={{ fontSize: "0.72rem", color: "#64748b", marginTop: 3 }}>
+                        Z: <strong style={{ color: col }}>{Number(c.z).toFixed(2)}</strong>
+                        {c.p && <> · <strong>{c.p}</strong></>}
+                      </div>
+                    )}
+                    {c.est && (
+                      <div style={{ fontSize: "0.62rem", color: col, fontWeight: 700, marginTop: 3, textTransform: "uppercase" }}>
+                        {c.est}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })()}
+      </div>
+
+      {/* ── Gráfica ─────────────────────────────────────────────────── */}
+      <div className="card" style={{ padding: 0, overflow: "hidden" }}>
+        {/* Sub-tabs */}
+        <div style={{ display: "flex", borderBottom: "2px solid #f1f5f9", overflowX: "auto", scrollbarWidth: "none" }}>
+          {tabs5.map(t => (
+            <button key={t.key} onClick={() => setTabGrafica(t.key)} style={{
+              flex: isMobile ? "0 0 auto" : "1",
+              padding: isMobile ? "9px 12px" : "10px 14px",
+              border: "none", background: "none", cursor: "pointer",
+              borderBottom: tabGrafica === t.key ? "2.5px solid #6366f1" : "2.5px solid transparent",
+              color: tabGrafica === t.key ? "#4f46e5" : "#94a3b8",
+              fontWeight: tabGrafica === t.key ? 700 : 500,
+              fontSize: isMobile ? "0.75rem" : "0.82rem",
+              whiteSpace: "nowrap", marginBottom: -2,
+            }}>{t.label}</button>
+          ))}
+        </div>
+
+        <div style={{ padding: isMobile ? "14px 10px 10px" : "16px 18px 12px" }}>
+          {/* Leyenda */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 6, marginBottom: 10 }}>
+            <div>
+              <div style={{ fontWeight: 600, fontSize: isMobile ? "0.85rem" : "0.95rem", color: "#1e293b" }}>
+                {curva.etiqueta} — {paciente.sexo === "F" ? "Niñas" : "Niños"} {refOMS === "5_19" ? `(5–${xDomain[1] != null ? Math.floor(xDomain[1] / 12) : 19} años)` : "(0–60 meses)"}
+              </div>
+              <div style={{ fontSize: "0.72rem", color: "#94a3b8", marginTop: 2 }}>
+                Estándares OMS · {puntosPaciente.length} {puntosPaciente.length === 1 ? "punto" : "puntos"} del paciente
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: isMobile ? 6 : 12, fontSize: "0.7rem", flexWrap: "wrap", justifyContent: "flex-end" }}>
+              <span style={{ color: "#10b981", fontWeight: 600 }}>— Mediana</span>
+              <span style={{ color: "#f59e0b" }}>-- ±2 DE</span>
+              <span style={{ color: "#ef4444" }}>-- ±3 DE</span>
+              {puntosPaciente.length > 0 && <span style={{ color: curva.color, fontWeight: 700 }}>● Paciente</span>}
+            </div>
+          </div>
+
+          {chartData.length < 2 ? (
+            <div style={{ padding: "48px 0", textAlign: "center" }}>
+              <div style={{ fontSize: "2rem", marginBottom: 8 }}>📊</div>
+              <p style={{ color: "#94a3b8", fontSize: "0.875rem", margin: 0 }}>
+                {crecimiento.length === 0
+                  ? "Sin mediciones. Presiona \"Nueva medición\" para comenzar."
+                  : "Sin datos suficientes para esta gráfica."}
+              </p>
+            </div>
+          ) : (
+            <div ref={chartRef}>
+            <ResponsiveContainer width="100%" height={chartHeight}>
+              <LineChart data={chartData} margin={{ top: 8, right: chartRight, left: chartLeft, bottom: 20 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+                <XAxis
+                  dataKey="x" type="number" scale="linear"
+                  domain={xDomain}
+                  tick={{ fontSize: isMobile ? 9 : 11, fill: "#94a3b8" }}
+                  label={{ value: refOMS === "5_19" ? "Edad" : curva.xLabel, position: "insideBottom", offset: -10, fontSize: 11, fill: "#94a3b8" }}
+                  tickCount={xTickCount}
+                  tickFormatter={xTickFmt}
+                />
+                <YAxis
+                  domain={curva.yDomain}
+                  tick={{ fontSize: isMobile ? 9 : 11, fill: "#94a3b8" }}
+                  width={isMobile ? 28 : 36}
+                  tickFormatter={v => isMobile && v >= 1000 ? `${(v/1000).toFixed(0)}k` : v}
+                />
+                <Tooltip
+                  contentStyle={{ background: "#1e293b", border: "none", borderRadius: 8, fontSize: 12, boxShadow: "0 4px 20px rgba(0,0,0,0.3)" }}
+                  labelStyle={{ color: "#94a3b8", marginBottom: 4 }}
+                  itemStyle={{ color: "#fff", padding: "1px 0" }}
+                  formatter={(v, name) => [
+                    v != null ? `${Number(v).toFixed(2)} ${curva.unidad}` : "—",
+                    name === "paciente" ? `● ${paciente.nombre?.split(" ")[0] || "Paciente"}` :
+                    name === "p3" ? "P3 (−3 DE)" : name === "p15" ? "P15 (−2 DE)" :
+                    name === "p50" ? "P50 mediana" :
+                    name === "p85" ? "P85 (+2 DE)" : "P97 (+3 DE)",
+                  ]}
+                  labelFormatter={v => refOMS === "5_19" ? `Edad: ${Math.floor(v / 12)}a${v % 12 > 0 ? ` ${v % 12}m` : ""}` : `${curva.xLabel.split(" ")[0]}: ${v}`}
+                />
+                {/* Banda ±3 DE (alerta) */}
+                <Line type="monotone" dataKey="p3"  stroke="#ef4444" strokeWidth={1} strokeDasharray="3 3" dot={false} connectNulls legendType="none" />
+                <Line type="monotone" dataKey="p97" stroke="#ef4444" strokeWidth={1} strokeDasharray="3 3" dot={false} connectNulls legendType="none" />
+                {/* Banda ±2 DE (riesgo) */}
+                <Line type="monotone" dataKey="p15" stroke="#f59e0b" strokeWidth={1} strokeDasharray="4 2" dot={false} connectNulls legendType="none" />
+                <Line type="monotone" dataKey="p85" stroke="#f59e0b" strokeWidth={1} strokeDasharray="4 2" dot={false} connectNulls legendType="none" />
+                {/* Mediana */}
+                <Line type="monotone" dataKey="p50" stroke="#10b981" strokeWidth={2} dot={false} connectNulls legendType="none" />
+                {/* Puntos del paciente */}
+                {puntosPaciente.length > 0 && (
+                  <Line
+                    type="monotone" dataKey="paciente"
+                    stroke={curva.color} strokeWidth={2.5}
+                    dot={{ r: isMobile ? 4 : 5, fill: curva.color, stroke: "#fff", strokeWidth: 2 }}
+                    activeDot={{ r: isMobile ? 6 : 7, stroke: curva.color, strokeWidth: 2 }}
+                    connectNulls
+                  />
+                )}
+              </LineChart>
+            </ResponsiveContainer>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ── Historial ───────────────────────────────────────────────── */}
+      <div className="card" style={{ padding: isMobile ? "14px 14px" : "18px 20px" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14, flexWrap: "wrap", gap: 8 }}>
+          <h3 style={{ margin: 0, fontSize: isMobile ? "0.9rem" : "1rem" }}>
+            🗓️ Historial ({crecimiento.length})
+          </h3>
+          {crecimiento.length > 0 && (
+            <span style={{ fontSize: "0.72rem", color: "#94a3b8" }}>
+              Mostrando z-scores de: <strong style={{ color: "#6366f1" }}>{tabs5.find(t => t.key === tabGrafica)?.label}</strong>
+            </span>
+          )}
+        </div>
+
+        {crecimiento.length === 0 ? (
+          <div style={{ padding: "32px 0", textAlign: "center", color: "#94a3b8", fontSize: "0.875rem" }}>
+            Sin mediciones registradas.
+          </div>
+        ) : isMobile ? (
+          /* ── Vista tarjetas (móvil) ──────────────────────────────── */
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {crecimiento.map(r => {
+              const z   = indicadorActivo ? r[indicadorActivo] : r.zscore_peso_edad;
+              const est = estadoActivo    ? r[estadoActivo]    : r.estado_peso_edad;
+              const pct = percentilActivo ? r[percentilActivo] : r.percentil_peso_edad;
+              const col = colorEstado(est);
+              const bg  = col === "#dc2626" ? "#fef2f2" : col === "#d97706" ? "#fffbeb" : col === "#16a34a" ? "#f0fdf4" : "#f8f8ff";
+              const fecha = r.fecha ? new Date(String(r.fecha).substring(0,10) + "T00:00:00").toLocaleDateString("es-GT", { day: "2-digit", month: "short", year: "2-digit" }) : "—";
+              const edad  = r.edad_meses != null ? (r.edad_meses < 24 ? `${r.edad_meses}m` : `${Math.floor(r.edad_meses/12)}a ${r.edad_meses%12}m`) : "—";
+              return (
+                <div key={r.id} style={{ border: `1.5px solid ${col}30`, borderRadius: 10, background: bg, padding: "11px 14px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
+                    <div>
+                      <div style={{ fontWeight: 700, fontSize: "0.88rem", color: "#1e293b" }}>{fecha}</div>
+                      <div style={{ fontSize: "0.72rem", color: "#64748b" }}>Edad: {edad}</div>
+                    </div>
+                    <div style={{ display: "flex", gap: 4 }}>
+                      <button onClick={() => onEditar(r)} style={{ background: "#dbeafe", border: "none", cursor: "pointer", color: "#2563eb", padding: "5px 8px", borderRadius: 6 }} title="Editar"><FiEdit2 size={14} /></button>
+                      <button onClick={() => onEliminar(r)} style={{ background: "#fee2e2", border: "none", cursor: "pointer", color: "#dc2626", padding: "5px 8px", borderRadius: 6 }} title="Eliminar"><FiTrash2 size={14} /></button>
+                    </div>
+                  </div>
+                  {/* Medidas */}
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: "4px 16px", marginBottom: 8 }}>
+                    {r.peso_kg  != null && <span style={{ fontSize: "0.78rem", color: "#475569" }}>⚖️ <strong>{Number(r.peso_kg).toFixed(1)} kg</strong></span>}
+                    {r.talla_cm != null && <span style={{ fontSize: "0.78rem", color: "#475569" }}>📏 <strong>{Number(r.talla_cm).toFixed(1)} cm</strong></span>}
+                    {r.imc      != null && <span style={{ fontSize: "0.78rem", color: "#475569" }}>IMC <strong>{Number(r.imc).toFixed(1)}</strong></span>}
+                    {r.pc_cm    != null && <span style={{ fontSize: "0.78rem", color: "#475569" }}>PC <strong>{Number(r.pc_cm).toFixed(1)} cm</strong></span>}
+                  </div>
+                  {/* Z-score + estado */}
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                    {z != null && (
+                      <span style={{ fontSize: "0.82rem", color: "#64748b" }}>
+                        Z: <strong style={{ color: col, fontSize: "0.95rem" }}>{Number(z).toFixed(2)}</strong>
+                      </span>
+                    )}
+                    {pct && (
+                      <span style={{ background: "#f0f9ff", color: "#0369a1", borderRadius: 20, padding: "2px 8px", fontSize: "0.7rem", fontWeight: 700 }}>{pct}</span>
+                    )}
+                    <BadgeEstado estado={est} />
+                  </div>
+                  {r.observaciones && (
+                    <div style={{ marginTop: 6, fontSize: "0.72rem", color: "#64748b", fontStyle: "italic" }}>💬 {r.observaciones}</div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          /* ── Vista tabla (tablet / desktop) ─────────────────────── */
+          <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", minWidth: isTablet ? 520 : 640 }}>
+              <thead>
+                <tr style={{ borderBottom: "2px solid #f1f5f9" }}>
+                  {["Fecha", "Edad", "Peso (kg)", "Talla (cm)", "IMC", !isTablet && "P.C. (cm)", "Z-score", "Percentil", "Estado", ""].filter(Boolean).map(h => (
+                    <th key={h} style={{ padding: "8px 10px", fontSize: "0.72rem", fontWeight: 700, color: "#64748b", textAlign: "left", whiteSpace: "nowrap", textTransform: "uppercase", letterSpacing: "0.04em" }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {crecimiento.map(r => {
+                  const z   = indicadorActivo ? r[indicadorActivo] : r.zscore_peso_edad;
+                  const est = estadoActivo    ? r[estadoActivo]    : r.estado_peso_edad;
+                  const pct = percentilActivo ? r[percentilActivo] : r.percentil_peso_edad;
+                  const col = colorEstado(est);
+                  return (
+                    <tr key={r.id} style={{ borderBottom: "1px solid #f8fafc" }}
+                      onMouseEnter={e => e.currentTarget.style.background = "#f8fafc"}
+                      onMouseLeave={e => e.currentTarget.style.background = ""}>
+                      <td style={{ padding: "9px 10px", fontSize: "0.82rem", whiteSpace: "nowrap", color: "#374151" }}>
+                        {r.fecha ? new Date(String(r.fecha).substring(0,10) + "T00:00:00").toLocaleDateString("es-GT", { day: "2-digit", month: "2-digit", year: "2-digit" }) : "—"}
+                      </td>
+                      <td style={{ padding: "9px 10px", fontSize: "0.82rem", color: "#64748b", whiteSpace: "nowrap" }}>
+                        {r.edad_meses != null ? (r.edad_meses < 24 ? `${r.edad_meses}m` : `${Math.floor(r.edad_meses/12)}a ${r.edad_meses%12}m`) : "—"}
+                      </td>
+                      <td style={{ padding: "9px 10px", fontSize: "0.85rem", fontWeight: 600, color: "#1e293b" }}>
+                        {r.peso_kg != null ? Number(r.peso_kg).toFixed(2) : "—"}
+                      </td>
+                      <td style={{ padding: "9px 10px", fontSize: "0.85rem", color: "#1e293b" }}>
+                        {r.talla_cm != null ? Number(r.talla_cm).toFixed(1) : "—"}
+                      </td>
+                      <td style={{ padding: "9px 10px", fontSize: "0.82rem", color: "#64748b" }}>
+                        {r.imc != null ? Number(r.imc).toFixed(1) : "—"}
+                      </td>
+                      {!isTablet && (
+                        <td style={{ padding: "9px 10px", fontSize: "0.82rem", color: "#64748b" }}>
+                          {r.pc_cm != null ? Number(r.pc_cm).toFixed(1) : "—"}
+                        </td>
+                      )}
+                      <td style={{ padding: "9px 10px", fontWeight: 700, color: z != null ? col : "#94a3b8", fontSize: "0.92rem" }}>
+                        {z != null ? Number(z).toFixed(2) : "—"}
+                      </td>
+                      <td style={{ padding: "9px 10px" }}>
+                        {pct ? (
+                          <span style={{ background: "#f0f9ff", color: "#0369a1", borderRadius: 20, padding: "2px 10px", fontSize: "0.7rem", fontWeight: 700 }}>{pct}</span>
+                        ) : <span style={{ color: "#cbd5e1" }}>—</span>}
+                      </td>
+                      <td style={{ padding: "9px 10px" }}><BadgeEstado estado={est} /></td>
+                      <td style={{ padding: "9px 10px" }}>
+                        <div style={{ display: "flex", gap: 4 }}>
+                          <button onClick={() => onEditar(r)} style={{ background: "#dbeafe", border: "none", cursor: "pointer", color: "#2563eb", padding: "4px 7px", borderRadius: 6, display: "flex", alignItems: "center" }} title="Editar"><FiEdit2 size={13} /></button>
+                          <button onClick={() => onEliminar(r)} style={{ background: "#fee2e2", border: "none", cursor: "pointer", color: "#dc2626", padding: "4px 7px", borderRadius: 6, display: "flex", alignItems: "center" }} title="Eliminar"><FiTrash2 size={13} /></button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
 

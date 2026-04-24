@@ -3,6 +3,7 @@ import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { FiArrowLeft } from "react-icons/fi";
 import api from "../../api/axios";
 import Layout from "../../components/Layout";
+import { calcularZScores, calcularEdadMeses } from "../../utils/who_zscore";
 
 const VACÍO = {
   paciente_id: "", fecha: new Date().toISOString().split("T")[0],
@@ -31,6 +32,13 @@ export default function ConsultasForm() {
   const [sugerencias, setSugerencias] = useState([]);
   const [pacienteNombre, setPacienteNombre] = useState("");
   const refSug = useRef(null);
+
+  // Curva de crecimiento
+  const [calcularCrecimiento, setCalcularCrecimiento] = useState(false);
+  const [pacienteFechaNac, setPacienteFechaNac] = useState(null);
+  const [pacienteSexo, setPacienteSexo] = useState("M");
+  const [pcCm, setPcCm] = useState("");
+  const [notasCrec, setNotasCrec] = useState("");
 
   useEffect(() => {
     api.get("/pacientes").then((r) => setPacientes(r.data));
@@ -75,11 +83,23 @@ export default function ConsultasForm() {
     setPacienteNombre(p.nombre);
     setBuscarPac(p.nombre);
     setSugerencias([]);
+    setPacienteFechaNac(p.fecha_nacimiento || null);
+    setPacienteSexo(p.sexo || "M");
   }
 
   function cambiar(e) {
     setForm({ ...form, [e.target.name]: e.target.value });
   }
+
+  // Z-scores preview en tiempo real cuando el switch está activo
+  const zPrev = (() => {
+    if (!calcularCrecimiento || (!form.peso && !form.talla && !pcCm)) return null;
+    const edadMeses = calcularEdadMeses(pacienteFechaNac, form.fecha);
+    return calcularZScores(
+      { peso_kg: form.peso || null, talla_cm: form.talla || null, pc_cm: pcCm || null, edad_meses: edadMeses },
+      pacienteSexo
+    );
+  })();
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -91,6 +111,28 @@ export default function ConsultasForm() {
         await api.put(`/consultas/${id}`, form);
       } else {
         await api.post("/consultas", form);
+      }
+      // Guardar medición de crecimiento si el switch está activo
+      if (calcularCrecimiento && form.paciente_id && !esEdicion) {
+        try {
+          const edadMeses = calcularEdadMeses(pacienteFechaNac, form.fecha);
+          const zs = calcularZScores(
+            { peso_kg: form.peso || null, talla_cm: form.talla || null, pc_cm: pcCm || null, edad_meses: edadMeses },
+            pacienteSexo
+          );
+          await api.post(`/pacientes/${form.paciente_id}/crecimiento`, {
+            fecha: form.fecha,
+            peso_kg: form.peso || null,
+            talla_cm: form.talla || null,
+            pc_cm: pcCm || null,
+            edad_meses: edadMeses,
+            observaciones: notasCrec || null,
+            ...zs,
+          });
+        } catch {
+          // No bloquear el flujo principal si falla el registro de crecimiento
+          console.warn("No se pudo guardar el registro de crecimiento");
+        }
       }
       navigate("/consultas");
     } catch (err) {
@@ -213,6 +255,105 @@ export default function ConsultasForm() {
               <label>Próxima cita</label>
               <input type="date" name="proxima_cita" value={form.proxima_cita} onChange={cambiar} />
             </div>
+
+            {/* ── Switch curva de crecimiento ───────────────────────── */}
+            {!esEdicion && (
+              <div style={{ gridColumn: "1 / -1" }}>
+                <div style={{
+                  background: calcularCrecimiento ? "#f0fdf4" : "#f8fafc",
+                  border: `1.5px solid ${calcularCrecimiento ? "#16a34a" : "#e2e8f0"}`,
+                  borderRadius: 12, padding: "14px 18px", transition: "all 0.2s",
+                }}>
+                  {/* Toggle header */}
+                  <label style={{ display: "flex", alignItems: "center", gap: 12, cursor: "pointer", userSelect: "none" }}>
+                    <div
+                      onClick={() => setCalcularCrecimiento(v => !v)}
+                      style={{
+                        position: "relative", width: 44, height: 24, borderRadius: 12, flexShrink: 0,
+                        background: calcularCrecimiento ? "#16a34a" : "#cbd5e1",
+                        cursor: "pointer", transition: "background 0.2s",
+                      }}
+                    >
+                      <div style={{
+                        position: "absolute", top: 3, left: calcularCrecimiento ? 23 : 3,
+                        width: 18, height: 18, borderRadius: "50%", background: "#fff",
+                        boxShadow: "0 1px 4px rgba(0,0,0,0.2)", transition: "left 0.2s",
+                      }} />
+                    </div>
+                    <div>
+                      <div style={{ fontWeight: 600, color: "#1e293b", fontSize: "0.92rem" }}>
+                        📏 Registrar curva de crecimiento OMS
+                      </div>
+                      <div style={{ fontSize: "0.74rem", color: "#64748b", marginTop: 1 }}>
+                        Guarda automáticamente la medición en el historial de crecimiento del paciente
+                      </div>
+                    </div>
+                  </label>
+
+                  {/* Campos adicionales cuando está activo */}
+                  {calcularCrecimiento && (
+                    <div style={{ marginTop: 14, display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 12 }}>
+                      <div>
+                        <label style={{ display: "block", fontSize: "0.78rem", fontWeight: 600, color: "#374151", marginBottom: 4 }}>P. CEFÁLICO (CM)</label>
+                        <input
+                          type="number" step="0.1" min="0" placeholder="Ej: 43.2"
+                          value={pcCm} onChange={e => setPcCm(e.target.value)}
+                          style={{ width: "100%", boxSizing: "border-box", padding: "0.6rem 0.8rem", border: "1.5px solid #d1fae5", borderRadius: 8, fontSize: "0.9rem" }}
+                        />
+                      </div>
+                      <div style={{ gridColumn: "1 / -1" }}>
+                        <label style={{ display: "block", fontSize: "0.78rem", fontWeight: 600, color: "#374151", marginBottom: 4 }}>NOTAS (CURVA DE CRECIMIENTO)</label>
+                        <input
+                          type="text" placeholder="Observaciones para este registro de crecimiento..."
+                          value={notasCrec} onChange={e => setNotasCrec(e.target.value)}
+                          style={{ width: "100%", boxSizing: "border-box", padding: "0.6rem 0.8rem", border: "1.5px solid #d1fae5", borderRadius: 8, fontSize: "0.9rem" }}
+                        />
+                      </div>
+
+                      {/* Preview Z-scores */}
+                      {zPrev && Object.keys(zPrev).some(k => k.startsWith("zscore")) && (
+                        <div style={{ gridColumn: "1 / -1", background: "#fff", border: "1px solid #d1fae5", borderRadius: 10, padding: "10px 12px" }}>
+                          <div style={{ fontSize: "0.7rem", fontWeight: 700, color: "#16a34a", letterSpacing: "0.06em", marginBottom: 8 }}>
+                            📊 Z-SCORES OMS (CALCULADOS AUTOMÁTICAMENTE)
+                          </div>
+                          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                            {[
+                              { key: "zscore_peso_edad",  label: "Peso/Edad",  est: "estado_peso_edad" },
+                              { key: "zscore_talla_edad", label: "Talla/Edad", est: "estado_talla_edad" },
+                              { key: "zscore_imc_edad",   label: "IMC/Edad",   est: "estado_imc_edad" },
+                              { key: "zscore_pc_edad",    label: "P.C./Edad",  est: "estado_pc_edad" },
+                            ].filter(c => zPrev[c.key] != null).map(c => {
+                              const z = zPrev[c.key];
+                              const est = zPrev[c.est];
+                              const col = !est ? "#94a3b8" : est.includes("severa") || est.includes("Obesi") || est.includes("Micro") || est.includes("Macro") ? "#dc2626" : est.includes("oderad") || est.includes("riesgo") || est.includes("baja") || est.includes("Delga") ? "#d97706" : "#16a34a";
+                              return (
+                                <div key={c.key} style={{ background: "#f8fafc", borderRadius: 8, padding: "7px 12px", border: `1.5px solid ${col}25`, minWidth: 100 }}>
+                                  <div style={{ fontSize: "0.65rem", color: "#94a3b8", marginBottom: 1 }}>{c.label}</div>
+                                  <div style={{ fontSize: "1rem", fontWeight: 700, color: col }}>{z}</div>
+                                  {est && <div style={{ fontSize: "0.6rem", color: col, fontWeight: 600, lineHeight: 1.2 }}>{est}</div>}
+                                </div>
+                              );
+                            })}
+                            {zPrev.imc && (
+                              <div style={{ background: "#f8fafc", borderRadius: 8, padding: "7px 12px", border: "1.5px solid #6366f125", minWidth: 80 }}>
+                                <div style={{ fontSize: "0.65rem", color: "#94a3b8", marginBottom: 1 }}>IMC</div>
+                                <div style={{ fontSize: "1rem", fontWeight: 700, color: "#6366f1" }}>{zPrev.imc}</div>
+                                <div style={{ fontSize: "0.6rem", color: "#94a3b8" }}>kg/m²</div>
+                              </div>
+                            )}
+                          </div>
+                          {!pacienteFechaNac && (
+                            <p style={{ margin: "8px 0 0", fontSize: "0.7rem", color: "#f59e0b" }}>
+                              ⚠️ El paciente no tiene fecha de nacimiento registrada — la edad en meses no se puede calcular.
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* Áreas de texto — ancho completo */}
             <div className="form-group" style={{ gridColumn: "1 / -1" }}>

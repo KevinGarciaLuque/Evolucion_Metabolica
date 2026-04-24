@@ -22,7 +22,7 @@ const menu = [
   { to: "/dashboard",       icon: HiOutlineSquares2X2,            label: "Dashboard",   modulo: "dashboard"   },
   { to: "/consolidado",     icon: HiOutlinePresentationChartLine, label: "Consolidado", modulo: "consolidado" },
   { to: "/pacientes",       icon: HiOutlineUsers,                 label: "Pacientes",   modulo: "pacientes"   },
-  { to: "/analisis/subir",  icon: HiOutlineDocumentArrowUp,       label: "Subir PDF",   modulo: "analisis"    },
+  { to: "/analisis/subir",  icon: HiOutlineDocumentArrowUp,       label: "Analizar PDF", modulo: "analisis"    },
   { to: "/consultas",       icon: HiOutlineBookOpen,              label: "Consultas",   modulo: "consultas"   },
   { to: "/mapa",            icon: HiOutlineMapPin,                label: "Mapa",        modulo: "mapa"        },
   { to: "/mensajes",        icon: HiOutlineChatBubbleLeftEllipsis, label: "Mensajes",   modulo: "mensajes"    },

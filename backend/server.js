@@ -15,6 +15,7 @@ import clinicoRoutes from "./routes/clinico.routes.js";
 import auditoriaRoutes  from "./routes/auditoria.routes.js";
 import mensajesRoutes   from "./routes/mensajes.routes.js";
 import permisosRoutes   from "./routes/permisos.routes.js";
+import crecimientoRoutes from "./routes/crecimiento.routes.js";
 
 dotenv.config();
 
@@ -51,7 +52,8 @@ app.use("/api/consultas", consultasRoutes);
 app.use("/api/pacientes", clinicoRoutes);
 app.use("/api/auditoria", auditoriaRoutes);
 app.use("/api/mensajes",  mensajesRoutes);
-app.use("/api/permisos",  permisosRoutes);
+app.use("/api/permisos",    permisosRoutes);
+app.use("/api/pacientes",   crecimientoRoutes);
 
 // Health check
 app.get("/api/health", (_req, res) => res.json({ status: "ok", timestamp: new Date().toISOString() }));
