@@ -1102,7 +1102,10 @@ body {
   }
 
   /* Filtros colapsables en móvil */
-  .filtros-toggle { display: inline-flex; }
+  .filtros-toggle { display: inline-flex; flex-shrink: 0; }
+  .filtros-topbar { flex-wrap: nowrap; align-items: center; }
+  .filtros-topbar .form-group { min-width: 0; flex: 1 1 0; }
+  .filtros-topbar .form-group select { width: 100%; min-width: 0; }
   .filtros-extra {
     display: none;
     margin-top: 12px;

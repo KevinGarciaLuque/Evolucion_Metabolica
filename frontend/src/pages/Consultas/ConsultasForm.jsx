@@ -48,10 +48,24 @@ export default function ConsultasForm() {
   const [pacienteSexo, setPacienteSexo] = useState("M");
   const [pcCm, setPcCm] = useState("");
   const [notasCrec, setNotasCrec] = useState("");
+  const [registrado, setRegistrado] = useState(false);
 
   useEffect(() => {
     api.get("/pacientes").then((r) => setPacientes(r.data));
   }, []);
+
+  // Pre-seleccionar paciente cuando viene ?paciente_id= en la URL
+  useEffect(() => {
+    const pidUrl = searchParams.get("paciente_id");
+    if (!pidUrl || esEdicion || pacientes.length === 0) return;
+    const p = pacientes.find((x) => String(x.id) === String(pidUrl));
+    if (p) {
+      setBuscarPac(p.nombre);
+      setPacienteNombre(p.nombre);
+      setPacienteFechaNac(p.fecha_nacimiento || null);
+      setPacienteSexo(p.sexo || "M");
+    }
+  }, [pacientes, searchParams, esEdicion]);
 
   // Cuando carga en edición, buscar el nombre del paciente seleccionado
   useEffect(() => {
@@ -143,7 +157,11 @@ export default function ConsultasForm() {
           console.warn("No se pudo guardar el registro de crecimiento");
         }
       }
-      navigate("/consultas");
+      if (esEdicion) {
+        navigate("/consultas");
+      } else {
+        setRegistrado(true);
+      }
     } catch (err) {
       setError(err.response?.data?.error || "Error al guardar");
     } finally {
@@ -153,6 +171,75 @@ export default function ConsultasForm() {
 
   return (
     <Layout>
+      {/* ── Modal de confirmación ──────────────────────────────── */}
+      {registrado && (
+        <div style={{
+          position: "fixed", inset: 0, zIndex: 1000,
+          background: "rgba(15,23,42,0.5)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          animation: "fadein 0.2s ease",
+        }}>
+          <style>{`
+            @keyframes fadein { from { opacity: 0; } to { opacity: 1; } }
+            @keyframes scale-in { from { transform: scale(0.85); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+            @keyframes circle-draw { from { stroke-dashoffset: 226; } to { stroke-dashoffset: 0; } }
+            @keyframes check-draw  { from { stroke-dashoffset: 80;  } to { stroke-dashoffset: 0; } }
+            @keyframes pop-bg { 0%,100%{transform:scale(1)} 50%{transform:scale(1.08)} }
+          `}</style>
+          <div style={{
+            background: "#fff", borderRadius: 24, padding: "44px 48px 36px",
+            textAlign: "center", boxShadow: "0 32px 80px rgba(0,0,0,0.22)",
+            maxWidth: 380, width: "90%",
+            animation: "scale-in 0.3s cubic-bezier(.34,1.56,.64,1) forwards",
+          }}>
+            {/* Círculo verde con check animado */}
+            <div style={{ marginBottom: 22, display: "inline-block" }}>
+              <svg width="90" height="90" viewBox="0 0 90 90" fill="none">
+                <circle cx="45" cy="45" r="36" fill="#f0fdf4" />
+                <circle cx="45" cy="45" r="36" stroke="#22c55e" strokeWidth="4.5"
+                  strokeDasharray="226" strokeDashoffset="226" strokeLinecap="round"
+                  style={{ animation: "circle-draw 0.65s ease forwards" }}
+                />
+                <polyline points="28,46 40,58 63,32" stroke="#22c55e" strokeWidth="5"
+                  strokeLinecap="round" strokeLinejoin="round"
+                  strokeDasharray="80" strokeDashoffset="80"
+                  style={{ animation: "check-draw 0.4s ease 0.55s forwards" }}
+                />
+              </svg>
+            </div>
+
+            <h2 style={{ margin: "0 0 8px", fontSize: "1.35rem", color: "#1e293b", fontWeight: 700 }}>
+              ¡Consulta registrada!
+            </h2>
+            <p style={{ margin: "0 0 10px", color: "#64748b", fontSize: "0.93rem", lineHeight: 1.5 }}>
+              La consulta fue guardada correctamente
+              {pacienteNombre && <> para <strong style={{ color: "#1e293b" }}>{pacienteNombre}</strong></>}.
+            </p>
+            {calcularCrecimiento && (
+              <p style={{ margin: "0 0 24px", fontSize: "0.82rem", color: "#16a34a",
+                background: "#f0fdf4", borderRadius: 8, padding: "6px 12px", display: "inline-block" }}>
+                📏 Registro de crecimiento OMS guardado
+              </p>
+            )}
+            <div style={{ display: "flex", gap: 10, marginTop: 24 }}>
+              <button
+                onClick={() => { setRegistrado(false); setForm({ ...VACÍO, paciente_id: "" }); setBuscarPac(""); setPacienteNombre(""); }}
+                className="btn btn-outline"
+                style={{ flex: 1 }}
+              >
+                Nueva consulta
+              </button>
+              <button
+                onClick={() => navigate("/consultas")}
+                className="btn btn-primary"
+                style={{ flex: 1 }}
+              >
+                Ver historial
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="page-header">
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
           <button

@@ -523,8 +523,8 @@ export default function PacienteDetalle() {
       ══════════════════════════════════════════════════════════════════════ */}
       <div className="tab-bar">
         {[
-          { key: "consultas",    label: "Consultas",          icon: <FiClipboard size={14} />, count: consultas.length },
           { key: "info",         label: "Información",        icon: <FiUser size={14} /> },
+          { key: "consultas",    label: "Consultas",          icon: <FiClipboard size={14} />, count: consultas.length },
           { key: "analisis",     label: "Análisis MCG",       icon: <FiBarChart2 size={14} />, count: historial.length },
           { key: "crecimiento",  label: "Curvas Crecimiento", icon: <FiActivity size={14} />, count: crecimiento.length },
           { key: "insulina",     label: "Insulina",           icon: <FiZap size={14} />,      count: insulina.length },
