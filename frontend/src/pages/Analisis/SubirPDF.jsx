@@ -14,25 +14,40 @@ const PASOS_ANALISIS = [
   { id: 4, texto: "Calculando métricas ISPAD..." },
   { id: 5, texto: "Preparando resultados..." },
 ];
-const PASO_MS    = 500; // ms entre cada paso
-const VERDE_HOLD = 1000; // ms mostrando todos en verde antes de cerrar
-const TIEMPO_MIN = PASOS_ANALISIS.length * PASO_MS + VERDE_HOLD; // total garantizado
+const PASO_MS    = 800;
+const VERDE_HOLD = 1000;
+const TIEMPO_MIN = PASOS_ANALISIS.length * PASO_MS + VERDE_HOLD;
+
+// Nodos y aristas de la red neuronal decorativa
+const N_POS   = [[10,12],[90,10],[50,6],[4,55],[96,48],[18,90],[82,85],[50,96],[33,42],[67,38]];
+const N_EDGES = [[0,2],[2,1],[0,3],[1,4],[3,5],[4,6],[5,7],[6,7],[2,8],[8,9],[9,4],[8,3],[9,6]];
+
+// Frases que el modelo "lee" en tiempo real
+const SCAN_TOKENS = [
+  "glucosa_promedio: 154 mg/dL",
+  "tiempo_en_rango: 68.4%  ←  detectado",
+  "TAR: 30.1%  ←  calculado",
+  "GMI: estimando curva...",
+  "CV: 38.2%  ←  validado",
+  "GRI: procesando índice...",
+  "métricas ISPAD: ✓  listo",
+];
 
 function AnalizandoOverlay({ visible }) {
   const [pasoActual, setPasoActual] = useState(0);
+  const [tokenIdx,   setTokenIdx]   = useState(0);
 
   useEffect(() => {
-    if (!visible) { setPasoActual(0); return; }
+    if (!visible) { setPasoActual(0); setTokenIdx(0); return; }
     setPasoActual(0);
     const intervalos = [
-      // Avanzar cada paso
       ...PASOS_ANALISIS.map((_, i) =>
         setTimeout(() => setPasoActual(i), i * PASO_MS)
       ),
-      // Poner todos en verde (pasoActual > último índice)
       setTimeout(() => setPasoActual(PASOS_ANALISIS.length), PASOS_ANALISIS.length * PASO_MS),
     ];
-    return () => intervalos.forEach(clearTimeout);
+    const tokenTimer = setInterval(() => setTokenIdx(i => (i + 1) % SCAN_TOKENS.length), 1100);
+    return () => { intervalos.forEach(clearTimeout); clearInterval(tokenTimer); };
   }, [visible]);
 
   return (
@@ -42,66 +57,200 @@ function AnalizandoOverlay({ visible }) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.3 }}
+          transition={{ duration: 0.35 }}
           style={{
             position: "fixed", inset: 0, zIndex: 9999,
-            background: "rgba(10, 15, 30, 0.82)",
-            backdropFilter: "blur(6px)",
+            background: "rgba(4, 6, 18, 0.92)",
+            backdropFilter: "blur(10px)",
             display: "flex", alignItems: "center", justifyContent: "center",
           }}
         >
+          {/* ── Red neuronal de fondo ── */}
+          <svg
+            width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none"
+            style={{ position: "absolute", inset: 0, pointerEvents: "none" }}
+          >
+            {N_EDGES.map(([a, b], i) => (
+              <motion.path
+                key={i}
+                d={`M${N_POS[a][0]},${N_POS[a][1]} L${N_POS[b][0]},${N_POS[b][1]}`}
+                stroke="rgba(99,179,237,0.18)"
+                strokeWidth="0.22"
+                fill="none"
+                initial={{ pathLength: 0, opacity: 0 }}
+                animate={{ pathLength: [0, 1, 0], opacity: [0, 0.8, 0] }}
+                transition={{ duration: 3 + (i % 3) * 0.6, delay: i * 0.28, repeat: Infinity, ease: "easeInOut", repeatDelay: 0.6 }}
+              />
+            ))}
+            {N_POS.map(([x, y], i) => (
+              <motion.circle
+                key={i} cx={x} cy={y} r="0.7"
+                fill={i % 2 === 0 ? "rgba(124,58,237,0.55)" : "rgba(96,165,250,0.55)"}
+                animate={{ opacity: [0.3, 1, 0.3], r: [0.5, 1.1, 0.5] }}
+                transition={{ duration: 2 + (i % 4) * 0.45, delay: i * 0.22, repeat: Infinity, ease: "easeInOut" }}
+              />
+            ))}
+          </svg>
+
+          {/* ── Card principal ── */}
           <motion.div
-            initial={{ scale: 0.85, opacity: 0, y: 30 }}
+            initial={{ scale: 0.85, opacity: 0, y: 32 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.9, opacity: 0, y: -20 }}
-            transition={{ type: "spring", stiffness: 300, damping: 25 }}
+            transition={{ type: "spring", stiffness: 300, damping: 26 }}
             style={{
-              background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)",
-              border: "1px solid rgba(99,179,237,0.25)",
-              borderRadius: 20,
-              padding: "44px 52px",
-              maxWidth: 440,
+              position: "relative",
+              background: "linear-gradient(150deg, #06091a 0%, #0e1629 55%, #111b38 100%)",
+              border: "1px solid rgba(99,179,237,0.18)",
+              borderRadius: 26,
+              padding: "40px 48px 36px",
+              maxWidth: 460,
               width: "90%",
-              boxShadow: "0 30px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(99,179,237,0.1)",
+              boxShadow: "0 40px 110px rgba(0,0,0,0.75), 0 0 0 1px rgba(124,58,237,0.12), 0 0 80px rgba(124,58,237,0.06)",
               textAlign: "center",
+              overflow: "hidden",
             }}
           >
-            {/* Spinner SVG animado */}
-            <div style={{ display: "flex", justifyContent: "center", marginBottom: 28 }}>
-              <svg width="68" height="68" viewBox="0 0 68 68" fill="none">
-                <circle cx="34" cy="34" r="28" stroke="rgba(99,179,237,0.15)" strokeWidth="5" />
-                <motion.circle
-                  cx="34" cy="34" r="28"
-                  stroke="url(#grad)"
-                  strokeWidth="5"
-                  strokeLinecap="round"
-                  strokeDasharray="175.93"
-                  strokeDashoffset="132"
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 1.1, repeat: Infinity, ease: "linear" }}
-                  style={{ transformOrigin: "34px 34px" }}
+            {/* Destellos de esquina */}
+            <div style={{ position: "absolute", top: -50, right: -50, width: 180, height: 180, background: "radial-gradient(circle, rgba(124,58,237,0.11) 0%, transparent 70%)", pointerEvents: "none" }} />
+            <div style={{ position: "absolute", bottom: -50, left: -50, width: 180, height: 180, background: "radial-gradient(circle, rgba(56,189,248,0.09) 0%, transparent 70%)", pointerEvents: "none" }} />
+
+            {/* Badge "MODELO IA" */}
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              style={{
+                display: "inline-flex", alignItems: "center", gap: 7,
+                padding: "4px 14px", borderRadius: 20, marginBottom: 26,
+                background: "linear-gradient(135deg, rgba(124,58,237,0.18), rgba(96,165,250,0.13))",
+                border: "1px solid rgba(124,58,237,0.32)",
+                fontSize: 10, fontWeight: 800, color: "#a78bfa",
+                letterSpacing: "1.6px", textTransform: "uppercase",
+              }}
+            >
+              <motion.span
+                animate={{ opacity: [1, 0.25, 1] }}
+                transition={{ duration: 1.1, repeat: Infinity }}
+                style={{ width: 6, height: 6, borderRadius: "50%", background: "#7c3aed", display: "inline-block", boxShadow: "0 0 8px #7c3aed" }}
+              />
+              Modelo IA · Neural
+            </motion.div>
+
+            {/* ── Ícono: chip de IA con anillos y escáner ── */}
+            <div style={{ display: "flex", justifyContent: "center", marginBottom: 24 }}>
+              <div style={{ position: "relative", width: 100, height: 100 }}>
+                {/* Anillos de pulso */}
+                <motion.div
+                  animate={{ scale: [1, 1.5, 1], opacity: [0.3, 0, 0.3] }}
+                  transition={{ duration: 2.8, repeat: Infinity, ease: "easeOut" }}
+                  style={{ position: "absolute", inset: -16, borderRadius: "50%", border: "1px solid rgba(124,58,237,0.38)" }}
                 />
-                <defs>
-                  <linearGradient id="grad" x1="0" y1="0" x2="68" y2="68" gradientUnits="userSpaceOnUse">
-                    <stop stopColor="#63b3ed" />
-                    <stop offset="1" stopColor="#7c3aed" />
-                  </linearGradient>
-                </defs>
-                {/* Ícono PDF al centro */}
-                <text x="34" y="39" textAnchor="middle" fontSize="16" fill="#63b3ed" fontWeight="bold">PDF</text>
-              </svg>
+                <motion.div
+                  animate={{ scale: [1, 1.25, 1], opacity: [0.38, 0, 0.38] }}
+                  transition={{ duration: 2.8, repeat: Infinity, ease: "easeOut", delay: 0.5 }}
+                  style={{ position: "absolute", inset: -7, borderRadius: "50%", border: "1px solid rgba(96,165,250,0.28)" }}
+                />
+                {/* Anillo giratorio con gradiente */}
+                <svg width="100" height="100" viewBox="0 0 100 100" style={{ position: "absolute", inset: 0 }}>
+                  <defs>
+                    <linearGradient id="chipRingGrad" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
+                      <stop stopColor="#63b3ed" /><stop offset="0.5" stopColor="#7c3aed" /><stop offset="1" stopColor="#38bdf8" />
+                    </linearGradient>
+                  </defs>
+                  <circle cx="50" cy="50" r="44" stroke="rgba(99,179,237,0.09)" strokeWidth="6" fill="none" />
+                  <motion.circle
+                    cx="50" cy="50" r="44"
+                    stroke="url(#chipRingGrad)"
+                    strokeWidth="5" strokeLinecap="round"
+                    strokeDasharray="276.5" strokeDashoffset="207"
+                    fill="none"
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 1.9, repeat: Infinity, ease: "linear" }}
+                    style={{ transformOrigin: "50px 50px" }}
+                  />
+                </svg>
+                {/* Círculo interior con chip SVG */}
+                <div style={{
+                  position: "absolute", inset: 14, borderRadius: "50%",
+                  background: "linear-gradient(145deg, #080d1e 0%, #141c3a 100%)",
+                  border: "1px solid rgba(99,179,237,0.22)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  overflow: "hidden",
+                }}>
+                  {/* Línea de escáner */}
+                  <motion.div
+                    animate={{ top: ["10%", "88%", "10%"] }}
+                    transition={{ duration: 1.9, repeat: Infinity, ease: "easeInOut" }}
+                    style={{
+                      position: "absolute", left: "6%", right: "6%", height: 1.5,
+                      background: "linear-gradient(90deg, transparent, rgba(96,165,250,0.85), rgba(124,58,237,0.85), transparent)",
+                      borderRadius: 2, boxShadow: "0 0 10px rgba(96,165,250,0.65)",
+                    }}
+                  />
+                  {/* Chip SVG */}
+                  <svg width="34" height="34" viewBox="0 0 34 34" fill="none">
+                    <defs>
+                      <linearGradient id="icGrad" x1="0" y1="0" x2="34" y2="34" gradientUnits="userSpaceOnUse">
+                        <stop stopColor="#63b3ed"/><stop offset="1" stopColor="#a78bfa"/>
+                      </linearGradient>
+                    </defs>
+                    <rect x="10" y="10" width="14" height="14" rx="2.5" stroke="url(#icGrad)" strokeWidth="1.3" fill="rgba(99,179,237,0.09)"/>
+                    <line x1="10" y1="13.5" x2="6"  y2="13.5" stroke="#63b3ed" strokeWidth="1.1" strokeLinecap="round"/>
+                    <line x1="10" y1="17"   x2="6"  y2="17"   stroke="#63b3ed" strokeWidth="1.1" strokeLinecap="round"/>
+                    <line x1="10" y1="20.5" x2="6"  y2="20.5" stroke="#63b3ed" strokeWidth="1.1" strokeLinecap="round"/>
+                    <line x1="24" y1="13.5" x2="28" y2="13.5" stroke="#63b3ed" strokeWidth="1.1" strokeLinecap="round"/>
+                    <line x1="24" y1="17"   x2="28" y2="17"   stroke="#63b3ed" strokeWidth="1.1" strokeLinecap="round"/>
+                    <line x1="24" y1="20.5" x2="28" y2="20.5" stroke="#63b3ed" strokeWidth="1.1" strokeLinecap="round"/>
+                    <line x1="13.5" y1="10" x2="13.5" y2="6"  stroke="#a78bfa" strokeWidth="1.1" strokeLinecap="round"/>
+                    <line x1="17"   y1="10" x2="17"   y2="6"  stroke="#a78bfa" strokeWidth="1.1" strokeLinecap="round"/>
+                    <line x1="20.5" y1="10" x2="20.5" y2="6"  stroke="#a78bfa" strokeWidth="1.1" strokeLinecap="round"/>
+                    <line x1="13.5" y1="24" x2="13.5" y2="28" stroke="#a78bfa" strokeWidth="1.1" strokeLinecap="round"/>
+                    <line x1="17"   y1="24" x2="17"   y2="28" stroke="#a78bfa" strokeWidth="1.1" strokeLinecap="round"/>
+                    <line x1="20.5" y1="24" x2="20.5" y2="28" stroke="#a78bfa" strokeWidth="1.1" strokeLinecap="round"/>
+                    <rect x="13" y="13" width="8" height="8" rx="1.5" fill="rgba(124,58,237,0.18)" stroke="url(#icGrad)" strokeWidth="1"/>
+                    <circle cx="17" cy="17" r="2.2" fill="url(#icGrad)"/>
+                  </svg>
+                </div>
+              </div>
             </div>
 
-            <motion.h2
-              style={{ color: "#f1f5f9", fontSize: 20, fontWeight: 700, marginBottom: 8, letterSpacing: "-0.3px" }}
-            >
+            <motion.h2 style={{ color: "#f1f5f9", fontSize: 21, fontWeight: 700, marginBottom: 5, letterSpacing: "-0.4px" }}>
               Analizando reporte
             </motion.h2>
-            <p style={{ color: "#94a3b8", fontSize: 13, marginBottom: 32 }}>
+            <p style={{ color: "#4e6080", fontSize: 12.5, marginBottom: 24 }}>
               Extracción automática de datos Syai X1
             </p>
 
-            {/* Pasos */}
+            {/* ── Terminal de tokens en tiempo real ── */}
+            <div style={{
+              marginBottom: 26,
+              background: "rgba(0,0,0,0.35)",
+              border: "1px solid rgba(96,165,250,0.12)",
+              borderRadius: 10,
+              padding: "9px 14px",
+              display: "flex", alignItems: "center", gap: 10, minHeight: 38,
+            }}>
+              <motion.span
+                animate={{ opacity: [1, 0.2, 1] }}
+                transition={{ duration: 0.75, repeat: Infinity }}
+                style={{ color: "#22c55e", fontSize: 10, fontWeight: 700, flexShrink: 0 }}
+              >▶</motion.span>
+              <AnimatePresence mode="wait">
+                <motion.span
+                  key={tokenIdx}
+                  initial={{ opacity: 0, y: 7 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -7 }}
+                  transition={{ duration: 0.22 }}
+                  style={{ color: "#38bdf8", fontSize: 11.5, fontFamily: "'Courier New', monospace", textAlign: "left" }}
+                >
+                  {SCAN_TOKENS[tokenIdx]}
+                </motion.span>
+              </AnimatePresence>
+            </div>
+
+            {/* ── Pasos ── */}
             <div style={{ textAlign: "left", display: "flex", flexDirection: "column", gap: 10 }}>
               {PASOS_ANALISIS.map((paso, i) => {
                 const completado = i < pasoActual;
@@ -110,7 +259,7 @@ function AnalizandoOverlay({ visible }) {
                   <motion.div
                     key={paso.id}
                     initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: i <= pasoActual ? 1 : 0.3, x: 0 }}
+                    animate={{ opacity: i <= pasoActual ? 1 : 0.25, x: 0 }}
                     transition={{ delay: i * 0.08, duration: 0.3 }}
                     style={{ display: "flex", alignItems: "center", gap: 12 }}
                   >
@@ -119,42 +268,59 @@ function AnalizandoOverlay({ visible }) {
                       display: "flex", alignItems: "center", justifyContent: "center",
                       background: completado ? "linear-gradient(135deg,#22c55e,#16a34a)"
                                 : activo     ? "linear-gradient(135deg,#63b3ed,#7c3aed)"
-                                :              "rgba(255,255,255,0.07)",
-                      border: activo ? "none" : "1px solid rgba(255,255,255,0.1)",
-                      transition: "background 0.4s",
+                                :              "rgba(255,255,255,0.05)",
+                      border: (completado || activo) ? "none" : "1px solid rgba(255,255,255,0.07)",
+                      boxShadow: activo ? "0 0 14px rgba(124,58,237,0.55)" : completado ? "0 0 8px rgba(34,197,94,0.4)" : "none",
+                      transition: "all 0.4s",
                     }}>
                       {completado
                         ? <svg width="12" height="12" viewBox="0 0 12 12"><path d="M2 6l3 3 5-5" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" fill="none"/></svg>
                         : activo
                           ? <motion.div
-                              animate={{ scale: [1, 1.3, 1] }}
-                              transition={{ duration: 0.8, repeat: Infinity }}
+                              animate={{ scale: [1, 1.4, 1] }}
+                              transition={{ duration: 0.7, repeat: Infinity }}
                               style={{ width: 6, height: 6, borderRadius: "50%", background: "#fff" }}
                             />
-                          : <div style={{ width: 6, height: 6, borderRadius: "50%", background: "rgba(255,255,255,0.3)" }} />
+                          : <div style={{ width: 5, height: 5, borderRadius: "50%", background: "rgba(255,255,255,0.18)" }} />
                       }
                     </div>
                     <span style={{
+                      flex: 1,
                       fontSize: 13,
-                      color: completado ? "#86efac" : activo ? "#e2e8f0" : "#475569",
-                      fontWeight: activo ? 600 : 400,
+                      color: completado ? "#86efac" : activo ? "#e2e8f0" : "#2d3f55",
+                      fontWeight: activo ? 600 : completado ? 500 : 400,
                       transition: "color 0.3s",
                     }}>
                       {paso.texto}
                     </span>
+                    {activo && (
+                      <motion.span
+                        animate={{ opacity: [1, 0, 1] }}
+                        transition={{ duration: 0.65, repeat: Infinity }}
+                        style={{ color: "#63b3ed", fontSize: 11, fontFamily: "monospace", flexShrink: 0 }}
+                      >···</motion.span>
+                    )}
                   </motion.div>
                 );
               })}
             </div>
 
-            {/* Barra de progreso */}
-            <div style={{ marginTop: 28, height: 4, background: "rgba(255,255,255,0.08)", borderRadius: 99, overflow: "hidden" }}>
+            {/* ── Barra de progreso ── */}
+            <div style={{ marginTop: 26, height: 3, background: "rgba(255,255,255,0.06)", borderRadius: 99, overflow: "hidden" }}>
               <motion.div
-                animate={{ width: `${((pasoActual + 1) / PASOS_ANALISIS.length) * 100}%` }}
+                animate={{ width: `${Math.min(((pasoActual + 1) / PASOS_ANALISIS.length) * 100, 100)}%` }}
                 transition={{ duration: 0.5, ease: "easeOut" }}
-                style={{ height: "100%", background: "linear-gradient(90deg,#63b3ed,#7c3aed)", borderRadius: 99 }}
+                style={{
+                  height: "100%",
+                  background: "linear-gradient(90deg, #63b3ed, #7c3aed, #38bdf8)",
+                  borderRadius: 99,
+                  boxShadow: "0 0 14px rgba(99,102,241,0.55)",
+                }}
               />
             </div>
+            <p style={{ marginTop: 8, color: "#2d3f55", fontSize: 10.5, textAlign: "right", fontFamily: "monospace" }}>
+              {Math.min(Math.round(((pasoActual + 1) / PASOS_ANALISIS.length) * 100), 100)}% completado
+            </p>
           </motion.div>
         </motion.div>
       )}
@@ -437,8 +603,34 @@ export default function SubirPDF() {
             <FiArrowLeft size={18} />
           </Link>
           <div>
-            <h1 style={{ margin: 0 }}>Subir Reporte PDF · Syai X1</h1>
-            <p className="page-subtitle">Carga el PDF generado por el monitor Syai X1 para extracción automática de datos</p>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
+              <h1 style={{ margin: 0 }}>
+                Analizar Reporte PDF{" "}
+                <span style={{ background: "linear-gradient(90deg,#3b82f6,#7c3aed)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
+                  · Syai X1
+                </span>
+              </h1>
+              <motion.div
+                animate={{ boxShadow: ["0 0 0px rgba(124,58,237,0)", "0 0 14px rgba(124,58,237,0.5)", "0 0 0px rgba(124,58,237,0)"] }}
+                transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: 5,
+                  padding: "3px 11px", borderRadius: 20,
+                  background: "linear-gradient(135deg, rgba(124,58,237,0.12), rgba(96,165,250,0.1))",
+                  border: "1px solid rgba(124,58,237,0.3)",
+                  fontSize: 10, fontWeight: 800, color: "#7c3aed",
+                  letterSpacing: "0.8px", flexShrink: 0,
+                }}
+              >
+                <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
+                  <path d="M4 0l.9 2.1L7 3 5.1 4 4 7l-.9-2.1L1 4l1.9-1L4 0z" fill="#7c3aed"/>
+                </svg>
+                IA
+              </motion.div>
+            </div>
+            <p className="page-subtitle">
+              Extrae automáticamente TIR · TAR · GMI · CV · GRI desde el reporte PDF del monitor Syai X1
+            </p>
           </div>
         </div>
       </div>
@@ -450,6 +642,65 @@ export default function SubirPDF() {
           <div className="ai-card-wrapper">
             <div className="ai-spin-border" />
             <div className="card">
+
+            {/* ── Banner IA ── */}
+            <div style={{
+              display: "flex", alignItems: "center", gap: 10,
+              marginBottom: 20, paddingBottom: 16,
+              borderBottom: "5px solid #f0f4ff",
+            }}>
+              <div style={{
+                width: 34, height: 34, borderRadius: 9,
+                background: "linear-gradient(135deg, #3b82f6, #7c3aed)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                boxShadow: "0 9px 14px rgba(124,58,237,0.38)",
+                flexShrink: 0,
+              }}>
+                <svg width="17" height="17" viewBox="0 0 17 17" fill="none">
+                  <path d="M8.5 1.5l1.6 3.8L14 7l-3.9 1.7L8.5 14l-1.6-5.3L3 7l3.9-1.7z"
+                    stroke="#fff" strokeWidth="1.35" strokeLinejoin="round" fill="rgba(255,255,255,0.28)" />
+                </svg>
+              </div>
+              <div style={{ flex: 1 }}>
+                <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "#1e293b", lineHeight: 1.3 }}>
+                  Análisis con Inteligencia Artificial
+                </p>
+                <p style={{ margin: 0, fontSize: 11, color: "#94a3b8", lineHeight: 1.3 }}>
+                  Modelo entrenado en reportes Syai X1
+                </p>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 5, flexShrink: 0 }}>
+                <motion.span
+                  animate={{ opacity: [1, 0.25, 1] }}
+                  transition={{ duration: 1.6, repeat: Infinity }}
+                  style={{ width: 6, height: 6, borderRadius: "50%", background: "#22c55e", display: "inline-block", boxShadow: "0 0 6px #22c55e" }}
+                />
+                <span style={{ fontSize: 11, color: "#22c55e", fontWeight: 600 }}>Sistema activo</span>
+              </div>
+            </div>
+
+            {/* ── Métricas que extrae la IA ── */}
+            <div style={{ marginBottom: 22 }}>
+              <p style={{ margin: "0 0 8px", fontSize: 10.5, fontWeight: 700, color: "#94a3b8", letterSpacing: "0.8px", textTransform: "uppercase" }}>
+                Extrae automáticamente
+              </p>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                {[
+                  { label: "TIR",           color: "#16a34a", bg: "#f0fdf4", border: "#bbf7d0" },
+                  { label: "TAR",           color: "#d97706", bg: "#fffbeb", border: "#fde68a" },
+                  { label: "TBR",           color: "#dc2626", bg: "#fef2f2", border: "#fecaca" },
+                  { label: "GMI",           color: "#2563eb", bg: "#eff6ff", border: "#bfdbfe" },
+                  { label: "CV",            color: "#7c3aed", bg: "#f5f3ff", border: "#ddd6fe" },
+                  { label: "GRI",           color: "#0284c7", bg: "#f0f9ff", border: "#bae6fd" },
+                  { label: "Glucosa Prom.", color: "#475569", bg: "#f8fafc", border: "#e2e8f0" },
+                ].map(c => (
+                  <span key={c.label} style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "3px 10px", borderRadius: 20, fontSize: 11, fontWeight: 600, color: c.color, background: c.bg, border: `1px solid ${c.border}` }}>
+                    <span style={{ width: 5, height: 5, borderRadius: "50%", background: c.color, display: "inline-block" }} />
+                    {c.label}
+                  </span>
+                ))}
+              </div>
+            </div>
 
             {/* ── Paso 1: Paciente ── */}
             <div className="step-row">
@@ -483,6 +734,15 @@ export default function SubirPDF() {
                 </p>
                 <div className="form-group" style={{ position: "relative", marginBottom: 0 }}>
                   <div style={{ position: "relative" }}>
+                    <svg
+                      width="15" height="15" viewBox="0 0 15 15" fill="none"
+                      style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", pointerEvents: "none", zIndex: 2 }}
+                    >
+                      {pacienteId
+                        ? <path d="M2.5 7l3 3 7-7" stroke="#22c55e" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/>
+                        : <><circle cx="6.5" cy="6.5" r="4" stroke="#94a3b8" strokeWidth="1.5"/><path d="M10 10l2.5 2.5" stroke="#94a3b8" strokeWidth="1.5" strokeLinecap="round"/></>
+                      }
+                    </svg>
                     <input
                       ref={busquedaRef}
                       type="text"
@@ -498,6 +758,7 @@ export default function SubirPDF() {
                       onFocus={() => setDropdownAbierto(true)}
                       onBlur={() => setTimeout(() => setDropdownAbierto(false), 180)}
                       style={{
+                        paddingLeft: 36,
                         borderColor: pacienteId ? "#22c55e" : undefined,
                         background: pacienteId ? "#f0fdf4" : undefined,
                       }}
@@ -602,103 +863,255 @@ export default function SubirPDF() {
                           onChange={(e) => { if (e.target.files[0]) setArchivo(e.target.files[0]); }}
                         />
                         {archivo ? (
-                          <>
+                          <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            transition={{ type: "spring", stiffness: 320, damping: 24 }}
+                            style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 14, width: "100%", position: "relative" }}
+                          >
+                            {/* Grid de puntos */}
+                            <svg style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none", zIndex: 0 }} viewBox="0 0 300 170" preserveAspectRatio="none">
+                              {Array.from({ length: 9 }, (_, xi) =>
+                                Array.from({ length: 6 }, (_, yi) => (
+                                  <circle key={`${xi}-${yi}`} cx={xi * 35 + 17} cy={yi * 28 + 14} r="0.75" fill="rgba(34,197,94,0.2)" />
+                                ))
+                              ).flat()}
+                            </svg>
+
+                            {/* Línea de escaneo verde */}
                             <motion.div
-                              initial={{ scale: 0 }}
-                              animate={{ scale: 1 }}
-                              transition={{ type: "spring", stiffness: 400, damping: 20 }}
-                            >
-                              <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
-                                <rect width="48" height="48" rx="12" fill="#dcfce7" />
-                                <path d="M14 24l7 7 13-13" stroke="#16a34a" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-                              </svg>
-                            </motion.div>
-                            <p className="drop-filename" style={{ marginTop: 10 }}>{archivo.name}</p>
-                            <p className="drop-hint">Clic para cambiar</p>
-                          </>
-                        ) : (
-                          <>
-                            <AnimatePresence>
-                              {hoveringZone && (
-                                <motion.div
-                                  key="scan-overlay"
-                                  initial={{ opacity: 0 }}
-                                  animate={{ opacity: 1 }}
-                                  exit={{ opacity: 0 }}
-                                  transition={{ duration: 0.3 }}
-                                  style={{
-                                    position: "absolute", inset: 0,
-                                    borderRadius: "inherit",
-                                    overflow: "hidden",
-                                    pointerEvents: "none",
-                                    zIndex: 0,
-                                  }}
-                                >
-                                  <motion.div
-                                    animate={{ y: ["-10%", "110%"] }}
-                                    transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut", repeatDelay: 0.3 }}
-                                    style={{
-                                      position: "absolute",
-                                      left: 0, right: 0,
-                                      height: "28%",
-                                      background: "linear-gradient(180deg, transparent 0%, rgba(99,102,241,0.07) 30%, rgba(124,58,237,0.14) 50%, rgba(96,165,250,0.07) 70%, transparent 100%)",
-                                    }}
-                                  />
-                                  <motion.div
-                                    animate={{ opacity: [0, 0.6, 0] }}
-                                    transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut", repeatDelay: 0.1 }}
-                                    style={{
-                                      position: "absolute", inset: 0,
-                                      background: "radial-gradient(ellipse at 20% 50%, rgba(96,165,250,0.1) 0%, transparent 60%), radial-gradient(ellipse at 80% 50%, rgba(124,58,237,0.1) 0%, transparent 60%)",
-                                    }}
-                                  />
-                                </motion.div>
-                              )}
-                            </AnimatePresence>
-                            <motion.span
-                              className="drop-icon"
-                              animate={{
-                                y: [0, -8, 0],
-                                filter: [
-                                  "drop-shadow(0 0 0px #60a5fa)",
-                                  "drop-shadow(0 0 18px #7c3aed) drop-shadow(0 0 32px #60a5fa)",
-                                  "drop-shadow(0 0 0px #60a5fa)",
-                                ],
+                              animate={{ top: ["8%", "92%", "8%"] }}
+                              transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut", repeatDelay: 0.4 }}
+                              style={{
+                                position: "absolute", left: "5%", right: "5%", height: 1.5,
+                                background: "linear-gradient(90deg, transparent, rgba(34,197,94,0.8), rgba(74,222,128,0.9), transparent)",
+                                borderRadius: 2, boxShadow: "0 0 12px rgba(34,197,94,0.5)",
+                                pointerEvents: "none", zIndex: 1,
                               }}
-                              transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
-                              style={{ display: "inline-block", position: "relative", zIndex: 1 }}
-                            >
-                              <svg width="56" height="56" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            />
+
+                            {/* Partículas verdes */}
+                            {[[7,18],[88,12],[10,78],[90,72],[48,7],[22,90],[75,85],[60,4]].map(([x,y], i) => (
+                              <motion.div
+                                key={i}
+                                animate={{ opacity: [0.1, 0.7, 0.1], scale: [0.7, 1.5, 0.7] }}
+                                transition={{ duration: 1.6 + i * 0.4, delay: i * 0.28, repeat: Infinity, ease: "easeInOut" }}
+                                style={{
+                                  position: "absolute", left: `${x}%`, top: `${y}%`,
+                                  width: i < 4 ? 2.5 : 1.5, height: i < 4 ? 2.5 : 1.5,
+                                  borderRadius: "50%",
+                                  background: i % 2 === 0 ? "#4ade80" : "#86efac",
+                                  pointerEvents: "none", zIndex: 1,
+                                }}
+                              />
+                            ))}
+
+                            {/* Corchetes verdes */}
+                            <svg style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none", zIndex: 1 }} viewBox="0 0 100 100" preserveAspectRatio="none">
+                              <motion.path d="M6 18 L6 6 L18 6" stroke="rgba(74,222,128,0.55)" strokeWidth="0.9" fill="none" strokeLinecap="round" animate={{ opacity: [0.4, 1, 0.4] }} transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }} />
+                              <motion.path d="M82 6 L94 6 L94 18" stroke="rgba(74,222,128,0.55)" strokeWidth="0.9" fill="none" strokeLinecap="round" animate={{ opacity: [0.4, 1, 0.4] }} transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut", delay: 0.5 }} />
+                              <motion.path d="M6 82 L6 94 L18 94" stroke="rgba(74,222,128,0.55)" strokeWidth="0.9" fill="none" strokeLinecap="round" animate={{ opacity: [0.4, 1, 0.4] }} transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut", delay: 1.0 }} />
+                              <motion.path d="M82 94 L94 94 L94 82" stroke="rgba(74,222,128,0.55)" strokeWidth="0.9" fill="none" strokeLinecap="round" animate={{ opacity: [0.4, 1, 0.4] }} transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut", delay: 1.5 }} />
+                            </svg>
+
+                            {/* Ícono PDF con anillo orbital verde */}
+                            <div style={{ position: "relative", zIndex: 2, display: "flex", justifyContent: "center" }}>
+                              <svg width="90" height="90" viewBox="0 0 90 90" style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)" }}>
                                 <defs>
-                                  <linearGradient id="uploadGrad" x1="0" y1="0" x2="56" y2="56" gradientUnits="userSpaceOnUse">
-                                    <stop stopColor="#60a5fa" />
-                                    <stop offset="1" stopColor="#7c3aed" />
-                                  </linearGradient>
-                                  <linearGradient id="uploadGrad2" x1="0" y1="0" x2="56" y2="56" gradientUnits="userSpaceOnUse">
-                                    <stop stopColor="#93c5fd" />
-                                    <stop offset="1" stopColor="#a78bfa" />
+                                  <linearGradient id="pdfRingGrad" x1="0" y1="0" x2="90" y2="90" gradientUnits="userSpaceOnUse">
+                                    <stop stopColor="#4ade80"/><stop offset="0.5" stopColor="#22c55e"/><stop offset="1" stopColor="#86efac"/>
                                   </linearGradient>
                                 </defs>
-                                <rect width="56" height="56" rx="14" fill="url(#uploadGrad)" opacity="0.15" />
-                                <path
-                                  d="M38.5 34c2.485 0 4.5-2.015 4.5-4.5 0-2.3-1.73-4.2-3.977-4.462A7.5 7.5 0 0 0 21.5 26.5c0 .17.007.338.02.505A5.5 5.5 0 0 0 17.5 32.5 5.5 5.5 0 0 0 23 38h15.5"
-                                  stroke="url(#uploadGrad)"
-                                  strokeWidth="2"
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
+                                <circle cx="45" cy="45" r="38" stroke="rgba(34,197,94,0.08)" strokeWidth="1.2" fill="none" strokeDasharray="3 5"/>
+                                <motion.circle
+                                  cx="45" cy="45" r="38"
+                                  stroke="url(#pdfRingGrad)"
+                                  strokeWidth="2" strokeLinecap="round"
+                                  strokeDasharray="238.8" strokeDashoffset="185"
                                   fill="none"
+                                  animate={{ rotate: 360 }}
+                                  transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                                  style={{ transformOrigin: "45px 45px" }}
                                 />
-                                <motion.g
-                                  animate={{ y: [0, -3, 0] }}
-                                  transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
-                                >
-                                  <path d="M28 44V32" stroke="url(#uploadGrad2)" strokeWidth="2.2" strokeLinecap="round" />
-                                  <path d="M23 37l5-5 5 5" stroke="url(#uploadGrad2)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-                                </motion.g>
                               </svg>
-                            </motion.span>
-                            <p className="drop-text" style={{ position: "relative", zIndex: 1 }}>Arrastra el PDF aquí o haz clic para seleccionar</p>
-                            <p className="drop-hint" style={{ position: "relative", zIndex: 1 }}>Reporte generado por el monitor Syai X1 · Max 20 MB</p>
+                              <div style={{ position: "relative" }}>
+                                <motion.div
+                                  animate={{ boxShadow: ["0 0 0px rgba(34,197,94,0)", "0 0 22px rgba(34,197,94,0.45)", "0 0 0px rgba(34,197,94,0)"] }}
+                                  transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
+                                  style={{ width: 58, height: 58, borderRadius: 15, background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.22)", display: "flex", alignItems: "center", justifyContent: "center" }}
+                                >
+                                  <svg width="28" height="28" viewBox="0 0 26 26" fill="none">
+                                    <path d="M5 4a2 2 0 0 1 2-2h7.5L20 7.5V22a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4z" fill="#ef4444" opacity="0.18" stroke="rgba(239,68,68,0.7)" strokeWidth="1.3"/>
+                                    <path d="M14.5 2v5.5H20" stroke="rgba(239,68,68,0.7)" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+                                    <text x="7.5" y="18.5" fontSize="5.5" fill="#f87171" fontWeight="800" fontFamily="sans-serif">PDF</text>
+                                  </svg>
+                                </motion.div>
+                                <motion.div
+                                  initial={{ scale: 0 }} animate={{ scale: 1 }}
+                                  transition={{ type: "spring", stiffness: 500, damping: 18, delay: 0.2 }}
+                                  style={{ position: "absolute", bottom: -6, right: -6, width: 22, height: 22, borderRadius: "50%", background: "linear-gradient(135deg,#22c55e,#16a34a)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 2px 10px rgba(34,197,94,0.5)" }}
+                                >
+                                  <svg width="10" height="10" viewBox="0 0 9 9" fill="none"><path d="M1.5 4.5l2.2 2.2 3.8-4" stroke="#fff" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                                </motion.div>
+                              </div>
+                            </div>
+
+                            {/* Nombre y tamaño */}
+                            <div style={{ textAlign: "center", position: "relative", zIndex: 2 }}>
+                              <p style={{ margin: 0, fontWeight: 700, fontSize: 13.5, color: "#f1f5f9", maxWidth: 300, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{archivo.name}</p>
+                              <p style={{ margin: "4px 0 0", fontSize: 12, color: "#64748b" }}>
+                                {archivo.size < 1048576 ? (archivo.size / 1024).toFixed(1) + " KB" : (archivo.size / 1048576).toFixed(1) + " MB"} · PDF
+                              </p>
+                            </div>
+
+                            {/* Badge + hint */}
+                            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 5, position: "relative", zIndex: 2 }}>
+                              <motion.span
+                                animate={{ boxShadow: ["0 0 0px rgba(34,197,94,0)", "0 0 14px rgba(34,197,94,0.35)", "0 0 0px rgba(34,197,94,0)"] }}
+                                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                                style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "5px 14px", borderRadius: 20, fontSize: 11, fontWeight: 700, color: "#4ade80", background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.32)" }}
+                              >
+                                <motion.span animate={{ opacity: [1, 0.2, 1] }} transition={{ duration: 1.2, repeat: Infinity }} style={{ width: 5, height: 5, borderRadius: "50%", background: "#4ade80", display: "inline-block" }} />
+                                Listo para analizar
+                              </motion.span>
+                              <p style={{ margin: 0, fontSize: 11, color: "#334155" }}>Clic para cambiar archivo</p>
+                            </div>
+                          </motion.div>
+                        ) : (
+                          <>
+                            {/* Grid de puntos */}
+                            <svg
+                              style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none", zIndex: 0 }}
+                              viewBox="0 0 300 170" preserveAspectRatio="none"
+                            >
+                              {Array.from({ length: 9 }, (_, xi) =>
+                                Array.from({ length: 6 }, (_, yi) => (
+                                  <circle key={`${xi}-${yi}`} cx={xi * 35 + 17} cy={yi * 28 + 14} r="0.75" fill="rgba(99,179,237,0.38)" />
+                                ))
+                              ).flat()}
+                            </svg>
+
+                            {/* Línea de escaneo permanente */}
+                            <motion.div
+                              animate={{ top: ["10%", "90%", "10%"] }}
+                              transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut", repeatDelay: 0.5 }}
+                              style={{
+                                position: "absolute", left: "6%", right: "6%", height: 1.5,
+                                background: "linear-gradient(90deg, transparent, rgba(96,165,250,0.75), rgba(124,58,237,0.75), transparent)",
+                                borderRadius: 2, boxShadow: "0 0 10px rgba(96,165,250,0.5)",
+                                pointerEvents: "none", zIndex: 1,
+                              }}
+                            />
+
+                            {/* Partículas */}
+                            {[[7,18],[88,12],[10,78],[90,72],[48,7],[22,90],[75,85],[60,4]].map(([x,y], i) => (
+                              <motion.div
+                                key={i}
+                                animate={{ opacity: [0.15, 0.85, 0.15], scale: [0.7, 1.4, 0.7] }}
+                                transition={{ duration: 1.6 + i * 0.4, delay: i * 0.28, repeat: Infinity, ease: "easeInOut" }}
+                                style={{
+                                  position: "absolute", left: `${x}%`, top: `${y}%`,
+                                  width: i < 4 ? 2.5 : 1.5, height: i < 4 ? 2.5 : 1.5,
+                                  borderRadius: "50%",
+                                  background: i % 2 === 0 ? "#60a5fa" : "#a78bfa",
+                                  pointerEvents: "none", zIndex: 1,
+                                }}
+                              />
+                            ))}
+
+                            {/* Corchetes de targeting en las 4 esquinas */}
+                            <svg
+                              style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none", zIndex: 1 }}
+                              viewBox="0 0 100 100" preserveAspectRatio="none"
+                            >
+                              <motion.path d="M6 18 L6 6 L18 6" stroke="rgba(99,179,237,0.5)" strokeWidth="0.9" fill="none" strokeLinecap="round" animate={{ opacity: [0.35, 1, 0.35] }} transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }} />
+                              <motion.path d="M82 6 L94 6 L94 18" stroke="rgba(99,179,237,0.5)" strokeWidth="0.9" fill="none" strokeLinecap="round" animate={{ opacity: [0.35, 1, 0.35] }} transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut", delay: 0.6 }} />
+                              <motion.path d="M6 82 L6 94 L18 94" stroke="rgba(99,179,237,0.5)" strokeWidth="0.9" fill="none" strokeLinecap="round" animate={{ opacity: [0.35, 1, 0.35] }} transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut", delay: 1.2 }} />
+                              <motion.path d="M82 94 L94 94 L94 82" stroke="rgba(99,179,237,0.5)" strokeWidth="0.9" fill="none" strokeLinecap="round" animate={{ opacity: [0.35, 1, 0.35] }} transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut", delay: 1.8 }} />
+                            </svg>
+
+                            {/* Ícono central con anillo orbital */}
+                            <div style={{ position: "relative", zIndex: 2, display: "inline-flex", justifyContent: "center", marginBottom: 18 }}>
+                              <svg width="88" height="88" viewBox="0 0 88 88" style={{ position: "absolute", top: -16, left: "50%", transform: "translateX(-50%)" }}>
+                                <defs>
+                                  <linearGradient id="dzRingGrad" x1="0" y1="0" x2="88" y2="88" gradientUnits="userSpaceOnUse">
+                                    <stop stopColor="#60a5fa"/><stop offset="0.5" stopColor="#7c3aed"/><stop offset="1" stopColor="#38bdf8"/>
+                                  </linearGradient>
+                                </defs>
+                                <circle cx="44" cy="44" r="38" stroke="rgba(99,179,237,0.09)" strokeWidth="1.2" fill="none" strokeDasharray="3 5"/>
+                                <motion.circle
+                                  cx="44" cy="44" r="38"
+                                  stroke="url(#dzRingGrad)"
+                                  strokeWidth="1.5" strokeLinecap="round"
+                                  strokeDasharray="238.8" strokeDashoffset="200"
+                                  fill="none"
+                                  animate={{ rotate: 360 }}
+                                  transition={{ duration: 5, repeat: Infinity, ease: "linear" }}
+                                  style={{ transformOrigin: "44px 44px" }}
+                                />
+                              </svg>
+                              <motion.span
+                                className="drop-icon"
+                                animate={{
+                                  y: [0, -7, 0],
+                                  filter: [
+                                    "drop-shadow(0 0 0px #60a5fa)",
+                                    "drop-shadow(0 0 18px #7c3aed) drop-shadow(0 0 30px #60a5fa)",
+                                    "drop-shadow(0 0 0px #60a5fa)",
+                                  ],
+                                }}
+                                transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+                                style={{ display: "inline-block", position: "relative", zIndex: 1 }}
+                              >
+                                <svg width="56" height="56" viewBox="0 0 56 56" fill="none">
+                                  <defs>
+                                    <linearGradient id="uploadGrad" x1="0" y1="0" x2="56" y2="56" gradientUnits="userSpaceOnUse">
+                                      <stop stopColor="#60a5fa" /><stop offset="1" stopColor="#7c3aed" />
+                                    </linearGradient>
+                                    <linearGradient id="uploadGrad2" x1="0" y1="0" x2="56" y2="56" gradientUnits="userSpaceOnUse">
+                                      <stop stopColor="#93c5fd" /><stop offset="1" stopColor="#a78bfa" />
+                                    </linearGradient>
+                                  </defs>
+                                  <rect width="56" height="56" rx="14" fill="url(#uploadGrad)" opacity="0.15" />
+                                  <path
+                                    d="M38.5 34c2.485 0 4.5-2.015 4.5-4.5 0-2.3-1.73-4.2-3.977-4.462A7.5 7.5 0 0 0 21.5 26.5c0 .17.007.338.02.505A5.5 5.5 0 0 0 17.5 32.5 5.5 5.5 0 0 0 23 38h15.5"
+                                    stroke="url(#uploadGrad)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none"
+                                  />
+                                  <motion.g animate={{ y: [0, -3, 0] }} transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}>
+                                    <path d="M28 44V32" stroke="url(#uploadGrad2)" strokeWidth="2.2" strokeLinecap="round" />
+                                    <path d="M23 37l5-5 5 5" stroke="url(#uploadGrad2)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+                                  </motion.g>
+                                </svg>
+                              </motion.span>
+                            </div>
+
+                            {/* Badge + texto */}
+                            <div style={{ position: "relative", zIndex: 2 }}>
+                              <motion.div
+                                animate={{ opacity: [0.6, 1, 0.6] }}
+                                transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
+                                style={{
+                                  display: "inline-flex", alignItems: "center", gap: 6,
+                                  padding: "3px 11px", borderRadius: 20, marginBottom: 10,
+                                  background: "rgba(96,165,250,0.09)",
+                                  border: "1px solid rgba(96,165,250,0.22)",
+                                  fontSize: 10, color: "#63b3ed", fontWeight: 700, letterSpacing: "0.8px",
+                                }}
+                              >
+                                <motion.span
+                                  animate={{ opacity: [1, 0.2, 1] }}
+                                  transition={{ duration: 1, repeat: Infinity }}
+                                  style={{ width: 5, height: 5, borderRadius: "50%", background: "#60a5fa", display: "inline-block" }}
+                                />
+                                LISTO PARA ESCANEAR
+                              </motion.div>
+                              <p style={{ color: "#94a3b8", fontSize: 14, fontWeight: 600, margin: "0 0 5px" }}>
+                                Arrastra el PDF aquí o haz clic
+                              </p>
+                              <p style={{ color: "#334155", fontSize: 12, margin: 0 }}>
+                                Reporte generado por el monitor Syai X1 · Max 20 MB
+                              </p>
+                            </div>
                           </>
                         )}
                       </div>
@@ -708,13 +1121,18 @@ export default function SubirPDF() {
 
                 {!pacienteId && (
                   <div className="drop-zone-locked">
-                    <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-                      <rect width="28" height="28" rx="8" fill="#f1f5f9" />
-                      <path d="M10 13v-2a4 4 0 0 1 8 0v2" stroke="#94a3b8" strokeWidth="1.6" strokeLinecap="round"/>
-                      <rect x="8" y="13" width="12" height="8" rx="2.5" fill="#e2e8f0" stroke="#cbd5e1" strokeWidth="1.2"/>
-                      <circle cx="14" cy="17" r="1.2" fill="#94a3b8"/>
-                    </svg>
-                    <p style={{ color: "#94a3b8", fontSize: 13, margin: "8px 0 0" }}>Selecciona primero un paciente</p>
+                    {[[8,20],[85,14],[12,76],[88,70],[48,7],[22,90]].map(([x,y], i) => (
+                      <motion.div key={i} animate={{ opacity: [0.1, 0.55, 0.1] }} transition={{ duration: 1.8 + i * 0.4, delay: i * 0.3, repeat: Infinity }} style={{ position: "absolute", left: `${x}%`, top: `${y}%`, width: 1.5, height: 1.5, borderRadius: "50%", background: i % 2 === 0 ? "#60a5fa" : "#a78bfa", pointerEvents: "none" }} />
+                    ))}
+                    <div style={{ width: 42, height: 42, borderRadius: 12, background: "rgba(99,179,237,0.06)", border: "1px solid rgba(99,179,237,0.18)", display: "flex", alignItems: "center", justifyContent: "center", position: "relative", zIndex: 1 }}>
+                      <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <path d="M7 9.5v-2a3 3 0 0 1 6 0v2" stroke="rgba(99,179,237,0.5)" strokeWidth="1.5" strokeLinecap="round"/>
+                        <rect x="5" y="9.5" width="10" height="7" rx="2" fill="rgba(99,179,237,0.07)" stroke="rgba(99,179,237,0.25)" strokeWidth="1.2"/>
+                        <circle cx="10" cy="13" r="1" fill="rgba(99,179,237,0.5)"/>
+                      </svg>
+                    </div>
+                    <p style={{ color: "rgba(99,179,237,0.65)", fontSize: 13, margin: "10px 0 3px", fontWeight: 600, position: "relative", zIndex: 1 }}>Selecciona primero un paciente</p>
+                    <p style={{ color: "rgba(99,179,237,0.3)", fontSize: 11, margin: 0, position: "relative", zIndex: 1 }}>Completa el paso 1 para continuar</p>
                   </div>
                 )}
               </div>

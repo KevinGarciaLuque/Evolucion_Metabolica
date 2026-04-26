@@ -611,53 +611,107 @@ body {
 }
 
 /* ─── Drop zone PDF ──────────────────────────────────────────────────────── */
-.upload-container { max-width: 620px; }
+.upload-container {
+  max-width: 620px;
+  position: relative;
+}
 
 /* ─── AI Border animado ─────────────────────────────────────────────────── */
 .ai-card-wrapper {
   position: relative;
   border-radius: var(--radius);
   margin-bottom: 20px;
+  z-index: 1;
+  animation: ai-aura-pulse 2.8s ease-in-out infinite;
 }
 
-/* Div hermano con overflow:hidden propio → el gradient giratorio queda
-   recortado dentro de él sin afectar al dropdown del card */
-.ai-spin-border {
+.ai-spin-border { display: none; }
+.ai-spin-border::before, .ai-spin-border::after { display: none; }
+
+@property --border-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@property --border-angle-2 {
+  syntax: '<angle>';
+  initial-value: 180deg;
+  inherits: false;
+}
+
+@keyframes ai-border-rotate {
+  to { --border-angle: 360deg; }
+}
+
+@keyframes ai-border-rotate-2 {
+  to { --border-angle-2: 540deg; }
+}
+
+@keyframes ai-aura-pulse {
+  0%, 100% {
+    filter: drop-shadow(0 0 3px rgba(124, 58, 237, 0.25))
+            drop-shadow(0 0 8px rgba(56, 189, 248, 0.15));
+  }
+  50% {
+    filter: drop-shadow(0 0 7px rgba(124, 58, 237, 0.55))
+            drop-shadow(0 0 18px rgba(56, 189, 248, 0.35));
+  }
+}
+
+/* Destello principal — recorre el borde cada 3s */
+.ai-card-wrapper::before {
+  content: '';
   position: absolute;
-  inset: -2px;
-  border-radius: calc(var(--radius) + 2px);
-  overflow: hidden;
+  inset: -2.5px;
+  border-radius: calc(var(--radius) + 2.5px);
+  background: conic-gradient(
+    from var(--border-angle),
+    rgba(226, 232, 240, 0.5)   0deg,
+    rgba(226, 232, 240, 0.5)  50deg,
+    rgba(96,  165, 250, 0.5)  68deg,
+    rgba(124,  58, 237, 1)    82deg,
+    rgba(56,  189, 248, 1)    94deg,
+    rgba(167, 139, 250, 0.5) 110deg,
+    rgba(226, 232, 240, 0.5) 132deg,
+    rgba(226, 232, 240, 0.5) 360deg
+  );
   z-index: 0;
+  animation: ai-border-rotate 3s linear infinite;
   pointer-events: none;
 }
 
-.ai-spin-border::before {
+/* Destello secundario — arco más corto, velocidad y dirección distintas → efecto "datos procesándose" */
+.ai-card-wrapper::after {
   content: '';
   position: absolute;
-  /* 300% para que la diagonal siempre cubra el borde al rotar */
-  inset: -100%;
+  inset: -2.5px;
+  border-radius: calc(var(--radius) + 2.5px);
   background: conic-gradient(
-    from 0deg,
-    transparent 0deg,
-    transparent 155deg,
-    #a78bfa 168deg,
-    #7c3aed 176deg,
-    #60a5fa 184deg,
-    #38bdf8 190deg,
-    transparent 205deg,
-    transparent 360deg
+    from var(--border-angle-2),
+    transparent                0deg,
+    transparent               165deg,
+    rgba(56,  189, 248, 0.18) 172deg,
+    rgba(167, 139, 250, 0.65) 179deg,
+    rgba(56,  189, 248, 0.18) 186deg,
+    transparent               193deg,
+    transparent               360deg
   );
-  animation: ai-border-spin 3s linear infinite;
+  z-index: 0;
+  animation: ai-border-rotate-2 1.9s linear infinite reverse;
+  pointer-events: none;
+  mix-blend-mode: screen;
 }
 
 .ai-card-wrapper > .card {
   position: relative;
   z-index: 1;
   margin-bottom: 0;
-}
-
-@keyframes ai-border-spin {
-  to { transform: rotate(360deg); }
+  background: #fff !important;
+  border: none !important;
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.09),
+    0 2px 8px rgba(0, 0, 0, 0.06) !important;
 }
 
 /* ─── Stepper pasos ──────────────────────────────────────────────────────── */
@@ -749,48 +803,48 @@ body {
 }
 
 .drop-zone-locked {
-  border: 2px dashed #e2e8f0;
+  position: relative;
+  border: 1.5px dashed rgba(99,179,237,0.18);
   border-radius: var(--radius);
-  padding: 28px 24px;
+  padding: 32px 24px;
   text-align: center;
-  background: #f8fafc;
+  background: linear-gradient(160deg, #060b1a 0%, #0c1630 55%, #080f24 100%);
   cursor: not-allowed;
   display: flex;
   flex-direction: column;
   align-items: center;
   user-select: none;
+  overflow: hidden;
 }
 
 .drop-zone {
   position: relative;
-  border: 2px dashed var(--gray-200);
+  border: 1.5px solid rgba(99,179,237,0.2);
   border-radius: var(--radius);
-  padding: 48px 24px;
+  padding: 48px 24px 38px;
   text-align: center;
   cursor: pointer;
-  transition: border-color 0.3s, background 0.3s, box-shadow 0.3s;
+  transition: border-color 0.4s, box-shadow 0.4s;
   margin-bottom: 20px;
-  background: var(--gray-50);
+  background: linear-gradient(160deg, #060b1a 0%, #0c1630 55%, #080f24 100%);
   overflow: hidden;
+  box-shadow: inset 0 0 50px rgba(99,179,237,0.03), 0 2px 16px rgba(0,0,0,0.1);
 }
 
 .drop-zone:hover, .drop-zone.arrastrado {
-  border-color: transparent;
-  background: linear-gradient(#fff, #fff) padding-box,
-              linear-gradient(135deg, #60a5fa, #7c3aed, #38bdf8) border-box;
-  border: 2px solid transparent;
-  box-shadow: 0 0 0 1px rgba(124,58,237,0.15), inset 0 0 30px rgba(96,165,250,0.06);
+  border-color: rgba(96,165,250,0.52);
+  box-shadow: inset 0 0 50px rgba(99,102,241,0.07), 0 0 0 3px rgba(124,58,237,0.1);
 }
 
 .drop-zone.hovering-ai {
-  background: linear-gradient(#f8f9ff, #f8f9ff) padding-box,
-              linear-gradient(135deg, #60a5fa, #7c3aed, #38bdf8) border-box;
-  border: 2px solid transparent;
+  border-color: rgba(124,58,237,0.55);
+  box-shadow: inset 0 0 60px rgba(124,58,237,0.08), 0 0 0 3px rgba(124,58,237,0.12);
 }
 
 .drop-zone.con-archivo {
-  border-color: var(--green);
-  background: var(--green-lt);
+  border-color: rgba(34,197,94,0.42);
+  background: linear-gradient(160deg, #031510 0%, #061c14 55%, #040e0b 100%);
+  box-shadow: inset 0 0 40px rgba(34,197,94,0.05), 0 0 0 2px rgba(34,197,94,0.08);
 }
 
 .drop-icon { font-size: 2.5rem; display: block; margin-bottom: 12px; }
