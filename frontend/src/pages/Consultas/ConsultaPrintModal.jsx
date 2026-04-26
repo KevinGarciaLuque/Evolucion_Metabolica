@@ -134,7 +134,7 @@ function generarHTMLImpresion(consulta, paciente, doctor) {
       <div class="doc-nombre">${doctor?.nombre || "—"}</div>
       <div class="doc-email">${doctor?.email || ""}</div>
       <div class="doc-rol">${doctor?.rol === "admin" ? "Administrador" : "Médico"}</div>
-      <div style="font-size:11px;color:#64748b;margin-top:3px">Fecha de emisión: ${fmtFecha(new Date().toISOString())}</div>
+      <div style="font-size:11px;color:#64748b;margin-top:3px">Fecha de emisión: ${fmtFecha((() => { const n = new Date(); return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}`; })())}</div>
     </div>
   </div>
 
@@ -408,7 +408,7 @@ function PreviewConsulta({ consulta, paciente, doctor }) {
             {doctor?.rol === "admin" ? "Administrador" : "Médico"}
           </div>
           <div style={{ fontSize: "0.72rem", color: "#94a3b8", marginTop: 3 }}>
-            Emitido: {fmtFecha(new Date().toISOString())}
+            Emitido: {fmtFecha((() => { const n = new Date(); return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}`; })())}
           </div>
         </div>
       </div>

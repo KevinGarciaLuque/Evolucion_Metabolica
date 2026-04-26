@@ -15,6 +15,9 @@ import SemaforoISPAD from "../../components/SemaforoISPAD";
 import { useAuth } from "../../context/AuthContext";
 import { calcularZScores, calcularEdadMeses } from "../../utils/who_zscore";
 
+// ─── Fecha local (evita desfase UTC) ────────────────────────────────────────
+function fechaHoy() { const n = new Date(); return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,"0")}-${String(n.getDate()).padStart(2,"0")}`; }
+
 // ─── Colores por clasificación ──────────────────────────────────────────────
 const COLORS_CLASIF = { OPTIMO: "#16a34a", MODERADO: "#d97706", ALTO_RIESGO: "#dc2626" };
 
@@ -188,7 +191,7 @@ export default function PacienteDetalle() {
   function abrirNuevaInsulina() {
     // Pre-poblar con la insulina actual del paciente
     setFormInsulina({
-      fecha: new Date().toISOString().split("T")[0],
+      fecha: fechaHoy(),
       insulina_prolongada: paciente.tipo_insulina  || "",
       insulina_corta:      paciente.tipo_insulina_2 || "",
       dosis_prolongada: "", dosis_corta: "",
@@ -247,7 +250,7 @@ export default function PacienteDetalle() {
   // ── Alimentación helpers ──────────────────────────────────────────────────
   function abrirNuevaAlimentacion() {
     setFormAlimentacion({
-      fecha: new Date().toISOString().split("T")[0],
+      fecha: fechaHoy(),
       tipo_dieta: "", calorias_dia: "", carbohidratos_g: "",
       proteinas_g: "", grasas_g: "", fibra_g: "",
       distribucion: "", restricciones: "", observaciones: "", elaborado_por: "",
@@ -294,7 +297,7 @@ export default function PacienteDetalle() {
   function abrirNuevoCrec() {
     const edadMeses = calcularEdadMeses(paciente?.fecha_nacimiento, null);
     setFormCrec({
-      fecha: new Date().toISOString().split("T")[0],
+      fecha: fechaHoy(),
       peso_kg: "", talla_cm: "", pc_cm: "",
       edad_meses: edadMeses ?? "",
       observaciones: "",

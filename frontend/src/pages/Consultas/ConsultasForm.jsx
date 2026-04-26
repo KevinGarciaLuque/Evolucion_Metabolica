@@ -5,8 +5,9 @@ import api from "../../api/axios";
 import Layout from "../../components/Layout";
 import { calcularZScores, calcularEdadMeses } from "../../utils/who_zscore";
 
+const hoy = () => { const n = new Date(); return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,"0")}-${String(n.getDate()).padStart(2,"0")}`; };
 const VACÍO = {
-  paciente_id: "", fecha: new Date().toISOString().split("T")[0],
+  paciente_id: "", fecha: hoy(),
   tipo_consulta: "Presencial",
   peso: "", talla: "", glucosa_ayunas: "", hba1c: "",
   tension_arterial: "", medicamentos: "", observaciones: "",
