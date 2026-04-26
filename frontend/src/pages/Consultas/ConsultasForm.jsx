@@ -344,7 +344,7 @@ export default function ConsultasForm() {
             </div>
 
             <div className="form-group">
-              <label>Tensión arterial</label>
+              <label>Presión arterial</label>
               <input name="tension_arterial" placeholder="Ej: 110/70 mmHg" value={form.tension_arterial} onChange={cambiar} />
             </div>
 
