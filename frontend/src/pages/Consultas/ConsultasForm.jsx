@@ -11,7 +11,16 @@ const VACÍO = {
   peso: "", talla: "", glucosa_ayunas: "", hba1c: "",
   tension_arterial: "", medicamentos: "", observaciones: "",
   plan_tratamiento: "", proxima_cita: "",
+  tanner_mama: "", tanner_genitales: "", tanner_vello_pubico: "", tanner_observaciones: "",
 };
+
+const TANNER_OPCIONES = [
+  { value: "1", label: "Estadio 1 — Prepuberal" },
+  { value: "2", label: "Estadio 2 — Inicio de pubertad" },
+  { value: "3", label: "Estadio 3 — Pubertad media" },
+  { value: "4", label: "Estadio 4 — Pubertad avanzada" },
+  { value: "5", label: "Estadio 5 — Desarrollo adulto" },
+];
 
 export default function ConsultasForm() {
   const { id } = useParams();
@@ -255,6 +264,128 @@ export default function ConsultasForm() {
               <label>Próxima cita</label>
               <input type="date" name="proxima_cita" value={form.proxima_cita} onChange={cambiar} />
             </div>
+
+            {/* ── Estadios de Tanner ────────────────────────────────── */}
+            {form.paciente_id && (
+              <div style={{ gridColumn: "1 / -1" }}>
+                <div style={{
+                  background: "#faf5ff",
+                  border: "1.5px solid #e9d5ff",
+                  borderRadius: 12, padding: "14px 18px",
+                }}>
+                  {/* Encabezado */}
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                    <span style={{ fontSize: "1rem" }}>🔬</span>
+                    <div>
+                      <div style={{ fontWeight: 600, color: "#1e293b", fontSize: "0.92rem" }}>
+                        Estadios de Tanner
+                      </div>
+                      <div style={{ fontSize: "0.74rem", color: "#64748b", marginTop: 1 }}>
+                        Clasificación del desarrollo puberal&nbsp;
+                        <span style={{
+                          background: pacienteSexo === "F" ? "#fce7f3" : "#dbeafe",
+                          color: pacienteSexo === "F" ? "#9d174d" : "#1e40af",
+                          borderRadius: 6, padding: "1px 7px", fontSize: "0.7rem", fontWeight: 700,
+                        }}>
+                          {pacienteSexo === "F" ? "♀ Niña" : "♂ Niño"}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 12 }}>
+
+                    {/* Campo específico por sexo */}
+                    {pacienteSexo === "F" ? (
+                      <div>
+                        <label style={{ display: "block", fontSize: "0.78rem", fontWeight: 600, color: "#374151", marginBottom: 4 }}>
+                          MAMA (M) — DESARROLLO MAMARIO
+                        </label>
+                        <select
+                          name="tanner_mama"
+                          value={form.tanner_mama}
+                          onChange={cambiar}
+                          style={{ width: "100%", boxSizing: "border-box", padding: "0.6rem 0.8rem", border: "1.5px solid #e9d5ff", borderRadius: 8, fontSize: "0.88rem", background: "#fff" }}
+                        >
+                          <option value="">— Sin registro —</option>
+                          {TANNER_OPCIONES.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                        </select>
+                      </div>
+                    ) : (
+                      <div>
+                        <label style={{ display: "block", fontSize: "0.78rem", fontWeight: 600, color: "#374151", marginBottom: 4 }}>
+                          GENITALES (G) — DESARROLLO GENITAL
+                        </label>
+                        <select
+                          name="tanner_genitales"
+                          value={form.tanner_genitales}
+                          onChange={cambiar}
+                          style={{ width: "100%", boxSizing: "border-box", padding: "0.6rem 0.8rem", border: "1.5px solid #bfdbfe", borderRadius: 8, fontSize: "0.88rem", background: "#fff" }}
+                        >
+                          <option value="">— Sin registro —</option>
+                          {TANNER_OPCIONES.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                        </select>
+                      </div>
+                    )}
+
+                    {/* Vello púbico — ambos sexos */}
+                    <div>
+                      <label style={{ display: "block", fontSize: "0.78rem", fontWeight: 600, color: "#374151", marginBottom: 4 }}>
+                        VELLO PÚBICO (PH)
+                      </label>
+                      <select
+                        name="tanner_vello_pubico"
+                        value={form.tanner_vello_pubico}
+                        onChange={cambiar}
+                        style={{ width: "100%", boxSizing: "border-box", padding: "0.6rem 0.8rem", border: `1.5px solid ${pacienteSexo === "F" ? "#e9d5ff" : "#bfdbfe"}`, borderRadius: 8, fontSize: "0.88rem", background: "#fff" }}
+                      >
+                        <option value="">— Sin registro —</option>
+                        {TANNER_OPCIONES.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                      </select>
+                    </div>
+
+                    {/* Campo de observaciones Tanner */}
+                    <div style={{ gridColumn: "1 / -1" }}>
+                      <label style={{ display: "block", fontSize: "0.78rem", fontWeight: 600, color: "#374151", marginBottom: 4 }}>
+                        OBSERVACIONES
+                      </label>
+                      <textarea
+                        name="tanner_observaciones"
+                        value={form.tanner_observaciones}
+                        onChange={cambiar}
+                        rows={2}
+                        placeholder="Notas sobre el desarrollo puberal, hallazgos relevantes..."
+                        style={{ width: "100%", boxSizing: "border-box", padding: "0.6rem 0.8rem", border: `1.5px solid ${pacienteSexo === "F" ? "#e9d5ff" : "#bfdbfe"}`, borderRadius: 8, fontSize: "0.88rem", resize: "vertical", fontFamily: "inherit" }}
+                      />
+                    </div>
+
+                    {/* Resumen visual si hay estadios registrados */}
+                    {((pacienteSexo === "F" ? form.tanner_mama : form.tanner_genitales) || form.tanner_vello_pubico) && (
+                      <div style={{ gridColumn: "1 / -1", display: "flex", gap: 10, flexWrap: "wrap", marginTop: 4 }}>
+                        {pacienteSexo === "F" && form.tanner_mama && (
+                          <div style={{ background: "#fff", border: "1.5px solid #e9d5ff", borderRadius: 8, padding: "6px 12px", display: "flex", alignItems: "center", gap: 6 }}>
+                            <span style={{ fontSize: "0.7rem", color: "#94a3b8" }}>Mama</span>
+                            <span style={{ fontWeight: 700, color: "#9333ea", fontSize: "1.1rem" }}>M{form.tanner_mama}</span>
+                          </div>
+                        )}
+                        {pacienteSexo !== "F" && form.tanner_genitales && (
+                          <div style={{ background: "#fff", border: "1.5px solid #bfdbfe", borderRadius: 8, padding: "6px 12px", display: "flex", alignItems: "center", gap: 6 }}>
+                            <span style={{ fontSize: "0.7rem", color: "#94a3b8" }}>Genitales</span>
+                            <span style={{ fontWeight: 700, color: "#2563eb", fontSize: "1.1rem" }}>G{form.tanner_genitales}</span>
+                          </div>
+                        )}
+                        {form.tanner_vello_pubico && (
+                          <div style={{ background: "#fff", border: "1.5px solid #d1d5db", borderRadius: 8, padding: "6px 12px", display: "flex", alignItems: "center", gap: 6 }}>
+                            <span style={{ fontSize: "0.7rem", color: "#94a3b8" }}>Vello púbico</span>
+                            <span style={{ fontWeight: 700, color: "#374151", fontSize: "1.1rem" }}>PH{form.tanner_vello_pubico}</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* ── Switch curva de crecimiento ───────────────────────── */}
             {!esEdicion && (

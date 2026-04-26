@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { FiPrinter } from "react-icons/fi";
 import api from "../../api/axios";
 import Layout from "../../components/Layout";
+import ConsultaPrintModal from "./ConsultaPrintModal";
 
 const TIPO_BADGE = {
   Presencial:   "badge-green",
@@ -19,6 +21,7 @@ export default function ConsultasList() {
   const navigate = useNavigate();
   const [entradas, setEntradas] = useState([]);
   const [cargando, setCargando] = useState(true);
+  const [printId, setPrintId] = useState(null);
   const [filtros, setFiltros] = useState({
     paciente_nombre: "", fecha_desde: "", fecha_hasta: hoy(),
   });
@@ -46,6 +49,9 @@ export default function ConsultasList() {
 
   return (
     <Layout>
+      {printId && (
+        <ConsultaPrintModal consultaId={printId} onClose={() => setPrintId(null)} />
+      )}
       <div className="page-header">
         <div>
           <h1>Consultas</h1>
@@ -126,6 +132,14 @@ export default function ConsultasList() {
                     <td className="hide-mobile">{e.proxima_cita?.split("T")[0] || "—"}</td>
                     <td>
                       <div className="acciones">
+                        <button
+                          className="btn btn-sm btn-outline"
+                          title="Imprimir consulta"
+                          onClick={() => setPrintId(e.id)}
+                          style={{ display: "flex", alignItems: "center", gap: 4 }}
+                        >
+                          <FiPrinter size={13} />
+                        </button>
                         <button
                           className="btn btn-sm btn-outline"
                           onClick={() => navigate(`/consultas/${e.id}/editar`)}

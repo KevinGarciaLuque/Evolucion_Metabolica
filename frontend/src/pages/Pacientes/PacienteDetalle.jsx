@@ -2,12 +2,13 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import { useParams, Link, useNavigate, useLocation } from "react-router-dom";
-import { FiTrash2, FiEdit2, FiEye, FiArrowLeft, FiUpload, FiEdit3, FiPlus, FiActivity, FiDroplet, FiBookOpen, FiUser, FiBarChart2, FiSun, FiZap, FiClipboard } from "react-icons/fi";
+import { FiTrash2, FiEdit2, FiEye, FiArrowLeft, FiUpload, FiEdit3, FiPlus, FiActivity, FiDroplet, FiBookOpen, FiUser, FiBarChart2, FiSun, FiZap, FiClipboard, FiPrinter } from "react-icons/fi";
 import { IoLogoWhatsapp } from "react-icons/io";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Legend, BarChart, Bar, Cell, ReferenceLine,
 } from "recharts";
+import ConsultaPrintModal from "../Consultas/ConsultaPrintModal";
 import api from "../../api/axios";
 import Layout from "../../components/Layout";
 import SemaforoISPAD from "../../components/SemaforoISPAD";
@@ -91,6 +92,7 @@ export default function PacienteDetalle() {
 
   // ── Consultas ─────────────────────────────────────────────────────────────
   const [consultas, setConsultas] = useState([]);
+  const [printConsultaId, setPrintConsultaId] = useState(null);
 
   // ── Crecimiento ───────────────────────────────────────────────────────────
   const [crecimiento, setCrecimiento] = useState([]);
@@ -1175,6 +1177,9 @@ export default function PacienteDetalle() {
         {/* ── TAB: ALIMENTACIÓN ─────────────────────────────────────────── */}
         {tabActiva === "consultas" && (
           <div className="card">
+            {printConsultaId && (
+              <ConsultaPrintModal consultaId={printConsultaId} onClose={() => setPrintConsultaId(null)} />
+            )}
             <div className="card-header-row">
               <h3 style={{ margin: 0 }}>📋 Historial de Consultas ({consultas.length})</h3>
               <Link
@@ -1209,6 +1214,14 @@ export default function PacienteDetalle() {
                       <td className="hide-mobile">{c.proxima_cita?.split("T")[0] || "—"}</td>
                       <td>
                         <div style={{ display: "flex", gap: 4 }}>
+                          <button
+                            onClick={() => setPrintConsultaId(c.id)}
+                            className="btn btn-sm btn-outline"
+                            title="Imprimir consulta"
+                            style={{ display: "flex", alignItems: "center", gap: 4 }}
+                          >
+                            <FiPrinter size={13} />
+                          </button>
                           <button
                             onClick={() => navigate(`/consultas/${c.id}/editar`)}
                             className="btn btn-sm btn-outline"

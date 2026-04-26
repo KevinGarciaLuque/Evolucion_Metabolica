@@ -50,6 +50,7 @@ export async function crear(req, res) {
   const {
     paciente_id, fecha, tipo_consulta, peso, talla, glucosa_ayunas,
     hba1c, tension_arterial, medicamentos, observaciones, plan_tratamiento, proxima_cita,
+    tanner_mama, tanner_genitales, tanner_vello_pubico, tanner_observaciones,
   } = req.body;
 
   if (!paciente_id || !fecha)
@@ -59,13 +60,16 @@ export async function crear(req, res) {
     const [result] = await pool.query(
       `INSERT INTO consultas
         (paciente_id, fecha, tipo_consulta, peso, talla, glucosa_ayunas,
-         hba1c, tension_arterial, medicamentos, observaciones, plan_tratamiento, proxima_cita, usuario_id)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+         hba1c, tension_arterial, medicamentos, observaciones, plan_tratamiento, proxima_cita,
+         tanner_mama, tanner_genitales, tanner_vello_pubico, tanner_observaciones, usuario_id)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         paciente_id, fecha, tipo_consulta || "Presencial",
         peso || null, talla || null, glucosa_ayunas || null,
         hba1c || null, tension_arterial || null, medicamentos || null,
         observaciones || null, plan_tratamiento || null, proxima_cita || null,
+        tanner_mama || null, tanner_genitales || null, tanner_vello_pubico || null,
+        tanner_observaciones || null,
         req.usuario?.id || null,
       ]
     );    auditarAccion(pool, req, { accion: "crear_bitacora", entidad: "bitacora", entidad_id: result.insertId, descripcion: `Nueva entrada bitácora paciente ID ${paciente_id}` });    res.status(201).json({ id: result.insertId, mensaje: "Entrada registrada correctamente" });
@@ -80,6 +84,7 @@ export async function actualizar(req, res) {
   const {
     fecha, tipo_consulta, peso, talla, glucosa_ayunas, hba1c,
     tension_arterial, medicamentos, observaciones, plan_tratamiento, proxima_cita,
+    tanner_mama, tanner_genitales, tanner_vello_pubico, tanner_observaciones,
   } = req.body;
 
   try {
@@ -87,13 +92,16 @@ export async function actualizar(req, res) {
       `UPDATE consultas SET
         fecha = ?, tipo_consulta = ?, peso = ?, talla = ?, glucosa_ayunas = ?,
         hba1c = ?, tension_arterial = ?, medicamentos = ?, observaciones = ?,
-        plan_tratamiento = ?, proxima_cita = ?
+        plan_tratamiento = ?, proxima_cita = ?,
+        tanner_mama = ?, tanner_genitales = ?, tanner_vello_pubico = ?, tanner_observaciones = ?
        WHERE id = ?`,
       [
         fecha, tipo_consulta || "Presencial",
         peso || null, talla || null, glucosa_ayunas || null,
         hba1c || null, tension_arterial || null, medicamentos || null,
         observaciones || null, plan_tratamiento || null, proxima_cita || null,
+        tanner_mama || null, tanner_genitales || null, tanner_vello_pubico || null,
+        tanner_observaciones || null,
         req.params.id,
       ]
     );
