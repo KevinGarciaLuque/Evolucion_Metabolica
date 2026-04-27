@@ -464,7 +464,7 @@ export default function PacienteDetalle() {
     TIR:   Number(a.tir)  || 0,
     TAR:   Number(a.tar)  || 0,
     TBR:   Number(a.tbr)  || 0,
-    GMI:   Number(a.gmi)  || 0,
+    GMI:   a.gmi != null ? Number(a.gmi) : null,
     CV:    Number(a.cv)   || 0,
     TA:    Number(a.tiempo_activo) || 0,
     GRI:   Number(a.gri)  || 0,
@@ -901,7 +901,7 @@ export default function PacienteDetalle() {
                     <p style={{ fontSize: "0.78rem", color: "#64748b", marginBottom: 8 }}>
                       HbA1c estimada por sensor (GMI) vs real por laboratorio
                     </p>
-                    {chartData.some(d => d.hba1c_post != null && d.hba1c_post > 0) ? (
+                    {chartData.some(d => (d.GMI != null && d.GMI > 0) || (d.hba1c_post != null && d.hba1c_post > 0)) ? (
                       <ResponsiveContainer width="100%" height={isMobile ? 165 : 200}>
                         <BarChart data={chartData} margin={{ top: 5, right: isMobile ? 4 : 20, left: isMobile ? -18 : -20, bottom: 5 }}>
                           <CartesianGrid strokeDasharray="3 3" vertical={false} />

@@ -94,6 +94,7 @@ export async function crear(req, res) {
 
 export async function actualizar(req, res) {
   const {
+    numero_registro,
     fecha, fecha_colocacion, tir, tar, tar_muy_alto, tar_alto,
     tbr, tbr_bajo, tbr_muy_bajo, gmi, cv, tiempo_activo,
     glucosa_promedio, gri, eventos_hipoglucemia, duracion_hipoglucemia,
@@ -112,6 +113,7 @@ export async function actualizar(req, res) {
   try {
     await pool.query(
       `UPDATE analisis SET
+        numero_registro=?,
         fecha=?, fecha_colocacion=?, tir=?, tar=?, tar_muy_alto=?, tar_alto=?,
         tbr=?, tbr_bajo=?, tbr_muy_bajo=?, gmi=?, cv=?, tiempo_activo=?,
         glucosa_promedio=?, gri=?, eventos_hipoglucemia=?, duracion_hipoglucemia=?,
@@ -120,6 +122,7 @@ export async function actualizar(req, res) {
         limitacion_economica=?, calidad_vida=?, comentarios=?
        WHERE id=?`,
       [
+        numero_registro || null,
         fecha, fecha_colocacion || null,
         tir, tar, tar_muy_alto || null, tar_alto || null,
         tbr, tbr_bajo || null, tbr_muy_bajo || null,
@@ -133,7 +136,8 @@ export async function actualizar(req, res) {
     );
     res.json({ clasificacion, mensaje: "Análisis actualizado" });
   } catch (err) {
-    res.status(500).json({ error: "Error al actualizar análisis" });
+    console.error("Error al actualizar análisis:", err);
+    res.status(500).json({ error: "Error al actualizar análisis", detalle: err.message });
   }
 }
 
