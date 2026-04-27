@@ -52,17 +52,23 @@ export async function crear(req, res) {
   );
 
   try {
+    const [[{ total }]] = await pool.query(
+      "SELECT COUNT(*) AS total FROM analisis WHERE paciente_id = ?",
+      [paciente_id]
+    );
+    const numero_registro = total + 1;
+
     const [result] = await pool.query(
       `INSERT INTO analisis
-        (paciente_id, fecha, fecha_colocacion, tir, tar, tar_muy_alto, tar_alto,
+        (paciente_id, numero_registro, fecha, fecha_colocacion, tir, tar, tar_muy_alto, tar_alto,
          tbr, tbr_bajo, tbr_muy_bajo, gmi, cv, tiempo_activo, glucosa_promedio, gri,
          eventos_hipoglucemia, duracion_hipoglucemia, clasificacion, archivo_pdf,
          dosis_insulina_post, se_modifico_dosis, dosis_modificada, hba1c_post_mcg,
          limitacion_internet, limitacion_alergias, limitacion_economica,
          calidad_vida, comentarios)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
-        paciente_id, fecha, fecha_colocacion || null,
+        paciente_id, numero_registro, fecha, fecha_colocacion || null,
         tir, tar, tar_muy_alto || null, tar_alto || null,
         tbr, tbr_bajo || null, tbr_muy_bajo || null,
         gmi, cv, tiempo_activo, glucosa_promedio, gri,

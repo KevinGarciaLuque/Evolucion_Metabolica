@@ -66,14 +66,20 @@ export async function confirmarAnalisis(req, res) {
   );
 
   try {
+    const [[{ total }]] = await pool.query(
+      "SELECT COUNT(*) AS total FROM analisis WHERE paciente_id = ?",
+      [paciente_id]
+    );
+    const numero_registro = total + 1;
+
     const [result] = await pool.query(
       `INSERT INTO analisis
-        (paciente_id, fecha, tir, tar, tar_muy_alto, tar_alto, tbr, tbr_bajo, tbr_muy_bajo,
+        (paciente_id, numero_registro, fecha, tir, tar, tar_muy_alto, tar_alto, tbr, tbr_bajo, tbr_muy_bajo,
          gmi, cv, tiempo_activo, glucosa_promedio, gri,
          eventos_hipoglucemia, duracion_hipoglucemia, clasificacion, archivo_pdf)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
-        paciente_id, fecha, tir, tar,
+        paciente_id, numero_registro, fecha, tir, tar,
         tar_muy_alto ?? null, tar_alto ?? null,
         tbr, tbr_bajo ?? null, tbr_muy_bajo ?? null,
         gmi, cv, tiempo_activo, glucosa_promedio, gri,
