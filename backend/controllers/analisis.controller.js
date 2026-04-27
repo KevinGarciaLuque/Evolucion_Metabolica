@@ -110,6 +110,9 @@ export async function actualizar(req, res) {
     gmi ? parseFloat(gmi) : null
   );
 
+  const fechaLimpia           = fecha           ? fecha.split("T")[0]           : null;
+  const fechaColocacionLimpia = fecha_colocacion ? fecha_colocacion.split("T")[0] : null;
+
   try {
     await pool.query(
       `UPDATE analisis SET
@@ -123,7 +126,7 @@ export async function actualizar(req, res) {
        WHERE id=?`,
       [
         numero_registro || null,
-        fecha, fecha_colocacion || null,
+        fechaLimpia, fechaColocacionLimpia,
         tir, tar, tar_muy_alto || null, tar_alto || null,
         tbr, tbr_bajo || null, tbr_muy_bajo || null,
         gmi, cv, tiempo_activo, glucosa_promedio, gri,
