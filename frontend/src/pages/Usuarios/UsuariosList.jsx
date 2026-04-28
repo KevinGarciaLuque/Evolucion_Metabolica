@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import api from "../../api/axios";
 import Layout from "../../components/Layout";
 import { useAuth } from "../../context/AuthContext";
+import { FiTrash2 } from "react-icons/fi";
+import ConfirmModal from "../../components/ConfirmModal";
 
 const ROL_BADGE = {
   admin:     "badge-purple",
@@ -25,6 +27,7 @@ export default function UsuariosList() {
   const [cargando, setCargando] = useState(true);
   const [error, setError]       = useState(null);
   const [buscar, setBuscar]     = useState("");
+  const [confirmEliminar, setConfirmEliminar] = useState(null); // { id, nombre }
 
   useEffect(() => {
     setCargando(true);
@@ -40,10 +43,10 @@ export default function UsuariosList() {
   }, []);
 
   async function eliminar(id, nombre) {
-    if (!confirm(`¿Desactivar al usuario "${nombre}"?`)) return;
     try {
       await api.delete(`/usuarios/${id}`);
       setUsuarios((prev) => prev.map((u) => u.id === id ? { ...u, estado: 0 } : u));
+      setConfirmEliminar(null);
     } catch (err) {
       alert(err.response?.data?.error || "Error al eliminar usuario");
     }
@@ -56,6 +59,15 @@ export default function UsuariosList() {
 
   return (
     <Layout>
+      {confirmEliminar && (
+        <ConfirmModal
+          mensaje={`¿Desactivar al usuario "${confirmEliminar.nombre}"?`}
+          detalle="El usuario no podrá acceder al sistema. Puedes reactivarlo editando el perfil."
+          onConfirm={() => eliminar(confirmEliminar.id, confirmEliminar.nombre)}
+          onCancel={() => setConfirmEliminar(null)}
+          labelOk="Desactivar"
+        />
+      )}
       <div className="page-header">
         <div>
           <h1>Usuarios</h1>
@@ -135,10 +147,10 @@ export default function UsuariosList() {
                         {u.id !== yo?.id && (
                           <button
                             className="btn btn-sm btn-danger"
-                            onClick={() => eliminar(u.id, u.nombre)}
-                          >
-                            Eliminar
-                          </button>
+                            onClick={() => setConfirmEliminar({ id: u.id, nombre: u.nombre })}
+                            title="Eliminar usuario"
+                            style={{ display: "flex", alignItems: "center" }}
+                          ><FiTrash2 size={14} /></button>
                         )}
                       </div>
                     </td>

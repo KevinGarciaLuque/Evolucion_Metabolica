@@ -2,13 +2,14 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import { useParams, Link, useNavigate, useLocation } from "react-router-dom";
-import { FiTrash2, FiEdit2, FiEye, FiArrowLeft, FiUpload, FiEdit3, FiPlus, FiActivity, FiDroplet, FiBookOpen, FiUser, FiBarChart2, FiSun, FiZap, FiClipboard, FiPrinter } from "react-icons/fi";
+import { FiTrash2, FiEdit2, FiEye, FiArrowLeft, FiUpload, FiEdit3, FiPlus, FiActivity, FiDroplet, FiBookOpen, FiUser, FiBarChart2, FiSun, FiZap, FiClipboard } from "react-icons/fi";
 import { IoLogoWhatsapp } from "react-icons/io";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Legend, BarChart, Bar, Cell, ReferenceLine,
 } from "recharts";
 import ConsultaPrintModal from "../Consultas/ConsultaPrintModal";
+import ConfirmModal from "../../components/ConfirmModal";
 import api from "../../api/axios";
 import Layout from "../../components/Layout";
 import SemaforoISPAD from "../../components/SemaforoISPAD";
@@ -63,6 +64,7 @@ export default function PacienteDetalle() {
   const [isMobile, setIsMobile]   = useState(window.innerWidth < 768);
   const [isTablet, setIsTablet]   = useState(window.innerWidth < 1024);
   const [modalEliminar, setModalEliminar] = useState(null);
+  const [confirmEliminarConsulta, setConfirmEliminarConsulta] = useState(null);
   const [eliminando, setEliminando] = useState(false);
   const [modalEditar, setModalEditar] = useState(null);
   const [editForm, setEditForm] = useState(null);
@@ -379,6 +381,16 @@ export default function PacienteDetalle() {
       alert("Error al eliminar el registro.");
     } finally {
       setEliminandoCrec(false);
+    }
+  }
+
+  async function eliminarConsulta(cid) {
+    if (!confirm("\u00bfEliminar esta consulta?")) return;
+    try {
+      await api.delete(`/consultas/${cid}`);
+      setConsultas(list => list.filter(c => c.id !== cid));
+    } catch {
+      alert("Error al eliminar la consulta.");
     }
   }
 
@@ -1279,6 +1291,14 @@ export default function PacienteDetalle() {
             {printConsultaId && (
               <ConsultaPrintModal consultaId={printConsultaId} onClose={() => setPrintConsultaId(null)} />
             )}
+            {confirmEliminarConsulta && (
+              <ConfirmModal
+                mensaje="¿Eliminar esta consulta?"
+                detalle="Esta acción no se puede deshacer."
+                onConfirm={() => eliminarConsulta(confirmEliminarConsulta)}
+                onCancel={() => setConfirmEliminarConsulta(null)}
+              />
+            )}
             <div className="card-header-row">
               <h3 style={{ margin: 0 }}>📋 Historial de Consultas ({consultas.length})</h3>
               <Link
@@ -1305,7 +1325,7 @@ export default function PacienteDetalle() {
                 <tbody>
                   {consultas.map(c => (
                     <tr key={c.id}>
-                      <td style={{ whiteSpace: "nowrap", fontSize: "0.82rem" }}>{c.fecha?.split("T")[0]}</td>
+                      <td style={{ whiteSpace: "nowrap", fontSize: "0.82rem" }}>{c.fecha ? c.fecha.slice(0, 10).split("-").reverse().join("/") : "—"}</td>
                       <td><span className={`badge ${TIPO_BADGE[c.tipo_consulta] || "badge-gray"}`}>{c.tipo_consulta}</span></td>
                       <td className="hide-mobile">{c.glucosa_ayunas != null ? `${c.glucosa_ayunas} mg/dL` : "—"}</td>
                       <td className="hide-mobile">{c.hba1c != null ? `${c.hba1c}%` : "—"}</td>
@@ -1316,15 +1336,21 @@ export default function PacienteDetalle() {
                           <button
                             onClick={() => setPrintConsultaId(c.id)}
                             className="btn btn-sm btn-outline"
-                            title="Imprimir consulta"
+                            title="Ver consulta"
                             style={{ display: "flex", alignItems: "center", gap: 4 }}
                           >
-                            <FiPrinter size={13} />
+                            <FiEye size={13} /> Ver
                           </button>
                           <button
                             onClick={() => navigate(`/consultas/${c.id}/editar`)}
                             className="btn btn-sm btn-outline"
                           >Editar</button>
+                          <button
+                            onClick={() => setConfirmEliminarConsulta(c.id)}
+                            className="btn btn-sm btn-danger"
+                            title="Eliminar consulta"
+                            style={{ display: "flex", alignItems: "center" }}
+                          ><FiTrash2 size={14} /></button>
                         </div>
                       </td>
                     </tr>

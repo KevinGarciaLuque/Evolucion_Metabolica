@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { MapContainer, TileLayer, Marker, Popup, Tooltip } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, Tooltip, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import api from "../../api/axios";
@@ -32,19 +32,46 @@ const LABELS = {
 
 function crearIcono(clasificacion) {
   const color = COLORES[clasificacion] || COLORES.SIN_DATOS;
-  const svg = encodeURIComponent(`
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 36" width="24" height="36">
-      <path d="M12 0C5.37 0 0 5.37 0 12c0 9 12 24 12 24S24 21 24 12C24 5.37 18.63 0 12 0z"
-        fill="${color}" stroke="white" stroke-width="1.5"/>
-      <circle cx="12" cy="12" r="5" fill="white" opacity="0.9"/>
-    </svg>
-  `);
+
+  const svgStr = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 36" width="24" height="36" style="display:block;position:relative;z-index:1"><path d="M12 0C5.37 0 0 5.37 0 12c0 9 12 24 12 24S24 21 24 12C24 5.37 18.63 0 12 0z" fill="${color}" stroke="white" stroke-width="1.5"/><circle cx="12" cy="12" r="5" fill="white" opacity="0.9"/></svg>`;
+
+  if (clasificacion === "ALTO_RIESGO") {
+    return L.divIcon({
+      className: "",
+      html: `<div class="marker-ar-wrapper"><span class="pulse-wave w1"></span><span class="pulse-wave w2"></span><span class="pulse-wave w3"></span>${svgStr}</div>`,
+      iconSize:    [24, 36],
+      iconAnchor:  [12, 36],
+      popupAnchor: [0, -36],
+    });
+  }
+
   return L.icon({
-    iconUrl: `data:image/svg+xml,${svg}`,
-    iconSize:   [24, 36],
-    iconAnchor: [12, 36],
-    popupAnchor:[0, -36],
+    iconUrl: `data:image/svg+xml,${encodeURIComponent(svgStr)}`,
+    iconSize:    [24, 36],
+    iconAnchor:  [12, 36],
+    popupAnchor: [0, -36],
   });
+}
+
+function BotonCentrar() {
+  const map = useMap();
+  return (
+    <div className="leaflet-bottom leaflet-right" style={{ pointerEvents: "auto", marginBottom: 24, marginRight: 10 }}>
+      <button
+        title="Centrar mapa"
+        onClick={() => map.setView(CENTRO_HN, 7)}
+        style={{
+          width: 34, height: 34, background: "#fff",
+          border: "2px solid rgba(0,0,0,0.2)", borderRadius: 6,
+          cursor: "pointer", fontSize: 16, display: "flex",
+          alignItems: "center", justifyContent: "center",
+          boxShadow: "0 1px 5px rgba(0,0,0,0.25)",
+        }}
+      >
+        🏠
+      </button>
+    </div>
+  );
 }
 
 // Centro de Honduras
@@ -55,6 +82,7 @@ export default function MapaPacientes() {
   const [pacientes, setPacientes] = useState([]);
   const [cargando,  setCargando]  = useState(true);
   const [filtro,    setFiltro]    = useState("TODOS");
+  const [busqueda,  setBusqueda]  = useState("");
 
   useEffect(() => {
     api.get("/pacientes/mapa")
@@ -62,9 +90,16 @@ export default function MapaPacientes() {
       .finally(() => setCargando(false));
   }, []);
 
-  const filtrados = filtro === "TODOS"
-    ? pacientes
-    : pacientes.filter(p => (p.clasificacion || "SIN_DATOS") === filtro);
+  const filtrados = (() => {
+    let lista = filtro === "TODOS"
+      ? pacientes
+      : pacientes.filter(p => (p.clasificacion || "SIN_DATOS") === filtro);
+    if (busqueda.trim()) {
+      const q = busqueda.toLowerCase();
+      lista = lista.filter(p => p.nombre?.toLowerCase().includes(q));
+    }
+    return lista;
+  })();
 
   const conteos = pacientes.reduce((acc, p) => {
     const k = p.clasificacion || "SIN_DATOS";
@@ -78,7 +113,19 @@ export default function MapaPacientes() {
         <div>
           <h1>Mapa de Pacientes</h1>
           <p className="page-subtitle">
-            {cargando ? "Cargando..." : `${pacientes.length} pacientes georeferenciados`}
+            {cargando ? (
+              "Cargando..."
+            ) : (
+              <span className="mapa-stat-badge">
+                <span className="mapa-stat-dot" />
+                <span className="mapa-stat-num">
+                  {filtrados.length < pacientes.length
+                    ? `${filtrados.length} / ${pacientes.length}`
+                    : pacientes.length}
+                </span>
+                <span className="mapa-stat-text">pacientes georeferenciados</span>
+              </span>
+            )}
           </p>
         </div>
       </div>
@@ -86,6 +133,14 @@ export default function MapaPacientes() {
       {/* Leyenda / filtros */}
       <div className="card" style={{ marginBottom: 16 }}>
         <div className="mapa-filtros">
+          <input
+            type="text"
+            className="mapa-busqueda"
+            placeholder="🔍 Buscar paciente..."
+            value={busqueda}
+            onChange={e => setBusqueda(e.target.value)}
+          />
+          <span className="mapa-filtro-sep" />
           <span className="mapa-filtro-label">Filtrar:</span>
           {[
             { key: "TODOS",      label: `Todos (${pacientes.length})`,                         color: "#6366f1" },
@@ -141,6 +196,7 @@ export default function MapaPacientes() {
               attribution='© <a href="https://www.openstreetmap.org/">OpenStreetMap</a>'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
+            <BotonCentrar />
             {filtrados.map(p => (
               <Marker
                 key={p.id}

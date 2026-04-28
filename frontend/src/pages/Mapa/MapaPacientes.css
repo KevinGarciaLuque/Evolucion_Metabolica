@@ -29,6 +29,47 @@
 .mapa-wrapper .leaflet-top,
 .mapa-wrapper .leaflet-bottom         { z-index: 800; }
 
+/* ─── Stat badge del header ─────────────────────────────────────────────── */
+.mapa-stat-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: #f0fdf4;
+  border: 1.5px solid #bbf7d0;
+  border-radius: 20px;
+  padding: 3px 12px 3px 8px;
+  font-size: 0.83rem;
+  color: #166534;
+  font-weight: 500;
+  line-height: 1;
+}
+
+.mapa-stat-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #16a34a;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.5);
+  animation: dotPulse 2s ease-in-out infinite;
+}
+
+@keyframes dotPulse {
+  0%   { box-shadow: 0 0 0 0   rgba(22, 163, 74, 0.45); }
+  60%  { box-shadow: 0 0 0 6px rgba(22, 163, 74, 0); }
+  100% { box-shadow: 0 0 0 0   rgba(22, 163, 74, 0); }
+}
+
+.mapa-stat-num {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #15803d;
+}
+
+.mapa-stat-text {
+  color: #166534;
+}
+
 /* ─── Filtros del mapa ───────────────────────────────────────────────────── */
 .mapa-filtros {
   display: flex;
@@ -42,6 +83,64 @@
   color: #64748b;
   font-weight: 600;
   flex-shrink: 0;
+}
+
+.mapa-filtro-sep {
+  width: 1px;
+  height: 22px;
+  background: #e2e8f0;
+  flex-shrink: 0;
+  align-self: center;
+}
+
+/* ─── Búsqueda ───────────────────────────────────────────────────────────── */
+.mapa-busqueda {
+  padding: 5px 14px;
+  border-radius: 20px;
+  border: 2px solid #e2e8f0;
+  background: #f8fafc;
+  color: #334155;
+  font-size: 0.82rem;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  min-width: 190px;
+}
+
+.mapa-busqueda:focus {
+  border-color: #6366f1;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+/* ─── Marcador Alto Riesgo — ondas pulsantes ─────────────────────────────── */
+.marker-ar-wrapper {
+  position: relative;
+  width: 24px;
+  height: 36px;
+  overflow: visible;
+}
+
+.pulse-wave {
+  position: absolute;
+  left: 12px;
+  top: 12px;
+  width: 22px;
+  height: 22px;
+  transform: translate(-50%, -50%) scale(0.2);
+  border-radius: 50%;
+  border: 2.5px solid rgba(220, 38, 38, 0.75);
+  background: rgba(220, 38, 38, 0.1);
+  animation: pulseWave 2.4s ease-out infinite;
+  pointer-events: none;
+}
+
+.pulse-wave.w2 { animation-delay: 0.8s; }
+.pulse-wave.w3 { animation-delay: 1.6s; }
+
+@keyframes pulseWave {
+  0%   { transform: translate(-50%, -50%) scale(0.3); opacity: 0.9; }
+  55%  { opacity: 0.35; }
+  100% { transform: translate(-50%, -50%) scale(3.2); opacity: 0; }
 }
 
 /* ─── Tablet ─────────────────────────────────────────────────────────────── */

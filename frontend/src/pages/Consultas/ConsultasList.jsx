@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { FiPrinter } from "react-icons/fi";
+import { FiEye, FiTrash2 } from "react-icons/fi";
 import api from "../../api/axios";
 import Layout from "../../components/Layout";
 import ConsultaPrintModal from "./ConsultaPrintModal";
+import ConfirmModal from "../../components/ConfirmModal";
 
 const TIPO_BADGE = {
   Presencial:   "badge-green",
@@ -23,6 +24,7 @@ export default function ConsultasList() {
   const [entradas, setEntradas] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [printId, setPrintId] = useState(null);
+  const [confirmEliminar, setConfirmEliminar] = useState(null);
   const [filtros, setFiltros] = useState({
     paciente_nombre: "", fecha_desde: "", fecha_hasta: hoy(),
   });
@@ -43,15 +45,23 @@ export default function ConsultasList() {
   }
 
   async function eliminar(id) {
-    if (!confirm("¿Eliminar este registro clínico?")) return;
     await api.delete(`/consultas/${id}`);
     setEntradas(entradas.filter((e) => e.id !== id));
+    setConfirmEliminar(null);
   }
 
   return (
     <Layout>
       {printId && (
         <ConsultaPrintModal consultaId={printId} onClose={() => setPrintId(null)} />
+      )}
+      {confirmEliminar && (
+        <ConfirmModal
+          mensaje="¿Eliminar esta consulta?"
+          detalle="Esta acción no se puede deshacer."
+          onConfirm={() => eliminar(confirmEliminar)}
+          onCancel={() => setConfirmEliminar(null)}
+        />
       )}
       <div className="page-header">
         <div>
@@ -88,7 +98,7 @@ export default function ConsultasList() {
       {/* Tabla */}
       <div className="card">
         <div className="card-header-row">
-          <h3>Entradas ({entradas.length})</h3>
+          <h3>Consultas ({entradas.length})</h3>
         </div>
 
         {cargando ? (
@@ -112,7 +122,7 @@ export default function ConsultasList() {
               <tbody>
                 {entradas.map((e) => (
                   <tr key={e.id}>
-                    <td style={{ whiteSpace: "nowrap", fontSize: "0.85rem" }}>{e.fecha?.split("T")[0]}</td>
+                    <td style={{ whiteSpace: "nowrap", fontSize: "0.85rem" }}>{e.fecha ? e.fecha.slice(0, 10).split("-").reverse().join("/") : "—"}</td>
                     <td>
                       <Link to={`/pacientes/${e.paciente_id}`} className="link-paciente">
                         {e.paciente_nombre}
@@ -135,11 +145,11 @@ export default function ConsultasList() {
                       <div className="acciones">
                         <button
                           className="btn btn-sm btn-outline"
-                          title="Imprimir consulta"
+                          title="Ver consulta"
                           onClick={() => setPrintId(e.id)}
                           style={{ display: "flex", alignItems: "center", gap: 4 }}
                         >
-                          <FiPrinter size={13} />
+                          <FiEye size={13} /> Ver
                         </button>
                         <button
                           className="btn btn-sm btn-outline"
@@ -147,8 +157,10 @@ export default function ConsultasList() {
                         >Editar</button>
                         <button
                           className="btn btn-sm btn-danger"
-                          onClick={() => eliminar(e.id)}
-                        >Eliminar</button>
+                          onClick={() => setConfirmEliminar(e.id)}
+                          title="Eliminar consulta"
+                          style={{ display: "flex", alignItems: "center" }}
+                        ><FiTrash2 size={14} /></button>
                       </div>
                     </td>
                   </tr>

@@ -144,30 +144,30 @@ function generarHTMLImpresion(consulta, paciente, doctor) {
     <div class="subtitulo">${fmtFecha(consulta.fecha)} &nbsp;·&nbsp; ${consulta.tipo_consulta || "Presencial"}</div>
   </div>
 
-  <!-- Paciente -->
-  <div class="seccion">
-    <div class="seccion-titulo">Datos del Paciente</div>
-    <table>
-      ${fila("Nombre completo", paciente?.nombre || consulta.paciente_nombre)}
-      ${fila("DNI / ID", paciente?.dni || consulta.paciente_dni || "—")}
-      ${fila("Fecha de nacimiento", fmtFecha(paciente?.fecha_nacimiento))}
-      ${fila("Edad", edad != null ? `${edad} años` : null)}
-      ${fila("Sexo", paciente?.sexo === "F" ? "Femenino" : paciente?.sexo === "M" ? "Masculino" : null)}
-      ${fila("Diagnóstico principal", paciente?.diagnostico)}
-    </table>
-  </div>
-
-  <!-- Signos vitales -->
-  <div class="seccion">
-    <div class="seccion-titulo">Signos Vitales y Mediciones</div>
-    <table>
-      ${fila("Peso", consulta.peso != null ? `${consulta.peso} kg` : null)}
-      ${fila("Talla", consulta.talla != null ? `${consulta.talla} cm` : null)}
-      ${consulta.peso && consulta.talla
-        ? fila("IMC", `${(consulta.peso / Math.pow(consulta.talla / 100, 2)).toFixed(1)} kg/m²`)
-        : ""}
-      ${fila("Tensión arterial", consulta.tension_arterial)}
-    </table>
+  <!-- Paciente + Signos vitales — 2 columnas -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 24px;margin-bottom:16px">
+    <div class="seccion">
+      <div class="seccion-titulo">Datos del Paciente</div>
+      <table>
+        ${fila("Nombre completo", paciente?.nombre || consulta.paciente_nombre)}
+        ${fila("DNI / ID", paciente?.dni || consulta.paciente_dni || "—")}
+        ${fila("Fecha de nacimiento", fmtFecha(paciente?.fecha_nacimiento))}
+        ${fila("Edad", edad != null ? `${edad} años` : null)}
+        ${fila("Sexo", paciente?.sexo === "F" ? "Femenino" : paciente?.sexo === "M" ? "Masculino" : null)}
+        ${fila("Diagnóstico principal", paciente?.diagnostico)}
+      </table>
+    </div>
+    <div class="seccion">
+      <div class="seccion-titulo">Signos Vitales y Mediciones</div>
+      <table>
+        ${fila("Peso", consulta.peso != null ? `${consulta.peso} kg` : null)}
+        ${fila("Talla", consulta.talla != null ? `${consulta.talla} cm` : null)}
+        ${consulta.peso && consulta.talla
+          ? fila("IMC", `${(consulta.peso / Math.pow(consulta.talla / 100, 2)).toFixed(1)} kg/m²`)
+          : ""}
+        ${fila("Tensión arterial", consulta.tension_arterial)}
+      </table>
+    </div>
   </div>
 
   <!-- Laboratorio -->
@@ -423,25 +423,26 @@ function PreviewConsulta({ consulta, paciente, doctor }) {
         </div>
       </div>
 
-      {/* Paciente */}
-      <Seccion titulo="Datos del Paciente">
-        <FilaDato label="Nombre completo" valor={paciente?.nombre || consulta.paciente_nombre} />
-        <FilaDato label="DNI / ID" valor={paciente?.dni || consulta.paciente_dni} />
-        <FilaDato label="Fecha de nacimiento" valor={fmtFecha(paciente?.fecha_nacimiento)} />
-        <FilaDato label="Edad" valor={edad != null ? `${edad} años` : null} />
-        <FilaDato label="Sexo" valor={paciente?.sexo === "F" ? "Femenino" : paciente?.sexo === "M" ? "Masculino" : null} />
-        <FilaDato label="Diagnóstico principal" valor={paciente?.diagnostico} />
-      </Seccion>
+      {/* Paciente + Signos vitales — 2 columnas */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 24px", marginBottom: 18 }}>
+        <Seccion titulo="Datos del Paciente">
+          <FilaDato label="Nombre completo" valor={paciente?.nombre || consulta.paciente_nombre} />
+          <FilaDato label="DNI / ID" valor={paciente?.dni || consulta.paciente_dni} />
+          <FilaDato label="Fecha de nacimiento" valor={fmtFecha(paciente?.fecha_nacimiento)} />
+          <FilaDato label="Edad" valor={edad != null ? `${edad} años` : null} />
+          <FilaDato label="Sexo" valor={paciente?.sexo === "F" ? "Femenino" : paciente?.sexo === "M" ? "Masculino" : null} />
+          <FilaDato label="Diagnóstico principal" valor={paciente?.diagnostico} />
+        </Seccion>
 
-      {/* Signos vitales */}
-      <Seccion titulo="Signos Vitales y Mediciones">
-        <FilaDato label="Peso" valor={consulta.peso != null ? `${consulta.peso} kg` : null} />
-        <FilaDato label="Talla" valor={consulta.talla != null ? `${consulta.talla} cm` : null} />
-        {consulta.peso && consulta.talla && (
-          <FilaDato label="IMC" valor={`${(consulta.peso / Math.pow(consulta.talla / 100, 2)).toFixed(1)} kg/m²`} />
-        )}
-        <FilaDato label="Tensión arterial" valor={consulta.tension_arterial} />
-      </Seccion>
+        <Seccion titulo="Signos Vitales y Mediciones">
+          <FilaDato label="Peso" valor={consulta.peso != null ? `${consulta.peso} kg` : null} />
+          <FilaDato label="Talla" valor={consulta.talla != null ? `${consulta.talla} cm` : null} />
+          {consulta.peso && consulta.talla && (
+            <FilaDato label="IMC" valor={`${(consulta.peso / Math.pow(consulta.talla / 100, 2)).toFixed(1)} kg/m²`} />
+          )}
+          <FilaDato label="Tensión arterial" valor={consulta.tension_arterial} />
+        </Seccion>
+      </div>
 
       {/* Laboratorio */}
       <Seccion titulo="Laboratorio">

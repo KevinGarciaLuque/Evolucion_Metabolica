@@ -3,6 +3,8 @@ import { Link, useNavigate } from "react-router-dom";
 import api from "../../api/axios";
 import Layout from "../../components/Layout";
 import { IoLogoWhatsapp } from "react-icons/io";
+import { FiTrash2 } from "react-icons/fi";
+import ConfirmModal from "../../components/ConfirmModal";
 
 export default function PacientesList() {
   const navigate  = useNavigate();
@@ -15,6 +17,7 @@ export default function PacientesList() {
   });
   const [mostrarFiltros, setMostrarFiltros] = useState(false);
   const [clsVis, setClsVis] = useState({ OPTIMO: true, MODERADO: true, ALTO_RIESGO: true });
+  const [confirmEliminar, setConfirmEliminar] = useState(null);
 
   // ── WhatsApp modal ────────────────────────────────────────────────────────
   const [modalWA,    setModalWA]    = useState(null); // paciente seleccionado
@@ -85,13 +88,21 @@ export default function PacientesList() {
   }
 
   async function eliminar(id) {
-    if (!confirm("¿Eliminar este paciente?")) return;
     await api.delete(`/pacientes/${id}`);
     setPacientes(pacientes.filter((p) => p.id !== id));
+    setConfirmEliminar(null);
   }
 
   return (
     <Layout>
+      {confirmEliminar && (
+        <ConfirmModal
+          mensaje="¿Eliminar este paciente?"
+          detalle="Se eliminarán todos sus datos. Esta acción no se puede deshacer."
+          onConfirm={() => eliminar(confirmEliminar)}
+          onCancel={() => setConfirmEliminar(null)}
+        />
+      )}
       <div className="page-header">
         <div>
           <h1>Pacientes</h1>
@@ -275,7 +286,7 @@ export default function PacientesList() {
                         >
                           <IoLogoWhatsapp size={15} />
                         </button>
-                        <button className="btn btn-sm btn-danger" onClick={() => eliminar(p.id)}>Eliminar</button>
+                        <button className="btn btn-sm btn-danger" onClick={() => setConfirmEliminar(p.id)} title="Eliminar paciente" style={{ display: "flex", alignItems: "center" }}><FiTrash2 size={14} /></button>
                       </div>
                     </td>
                   </tr>
