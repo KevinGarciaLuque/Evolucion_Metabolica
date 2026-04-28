@@ -1097,6 +1097,9 @@ body {
   .form-grid-2col {
     grid-template-columns: 1fr;
   }
+  .depto-muni-grid {
+    grid-template-columns: 1fr !important;
+  }
   .filtros-grid {
     grid-template-columns: 1fr;
   }

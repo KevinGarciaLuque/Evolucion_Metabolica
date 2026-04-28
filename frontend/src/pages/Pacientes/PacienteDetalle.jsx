@@ -171,12 +171,24 @@ export default function PacienteDetalle() {
     setEditForm(f => ({ ...f, [name]: type === "checkbox" ? checked : value }));
   }
 
+  function dtLocal(val) {
+    if (!val) return "";
+    const d = new Date(typeof val === "string" ? val.replace(" ", "T") : val);
+    if (isNaN(d)) return "";
+    return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+  }
+
   async function guardarEdicion() {
     setGuardandoEdicion(true);
+    const inicio = editForm.fecha_inicio_mcg;
+    const payload = {
+      ...editForm,
+      fecha_colocacion: inicio ? (typeof inicio === "string" ? inicio.split("T")[0].split(" ")[0] : new Date(inicio).toISOString().split("T")[0]) : editForm.fecha_colocacion,
+    };
     try {
-      const { data } = await api.put(`/analisis/${modalEditar.id}`, editForm);
+      const { data } = await api.put(`/analisis/${modalEditar.id}`, payload);
       setHistorial(h => h.map(a =>
-        a.id === modalEditar.id ? { ...a, ...editForm, clasificacion: data.clasificacion } : a
+        a.id === modalEditar.id ? { ...a, ...payload, clasificacion: data.clasificacion } : a
       ));
       setModalEditar(null);
       setEditForm(null);
@@ -879,9 +891,9 @@ export default function PacienteDetalle() {
                           />
                           <Legend formatter={n => n === "eventos_hip" ? "Nº eventos" : "Duración (min)"} wrapperStyle={{ fontSize: 12 }} />
                           <Line yAxisId="ev" type="monotone" dataKey="eventos_hip" name="eventos_hip"
-                            stroke="#dc2626" strokeWidth={2} dot={{ r: 4, fill: "#dc2626" }} activeDot={{ r: 6 }} connectNulls />
+                            stroke="#dc2626" strokeWidth={2} dot={(p) => p.value != null ? <circle key={p.key} cx={p.cx} cy={p.cy} r={4} fill="#dc2626" /> : null} activeDot={{ r: 6 }} connectNulls />
                           <Line yAxisId="dur" type="monotone" dataKey="duracion_hip" name="duracion_hip"
-                            stroke="#f97316" strokeWidth={1.5} strokeDasharray="5 5" dot={{ r: 3, fill: "#f97316" }} connectNulls />
+                            stroke="#f97316" strokeWidth={1.5} strokeDasharray="5 5" dot={(p) => p.value != null ? <circle key={p.key} cx={p.cx} cy={p.cy} r={3} fill="#f97316" /> : null} connectNulls />
                         </LineChart>
                       </ResponsiveContainer>
                     ) : (
@@ -928,71 +940,151 @@ export default function PacienteDetalle() {
             {/* Historial de análisis */}
             <div className="card" style={{ marginTop: chartData.length > 0 ? 16 : 0 }}>
               <h3>Historial de Análisis ({historial.length})</h3>
-              <div className="table-wrapper">
-                <table className="tabla">
-                  <thead>
-                    <tr>
-                      <th className="hide-tablet">Nº MCG</th>
-                      <th>Fecha</th>
-                      <th>TIR</th>
-                      <th className="hide-mobile">TAR</th>
-                      <th className="hide-mobile">TBR</th>
-                      <th className="hide-mobile">GMI</th>
-                      <th className="hide-tablet">CV</th>
-                      <th className="hide-tablet">T. Activo</th>
-                      <th className="hide-tablet">G. Promedio</th>
-                      <th>Estado</th>
-                      <th className="hide-tablet">PDF</th>
-                      <th>Acciones</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {historial.map((a) => (
-                      <tr key={a.id}>
-                        <td className="hide-tablet" style={{ textAlign: "center", fontWeight: 600, color: "#3b82f6" }}>
-                          {a.numero_registro ?? "—"}
-                        </td>
-                        <td style={{ whiteSpace: "nowrap", fontSize: "0.82rem" }}>{a.fecha ? new Date(a.fecha).toLocaleDateString("es-GT", { day: "2-digit", month: "2-digit", year: "2-digit" }) : "—"}</td>
-                        <td><span className={`badge-tir ${a.tir >= 70 ? "ok" : a.tir >= 50 ? "warn" : "bad"}`}>{a.tir}%</span></td>
-                        <td className="hide-mobile">{a.tar}%</td>
-                        <td className="hide-mobile">{a.tbr}%</td>
-                        <td className="hide-mobile">{a.gmi}%</td>
-                        <td className="hide-tablet">{a.cv}%</td>
-                        <td className="hide-tablet">{a.tiempo_activo}%</td>
-                        <td className="hide-tablet">{a.glucosa_promedio} mg/dL</td>
-                        <td><ClasificacionBadge valor={a.clasificacion} /></td>
-                        <td className="hide-tablet">
-                          {a.archivo_pdf && (
-                            <a
-                              href={`${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:3001'}/uploads/pdfs/${a.archivo_pdf}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="link-small"
-                            >
-                              Ver PDF
-                            </a>
-                          )}
-                        </td>
-                        <td>
-                          <div style={{ display: "flex", gap: 2, alignItems: "center", flexWrap: "nowrap" }}>
-                            <button onClick={() => setModalVer(a)} style={{ background: "none", border: "none", cursor: "pointer", color: "#0ea5e9", padding: "3px", borderRadius: 4, display: "flex", alignItems: "center" }} title="Ver detalle"><FiEye size={15} /></button>
-                            <button onClick={() => abrirEditar(a)} style={{ background: "none", border: "none", cursor: "pointer", color: "#3b82f6", padding: "3px", borderRadius: 4, display: "flex", alignItems: "center" }} title="Editar análisis"><FiEdit2 size={15} /></button>
-                            <button onClick={() => setModalEliminar({ id: a.id, fecha: a.fecha })} style={{ background: "none", border: "none", cursor: "pointer", color: "#dc2626", padding: "3px", borderRadius: 4, display: "flex", alignItems: "center" }} title="Eliminar análisis"><FiTrash2 size={15} /></button>
+
+              {isMobile ? (
+                /* ── MÓVIL: tarjetas ─────────────────────────────────── */
+                <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 10 }}>
+                  {historial.map((a) => {
+                    const fmtF  = (v) => v ? new Date(String(v).substring(0,10) + "T00:00:00").toLocaleDateString("es-GT", { day:"2-digit", month:"2-digit", year:"2-digit" }) : "—";
+                    const fmtDt = (v) => v ? new Date(typeof v === "string" ? v.replace(" ","T") : v).toLocaleString("es-GT", { day:"2-digit", month:"2-digit", year:"2-digit", hour:"2-digit", minute:"2-digit" }) : "—";
+                    return (
+                      <div key={a.id} style={{ border: "1px solid #e2e8f0", borderRadius: 10, padding: "11px 13px", background: "#f8fafc" }}>
+                        {/* Cabecera */}
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                            {a.numero_registro != null && <span style={{ fontWeight: 700, color: "#3b82f6", fontSize: "0.82rem" }}>#{a.numero_registro}</span>}
+                            <span style={{ fontSize: "0.8rem", color: "#64748b" }}>{fmtF(a.fecha)}</span>
                           </div>
-                        </td>
-                      </tr>
-                    ))}
-                    {historial.length === 0 && (
+                          <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                            <ClasificacionBadge valor={a.clasificacion} />
+                          </div>
+                        </div>
+                        {/* Métricas TIR/TAR/TBR/GMI */}
+                        <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: "4px 6px", marginBottom: 8 }}>
+                          {[["TIR", <span className={`badge-tir ${a.tir >= 70 ? "ok" : a.tir >= 50 ? "warn" : "bad"}`}>{a.tir}%</span>],
+                            ["TAR", `${a.tar ?? "—"}%`],
+                            ["TBR", `${a.tbr ?? "—"}%`],
+                            ["GMI", a.gmi != null ? `${a.gmi}%` : "—"],
+                          ].map(([lbl, val]) => (
+                            <div key={lbl} style={{ textAlign: "center" }}>
+                              <div style={{ fontSize: "0.62rem", color: "#94a3b8", marginBottom: 1 }}>{lbl}</div>
+                              <div style={{ fontSize: "0.78rem", fontWeight: 600 }}>{val}</div>
+                            </div>
+                          ))}
+                        </div>
+                        {/* CV / T.Activo / G.Promedio */}
+                        <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: "4px 6px", paddingTop: 6, borderTop: "1px solid #e2e8f0", marginBottom: 8 }}>
+                          {[["CV", `${a.cv ?? "—"}%`], ["T.Act.", `${a.tiempo_activo ?? "—"}%`], ["G.Prom.", a.glucosa_promedio != null ? `${a.glucosa_promedio}` : "—"]].map(([lbl, val]) => (
+                            <div key={lbl}>
+                              <span style={{ fontSize: "0.62rem", color: "#94a3b8" }}>{lbl} </span>
+                              <span style={{ fontSize: "0.78rem" }}>{val}</span>
+                            </div>
+                          ))}
+                        </div>
+                        {/* Fechas MCG */}
+                        {(a.fecha_inicio_mcg || a.fecha_fin_mcg) && (
+                          <div style={{ display: "flex", gap: 12, flexWrap: "wrap", paddingTop: 6, borderTop: "1px solid #e2e8f0", marginBottom: 8 }}>
+                            <div><span style={{ fontSize: "0.62rem", color: "#94a3b8" }}>Inicio MCG: </span><span style={{ fontSize: "0.75rem", color: "#475569" }}>{fmtDt(a.fecha_inicio_mcg)}</span></div>
+                            <div><span style={{ fontSize: "0.62rem", color: "#94a3b8" }}>Fin MCG: </span><span style={{ fontSize: "0.75rem", color: "#475569" }}>{fmtDt(a.fecha_fin_mcg)}</span></div>
+                          </div>
+                        )}
+                        {/* Footer */}
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: 6, borderTop: "1px solid #e2e8f0" }}>
+                          {a.archivo_pdf ? (
+                            <a href={`${import.meta.env.VITE_API_URL?.replace('/api','') || 'http://localhost:3001'}/uploads/pdfs/${a.archivo_pdf}`} target="_blank" rel="noopener noreferrer" className="link-small">Ver PDF</a>
+                          ) : <span />}
+                          <div style={{ display: "flex", gap: 2 }}>
+                            <button onClick={() => setModalVer(a)} style={{ background:"none", border:"none", cursor:"pointer", color:"#0ea5e9", padding:"4px", borderRadius:4, display:"flex", alignItems:"center" }} title="Ver detalle"><FiEye size={16} /></button>
+                            <button onClick={() => abrirEditar(a)} style={{ background:"none", border:"none", cursor:"pointer", color:"#3b82f6", padding:"4px", borderRadius:4, display:"flex", alignItems:"center" }} title="Editar"><FiEdit2 size={16} /></button>
+                            <button onClick={() => setModalEliminar({ id: a.id, fecha: a.fecha })} style={{ background:"none", border:"none", cursor:"pointer", color:"#dc2626", padding:"4px", borderRadius:4, display:"flex", alignItems:"center" }} title="Eliminar"><FiTrash2 size={16} /></button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {historial.length === 0 && (
+                    <div style={{ padding: "24px 0", textAlign: "center", color: "#94a3b8", fontSize: "0.85rem" }}>
+                      No hay análisis aún. <Link to={`/analisis/subir?paciente=${id}`}>Subir primer PDF →</Link>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                /* ── TABLET / DESKTOP: tabla con scroll horizontal ──── */
+                <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch", marginTop: 8, borderRadius: 8 }}>
+                  <table className="tabla" style={{ minWidth: 920 }}>
+                    <thead>
                       <tr>
-                        <td colSpan={11} className="empty-cell">
-                          No hay análisis aún.{" "}
-                          <Link to={`/analisis/subir?paciente=${id}`}>Subir primer PDF →</Link>
-                        </td>
+                        <th style={{ whiteSpace: "nowrap" }}>Nº</th>
+                        <th style={{ whiteSpace: "nowrap" }}>Fecha</th>
+                        <th style={{ whiteSpace: "nowrap" }}>Inicio MCG</th>
+                        <th style={{ whiteSpace: "nowrap" }}>Fin MCG</th>
+                        <th>TIR</th>
+                        <th>TAR</th>
+                        <th>TBR</th>
+                        <th>GMI</th>
+                        <th>CV</th>
+                        <th style={{ whiteSpace: "nowrap" }}>T. Act.</th>
+                        <th style={{ whiteSpace: "nowrap" }}>G. Prom.</th>
+                        <th>Estado</th>
+                        <th>PDF</th>
+                        <th>Acciones</th>
                       </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody>
+                      {historial.map((a) => {
+                        const fmtDt = (v) => {
+                          if (!v) return null;
+                          const d = new Date(typeof v === "string" ? v.replace(" ","T") : v);
+                          const fecha = d.toLocaleDateString("es-GT", { day:"2-digit", month:"2-digit", year:"2-digit" });
+                          const hora  = d.toLocaleTimeString("es-GT", { hour:"2-digit", minute:"2-digit", hour12:true }).replace(/\s*a\.\s*m\.?/i,"am").replace(/\s*p\.\s*m\.?/i,"pm");
+                          return { fecha, hora };
+                        };
+                        const CeldaMCG = ({ v }) => {
+                          const r = fmtDt(v);
+                          if (!r) return <span style={{ color:"#cbd5e1" }}>—</span>;
+                          return <><span>{r.fecha}</span><br /><span style={{ color:"#94a3b8", fontSize:"0.72rem" }}>{r.hora}</span></>;
+                        };
+                        return (
+                          <tr key={a.id}>
+                            <td style={{ textAlign:"center", fontWeight:600, color:"#3b82f6" }}>{a.numero_registro ?? "—"}</td>
+                            <td style={{ whiteSpace:"nowrap", fontSize:"0.82rem" }}>{a.fecha ? new Date(String(a.fecha).substring(0,10)+"T00:00:00").toLocaleDateString("es-GT",{day:"2-digit",month:"2-digit",year:"2-digit"}) : "—"}</td>
+                            <td style={{ fontSize:"0.78rem", color:"#475569", lineHeight:1.3 }}><CeldaMCG v={a.fecha_inicio_mcg} /></td>
+                            <td style={{ fontSize:"0.78rem", color:"#475569", lineHeight:1.3 }}><CeldaMCG v={a.fecha_fin_mcg} /></td>
+                            <td><span className={`badge-tir ${a.tir >= 70 ? "ok" : a.tir >= 50 ? "warn" : "bad"}`}>{a.tir}%</span></td>
+                            <td>{a.tar ?? "—"}%</td>
+                            <td>{a.tbr ?? "—"}%</td>
+                            <td>{a.gmi != null ? `${a.gmi}%` : "—"}</td>
+                            <td>{a.cv ?? "—"}%</td>
+                            <td>{a.tiempo_activo ?? "—"}%</td>
+                            <td style={{ whiteSpace:"nowrap" }}>{a.glucosa_promedio != null ? `${a.glucosa_promedio} mg/dL` : "—"}</td>
+                            <td><ClasificacionBadge valor={a.clasificacion} /></td>
+                            <td>
+                              {a.archivo_pdf && (
+                                <a href={`${import.meta.env.VITE_API_URL?.replace('/api','') || 'http://localhost:3001'}/uploads/pdfs/${a.archivo_pdf}`} target="_blank" rel="noopener noreferrer" className="link-small">Ver PDF</a>
+                              )}
+                            </td>
+                            <td>
+                              <div style={{ display:"flex", gap:2, alignItems:"center", flexWrap:"nowrap" }}>
+                                <button onClick={() => setModalVer(a)} style={{ background:"none", border:"none", cursor:"pointer", color:"#0ea5e9", padding:"3px", borderRadius:4, display:"flex", alignItems:"center" }} title="Ver detalle"><FiEye size={15} /></button>
+                                <button onClick={() => abrirEditar(a)} style={{ background:"none", border:"none", cursor:"pointer", color:"#3b82f6", padding:"3px", borderRadius:4, display:"flex", alignItems:"center" }} title="Editar análisis"><FiEdit2 size={15} /></button>
+                                <button onClick={() => setModalEliminar({ id: a.id, fecha: a.fecha })} style={{ background:"none", border:"none", cursor:"pointer", color:"#dc2626", padding:"3px", borderRadius:4, display:"flex", alignItems:"center" }} title="Eliminar análisis"><FiTrash2 size={15} /></button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                      {historial.length === 0 && (
+                        <tr>
+                          <td colSpan={14} className="empty-cell">
+                            No hay análisis aún.{" "}
+                            <Link to={`/analisis/subir?paciente=${id}`}>Subir primer PDF →</Link>
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
           </>
         )}
@@ -1002,8 +1094,7 @@ export default function PacienteDetalle() {
           <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
 
             {/* ─── SECCIÓN ICR ─────────────────────────────────────────── */}
-            {relacionIC.filter(r => r.icr != null).length > 0 && (
-              <div className="card">
+            <div className="card">
                 <div className="card-header-row" style={{ marginBottom: 16 }}>
                   <div>
                     <h3 style={{ margin: "0 0 4px", display: "flex", alignItems: "center", gap: 8 }}>
@@ -1018,6 +1109,11 @@ export default function PacienteDetalle() {
                   </button>
                 </div>
 
+              {relacionIC.filter(r => r.icr != null).length === 0 ? (
+                <div style={{ textAlign: "center", padding: "32px 0", color: "#94a3b8", fontSize: "0.88rem" }}>
+                  Sin datos de ICR aún. Agrega registros de insulina con dosis corta y planes de alimentación con carbohidratos para calcular la relación.
+                </div>
+              ) : (<>
                 {/* Tarjetas resumen */}
                 {(() => {
                   const validos = relacionIC.filter(r => r.icr != null);
@@ -1104,9 +1200,9 @@ export default function PacienteDetalle() {
                     <Line yAxisId="icr" type="monotone" dataKey="insulina" stroke="#0ea5e9" strokeWidth={1.5} strokeDasharray="3 3" dot={{ r: 3, fill: "#0ea5e9" }} />
                   </LineChart>
                 </ResponsiveContainer>
+              </>)}
 
-              </div>
-            )}
+            </div>
 
             {/* ─── HISTORIAL DE INSULINA ───────────────────────────────── */}
             <div className="card">
@@ -1363,6 +1459,16 @@ export default function PacienteDetalle() {
               </div>
             </div>
 
+            {/* Aviso cuando la edad supera los 60 meses (fuera del bloque de z-scores) */}
+            {Number(formCrec.edad_meses) > 60 && (
+              <div style={{ background: "#fffbeb", border: "1px solid #fde68a", borderRadius: 8, padding: "8px 12px", marginBottom: 12 }}>
+                <p style={{ margin: 0, fontSize: "0.72rem", color: "#92400e" }}>
+                  ⚠️ <strong>Edad mayor a 60 meses</strong> — los z-scores OMS 2006 (incluyendo P.C./Edad) solo están disponibles para 0–60 meses.
+                  El valor de P.C. (cm) se guardará pero sin z-score ni percentil.
+                </p>
+              </div>
+            )}
+
             {/* Preview Z-scores calculados automáticamente */}
             {zPreview && Object.keys(zPreview).some(k => k.startsWith("zscore")) && (
               <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 10, padding: "12px 14px", marginBottom: 14 }}>
@@ -1395,11 +1501,6 @@ export default function PacienteDetalle() {
                     </div>
                   )}
                 </div>
-                {Number(formCrec.edad_meses) > 60 && (
-                  <p style={{ margin: "8px 0 0", fontSize: "0.72rem", color: "#f59e0b" }}>
-                    ⚠️ Edad &gt; 60 meses — se aplican estándares OMS 0–5 años. Para 5–19 años usa tablas específicas.
-                  </p>
-                )}
               </div>
             )}
 
@@ -1475,8 +1576,12 @@ export default function PacienteDetalle() {
                 <input type="date" name="fecha" value={editForm.fecha?.split("T")[0] || editForm.fecha || ""} onChange={cambiarEditForm} />
               </div>
               <div className="form-group">
-                <label>Fecha colocación MCG</label>
-                <input type="date" name="fecha_colocacion" value={editForm.fecha_colocacion?.split("T")[0] || editForm.fecha_colocacion || ""} onChange={cambiarEditForm} />
+                <label>Inicio MCG</label>
+                <input type="datetime-local" name="fecha_inicio_mcg" value={dtLocal(editForm.fecha_inicio_mcg)} onChange={cambiarEditForm} />
+              </div>
+              <div className="form-group">
+                <label>Fin MCG</label>
+                <input type="datetime-local" name="fecha_fin_mcg" value={dtLocal(editForm.fecha_fin_mcg)} onChange={cambiarEditForm} />
               </div>
             </div>
 
@@ -1548,14 +1653,47 @@ export default function PacienteDetalle() {
                 <label>Dosis de insulina (durante MCG)</label>
                 <input name="dosis_insulina_post" value={editForm.dosis_insulina_post ?? ""} onChange={cambiarEditForm} />
               </div>
-              <div className="form-group">
-                <label>Se modificó dosis</label>
-                <input type="checkbox" name="se_modifico_dosis" checked={!!editForm.se_modifico_dosis} onChange={cambiarEditForm} style={{ width: "auto" }} />
+              <div className="form-group" style={{ gridColumn: "span 2" }}>
+                <label
+                  htmlFor="se_modifico_dosis_edit"
+                  style={{ display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer", userSelect: "none" }}
+                >
+                  <span>¿Se modificó la dosis?</span>
+                  <span style={{ position: "relative", display: "inline-block", width: 44, height: 24, flexShrink: 0 }}>
+                    <input
+                      id="se_modifico_dosis_edit"
+                      type="checkbox"
+                      name="se_modifico_dosis"
+                      checked={!!editForm.se_modifico_dosis}
+                      onChange={cambiarEditForm}
+                      style={{ opacity: 0, width: 0, height: 0, position: "absolute" }}
+                    />
+                    <span style={{
+                      position: "absolute", inset: 0, borderRadius: 24,
+                      background: editForm.se_modifico_dosis ? "#6366f1" : "#cbd5e1",
+                      transition: "background 0.2s",
+                    }} />
+                    <span style={{
+                      position: "absolute", top: 3,
+                      left: editForm.se_modifico_dosis ? 23 : 3,
+                      width: 18, height: 18, borderRadius: "50%", background: "#fff",
+                      transition: "left 0.2s", boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+                    }} />
+                  </span>
+                </label>
               </div>
-              <div className="form-group">
-                <label>Dosis modificada</label>
-                <input name="dosis_modificada" value={editForm.dosis_modificada ?? ""} onChange={cambiarEditForm} />
-              </div>
+              {editForm.se_modifico_dosis && (
+                <div className="form-group" style={{ gridColumn: "span 2" }}>
+                  <label>Dosis modificada</label>
+                  <input
+                    name="dosis_modificada"
+                    value={editForm.dosis_modificada ?? ""}
+                    onChange={cambiarEditForm}
+                    placeholder="Nueva dosis indicada"
+                    autoFocus
+                  />
+                </div>
+              )}
               <div className="form-group">
                 <label>HbA1c post MCG (%)</label>
                 <input type="number" step="0.1" name="hba1c_post_mcg" value={editForm.hba1c_post_mcg ?? ""} onChange={cambiarEditForm} />
@@ -1573,6 +1711,17 @@ export default function PacienteDetalle() {
               </div>
               <div className="form-group">
                 <label><input type="checkbox" name="limitacion_economica" checked={!!editForm.limitacion_economica} onChange={cambiarEditForm} style={{ width: "auto", marginRight: 6 }} />Económicas</label>
+              </div>
+              <div className="form-group">
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={!editForm.limitacion_internet && !editForm.limitacion_alergias && !editForm.limitacion_economica}
+                    onChange={e => { if (e.target.checked) setEditForm(f => ({ ...f, limitacion_internet: false, limitacion_alergias: false, limitacion_economica: false })); }}
+                    style={{ width: "auto", marginRight: 6 }}
+                  />
+                  Ninguna
+                </label>
               </div>
               <div className="form-group">
                 <label>Valoración calidad de vida</label>
@@ -1637,8 +1786,9 @@ export default function PacienteDetalle() {
                 <table className="info-tabla" style={{ marginBottom: 16 }}>
                   <tbody>
                     <InfoFila label="Nº de monitor" valor={modalVer.numero_registro ?? "—"} />
-                    <InfoFila label="Fecha análisis" valor={modalVer.fecha ? new Date(modalVer.fecha).toLocaleString("es-GT", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "—"} />
-                    <InfoFila label="Fecha colocación MCG" valor={modalVer.fecha_colocacion ? new Date(modalVer.fecha_colocacion).toLocaleDateString("es-GT", { day: "2-digit", month: "2-digit", year: "numeric" }) : "—"} />
+                    <InfoFila label="Fecha análisis" valor={modalVer.fecha ? new Date(String(modalVer.fecha).substring(0, 10) + "T00:00:00").toLocaleDateString("es-GT", { day: "2-digit", month: "2-digit", year: "numeric" }) : "—"} />
+                    <InfoFila label="Inicio MCG" valor={modalVer.fecha_inicio_mcg ? new Date(typeof modalVer.fecha_inicio_mcg === "string" ? modalVer.fecha_inicio_mcg.replace(" ", "T") : modalVer.fecha_inicio_mcg).toLocaleString("es-GT", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "—"} />
+                    <InfoFila label="Fin MCG" valor={modalVer.fecha_fin_mcg ? new Date(typeof modalVer.fecha_fin_mcg === "string" ? modalVer.fecha_fin_mcg.replace(" ", "T") : modalVer.fecha_fin_mcg).toLocaleString("es-GT", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "—"} />
                     <InfoFila label="Clasificación" valor={<ClasificacionBadge valor={modalVer.clasificacion} />} />
                   </tbody>
                 </table>
@@ -1685,6 +1835,7 @@ export default function PacienteDetalle() {
                     <InfoFila label="Limitación internet" valor={modalVer.limitacion_internet ? "Sí" : "No"} />
                     <InfoFila label="Limitación alergias" valor={modalVer.limitacion_alergias ? "Sí" : "No"} />
                     <InfoFila label="Limitación económica" valor={modalVer.limitacion_economica ? "Sí" : "No"} />
+                    <InfoFila label="Ninguna" valor={!modalVer.limitacion_internet && !modalVer.limitacion_alergias && !modalVer.limitacion_economica ? "Sí" : "No"} />
                     <InfoFila label="Calidad de vida" valor={modalVer.calidad_vida || "—"} />
                     <InfoFila label="Comentarios" valor={modalVer.comentarios || "—"} />
                   </tbody>
@@ -2277,13 +2428,24 @@ function BadgeEstado({ estado }) {
 }
 
 function TabCrecimiento({ paciente, crecimiento, isMobile, isTablet, tabGrafica, setTabGrafica, refOMS, setRefOMS, onNuevo, onEditar, onEliminar }) {
-  const tabs5 = [
-    { key: "peso_edad",  label: isMobile ? "Peso" : "Peso / Edad" },
-    { key: "talla_edad", label: isMobile ? "Talla" : "Talla / Edad" },
-    { key: "peso_talla", label: isMobile ? "P/Talla" : "Peso / Talla" },
-    { key: "imc_edad",   label: "IMC" },
-    { key: "pc_edad",    label: isMobile ? "P.C." : "Per. Cefálico" },
+  const ALL_TABS = [
+    { key: "peso_edad",  label: isMobile ? "Peso" : "Peso / Edad",    solo0_5: false },
+    { key: "talla_edad", label: isMobile ? "Talla" : "Talla / Edad",  solo0_5: false },
+    { key: "peso_talla", label: isMobile ? "P/Talla" : "Peso / Talla", solo0_5: true },
+    { key: "imc_edad",   label: "IMC",                                  solo0_5: false },
+    { key: "pc_edad",    label: isMobile ? "P.C." : "Per. Cefálico",   solo0_5: true },
   ];
+
+  // En referencia 5-19 solo mostrar las tabs con datos WHO 2007
+  const tabs5 = refOMS === "5_19"
+    ? ALL_TABS.filter(t => !t.solo0_5)
+    : ALL_TABS;
+
+  // Si la tab activa no está disponible en el rango actual, cambiar a la primera disponible
+  useEffect(() => {
+    const disponible = tabs5.some(t => t.key === tabGrafica);
+    if (!disponible) setTabGrafica(tabs5[0].key);
+  }, [refOMS]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const [dropPrint, setDropPrint] = useState(false);
   const [dropDL,    setDropDL]    = useState(false);
@@ -2295,21 +2457,30 @@ function TabCrecimiento({ paciente, crecimiento, isMobile, isTablet, tabGrafica,
     ? OMS_CURVES_5_19[tabGrafica]
     : OMS_CURVES[tabGrafica];
 
-  // Formateador de ticks x para 5-19 años (meses → "5a", "6a"…)
-  const xTickFmt = refOMS === "5_19" ? (v => `${Math.floor(v / 12)}a`) : undefined;
+  // Formateador de ticks x
+  // 0-5: muestra meses; 5-19: muestra años ("5a", "6a"…)
+  const xTickFmt = refOMS === "5_19" && !curva?.xCampo
+    ? (v => `${Math.floor(v / 12)}a`)
+    : undefined;
 
-  // Dominio fijo del eje X para que 5-19 siempre muestre el rango completo
+  // Dominio fijo del eje X según la referencia activa
   const xDomain = (() => {
-    if (refOMS !== "5_19" || curva.xCampo) return ["dataMin", "dataMax"];
-    // peso_edad WHO 2007 solo tiene datos hasta 120m (10a)
-    const maxX = (OMS_CURVES_5_19[tabGrafica]?.puntos?.at(-1)?.[0]) ?? 228;
-    return [60, maxX];
+    if (curva?.xCampo) return ["dataMin", "dataMax"]; // peso/talla: eje X = talla (cm), no edad
+    if (refOMS === "5_19") {
+      // peso_edad WHO 2007 solo llega a 120m (10a); talla/IMC llegan a 228m (19a)
+      const maxX = (OMS_CURVES_5_19[tabGrafica]?.puntos?.at(-1)?.[0]) ?? 228;
+      return [60, maxX];
+    }
+    return [0, 60]; // OMS 0-5: siempre mostrar 0 → 60 meses completos
   })();
   const xTickCount = (() => {
     if (isMobile) return 5;
-    if (refOMS !== "5_19" || curva.xCampo) return 9;
-    const [xMin, xMax] = xDomain;
-    return Math.floor((xMax - xMin) / 12) + 1;
+    if (curva?.xCampo) return 9;
+    if (refOMS === "5_19") {
+      const [xMin, xMax] = xDomain;
+      return Math.floor((xMax - xMin) / 12) + 1;
+    }
+    return 7; // 0, 10, 20, 30, 40, 50, 60
   })();
 
   // ── Helpers z-score ──────────────────────────────────────────────────────
@@ -2330,7 +2501,10 @@ function TabCrecimiento({ paciente, crecimiento, isMobile, isTablet, tabGrafica,
     : null;
 
   // ── Chart data builder ───────────────────────────────────────────────────
-  const buildChartData = useCallback((curvaObj) => {
+  const buildChartData = useCallback((curvaObj, domainX) => {
+    const [xMin, xMax] = (Array.isArray(domainX) && domainX.every(v => typeof v === "number"))
+      ? domainX : [null, null];
+
     const pts = [...crecimiento]
       .filter(r => r[curvaObj.campo] != null)
       .sort((a, b) => new Date(a.fecha) - new Date(b.fecha))
@@ -2338,7 +2512,10 @@ function TabCrecimiento({ paciente, crecimiento, isMobile, isTablet, tabGrafica,
         const x = curvaObj.xCampo ? Number(r[curvaObj.xCampo]) : Number(r.edad_meses);
         return { x, y: Number(r[curvaObj.campo]), fecha: r.fecha?.split("T")[0] || r.fecha };
       })
-      .filter(p => !isNaN(p.x) && !isNaN(p.y) && p.x >= 0);
+      .filter(p => !isNaN(p.x) && !isNaN(p.y) && p.x >= 0
+        // Solo incluir puntos dentro del rango de la referencia activa
+        && (xMin == null || p.x >= xMin)
+        && (xMax == null || p.x <= xMax));
 
     const [p3s, p15s, p50s, p85s, p97s] = [[], [], [], [], []];
     curvaObj.puntos.forEach(([xVal, p3, p15, p50, p85, p97]) => {
@@ -2379,9 +2556,16 @@ function TabCrecimiento({ paciente, crecimiento, isMobile, isTablet, tabGrafica,
       const y = Number(r[curva.campo]);
       return { x, y, fecha: r.fecha?.split("T")[0] || r.fecha, id: r.id };
     })
-    .filter(p => !isNaN(p.x) && !isNaN(p.y) && p.x >= 0);
+    .filter(p => {
+      if (isNaN(p.x) || isNaN(p.y) || p.x < 0) return false;
+      const [xMin, xMax] = Array.isArray(xDomain) && xDomain.every(v => typeof v === "number")
+        ? xDomain : [null, null];
+      if (xMin != null && p.x < xMin) return false;
+      if (xMax != null && p.x > xMax) return false;
+      return true;
+    });
 
-  const chartData = buildChartData(curva);
+  const chartData = buildChartData(curva, xDomain);
 
   const chartHeight = isMobile ? 200 : isTablet ? 240 : 290;
   const chartLeft   = isMobile ? -24 : -10;
@@ -2935,7 +3119,12 @@ function TabCrecimiento({ paciente, crecimiento, isMobile, isTablet, tabGrafica,
         </div>
 
         {/* Nota referencia 5-19 */}
-        {refOMS === "5_19" && curva?.nota && (
+        {refOMS === "5_19" && tabGrafica === "pc_edad" && (
+          <p style={{ margin: "6px 0 0", fontSize: "0.72rem", color: "#f59e0b", fontWeight: 600 }}>
+            ⚠️ Los estándares OMS 5-19 (WHO 2007) no incluyen perímetro cefálico. Se muestra la curva de referencia OMS 0-5 años como aproximación.
+          </p>
+        )}
+        {refOMS === "5_19" && tabGrafica !== "pc_edad" && curva?.nota && (
           <p style={{ margin: "6px 0 0", fontSize: "0.72rem", color: "#f59e0b", fontWeight: 600 }}>
             {curva.nota}
           </p>
@@ -3097,6 +3286,26 @@ function TabCrecimiento({ paciente, crecimiento, isMobile, isTablet, tabGrafica,
             </span>
           )}
         </div>
+
+        {/* Nota informativa sobre P.C./Edad según rango activo */}
+        {tabGrafica === "pc_edad" && crecimiento.length > 0 && (
+          refOMS === "5_19" ? (
+            <div style={{ background: "#fffbeb", border: "1px solid #fde68a", borderRadius: 8, padding: "8px 12px", marginBottom: 12 }}>
+              <p style={{ margin: 0, fontSize: "0.72rem", color: "#92400e" }}>
+                ⚠️ <strong>Sin referencia OMS 5-19 para P.C.</strong> — los estándares WHO 2007 (5-19 años) no incluyen perímetro cefálico.
+                El z-score de P.C./Edad solo está disponible con la referencia <strong>0-5 años</strong> (OMS 2006, hasta 60 meses).
+              </p>
+            </div>
+          ) : crecimiento.every(r => r.zscore_pc_edad == null) ? (
+            <div style={{ background: "#fffbeb", border: "1px solid #fde68a", borderRadius: 8, padding: "8px 12px", marginBottom: 12 }}>
+              <p style={{ margin: 0, fontSize: "0.72rem", color: "#92400e" }}>
+                ⚠️ <strong>Z-score P.C./Edad no disponible</strong> — los estándares OMS 2006 para perímetro cefálico cubren únicamente 0–60 meses.
+                Para pacientes mayores de 5 años no existe referencia WHO para este indicador.
+                El valor de P.C. (cm) se registra y puede visualizarse en el historial, pero sin z-score ni percentil.
+              </p>
+            </div>
+          ) : null
+        )}
 
         {crecimiento.length === 0 ? (
           <div style={{ padding: "32px 0", textAlign: "center", color: "#94a3b8", fontSize: "0.875rem" }}>

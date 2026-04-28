@@ -4,12 +4,28 @@ import { FiArrowLeft } from "react-icons/fi";
 import api from "../../api/axios";
 import Layout from "../../components/Layout";
 
-const DEPARTAMENTOS_HN = [
-  "Atlántida", "Choluteca", "Colón", "Comayagua", "Copán",
-  "Cortés", "El Paraíso", "Francisco Morazán", "Gracias a Dios",
-  "Intibucá", "Islas de la Bahía", "La Paz", "Lempira",
-  "Ocotepeque", "Olancho", "Santa Bárbara", "Valle", "Yoro",
-];
+const MUNICIPIOS_POR_DEPARTAMENTO = {
+  "Atlántida":          ["Arizona", "El Porvenir", "Esparta", "Honduras", "Jutiapa", "La Ceiba", "La Masica", "San Francisco", "Tela"],
+  "Choluteca":          ["Apacilagua", "Choluteca", "Concepción de María", "Duyure", "El Corpus", "El Triunfo", "Marcovia", "Morolica", "Namasigüe", "Orocuina", "Pespire", "San Antonio de Flores", "San Isidro", "San José", "San Marcos de Colón", "Santa Ana de Yusguare"],
+  "Colón":              ["Balfate", "Bonito Oriental", "Iriona", "Limón", "Sabá", "Santa Fe", "Santa Rosa de Aguán", "Sonaguera", "Tocoa", "Trujillo"],
+  "Comayagua":          ["Ajuterique", "Comayagua", "El Rosario", "Esquías", "Humuya", "La Libertad", "La Trinidad", "Lamaní", "Las Lajas", "Lejamani", "Meámbar", "Minas de Oro", "Ojos de Agua", "San Jerónimo", "San José de Comayagua", "San José del Potrero", "San Luis", "San Sebastián", "Siguatepeque", "Taulabé", "Villa de San Antonio"],
+  "Copán":              ["Cabañas", "Concepción", "Copán Ruinas", "Corquín", "Cucuyagua", "Dulce Nombre", "El Paraíso", "Florida", "La Jigua", "La Unión", "Nueva Arcadia", "San Agustín", "San Antonio", "San Jerónimo", "San José", "San Juan de Opoa", "San Nicolás", "San Pedro", "Santa Rita", "Santa Rosa de Copán", "Trinidad de Copán", "Veracruz"],
+  "Cortés":             ["Choloma", "La Lima", "Omoa", "Pimienta", "Potrerillos", "Puerto Cortés", "San Antonio de Cortés", "San Francisco de Yojoa", "San Manuel", "San Pedro Sula", "Santa Cruz de Yojoa", "Villanueva"],
+  "El Paraíso":         ["Alauca", "Danlí", "El Paraíso", "Guinope", "Jacaleapa", "Liure", "Morocelí", "Oropolí", "Potrerillos", "San Antonio de Flores", "San Lucas", "San Matías", "Soledad", "Teupasenti", "Texiguat", "Trojes", "Vado Ancho", "Yauyupe", "Yuscarán"],
+  "Francisco Morazán":  ["Alubaren", "Cedros", "Curarén", "El Porvenir", "El Rosario", "Guaimaca", "La Libertad", "La Venta", "Lepaterique", "Maraita", "Marale", "Nueva Armenia", "Ojojona", "Orica", "Reitoca", "Sabanagrande", "San Ana", "San Buenaventura", "San Ignacio", "San Juan de Flores", "San Miguelito", "Santa Ana", "Santa Lucía", "Talanga", "Tatumbla", "Tegucigalpa", "Valle de Ángeles", "Vallecillo", "Villa de San Francisco"],
+  "Gracias a Dios":     ["Ahuas", "Brus Laguna", "Juan Francisco Bulnes", "Puerto Lempira", "Villeda Morales", "Wampusirpe"],
+  "Intibucá":           ["Camasca", "Colomoncagua", "Concepción", "Dolores", "Intibucá", "Jesús de Otoro", "La Esperanza", "Magdalena", "Masaguara", "San Antonio", "San Francisco de Becerra", "San Francisco de Opalaca", "San Isidro", "San Juan", "San Marcos de la Sierra", "San Miguelito", "Santa Lucía", "Yamaranguila"],
+  "Islas de la Bahía":  ["Guanaja", "José Santos Guardiola", "Roatán", "Utila"],
+  "La Paz":             ["Aguanqueterique", "Cabañas", "Cane", "Chinacla", "Guajiquiro", "La Paz", "Lauterique", "Marcala", "Mercedes de Oriente", "Opatoro", "San Antonio del Norte", "San José", "San Juan", "San Pedro de Tutule", "Santa Ana", "Santa Elena", "Santa María", "Santiago de Puringla", "Yarula"],
+  "Lempira":            ["Belén", "Candelaria", "Cololaca", "Erandique", "Gracias", "Gualcince", "Guarita", "La Campa", "La Iguala", "La Unión", "La Virtud", "Las Flores", "Lepaera", "Mapulaca", "Piraera", "San Andrés", "San Francisco", "San Juan Guarita", "San Manuel Colohete", "San Marcos de Caiquín", "San Rafael", "San Sebastián", "Santa Cruz", "Talgua", "Tambla", "Tomalá", "Valladolid", "Virginia"],
+  "Ocotepeque":         ["Belén Gualcho", "Concepción", "Dolores Merendón", "Fraternidad", "La Encarnación", "La Labor", "Lucerna", "Mercedes", "Ocotepeque", "San Fernando", "San Francisco del Valle", "San Jorge", "San Marcos", "Santa Fe", "Sensenti", "Sinuapa"],
+  "Olancho":            ["Campamento", "Catacamas", "Concordia", "Dulce Nombre de Culmí", "El Rosario", "Esquipulas del Norte", "Gualaco", "Guarizama", "Guata", "Jano", "Juticalpa", "La Unión", "Mangulile", "Manto", "Patuca", "Salamá", "San Esteban", "San Francisco de Becerra", "San Francisco de la Paz", "Santa María del Real", "Silca", "Yocón"],
+  "Santa Bárbara":      ["Arada", "Atima", "Azacualpa", "Ceguaca", "Chinda", "Concepción del Norte", "Concepción del Sur", "El Níspero", "Gualala", "Ilama", "Las Vegas", "Macuelizo", "Naranjito", "New Barbadoes", "Petoa", "Protección", "Quimistán", "San Francisco", "San Francisco de Ojuera", "San José de las Colinas", "San Luis", "San Marcos", "San Nicolás", "San Pedro Zacapa", "San Vicente Centenario", "Santa Bárbara", "Santa Rita", "Trinidad"],
+  "Valle":              ["Alianza", "Amapala", "Aramecina", "Caridad", "Goascorán", "Langue", "Nacaome", "San Francisco de Coray", "San Lorenzo"],
+  "Yoro":               ["Arenal", "El Negrito", "El Progreso", "Jocón", "Morazán", "Olanchito", "Santa Rita", "Sulaco", "Victoria", "Yorito", "Yoro"],
+};
+
+const DEPARTAMENTOS_HN = Object.keys(MUNICIPIOS_POR_DEPARTAMENTO).sort();
 
 const VACÍO = {
   dni: "", nombre: "", fecha_nacimiento: "", sexo: "F",
@@ -69,7 +85,11 @@ export default function PacienteForm() {
 
   function cambiar(e) {
     const { name, value, type, checked } = e.target;
-    setForm({ ...form, [name]: type === "checkbox" ? checked : value });
+    if (name === "departamento") {
+      setForm({ ...form, departamento: value, municipio: "" });
+    } else {
+      setForm({ ...form, [name]: type === "checkbox" ? checked : value });
+    }
   }
 
   async function handleSubmit(e) {
@@ -157,18 +177,33 @@ export default function PacienteForm() {
           {/* ── Sección 2: Ubicación y Procedencia ── */}
           <SeccionTitulo>Ubicación y Procedencia</SeccionTitulo>
           <div className="form-grid">
-            <div className="form-group">
-              <label>Departamento *</label>
-              <select name="departamento" value={form.departamento} onChange={cambiar} required>
-                <option value="">-- Seleccionar --</option>
-                {DEPARTAMENTOS_HN.map((d) => (
-                  <option key={d} value={d}>{d}</option>
-                ))}
-              </select>
-            </div>
-            <div className="form-group">
-              <label>Municipio</label>
-              <input name="municipio" placeholder="Ej: Tegucigalpa" value={form.municipio} onChange={cambiar} />
+            {/* Departamento + Municipio: siempre en pareja, 2 col → 1 col en móvil */}
+            <div style={{
+              gridColumn: "1 / -1",
+              display: "grid",
+              gridTemplateColumns: "repeat(2, 1fr)",
+              gap: 16,
+            }}
+              className="depto-muni-grid"
+            >
+              <div className="form-group">
+                <label>Departamento *</label>
+                <select name="departamento" value={form.departamento} onChange={cambiar} required>
+                  <option value="">-- Seleccionar --</option>
+                  {DEPARTAMENTOS_HN.map((d) => (
+                    <option key={d} value={d}>{d}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="form-group">
+                <label>Municipio</label>
+                <select name="municipio" value={form.municipio} onChange={cambiar} disabled={!form.departamento}>
+                  <option value="">{form.departamento ? "-- Seleccionar --" : "-- Seleccione departamento primero --"}</option>
+                  {(MUNICIPIOS_POR_DEPARTAMENTO[form.departamento] || []).map((m) => (
+                    <option key={m} value={m}>{m}</option>
+                  ))}
+                </select>
+              </div>
             </div>
             <div className="form-group">
               <label>Procedencia</label>

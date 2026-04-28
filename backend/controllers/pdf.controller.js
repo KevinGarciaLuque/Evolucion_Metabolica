@@ -50,9 +50,13 @@ export async function subirYParsear(req, res) {
  */
 export async function confirmarAnalisis(req, res) {
   const {
-    paciente_id, fecha, tir, tar, tar_muy_alto, tar_alto, tbr, tbr_bajo, tbr_muy_bajo,
+    paciente_id, fecha, fecha_colocacion, fecha_inicio_mcg, fecha_fin_mcg,
+    tir, tar, tar_muy_alto, tar_alto, tbr, tbr_bajo, tbr_muy_bajo,
     gmi, cv, tiempo_activo, glucosa_promedio, gri,
     eventos_hipoglucemia, duracion_hipoglucemia, archivo_pdf,
+    dosis_insulina_post, se_modifico_dosis, dosis_modificada, hba1c_post_mcg,
+    limitacion_internet, limitacion_alergias, limitacion_economica,
+    calidad_vida, comentarios,
   } = req.body;
 
   if (!paciente_id || !fecha)
@@ -74,16 +78,27 @@ export async function confirmarAnalisis(req, res) {
 
     const [result] = await pool.query(
       `INSERT INTO analisis
-        (paciente_id, numero_registro, fecha, tir, tar, tar_muy_alto, tar_alto, tbr, tbr_bajo, tbr_muy_bajo,
+        (paciente_id, numero_registro, fecha, fecha_colocacion, fecha_inicio_mcg, fecha_fin_mcg,
+         tir, tar, tar_muy_alto, tar_alto, tbr, tbr_bajo, tbr_muy_bajo,
          gmi, cv, tiempo_activo, glucosa_promedio, gri,
-         eventos_hipoglucemia, duracion_hipoglucemia, clasificacion, archivo_pdf)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+         eventos_hipoglucemia, duracion_hipoglucemia, clasificacion, archivo_pdf,
+         dosis_insulina_post, se_modifico_dosis, dosis_modificada, hba1c_post_mcg,
+         limitacion_internet, limitacion_alergias, limitacion_economica,
+         calidad_vida, comentarios)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
-        paciente_id, numero_registro, fecha, tir, tar,
-        tar_muy_alto ?? null, tar_alto ?? null,
+        paciente_id, numero_registro, fecha,
+        fecha_colocacion || null,
+        fecha_inicio_mcg ? (() => { const s = fecha_inicio_mcg.replace("T"," ").substring(0,19); return s.length===16 ? s+":00" : s; })() : null,
+        fecha_fin_mcg    ? (() => { const s = fecha_fin_mcg.replace("T"," ").substring(0,19);    return s.length===16 ? s+":00" : s; })() : null,
+        tir, tar, tar_muy_alto ?? null, tar_alto ?? null,
         tbr, tbr_bajo ?? null, tbr_muy_bajo ?? null,
         gmi, cv, tiempo_activo, glucosa_promedio, gri,
         eventos_hipoglucemia, duracion_hipoglucemia, clasificacion, archivo_pdf,
+        dosis_insulina_post || null, se_modifico_dosis ?? null, dosis_modificada || null,
+        hba1c_post_mcg || null,
+        limitacion_internet ? 1 : 0, limitacion_alergias ? 1 : 0, limitacion_economica ? 1 : 0,
+        calidad_vida || null, comentarios || null,
       ]
     );
 

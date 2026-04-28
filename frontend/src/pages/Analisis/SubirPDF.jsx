@@ -402,6 +402,8 @@ export default function SubirPDF() {
         paciente_id:          pacienteId,
         fecha:                (() => { const n = new Date(); return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,"0")}-${String(n.getDate()).padStart(2,"0")}`; })(),
         fecha_colocacion:     "",
+        fecha_inicio_mcg:     d.fechaInicioMCG ?? "",
+        fecha_fin_mcg:        d.fechaFinMCG    ?? "",
         tir:                  d.tir   ?? "",
         tar:                  d.tar   ?? "",
         tar_muy_alto:         d.tarMuyAlto   ?? "",
@@ -443,8 +445,13 @@ export default function SubirPDF() {
 
   async function confirmar() {
     setGuardando(true);
+    const inicio = form.fecha_inicio_mcg;
+    const formFinal = {
+      ...form,
+      fecha_colocacion: inicio ? (inicio.includes("T") ? inicio.split("T")[0] : inicio.split(" ")[0]) : form.fecha_colocacion,
+    };
     try {
-      await api.post("/pdf/confirmar", form);
+      await api.post("/pdf/confirmar", formFinal);
       setEtapa("guardado");
     } catch (err) {
       setError(err.response?.data?.error || "Error al guardar análisis");
@@ -1239,8 +1246,12 @@ export default function SubirPDF() {
                   <input type="date" name="fecha" value={form.fecha} onChange={cambiarForm} required />
                 </div>
                 <div className="form-group">
-                  <label>Fecha colocación MCG</label>
-                  <input type="date" name="fecha_colocacion" value={form.fecha_colocacion} onChange={cambiarForm} />
+                  <label>Inicio MCG</label>
+                  <input type="datetime-local" name="fecha_inicio_mcg" value={form.fecha_inicio_mcg ? form.fecha_inicio_mcg.replace(" ", "T").slice(0, 16) : ""} onChange={cambiarForm} />
+                </div>
+                <div className="form-group">
+                  <label>Fin MCG</label>
+                  <input type="datetime-local" name="fecha_fin_mcg" value={form.fecha_fin_mcg ? form.fecha_fin_mcg.replace(" ", "T").slice(0, 16) : ""} onChange={cambiarForm} />
                 </div>
                 <div className="form-group">
                   <label>TIR – Tiempo en Rango (%)</label>
@@ -1306,14 +1317,47 @@ export default function SubirPDF() {
 
               <h4 style={{ marginTop: 20 }}>Seguimiento post-MCG</h4>
               <div className="form-grid">
-                <div className="form-group">
-                  <label>Se modificó dosis</label>
-                  <input type="checkbox" name="se_modifico_dosis" checked={!!form.se_modifico_dosis} onChange={cambiarForm} style={{ width: "auto" }} />
+                <div className="form-group" style={{ gridColumn: "span 2" }}>
+                  <label
+                    htmlFor="se_modifico_dosis_subir"
+                    style={{ display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer", userSelect: "none" }}
+                  >
+                    <span>¿Se modificó la dosis?</span>
+                    <span style={{ position: "relative", display: "inline-block", width: 44, height: 24, flexShrink: 0 }}>
+                      <input
+                        id="se_modifico_dosis_subir"
+                        type="checkbox"
+                        name="se_modifico_dosis"
+                        checked={!!form.se_modifico_dosis}
+                        onChange={cambiarForm}
+                        style={{ opacity: 0, width: 0, height: 0, position: "absolute" }}
+                      />
+                      <span style={{
+                        position: "absolute", inset: 0, borderRadius: 24,
+                        background: form.se_modifico_dosis ? "#6366f1" : "#cbd5e1",
+                        transition: "background 0.2s",
+                      }} />
+                      <span style={{
+                        position: "absolute", top: 3,
+                        left: form.se_modifico_dosis ? 23 : 3,
+                        width: 18, height: 18, borderRadius: "50%", background: "#fff",
+                        transition: "left 0.2s", boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+                      }} />
+                    </span>
+                  </label>
                 </div>
-                <div className="form-group">
-                  <label>Dosis modificada</label>
-                  <input name="dosis_modificada" value={form.dosis_modificada} onChange={cambiarForm} placeholder="Nueva dosis indicada" />
-                </div>
+                {form.se_modifico_dosis && (
+                  <div className="form-group" style={{ gridColumn: "span 2" }}>
+                    <label>Dosis modificada</label>
+                    <input
+                      name="dosis_modificada"
+                      value={form.dosis_modificada}
+                      onChange={cambiarForm}
+                      placeholder="Nueva dosis indicada"
+                      autoFocus
+                    />
+                  </div>
+                )}
                 <div className="form-group">
                   <label>HbA1c post MCG (%)</label>
                   <input type="number" step="0.1" name="hba1c_post_mcg" value={form.hba1c_post_mcg} onChange={cambiarForm} placeholder="7.5" />
@@ -1330,6 +1374,16 @@ export default function SubirPDF() {
                 </div>
                 <div className="form-group">
                   <label><input type="checkbox" name="limitacion_economica" checked={!!form.limitacion_economica} onChange={cambiarForm} style={{ width: "auto", marginRight: 6 }} />Económicas</label>
+                </div>
+                <div className="form-group">
+                  <label>
+                    <input
+                      type="checkbox"
+                      checked={!form.limitacion_internet && !form.limitacion_alergias && !form.limitacion_economica}
+                      onChange={e => { if (e.target.checked) setForm(f => ({ ...f, limitacion_internet: false, limitacion_alergias: false, limitacion_economica: false })); }}
+                      style={{ width: "auto", marginRight: 6 }}
+                    />Ninguna
+                  </label>
                 </div>
               </div>
 

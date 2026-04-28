@@ -331,12 +331,13 @@ export async function relacionIC(req, res) {
          END AS icr
        FROM historial_insulina i
        LEFT JOIN planes_alimentacion a
-         ON a.paciente_id = i.paciente_id
-         AND ABS(DATEDIFF(a.fecha, i.fecha)) = (
-           SELECT MIN(ABS(DATEDIFF(a2.fecha, i.fecha)))
+         ON a.id = (
+           SELECT a2.id
            FROM planes_alimentacion a2
            WHERE a2.paciente_id = i.paciente_id
              AND ABS(DATEDIFF(a2.fecha, i.fecha)) <= 30
+           ORDER BY ABS(DATEDIFF(a2.fecha, i.fecha)) ASC, a2.id DESC
+           LIMIT 1
          )
        WHERE i.paciente_id = ?
        ORDER BY i.fecha ASC`,

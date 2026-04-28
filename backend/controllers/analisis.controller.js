@@ -33,7 +33,8 @@ export async function obtener(req, res) {
 
 export async function crear(req, res) {
   const {
-    paciente_id, fecha, fecha_colocacion, tir, tar, tar_muy_alto, tar_alto,
+    paciente_id, fecha, fecha_colocacion, fecha_inicio_mcg, fecha_fin_mcg,
+    tir, tar, tar_muy_alto, tar_alto,
     tbr, tbr_bajo, tbr_muy_bajo, gmi, cv, tiempo_activo, glucosa_promedio, gri,
     eventos_hipoglucemia, duracion_hipoglucemia, archivo_pdf,
     dosis_insulina_post, se_modifico_dosis, dosis_modificada, hba1c_post_mcg,
@@ -60,15 +61,17 @@ export async function crear(req, res) {
 
     const [result] = await pool.query(
       `INSERT INTO analisis
-        (paciente_id, numero_registro, fecha, fecha_colocacion, tir, tar, tar_muy_alto, tar_alto,
+        (paciente_id, numero_registro, fecha, fecha_colocacion, fecha_inicio_mcg, fecha_fin_mcg,
+         tir, tar, tar_muy_alto, tar_alto,
          tbr, tbr_bajo, tbr_muy_bajo, gmi, cv, tiempo_activo, glucosa_promedio, gri,
          eventos_hipoglucemia, duracion_hipoglucemia, clasificacion, archivo_pdf,
          dosis_insulina_post, se_modifico_dosis, dosis_modificada, hba1c_post_mcg,
          limitacion_internet, limitacion_alergias, limitacion_economica,
          calidad_vida, comentarios)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         paciente_id, numero_registro, fecha, fecha_colocacion || null,
+        fecha_inicio_mcg || null, fecha_fin_mcg || null,
         tir, tar, tar_muy_alto || null, tar_alto || null,
         tbr, tbr_bajo || null, tbr_muy_bajo || null,
         gmi, cv, tiempo_activo, glucosa_promedio, gri,
@@ -95,7 +98,8 @@ export async function crear(req, res) {
 export async function actualizar(req, res) {
   const {
     numero_registro,
-    fecha, fecha_colocacion, tir, tar, tar_muy_alto, tar_alto,
+    fecha, fecha_colocacion, fecha_inicio_mcg, fecha_fin_mcg,
+    tir, tar, tar_muy_alto, tar_alto,
     tbr, tbr_bajo, tbr_muy_bajo, gmi, cv, tiempo_activo,
     glucosa_promedio, gri, eventos_hipoglucemia, duracion_hipoglucemia,
     dosis_insulina_post, se_modifico_dosis, dosis_modificada, hba1c_post_mcg,
@@ -112,12 +116,20 @@ export async function actualizar(req, res) {
 
   const fechaLimpia           = fecha           ? fecha.split("T")[0]           : null;
   const fechaColocacionLimpia = fecha_colocacion ? fecha_colocacion.split("T")[0] : null;
+  const normDatetime = (v) => {
+    if (!v) return null;
+    const s = v.replace("T", " ").substring(0, 19);
+    return s.length === 16 ? s + ":00" : s;
+  };
+  const inicioMCG = normDatetime(fecha_inicio_mcg);
+  const finMCG    = normDatetime(fecha_fin_mcg);
 
   try {
     await pool.query(
       `UPDATE analisis SET
         numero_registro=?,
-        fecha=?, fecha_colocacion=?, tir=?, tar=?, tar_muy_alto=?, tar_alto=?,
+        fecha=?, fecha_colocacion=?, fecha_inicio_mcg=?, fecha_fin_mcg=?,
+        tir=?, tar=?, tar_muy_alto=?, tar_alto=?,
         tbr=?, tbr_bajo=?, tbr_muy_bajo=?, gmi=?, cv=?, tiempo_activo=?,
         glucosa_promedio=?, gri=?, eventos_hipoglucemia=?, duracion_hipoglucemia=?,
         clasificacion=?, dosis_insulina_post=?, se_modifico_dosis=?, dosis_modificada=?,
@@ -127,6 +139,7 @@ export async function actualizar(req, res) {
       [
         numero_registro || null,
         fechaLimpia, fechaColocacionLimpia,
+        inicioMCG, finMCG,
         tir, tar, tar_muy_alto || null, tar_alto || null,
         tbr, tbr_bajo || null, tbr_muy_bajo || null,
         gmi, cv, tiempo_activo, glucosa_promedio, gri,

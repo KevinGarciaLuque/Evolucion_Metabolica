@@ -529,6 +529,16 @@ export default function ConsultasForm() {
                         />
                       </div>
 
+                      {/* Aviso edad > 60 meses — fuera del bloque de z-scores para que siempre se muestre */}
+                      {pacienteFechaNac && Number(calcularEdadMeses(pacienteFechaNac, form.fecha)) > 60 && (
+                        <div style={{ gridColumn: "1 / -1", background: "#fffbeb", border: "1px solid #fde68a", borderRadius: 8, padding: "8px 12px" }}>
+                          <p style={{ margin: 0, fontSize: "0.72rem", color: "#92400e" }}>
+                            ⚠️ <strong>Edad mayor a 60 meses</strong> — los z-scores OMS 2006 (incluyendo P.C./Edad) solo están disponibles para 0–60 meses.
+                            El valor de P.C. (cm) se guardará pero sin z-score ni percentil.
+                          </p>
+                        </div>
+                      )}
+
                       {/* Preview Z-scores */}
                       {zPrev && Object.keys(zPrev).some(k => k.startsWith("zscore")) && (
                         <div style={{ gridColumn: "1 / -1", background: "#fff", border: "1px solid #d1fae5", borderRadius: 10, padding: "10px 12px" }}>

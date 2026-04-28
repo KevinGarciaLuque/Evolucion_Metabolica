@@ -547,7 +547,7 @@ export default function Dashboard() {
                 <tr key={r.id}>
                   <td>{r.paciente_nombre}</td>
                   <td className="hide-mobile">{r.departamento}</td>
-                  <td className="hide-xs">{r.fecha ? new Date(r.fecha).toLocaleString("es-GT", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "—"}</td>
+                  <td className="hide-xs">{r.fecha ? new Date(String(r.fecha).substring(0, 10) + "T00:00:00").toLocaleDateString("es-GT", { day: "2-digit", month: "2-digit", year: "numeric" }) : "—"}</td>
                   <td><span className={`badge-tir ${r.tir >= 70 ? "ok" : r.tir >= 50 ? "warn" : "bad"}`}>{r.tir}%</span></td>
                   <td className="hide-mobile">{r.gmi}%</td>
                   <td><ClasificacionBadge valor={r.clasificacion} /></td>

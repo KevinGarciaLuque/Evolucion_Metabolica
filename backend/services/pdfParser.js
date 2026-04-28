@@ -44,12 +44,42 @@ export async function parsearPDFSyai(rutaArchivo) {
     /(?:nombre|paciente|patient)[:\s]+([A-Za-záéíóúñÁÉÍÓÚÑ\s]+?)(?:\n|fecha|id|dob)/i,
   ]);
 
+  // Normalizar caracteres nulos del PDF (ligadura "fi" y separador ":" se codifican como \u0000)
+  const textoNorm = texto.replace(/\x00/g, ":");
+
   // ─── Fechas ───────────────────────────────────────────────────────────────────
-  const periodoMatch = texto.match(
+  const periodoMatch = textoNorm.match(
     /(?:periodo|período|period)[:\s]+(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})\s*[-–a]\s*(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/i
   );
   const fechaInicio = periodoMatch ? periodoMatch[1] : null;
   const fechaFin    = periodoMatch ? periodoMatch[2] : null;
+
+  // ─── Fecha/hora inicio y fin MCG ─────────────────────────────────────────────
+  // Ej texto normalizado: "Hora de inicio：13 de ene de 2026 0:00 Hora de :nalización：27 de ene de 2026\n23:59"
+  const MESES = {
+    ene:1, feb:2, mar:3, abr:4, may:5, jun:6,
+    jul:7, ago:8, sep:9, oct:10, nov:11, dic:12,
+  };
+
+  function parsarFechaMCG(str) {
+    if (!str) return null;
+    // Juntar posibles saltos de línea entre fecha y hora ("27 de ene de 2026\n23:59")
+    const s = str.replace(/\n/g, " ").trim();
+    const m = s.match(/(\d{1,2})\s+de\s+([a-záéíóú]+)\s+de\s+(\d{4})\s+(\d{1,2}):(\d{2})/i);
+    if (!m) return null;
+    const [, dia, mesStr, anio, h, min] = m;
+    const mes = MESES[mesStr.toLowerCase().substring(0, 3)];
+    if (!mes) return null;
+    return `${anio}-${String(mes).padStart(2,"0")}-${String(dia).padStart(2,"0")} ${String(h).padStart(2,"0")}:${min}:00`;
+  }
+
+  // "Hora de inicio：13 de ene de 2026 0:00"
+  const inicioMatch = textoNorm.match(/hora\s+de\s+inicio\s*[：:]\s*([^\n]{5,50})/i);
+  // "Hora de :nalización：27 de ene de 2026\n23:59" (':nalización' es 'fi'+'nalización' normalizado)
+  const finMatch = textoNorm.match(/hora\s+de\s+(?:finalizaci[oó]n|:nalización)\s*[：:]\s*([\s\S]{5,60}?)(?:\s*Veces|\n[A-ZÁÉÍÓÚÑ])/i);
+
+  const fechaInicioMCG = parsarFechaMCG(inicioMatch ? inicioMatch[1] : null);
+  const fechaFinMCG    = parsarFechaMCG(finMatch    ? finMatch[1]    : null);
 
   // ─── TIR (Tiempo en Rango 70-180 mg/dL) ──────────────────────────────────────
   const tir = extraer(texto, [
@@ -66,7 +96,7 @@ export async function parsearPDFSyai(rutaArchivo) {
   // Orden: [0]=Muy Alto(>250)  [1]=Alto(181-250)  [2]=Objetivo(TIR)
   //        [3]=Bajo(54-69)     [4]=Muy Bajo(<54)
   const tdrPercents = (() => {
-    const m = texto.match(/<54\s*mg\/dL([\s\S]{3,700}?)GRI[：:\s]/i);
+    const m = textoNorm.match(/<54\s*mg\/dL([\s\S]{3,700}?)GRI[：:\s]/i);
     if (!m) return null;
     const bloque = m[1];
     const nums = [];
@@ -189,6 +219,8 @@ export async function parsearPDFSyai(rutaArchivo) {
     nombrePaciente,
     fechaInicio,
     fechaFin,
+    fechaInicioMCG,
+    fechaFinMCG,
     tir,
     tar,
     tarMuyAlto,
