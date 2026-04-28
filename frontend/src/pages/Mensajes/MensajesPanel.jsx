@@ -7,7 +7,7 @@ import "./MensajesPanel.css";
 function formatFecha(iso) {
   if (!iso) return "—";
   const d = new Date(iso);
-  return d.toLocaleString("es-GT", {
+  return d.toLocaleString("es-HN", {
     day: "2-digit", month: "2-digit", year: "numeric",
     hour: "2-digit", minute: "2-digit",
     hour12: true,

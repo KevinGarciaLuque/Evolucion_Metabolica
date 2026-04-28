@@ -945,8 +945,8 @@ export default function PacienteDetalle() {
                 /* ── MÓVIL: tarjetas ─────────────────────────────────── */
                 <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 10 }}>
                   {historial.map((a) => {
-                    const fmtF  = (v) => v ? new Date(String(v).substring(0,10) + "T00:00:00").toLocaleDateString("es-GT", { day:"2-digit", month:"2-digit", year:"2-digit" }) : "—";
-                    const fmtDt = (v) => v ? new Date(typeof v === "string" ? v.replace(" ","T") : v).toLocaleString("es-GT", { day:"2-digit", month:"2-digit", year:"2-digit", hour:"2-digit", minute:"2-digit" }) : "—";
+                    const fmtF  = (v) => v ? new Date(String(v).substring(0,10) + "T00:00:00").toLocaleDateString("es-HN", { day:"2-digit", month:"2-digit", year:"2-digit" }) : "—";
+                    const fmtDt = (v) => v ? new Date(typeof v === "string" ? v.replace(" ","T") : v).toLocaleString("es-HN", { day:"2-digit", month:"2-digit", year:"2-digit", hour:"2-digit", minute:"2-digit" }) : "—";
                     return (
                       <div key={a.id} style={{ border: "1px solid #e2e8f0", borderRadius: 10, padding: "11px 13px", background: "#f8fafc" }}>
                         {/* Cabecera */}
@@ -1035,8 +1035,8 @@ export default function PacienteDetalle() {
                         const fmtDt = (v) => {
                           if (!v) return null;
                           const d = new Date(typeof v === "string" ? v.replace(" ","T") : v);
-                          const fecha = d.toLocaleDateString("es-GT", { day:"2-digit", month:"2-digit", year:"2-digit" });
-                          const hora  = d.toLocaleTimeString("es-GT", { hour:"2-digit", minute:"2-digit", hour12:true }).replace(/\s*a\.\s*m\.?/i,"am").replace(/\s*p\.\s*m\.?/i,"pm");
+                          const fecha = d.toLocaleDateString("es-HN", { day:"2-digit", month:"2-digit", year:"2-digit" });
+                          const hora  = d.toLocaleTimeString("es-HN", { hour:"2-digit", minute:"2-digit", hour12:true }).replace(/\s*a\.\s*m\.?/i,"am").replace(/\s*p\.\s*m\.?/i,"pm");
                           return { fecha, hora };
                         };
                         const CeldaMCG = ({ v }) => {
@@ -1047,7 +1047,7 @@ export default function PacienteDetalle() {
                         return (
                           <tr key={a.id}>
                             <td style={{ textAlign:"center", fontWeight:600, color:"#3b82f6" }}>{a.numero_registro ?? "—"}</td>
-                            <td style={{ whiteSpace:"nowrap", fontSize:"0.82rem" }}>{a.fecha ? new Date(String(a.fecha).substring(0,10)+"T00:00:00").toLocaleDateString("es-GT",{day:"2-digit",month:"2-digit",year:"2-digit"}) : "—"}</td>
+                            <td style={{ whiteSpace:"nowrap", fontSize:"0.82rem" }}>{a.fecha ? new Date(String(a.fecha).substring(0,10)+"T00:00:00").toLocaleDateString("es-HN",{day:"2-digit",month:"2-digit",year:"2-digit"}) : "—"}</td>
                             <td style={{ fontSize:"0.78rem", color:"#475569", lineHeight:1.3 }}><CeldaMCG v={a.fecha_inicio_mcg} /></td>
                             <td style={{ fontSize:"0.78rem", color:"#475569", lineHeight:1.3 }}><CeldaMCG v={a.fecha_fin_mcg} /></td>
                             <td><span className={`badge-tir ${a.tir >= 70 ? "ok" : a.tir >= 50 ? "warn" : "bad"}`}>{a.tir}%</span></td>
@@ -1233,7 +1233,7 @@ export default function PacienteDetalle() {
                   <tbody>
                     {insulina.map(r => (
                       <tr key={r.id}>
-                        <td style={{ whiteSpace: "nowrap", fontSize: "0.82rem" }}>{r.fecha ? new Date(String(r.fecha).substring(0, 10) + "T00:00:00").toLocaleDateString("es-GT", { day: "2-digit", month: "2-digit", year: "2-digit" }) : "—"}</td>
+                        <td style={{ whiteSpace: "nowrap", fontSize: "0.82rem" }}>{r.fecha ? new Date(String(r.fecha).substring(0, 10) + "T00:00:00").toLocaleDateString("es-HN", { day: "2-digit", month: "2-digit", year: "2-digit" }) : "—"}</td>
                         <td className="hide-tablet">{r.insulina_prolongada || "—"}</td>
                         <td>{r.dosis_prolongada_u != null ? `${Math.round(Number(r.dosis_prolongada_u))} UI` : "—"}</td>
                         <td className="hide-tablet">{r.insulina_corta || "—"}</td>
@@ -1381,7 +1381,7 @@ export default function PacienteDetalle() {
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 8 }}>
                       <div>
                         <div style={{ fontWeight: 700, color: "#0f172a", fontSize: "0.95rem" }}>
-                          {p.tipo_dieta || "Plan sin nombre"} · {p.fecha ? new Date(String(p.fecha).substring(0, 10) + "T00:00:00").toLocaleDateString("es-GT", { day: "2-digit", month: "long", year: "numeric" }) : "—"}
+                          {p.tipo_dieta || "Plan sin nombre"} · {p.fecha ? new Date(String(p.fecha).substring(0, 10) + "T00:00:00").toLocaleDateString("es-HN", { day: "2-digit", month: "long", year: "numeric" }) : "—"}
                         </div>
                         {p.elaborado_por && <div style={{ fontSize: "0.78rem", color: "#64748b", marginTop: 2 }}>Elaborado por: {p.elaborado_por}</div>}
                       </div>
@@ -1786,9 +1786,9 @@ export default function PacienteDetalle() {
                 <table className="info-tabla" style={{ marginBottom: 16 }}>
                   <tbody>
                     <InfoFila label="Nº de monitor" valor={modalVer.numero_registro ?? "—"} />
-                    <InfoFila label="Fecha análisis" valor={modalVer.fecha ? new Date(String(modalVer.fecha).substring(0, 10) + "T00:00:00").toLocaleDateString("es-GT", { day: "2-digit", month: "2-digit", year: "numeric" }) : "—"} />
-                    <InfoFila label="Inicio MCG" valor={modalVer.fecha_inicio_mcg ? new Date(typeof modalVer.fecha_inicio_mcg === "string" ? modalVer.fecha_inicio_mcg.replace(" ", "T") : modalVer.fecha_inicio_mcg).toLocaleString("es-GT", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "—"} />
-                    <InfoFila label="Fin MCG" valor={modalVer.fecha_fin_mcg ? new Date(typeof modalVer.fecha_fin_mcg === "string" ? modalVer.fecha_fin_mcg.replace(" ", "T") : modalVer.fecha_fin_mcg).toLocaleString("es-GT", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "—"} />
+                    <InfoFila label="Fecha análisis" valor={modalVer.fecha ? new Date(String(modalVer.fecha).substring(0, 10) + "T00:00:00").toLocaleDateString("es-HN", { day: "2-digit", month: "2-digit", year: "numeric" }) : "—"} />
+                    <InfoFila label="Inicio MCG" valor={modalVer.fecha_inicio_mcg ? new Date(typeof modalVer.fecha_inicio_mcg === "string" ? modalVer.fecha_inicio_mcg.replace(" ", "T") : modalVer.fecha_inicio_mcg).toLocaleString("es-HN", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "—"} />
+                    <InfoFila label="Fin MCG" valor={modalVer.fecha_fin_mcg ? new Date(typeof modalVer.fecha_fin_mcg === "string" ? modalVer.fecha_fin_mcg.replace(" ", "T") : modalVer.fecha_fin_mcg).toLocaleString("es-HN", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "—"} />
                     <InfoFila label="Clasificación" valor={<ClasificacionBadge valor={modalVer.clasificacion} />} />
                   </tbody>
                 </table>
@@ -2573,7 +2573,7 @@ function TabCrecimiento({ paciente, crecimiento, isMobile, isTablet, tabGrafica,
 
   // ── Generar HTML para impresión/PDF ──────────────────────────────────────
   function buildPrintHTML(titulo, chartImgBase64, curvaObj, modo) {
-    const fecha = new Date().toLocaleDateString("es-GT", { day: "2-digit", month: "long", year: "numeric" });
+    const fecha = new Date().toLocaleDateString("es-HN", { day: "2-digit", month: "long", year: "numeric" });
     const sexoLabel = paciente.sexo === "F" ? "Femenino" : "Masculino";
     const edadLabel = (() => {
       if (!paciente.fecha_nacimiento) return "—";
@@ -2585,7 +2585,7 @@ function TabCrecimiento({ paciente, crecimiento, isMobile, isTablet, tabGrafica,
     })();
 
     const tablaHistorial = [...crecimiento].reverse().map(r => {
-      const fmtFecha = r.fecha ? new Date(String(r.fecha).substring(0, 10) + "T00:00:00").toLocaleDateString("es-GT", { day: "2-digit", month: "2-digit", year: "numeric" }) : "—";
+      const fmtFecha = r.fecha ? new Date(String(r.fecha).substring(0, 10) + "T00:00:00").toLocaleDateString("es-HN", { day: "2-digit", month: "2-digit", year: "numeric" }) : "—";
       const edad = r.edad_meses != null ? (r.edad_meses < 24 ? `${r.edad_meses}m` : `${Math.floor(r.edad_meses / 12)}a ${r.edad_meses % 12}m`) : "—";
       const zCol = (campo, estado) => {
         const v = r[campo]; if (v == null) return "<td style='color:#cbd5e1'>—</td>";
@@ -2655,7 +2655,7 @@ function TabCrecimiento({ paciente, crecimiento, isMobile, isTablet, tabGrafica,
 
       <div class="info-grid">
         <div class="info-card"><div class="label">Paciente</div><div class="value" style="font-size:11px">${paciente.nombre || "—"}</div><div class="sub">Sexo: ${sexoLabel}</div></div>
-        <div class="info-card"><div class="label">Edad</div><div class="value">${edadLabel}</div><div class="sub">Nac: ${paciente.fecha_nacimiento ? new Date(paciente.fecha_nacimiento).toLocaleDateString("es-GT") : "—"}</div></div>
+        <div class="info-card"><div class="label">Edad</div><div class="value">${edadLabel}</div><div class="sub">Nac: ${paciente.fecha_nacimiento ? new Date(paciente.fecha_nacimiento).toLocaleDateString("es-HN") : "—"}</div></div>
         <div class="info-card"><div class="label">Mediciones</div><div class="value">${crecimiento.length}</div><div class="sub">Total registros</div></div>
         <div class="info-card"><div class="label">Expediente</div><div class="value">${paciente.numero_expediente || "—"}</div><div class="sub">${paciente.institucion || "—"}</div></div>
       </div>
@@ -2700,7 +2700,7 @@ function TabCrecimiento({ paciente, crecimiento, isMobile, isTablet, tabGrafica,
 
   // ── Reporte consolidado (5 curvas + resumen + historial) ──────────────────
   function buildConsolidadoHTML(chartImgs) {
-    const fecha = new Date().toLocaleDateString("es-GT", { day: "2-digit", month: "long", year: "numeric" });
+    const fecha = new Date().toLocaleDateString("es-HN", { day: "2-digit", month: "long", year: "numeric" });
     const sexoLabel = paciente.sexo === "F" ? "femenino" : "masculino";
     const u = crecimiento.length > 0 ? crecimiento[0] : null;
     const edadStr = (() => {
@@ -2712,8 +2712,8 @@ function TabCrecimiento({ paciente, crecimiento, isMobile, isTablet, tabGrafica,
       return `${y} años, ${m} meses`;
     })();
     const fechaNacStr = paciente.fecha_nacimiento
-      ? new Date(paciente.fecha_nacimiento + "T00:00:00").toLocaleDateString("es-GT", { day: "2-digit", month: "short", year: "numeric" }) : "—";
-    const ultimaFechaStr = u?.fecha ? new Date(String(u.fecha).substring(0, 10) + "T00:00:00").toLocaleDateString("es-GT") : "—";
+      ? new Date(paciente.fecha_nacimiento + "T00:00:00").toLocaleDateString("es-HN", { day: "2-digit", month: "short", year: "numeric" }) : "—";
+    const ultimaFechaStr = u?.fecha ? new Date(String(u.fecha).substring(0, 10) + "T00:00:00").toLocaleDateString("es-HN") : "—";
     const zPTu = (u && u.peso_kg && u.talla_cm) ? calcularZScores({ peso_kg: u.peso_kg, talla_cm: u.talla_cm, edad_meses: u.edad_meses }, paciente.sexo) : null;
 
     const colZ = (est) => {
@@ -2764,7 +2764,7 @@ function TabCrecimiento({ paciente, crecimiento, isMobile, isTablet, tabGrafica,
 
     const histRows = [...crecimiento].reverse().map((r, idx) => {
       const zPTr = (r.peso_kg && r.talla_cm) ? calcularZScores({ peso_kg: r.peso_kg, talla_cm: r.talla_cm, edad_meses: r.edad_meses }, paciente.sexo) : null;
-      const fmtF = r.fecha ? new Date(String(r.fecha).substring(0, 10) + "T00:00:00").toLocaleDateString("es-GT") : "—";
+      const fmtF = r.fecha ? new Date(String(r.fecha).substring(0, 10) + "T00:00:00").toLocaleDateString("es-HN") : "—";
       const ed   = r.edad_meses != null ? (r.edad_meses < 24 ? `${r.edad_meses}m` : `${Math.floor(r.edad_meses / 12)}a ${r.edad_meses % 12}m`) : "—";
       const zc   = (v, est) => v != null ? `<td style="font-weight:700;color:${colZ(est)};padding:5px 7px">${Number(v).toFixed(2)}</td>` : `<td style="color:#cbd5e1;padding:5px 7px">—</td>`;
       const bg   = idx % 2 === 1 ? "background:#f8fafc" : "";
@@ -3320,7 +3320,7 @@ function TabCrecimiento({ paciente, crecimiento, isMobile, isTablet, tabGrafica,
               const pct = percentilActivo ? r[percentilActivo] : r.percentil_peso_edad;
               const col = colorEstado(est);
               const bg  = col === "#dc2626" ? "#fef2f2" : col === "#d97706" ? "#fffbeb" : col === "#16a34a" ? "#f0fdf4" : "#f8f8ff";
-              const fecha = r.fecha ? new Date(String(r.fecha).substring(0,10) + "T00:00:00").toLocaleDateString("es-GT", { day: "2-digit", month: "short", year: "2-digit" }) : "—";
+              const fecha = r.fecha ? new Date(String(r.fecha).substring(0,10) + "T00:00:00").toLocaleDateString("es-HN", { day: "2-digit", month: "short", year: "2-digit" }) : "—";
               const edad  = r.edad_meses != null ? (r.edad_meses < 24 ? `${r.edad_meses}m` : `${Math.floor(r.edad_meses/12)}a ${r.edad_meses%12}m`) : "—";
               return (
                 <div key={r.id} style={{ border: `1.5px solid ${col}30`, borderRadius: 10, background: bg, padding: "11px 14px" }}>
@@ -3382,7 +3382,7 @@ function TabCrecimiento({ paciente, crecimiento, isMobile, isTablet, tabGrafica,
                       onMouseEnter={e => e.currentTarget.style.background = "#f8fafc"}
                       onMouseLeave={e => e.currentTarget.style.background = ""}>
                       <td style={{ padding: "9px 10px", fontSize: "0.82rem", whiteSpace: "nowrap", color: "#374151" }}>
-                        {r.fecha ? new Date(String(r.fecha).substring(0,10) + "T00:00:00").toLocaleDateString("es-GT", { day: "2-digit", month: "2-digit", year: "2-digit" }) : "—"}
+                        {r.fecha ? new Date(String(r.fecha).substring(0,10) + "T00:00:00").toLocaleDateString("es-HN", { day: "2-digit", month: "2-digit", year: "2-digit" }) : "—"}
                       </td>
                       <td style={{ padding: "9px 10px", fontSize: "0.82rem", color: "#64748b", whiteSpace: "nowrap" }}>
                         {r.edad_meses != null ? (r.edad_meses < 24 ? `${r.edad_meses}m` : `${Math.floor(r.edad_meses/12)}a ${r.edad_meses%12}m`) : "—"}
