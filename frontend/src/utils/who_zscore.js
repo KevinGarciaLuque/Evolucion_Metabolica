@@ -118,7 +118,61 @@ const WFL_G = [
   [109,20.873,0.11189],[110,21.432,0.11411],
 ];
 
-// ─── Interpolación lineal en tabla ──────────────────────────────────────────
+// ─── WHO Growth Reference 2007 (5–19 años, de Onis et al.) ──────────────────
+// Formato [meses, M, S] con L fijo; o [meses, L, M, S] para L variable
+
+// Talla/Edad niños 5-19 a (L=1)
+const LHFA2_B = [
+  [61,109.9,0.03682],[72,116.0,0.03749],[84,121.7,0.03805],
+  [96,127.3,0.03852],[108,132.6,0.03908],[120,138.0,0.03950],
+  [132,143.7,0.04011],[144,149.5,0.04070],[156,155.0,0.04113],
+  [168,160.5,0.04113],[180,165.0,0.04055],[192,168.5,0.03957],
+  [204,171.1,0.03849],[216,173.0,0.03762],[228,174.4,0.03711],
+];
+// Talla/Edad niñas 5-19 a (L=1)
+const LHFA2_G = [
+  [61,108.5,0.04126],[72,114.7,0.04163],[84,120.7,0.04184],
+  [96,126.4,0.04223],[108,131.9,0.04278],[120,137.5,0.04326],
+  [132,142.8,0.04335],[144,148.1,0.04316],[156,152.8,0.04257],
+  [168,156.7,0.04178],[180,159.4,0.04124],[192,161.2,0.04100],
+  [204,162.3,0.04090],[216,163.1,0.04087],[228,163.5,0.04087],
+];
+
+// IMC/Edad niños 5-19 a (L variable) — formato [meses, L, M, S]
+const BFA2_B = [
+  [61,-1.7862,15.2836,0.08571],[72,-1.9670,15.0849,0.08928],
+  [84,-2.0694,15.0233,0.09332],[96,-2.0856,15.1379,0.09776],
+  [108,-1.8957,15.3874,0.10220],[120,-1.3668,15.9462,0.10699],
+  [132,-0.5551,16.7219,0.11151],[144,0.4571,17.5838,0.11586],
+  [156,1.3986,18.4925,0.11973],[168,2.1607,19.3927,0.12330],
+  [180,2.6877,20.2477,0.12692],[192,2.9969,21.0681,0.13003],
+  [204,3.1103,21.8741,0.13205],[216,3.0677,22.6378,0.13397],
+  [228,2.8978,23.3340,0.13593],
+];
+// IMC/Edad niñas 5-19 a (L variable) — formato [meses, L, M, S]
+const BFA2_G = [
+  [61,-1.6186,15.1534,0.09167],[72,-1.8530,15.0309,0.09457],
+  [84,-1.9969,15.0225,0.09846],[96,-2.0393,15.2213,0.10283],
+  [108,-1.9536,15.6020,0.10720],[120,-1.6945,16.1183,0.11154],
+  [132,-1.2426,16.7900,0.11567],[144,-0.6368,17.5282,0.11960],
+  [156,0.0487,18.3024,0.12330],[168,0.7302,19.1034,0.12668],
+  [180,1.3503,19.8343,0.12972],[192,1.8587,20.4280,0.13190],
+  [204,2.2225,20.9065,0.13379],[216,2.4571,21.3313,0.13546],
+  [228,2.5910,21.7231,0.13688],
+];
+
+// Peso/Edad niños 5-10 a (L=-0.3521) — solo hasta 120m
+const WFA2_B = [
+  [61,18.66,0.12177],[72,20.31,0.13034],[84,22.23,0.13735],
+  [96,24.44,0.14448],[108,27.15,0.15149],[120,30.46,0.15961],
+];
+// Peso/Edad niñas 5-10 a (L=-0.3521) — solo hasta 120m
+const WFA2_G = [
+  [61,18.20,0.13048],[72,19.95,0.13685],[84,21.84,0.14541],
+  [96,24.14,0.15441],[108,26.98,0.16390],[120,30.46,0.17453],
+];
+
+// ─── Interpolación lineal en tabla [x, M, S] ────────────────────────────────
 function interpolar(tabla, x) {
   if (x <= tabla[0][0]) return tabla[0];
   if (x >= tabla[tabla.length - 1][0]) return tabla[tabla.length - 1];
@@ -128,6 +182,21 @@ function interpolar(tabla, x) {
     if (x >= x0 && x <= x1) {
       const t = (x - x0) / (x1 - x0);
       return [x, m0 + t * (m1 - m0), s0 + t * (s1 - s0)];
+    }
+  }
+  return tabla[tabla.length - 1];
+}
+
+// ─── Interpolación lineal en tabla [x, L, M, S] (WHO 2007) ─────────────────
+function interpolarLMS(tabla, x) {
+  if (x <= tabla[0][0]) return tabla[0];
+  if (x >= tabla[tabla.length - 1][0]) return tabla[tabla.length - 1];
+  for (let i = 0; i < tabla.length - 1; i++) {
+    const [x0, l0, m0, s0] = tabla[i];
+    const [x1, l1, m1, s1] = tabla[i + 1];
+    if (x >= x0 && x <= x1) {
+      const t = (x - x0) / (x1 - x0);
+      return [x, l0 + t * (l1 - l0), m0 + t * (m1 - m0), s0 + t * (s1 - s0)];
     }
   }
   return tabla[tabla.length - 1];
@@ -215,42 +284,70 @@ export function calcularZScores(medidas, sexo) {
     result.imc = parseFloat((Number(peso_kg) / (tallaMt * tallaMt)).toFixed(2));
   }
 
-  // Solo calcular si tenemos edad en meses y está en rango 0-60
   const edad = Number(edad_meses);
-  const edadValida = !isNaN(edad) && edad >= 0 && edad <= 60;
+  const edadValida05  = !isNaN(edad) && edad >= 0  && edad <= 60;   // WHO 2006 (0-5a)
+  const edadValida519 = !isNaN(edad) && edad >= 61 && edad <= 228;  // WHO 2007 (5-19a)
 
   // ── Peso/Edad ─────────────────────────────────────────────────────────────
-  if (peso_kg && edadValida) {
-    const tabla = esNiño ? WFA_B : WFA_G;
-    const [, M, S] = interpolar(tabla, edad);
-    const z = parseFloat((lmsZ(Number(peso_kg), M, S, -0.3521) ?? 0).toFixed(2));
-    result.zscore_peso_edad = z;
-    result.percentil_peso_edad = zToPercentil(z);
-    result.estado_peso_edad = clasificarZ(z, "peso_edad");
+  if (peso_kg) {
+    if (edadValida05) {
+      const tabla = esNiño ? WFA_B : WFA_G;
+      const [, M, S] = interpolar(tabla, edad);
+      const z = parseFloat((lmsZ(Number(peso_kg), M, S, -0.3521) ?? 0).toFixed(2));
+      result.zscore_peso_edad = z;
+      result.percentil_peso_edad = zToPercentil(z);
+      result.estado_peso_edad = clasificarZ(z, "peso_edad");
+    } else if (edadValida519 && edad <= 120) { // WHO 2007 solo hasta 10a para peso
+      const tabla = esNiño ? WFA2_B : WFA2_G;
+      const [, M, S] = interpolar(tabla, edad);
+      const z = parseFloat((lmsZ(Number(peso_kg), M, S, -0.3521) ?? 0).toFixed(2));
+      result.zscore_peso_edad = z;
+      result.percentil_peso_edad = zToPercentil(z);
+      result.estado_peso_edad = clasificarZ(z, "peso_edad");
+    }
   }
 
   // ── Talla/Edad ────────────────────────────────────────────────────────────
-  if (talla_cm && edadValida) {
-    const tabla = esNiño ? LHFA_B : LHFA_G;
-    const [, M, S] = interpolar(tabla, edad);
-    const z = parseFloat((lmsZ(Number(talla_cm), M, S, 1) ?? 0).toFixed(2));
-    result.zscore_talla_edad = z;
-    result.percentil_talla_edad = zToPercentil(z);
-    result.estado_talla_edad = clasificarZ(z, "talla_edad");
+  if (talla_cm) {
+    if (edadValida05) {
+      const tabla = esNiño ? LHFA_B : LHFA_G;
+      const [, M, S] = interpolar(tabla, edad);
+      const z = parseFloat((lmsZ(Number(talla_cm), M, S, 1) ?? 0).toFixed(2));
+      result.zscore_talla_edad = z;
+      result.percentil_talla_edad = zToPercentil(z);
+      result.estado_talla_edad = clasificarZ(z, "talla_edad");
+    } else if (edadValida519) {
+      const tabla = esNiño ? LHFA2_B : LHFA2_G;
+      const [, M, S] = interpolar(tabla, edad);
+      const z = parseFloat((lmsZ(Number(talla_cm), M, S, 1) ?? 0).toFixed(2));
+      result.zscore_talla_edad = z;
+      result.percentil_talla_edad = zToPercentil(z);
+      result.estado_talla_edad = clasificarZ(z, "talla_edad");
+    }
   }
 
   // ── IMC/Edad ──────────────────────────────────────────────────────────────
-  if (result.imc && edadValida) {
-    const tabla = esNiño ? BFA_B : BFA_G;
-    const [, M, S] = interpolar(tabla, edad);
-    const z = parseFloat((lmsZ(result.imc, M, S, -2.0) ?? 0).toFixed(2));
-    result.zscore_imc_edad = z;
-    result.percentil_imc_edad = zToPercentil(z);
-    result.estado_imc_edad = clasificarZ(z, "imc_edad");
+  if (result.imc) {
+    if (edadValida05) {
+      const tabla = esNiño ? BFA_B : BFA_G;
+      const [, M, S] = interpolar(tabla, edad);
+      const z = parseFloat((lmsZ(result.imc, M, S, -2.0) ?? 0).toFixed(2));
+      result.zscore_imc_edad = z;
+      result.percentil_imc_edad = zToPercentil(z);
+      result.estado_imc_edad = clasificarZ(z, "imc_edad");
+    } else if (edadValida519) {
+      const tabla = esNiño ? BFA2_B : BFA2_G;
+      const [, L, M, S] = interpolarLMS(tabla, edad);
+      const z = parseFloat((lmsZ(result.imc, M, S, L) ?? 0).toFixed(2));
+      result.zscore_imc_edad = z;
+      result.percentil_imc_edad = zToPercentil(z);
+      result.estado_imc_edad = clasificarZ(z, "imc_edad");
+    }
   }
 
   // ── P.C./Edad ─────────────────────────────────────────────────────────────
-  if (pc_cm && edadValida) {
+  // Solo WHO 2006 (0-60m); WHO 2007 no incluye PC para 5-19a
+  if (pc_cm && edadValida05) {
     const tabla = esNiño ? HCFA_B : HCFA_G;
     const [, M, S] = interpolar(tabla, edad);
     const z = parseFloat((lmsZ(Number(pc_cm), M, S, 1) ?? 0).toFixed(2));

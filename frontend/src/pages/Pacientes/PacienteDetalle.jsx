@@ -420,12 +420,34 @@ export default function PacienteDetalle() {
       setAlimentacion(ali.data);
       setConsultas(cons.data);
       setRelacionIC(ric.data);
-      // Recalcular z-scores faltantes de PC (registros guardados antes de que existiera el cálculo)
+      // Recalcular z-scores faltantes (registros guardados antes del soporte WHO 2007 o antes del cálculo de PC)
       const sexo = p.data?.sexo || "M";
       const crecConZscores = crec.data.map(r => {
-        if (r.zscore_pc_edad == null && r.pc_cm != null && r.edad_meses != null) {
-          const zs = calcularZScores({ pc_cm: r.pc_cm, edad_meses: r.edad_meses }, sexo);
-          return { ...r, zscore_pc_edad: zs.zscore_pc_edad ?? null, percentil_pc_edad: zs.percentil_pc_edad ?? null, estado_pc_edad: zs.estado_pc_edad ?? null };
+        const edad = Number(r.edad_meses);
+        const faltaTalla = r.zscore_talla_edad == null && r.talla_cm != null && !isNaN(edad);
+        const faltaIMC   = r.zscore_imc_edad   == null && r.talla_cm != null && r.peso_kg != null && !isNaN(edad);
+        const faltaPeso  = r.zscore_peso_edad  == null && r.peso_kg  != null && !isNaN(edad);
+        const faltaPC    = r.zscore_pc_edad    == null && r.pc_cm    != null && !isNaN(edad);
+        if (faltaTalla || faltaIMC || faltaPeso || faltaPC) {
+          const zs = calcularZScores({
+            peso_kg: r.peso_kg, talla_cm: r.talla_cm, pc_cm: r.pc_cm, edad_meses: r.edad_meses,
+          }, sexo);
+          return {
+            ...r,
+            imc:                  r.imc              ?? zs.imc              ?? null,
+            zscore_peso_edad:     r.zscore_peso_edad  ?? zs.zscore_peso_edad  ?? null,
+            percentil_peso_edad:  r.percentil_peso_edad ?? zs.percentil_peso_edad ?? null,
+            estado_peso_edad:     r.estado_peso_edad   ?? zs.estado_peso_edad   ?? null,
+            zscore_talla_edad:    r.zscore_talla_edad  ?? zs.zscore_talla_edad  ?? null,
+            percentil_talla_edad: r.percentil_talla_edad ?? zs.percentil_talla_edad ?? null,
+            estado_talla_edad:    r.estado_talla_edad   ?? zs.estado_talla_edad   ?? null,
+            zscore_imc_edad:      r.zscore_imc_edad     ?? zs.zscore_imc_edad     ?? null,
+            percentil_imc_edad:   r.percentil_imc_edad  ?? zs.percentil_imc_edad  ?? null,
+            estado_imc_edad:      r.estado_imc_edad     ?? zs.estado_imc_edad     ?? null,
+            zscore_pc_edad:       r.zscore_pc_edad      ?? zs.zscore_pc_edad      ?? null,
+            percentil_pc_edad:    r.percentil_pc_edad   ?? zs.percentil_pc_edad   ?? null,
+            estado_pc_edad:       r.estado_pc_edad      ?? zs.estado_pc_edad      ?? null,
+          };
         }
         return r;
       });
@@ -2500,13 +2522,24 @@ function TabCrecimiento({ paciente, crecimiento, isMobile, isTablet, tabGrafica,
     ? (v => `${Math.floor(v / 12)}a`)
     : undefined;
 
+  // Límite real de la referencia OMS activa para la curva actual
+  const refLimitX = (refOMS === "5_19" && !curva?.xCampo)
+    ? ((OMS_CURVES_5_19[tabGrafica]?.puntos?.at(-1)?.[0]) ?? 228)
+    : null;
+
   // Dominio fijo del eje X según la referencia activa
   const xDomain = (() => {
     if (curva?.xCampo) return ["dataMin", "dataMax"]; // peso/talla: eje X = talla (cm), no edad
     if (refOMS === "5_19") {
       // peso_edad WHO 2007 solo llega a 120m (10a); talla/IMC llegan a 228m (19a)
-      const maxX = (OMS_CURVES_5_19[tabGrafica]?.puntos?.at(-1)?.[0]) ?? 228;
-      return [60, maxX];
+      const maxRefX = (OMS_CURVES_5_19[tabGrafica]?.puntos?.at(-1)?.[0]) ?? 228;
+      // Extender para mostrar puntos del paciente aunque superen el rango de referencia
+      const patientAges = crecimiento
+        .filter(r => r.edad_meses != null)
+        .map(r => Number(r.edad_meses))
+        .filter(v => !isNaN(v) && v > 0);
+      const maxPatientX = patientAges.length > 0 ? Math.max(...patientAges) : 0;
+      return [60, Math.max(maxRefX, maxPatientX)];
     }
     return [0, 60]; // OMS 0-5: siempre mostrar 0 → 60 meses completos
   })();
@@ -3302,6 +3335,22 @@ function TabCrecimiento({ paciente, crecimiento, isMobile, isTablet, tabGrafica,
                     dot={{ r: isMobile ? 4 : 5, fill: curva.color, stroke: "#fff", strokeWidth: 2 }}
                     activeDot={{ r: isMobile ? 6 : 7, stroke: curva.color, strokeWidth: 2 }}
                     connectNulls
+                  />
+                )}
+                {/* Línea vertical: límite real de la referencia OMS (siempre visible en 5-19) */}
+                {refLimitX != null && (
+                  <ReferenceLine
+                    x={refLimitX}
+                    stroke="#6366f1"
+                    strokeDasharray="6 3"
+                    strokeWidth={1.5}
+                    label={{
+                      value: `◀ Ref. OMS (${Math.floor(refLimitX / 12)}a)`,
+                      position: "insideTopRight",
+                      fontSize: isMobile ? 8 : 9,
+                      fill: "#6366f1",
+                      fontWeight: 600,
+                    }}
                   />
                 )}
               </LineChart>
