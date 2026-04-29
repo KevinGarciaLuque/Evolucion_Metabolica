@@ -3407,6 +3407,8 @@ function TabCrecimiento({ paciente, crecimiento, isMobile, isTablet, tabGrafica,
               const pct = percentilActivo ? r[percentilActivo] : r.percentil_peso_edad;
               const col = colorEstado(est);
               const bg  = col === "#dc2626" ? "#fef2f2" : col === "#d97706" ? "#fffbeb" : col === "#16a34a" ? "#f0fdf4" : "#f8f8ff";
+              const sinRefPC   = z == null && tabGrafica === "pc_edad"    && Number(r.edad_meses) > 60;
+              const sinRefPeso = z == null && tabGrafica === "peso_edad"  && Number(r.edad_meses) > 120;
               const fecha = r.fecha ? new Date(String(r.fecha).substring(0,10) + "T00:00:00").toLocaleDateString("es-HN", { day: "2-digit", month: "short", year: "2-digit" }) : "—";
               const edad  = r.edad_meses != null ? (r.edad_meses < 24 ? `${r.edad_meses}m` : `${Math.floor(r.edad_meses/12)}a ${r.edad_meses%12}m`) : "—";
               return (
@@ -3430,15 +3432,23 @@ function TabCrecimiento({ paciente, crecimiento, isMobile, isTablet, tabGrafica,
                   </div>
                   {/* Z-score + estado */}
                   <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                    {z != null && (
+                    {z != null ? (
                       <span style={{ fontSize: "0.82rem", color: "#64748b" }}>
                         Z: <strong style={{ color: col, fontSize: "0.95rem" }}>{Number(z).toFixed(2)}</strong>
                       </span>
-                    )}
+                    ) : (sinRefPC || sinRefPeso) ? (
+                      <span title={sinRefPC ? "WHO 2007 no incluye referencia de P.C. para >60 meses" : "WHO 2007 no incluye referencia de Peso para >10 años"}
+                        style={{ background: "#f1f5f9", color: "#94a3b8", borderRadius: 6, padding: "2px 8px", fontSize: "0.68rem", fontWeight: 600, cursor: "help" }}>
+                        Sin ref. OMS
+                      </span>
+                    ) : null}
                     {pct && (
                       <span style={{ background: "#f0f9ff", color: "#0369a1", borderRadius: 20, padding: "2px 8px", fontSize: "0.7rem", fontWeight: 700 }}>{pct}</span>
                     )}
-                    <BadgeEstado estado={est} />
+                    {!(sinRefPC || sinRefPeso) && <BadgeEstado estado={est} />}
+                    {(sinRefPC || sinRefPeso) && (
+                      <span style={{ color: "#94a3b8", fontSize: "0.68rem", fontStyle: "italic" }}>Sin referencia disponible</span>
+                    )}
                   </div>
                   {r.observaciones && (
                     <div style={{ marginTop: 6, fontSize: "0.72rem", color: "#64748b", fontStyle: "italic" }}>💬 {r.observaciones}</div>
@@ -3464,6 +3474,14 @@ function TabCrecimiento({ paciente, crecimiento, isMobile, isTablet, tabGrafica,
                   const est = estadoActivo    ? r[estadoActivo]    : r.estado_peso_edad;
                   const pct = percentilActivo ? r[percentilActivo] : r.percentil_peso_edad;
                   const col = colorEstado(est);
+                  // Mostrar aviso cuando no hay z-score pero sí hay razón conocida
+                  const sinRefPC = z == null && tabGrafica === "pc_edad" && Number(r.edad_meses) > 60;
+                  const sinRefPeso = z == null && tabGrafica === "peso_edad" && Number(r.edad_meses) > 120;
+                  const chipSinRef = (texto) => (
+                    <span title={texto} style={{ background: "#f1f5f9", color: "#94a3b8", borderRadius: 6, padding: "2px 7px", fontSize: "0.65rem", fontWeight: 600, whiteSpace: "nowrap", cursor: "help" }}>
+                      Sin ref. OMS
+                    </span>
+                  );
                   return (
                     <tr key={r.id} style={{ borderBottom: "1px solid #f8fafc" }}
                       onMouseEnter={e => e.currentTarget.style.background = "#f8fafc"}
@@ -3485,18 +3503,30 @@ function TabCrecimiento({ paciente, crecimiento, isMobile, isTablet, tabGrafica,
                       </td>
                       {!isTablet && (
                         <td style={{ padding: "9px 10px", fontSize: "0.82rem", color: "#64748b" }}>
-                          {r.pc_cm != null ? Number(r.pc_cm).toFixed(1) : "—"}
+                          {r.pc_cm != null
+                            ? Number(r.pc_cm).toFixed(1)
+                            : <span title="No se registró P.C. en esta medición"
+                                style={{ color: "#cbd5e1", fontSize: "0.72rem", fontStyle: "italic" }}>No reg.</span>}
                         </td>
                       )}
                       <td style={{ padding: "9px 10px", fontWeight: 700, color: z != null ? col : "#94a3b8", fontSize: "0.92rem" }}>
-                        {z != null ? Number(z).toFixed(2) : "—"}
+                        {z != null ? Number(z).toFixed(2)
+                          : (sinRefPC || sinRefPeso)
+                            ? chipSinRef(sinRefPC ? "WHO 2007 no incluye referencia de P.C. para mayores de 60 meses" : "WHO 2007 no incluye referencia de Peso para mayores de 10 años")
+                            : "—"}
                       </td>
                       <td style={{ padding: "9px 10px" }}>
                         {pct ? (
                           <span style={{ background: "#f0f9ff", color: "#0369a1", borderRadius: 20, padding: "2px 10px", fontSize: "0.7rem", fontWeight: 700 }}>{pct}</span>
-                        ) : <span style={{ color: "#cbd5e1" }}>—</span>}
+                        ) : (sinRefPC || sinRefPeso)
+                          ? chipSinRef()
+                          : <span style={{ color: "#cbd5e1" }}>—</span>}
                       </td>
-                      <td style={{ padding: "9px 10px" }}><BadgeEstado estado={est} /></td>
+                      <td style={{ padding: "9px 10px" }}>
+                        {(sinRefPC || sinRefPeso)
+                          ? <span style={{ color: "#94a3b8", fontSize: "0.72rem", fontStyle: "italic" }}>Sin referencia</span>
+                          : <BadgeEstado estado={est} />}
+                      </td>
                       <td style={{ padding: "9px 10px" }}>
                         <div style={{ display: "flex", gap: 4 }}>
                           {onEditar && <button onClick={() => onEditar(r)} style={{ background: "#dbeafe", border: "none", cursor: "pointer", color: "#2563eb", padding: "4px 7px", borderRadius: 6, display: "flex", alignItems: "center" }} title="Editar"><FiEdit2 size={13} /></button>}
