@@ -202,6 +202,12 @@ export default function PacienteDetalle() {
   }
 
   // ── Insulina helpers ──────────────────────────────────────────────────────
+  async function recargarRelacionIC() {
+    try {
+      const { data } = await api.get(`/pacientes/${id}/relacion-ic`);
+      setRelacionIC(data);
+    } catch { /* silencioso */ }
+  }
   function abrirNuevaInsulina() {
     // Pre-poblar con la insulina actual del paciente
     setFormInsulina({
@@ -242,6 +248,7 @@ export default function PacienteDetalle() {
         setInsulina(list => [{ ...formInsulina, id: data.id }, ...list]);
       }
       setModalInsulina(false);
+      recargarRelacionIC();
     } catch {
       alert("Error al guardar el registro de insulina.");
     } finally {
@@ -254,6 +261,7 @@ export default function PacienteDetalle() {
       await api.delete(`/pacientes/${id}/insulina/${eliminarInsulina.id}`);
       setInsulina(list => list.filter(r => r.id !== eliminarInsulina.id));
       setEliminarInsulina(null);
+      recargarRelacionIC();
     } catch {
       alert("Error al eliminar el registro.");
     } finally {
@@ -288,6 +296,7 @@ export default function PacienteDetalle() {
         setAlimentacion(list => [{ ...formAlimentacion, id: data.id }, ...list]);
       }
       setModalAlimentacion(false);
+      recargarRelacionIC();
     } catch {
       alert("Error al guardar el plan de alimentación.");
     } finally {
@@ -300,6 +309,7 @@ export default function PacienteDetalle() {
       await api.delete(`/pacientes/${id}/alimentacion/${eliminarAlimentacion.id}`);
       setAlimentacion(list => list.filter(r => r.id !== eliminarAlimentacion.id));
       setEliminarAlimentacion(null);
+      recargarRelacionIC();
     } catch {
       alert("Error al eliminar el plan.");
     } finally {
