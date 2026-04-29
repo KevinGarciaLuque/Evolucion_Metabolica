@@ -70,11 +70,11 @@ export async function confirmarAnalisis(req, res) {
   );
 
   try {
-    const [[{ total }]] = await pool.query(
-      "SELECT COUNT(*) AS total FROM analisis WHERE paciente_id = ?",
+    const [[{ maxReg }]] = await pool.query(
+      "SELECT COALESCE(MAX(numero_registro), 0) AS maxReg FROM analisis WHERE paciente_id = ?",
       [paciente_id]
     );
-    const numero_registro = total + 1;
+    const numero_registro = maxReg + 1;
 
     const [result] = await pool.query(
       `INSERT INTO analisis
