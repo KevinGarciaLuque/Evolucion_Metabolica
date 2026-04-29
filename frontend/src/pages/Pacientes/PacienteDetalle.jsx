@@ -420,7 +420,16 @@ export default function PacienteDetalle() {
       setAlimentacion(ali.data);
       setConsultas(cons.data);
       setRelacionIC(ric.data);
-      setCrecimiento(crec.data);
+      // Recalcular z-scores faltantes de PC (registros guardados antes de que existiera el cálculo)
+      const sexo = p.data?.sexo || "M";
+      const crecConZscores = crec.data.map(r => {
+        if (r.zscore_pc_edad == null && r.pc_cm != null && r.edad_meses != null) {
+          const zs = calcularZScores({ pc_cm: r.pc_cm, edad_meses: r.edad_meses }, sexo);
+          return { ...r, zscore_pc_edad: zs.zscore_pc_edad ?? null, percentil_pc_edad: zs.percentil_pc_edad ?? null, estado_pc_edad: zs.estado_pc_edad ?? null };
+        }
+        return r;
+      });
+      setCrecimiento(crecConZscores);
     }).finally(() => setCargando(false));
   }, [id, location.key]);
 
