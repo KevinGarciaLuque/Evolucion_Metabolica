@@ -10,7 +10,7 @@ export default function Layout({ children }) {
   const [collapsed, setCollapsed]     = useState(() => localStorage.getItem("sidebar_collapsed") === "true");
   const [menuOpen, setMenuOpen]       = useState(false);
   const [infoOpen, setInfoOpen]       = useState(false);
-  const { usuario, logout }           = useAuth();
+  const { usuario, logout, permisos }   = useAuth();
   const navigate                      = useNavigate();
   const menuRef                       = useRef(null);
 
@@ -79,11 +79,15 @@ export default function Layout({ children }) {
 
           {menuOpen && (
             <div className="topbar-dropdown">
-              <button className="topbar-dropdown-item" onClick={() => { setInfoOpen(true); setMenuOpen(false); }}>
-                <HiOutlineInformationCircle size={16} />
-                Acerca del sistema
-              </button>
-              <div className="topbar-dropdown-divider" />
+              {(permisos === null || permisos.includes("acerca")) && (
+                <button className="topbar-dropdown-item" onClick={() => { setInfoOpen(true); setMenuOpen(false); }}>
+                  <HiOutlineInformationCircle size={16} />
+                  Acerca del sistema
+                </button>
+              )}
+              {(permisos === null || permisos.includes("acerca")) && (
+                <div className="topbar-dropdown-divider" />
+              )}
               <button className="topbar-dropdown-item danger" onClick={handleLogout}>
                 <HiOutlineArrowRightOnRectangle size={16} />
                 Cerrar sesión

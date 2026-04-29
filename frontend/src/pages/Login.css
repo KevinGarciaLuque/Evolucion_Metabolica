@@ -86,6 +86,188 @@
   margin-top: 24px;
 }
 
+/* ── Botón info esquina superior derecha ── */
+.login-card {
+  position: relative;
+}
+
+.btn-acerca {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  color: #94a3b8;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s, background 0.2s;
+}
+.btn-acerca:hover {
+  color: #1d4ed8;
+  background: #eff6ff;
+}
+
+/* ── Modal Acerca de ── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+  backdrop-filter: blur(2px);
+  animation: overlayIn 0.2s ease forwards;
+}
+
+.modal-overlay-out {
+  animation: overlayOut 0.28s ease forwards;
+}
+
+.modal-acerca {
+  background: #fff;
+  border-radius: 16px;
+  padding: 36px 32px 28px;
+  width: 100%;
+  max-width: 420px;
+  position: relative;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.4);
+  animation: modalIn 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.modal-acerca-out {
+  animation: modalOut 0.25s cubic-bezier(0.4, 0, 0.6, 1) forwards;
+}
+
+@keyframes modalIn {
+  0%   { opacity: 0; transform: scale(0.05); }
+  55%  { opacity: 1; transform: scale(1.04); }
+  75%  { transform: scale(0.97); }
+  90%  { transform: scale(1.01); }
+  100% { transform: scale(1); }
+}
+
+@keyframes modalOut {
+  0%   { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(0.05); }
+}
+
+@keyframes overlayIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes overlayOut {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+
+.modal-close-btn {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #94a3b8;
+  display: flex;
+  padding: 4px;
+  border-radius: 6px;
+  transition: color 0.2s, background 0.2s;
+}
+.modal-close-btn:hover {
+  color: #0f172a;
+  background: #f1f5f9;
+}
+
+.modal-acerca-header {
+  text-align: center;
+  margin-bottom: 16px;
+}
+.modal-acerca-header h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 8px 0 4px;
+}
+.modal-version {
+  color: #94a3b8;
+  font-size: 0.78rem;
+  margin: 0;
+}
+
+.modal-descripcion {
+  color: #475569;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.modal-seccion {
+  margin-bottom: 18px;
+}
+.modal-seccion h3 {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #94a3b8;
+  margin: 0 0 10px;
+}
+
+.modal-doctor {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  background: #f8fafc;
+  border-radius: 10px;
+  margin-bottom: 8px;
+}
+.modal-doctor-icon { font-size: 1.4rem; line-height: 1; }
+.modal-doctor div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.modal-doctor strong {
+  font-size: 0.9rem;
+  color: #0f172a;
+  font-weight: 600;
+}
+.modal-doctor span {
+  font-size: 0.78rem;
+  color: #64748b;
+}
+
+.modal-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.modal-tags span {
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: 20px;
+}
+
+.modal-acerca-footer {
+  text-align: center;
+  color: #94a3b8;
+  font-size: 0.75rem;
+  margin: 16px 0 0;
+  line-height: 1.5;
+}
+
 /* Responsive */
 @media (max-width: 480px) {
   .login-card {

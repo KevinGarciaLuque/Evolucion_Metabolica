@@ -5,14 +5,14 @@ import {
   actualizarCrecimiento,
   eliminarCrecimiento,
 } from "../controllers/crecimiento.controller.js";
-import { verificarToken } from "../middlewares/auth.js";
+import { verificarToken, noAsistente } from "../middlewares/auth.js";
 
 const router = Router();
 router.use(verificarToken);
 
 router.get("/:id/crecimiento",          listarCrecimiento);
 router.post("/:id/crecimiento",         crearCrecimiento);
-router.put("/:id/crecimiento/:regId",   actualizarCrecimiento);
-router.delete("/:id/crecimiento/:regId",eliminarCrecimiento);
+router.put("/:id/crecimiento/:regId",   noAsistente, actualizarCrecimiento);
+router.delete("/:id/crecimiento/:regId", noAsistente, eliminarCrecimiento);
 
 export default router;

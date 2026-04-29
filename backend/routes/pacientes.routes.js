@@ -2,7 +2,7 @@ import { Router } from "express";
 import {
   listar, listarMapa, obtener, crear, actualizar, eliminar, historial, departamentos,
 } from "../controllers/pacientes.controller.js";
-import { verificarToken } from "../middlewares/auth.js";
+import { verificarToken, noAsistente } from "../middlewares/auth.js";
 
 const router = Router();
 
@@ -13,8 +13,8 @@ router.get("/departamentos",      departamentos);
 router.get("/mapa",               listarMapa);
 router.get("/:id",                obtener);
 router.post("/",                  crear);
-router.put("/:id",                actualizar);
-router.delete("/:id",             eliminar);
+router.put("/:id",                noAsistente, actualizar);
+router.delete("/:id",             noAsistente, eliminar);
 router.get("/:id/historial",      historial);
 
 export default router;

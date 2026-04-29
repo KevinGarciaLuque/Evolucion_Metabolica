@@ -4,6 +4,7 @@
     "jspdf": "^4.2.1"
   },
   "devDependencies": {
-    "docx": "^9.6.1"
+    "docx": "^9.6.1",
+    "qrcode": "^1.5.4"
   }
 }

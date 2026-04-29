@@ -10,6 +10,7 @@ const MODULOS = [
   { key: "consultas",   label: "Consultas" },
   { key: "mapa",        label: "Mapa" },
   { key: "mensajes",    label: "Mensajes" },
+  { key: "acerca",      label: "Acerca del sistema" },
 ];
 
 const ROL_BADGE = {

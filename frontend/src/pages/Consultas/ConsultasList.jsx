@@ -5,6 +5,7 @@ import api from "../../api/axios";
 import Layout from "../../components/Layout";
 import ConsultaPrintModal from "./ConsultaPrintModal";
 import ConfirmModal from "../../components/ConfirmModal";
+import { useAuth } from "../../context/AuthContext";
 
 const TIPO_BADGE = {
   Presencial:   "badge-green",
@@ -21,6 +22,7 @@ function hoy() {
 
 export default function ConsultasList() {
   const navigate = useNavigate();
+  const { soloLectura } = useAuth();
   const [entradas, setEntradas] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [printId, setPrintId] = useState(null);
@@ -151,16 +153,16 @@ export default function ConsultasList() {
                         >
                           <FiEye size={13} /> Ver
                         </button>
-                        <button
+                        {!soloLectura && <button
                           className="btn btn-sm btn-outline"
                           onClick={() => navigate(`/consultas/${e.id}/editar`)}
-                        >Editar</button>
-                        <button
+                        >Editar</button>}
+                        {!soloLectura && <button
                           className="btn btn-sm btn-danger"
                           onClick={() => setConfirmEliminar(e.id)}
                           title="Eliminar consulta"
                           style={{ display: "flex", alignItems: "center" }}
-                        ><FiTrash2 size={14} /></button>
+                        ><FiTrash2 size={14} /></button>}
                       </div>
                     </td>
                   </tr>

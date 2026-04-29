@@ -57,7 +57,7 @@ export default function PacienteDetalle() {
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const { usuario: yo } = useAuth();
+  const { usuario: yo, soloLectura } = useAuth();
   const [paciente, setPaciente] = useState(null);
   const [historial, setHistorial] = useState([]);
   const [cargando, setCargando]   = useState(true);
@@ -620,9 +620,11 @@ export default function PacienteDetalle() {
             <div className="card">
               <div className="card-header-row">
                 <h3 style={{ margin: 0 }}>Información del Paciente</h3>
-                <Link to={`/pacientes/${id}/editar`} className="btn btn-outline" style={{ display: "flex", alignItems: "center", gap: 6, fontSize: "0.82rem", padding: "5px 12px" }}>
-                  <FiEdit3 size={13} /> Editar
-                </Link>
+                {!soloLectura && (
+                  <Link to={`/pacientes/${id}/editar`} className="btn btn-outline" style={{ display: "flex", alignItems: "center", gap: 6, fontSize: "0.82rem", padding: "5px 12px" }}>
+                    <FiEdit3 size={13} /> Editar
+                  </Link>
+                )}
               </div>
               <table className="info-tabla">
                 <tbody>
@@ -1016,8 +1018,8 @@ export default function PacienteDetalle() {
                           ) : <span />}
                           <div style={{ display: "flex", gap: 2 }}>
                             <button onClick={() => setModalVer(a)} style={{ background:"none", border:"none", cursor:"pointer", color:"#0ea5e9", padding:"4px", borderRadius:4, display:"flex", alignItems:"center" }} title="Ver detalle"><FiEye size={16} /></button>
-                            <button onClick={() => abrirEditar(a)} style={{ background:"none", border:"none", cursor:"pointer", color:"#3b82f6", padding:"4px", borderRadius:4, display:"flex", alignItems:"center" }} title="Editar"><FiEdit2 size={16} /></button>
-                            <button onClick={() => setModalEliminar({ id: a.id, fecha: a.fecha })} style={{ background:"none", border:"none", cursor:"pointer", color:"#dc2626", padding:"4px", borderRadius:4, display:"flex", alignItems:"center" }} title="Eliminar"><FiTrash2 size={16} /></button>
+                            {!soloLectura && <button onClick={() => abrirEditar(a)} style={{ background:"none", border:"none", cursor:"pointer", color:"#3b82f6", padding:"4px", borderRadius:4, display:"flex", alignItems:"center" }} title="Editar"><FiEdit2 size={16} /></button>}
+                            {!soloLectura && <button onClick={() => setModalEliminar({ id: a.id, fecha: a.fecha })} style={{ background:"none", border:"none", cursor:"pointer", color:"#dc2626", padding:"4px", borderRadius:4, display:"flex", alignItems:"center" }} title="Eliminar"><FiTrash2 size={16} /></button>}
                           </div>
                         </div>
                       </div>
@@ -1087,8 +1089,8 @@ export default function PacienteDetalle() {
                             <td>
                               <div style={{ display:"flex", gap:2, alignItems:"center", flexWrap:"nowrap" }}>
                                 <button onClick={() => setModalVer(a)} style={{ background:"none", border:"none", cursor:"pointer", color:"#0ea5e9", padding:"3px", borderRadius:4, display:"flex", alignItems:"center" }} title="Ver detalle"><FiEye size={15} /></button>
-                                <button onClick={() => abrirEditar(a)} style={{ background:"none", border:"none", cursor:"pointer", color:"#3b82f6", padding:"3px", borderRadius:4, display:"flex", alignItems:"center" }} title="Editar análisis"><FiEdit2 size={15} /></button>
-                                <button onClick={() => setModalEliminar({ id: a.id, fecha: a.fecha })} style={{ background:"none", border:"none", cursor:"pointer", color:"#dc2626", padding:"3px", borderRadius:4, display:"flex", alignItems:"center" }} title="Eliminar análisis"><FiTrash2 size={15} /></button>
+                                {!soloLectura && <button onClick={() => abrirEditar(a)} style={{ background:"none", border:"none", cursor:"pointer", color:"#3b82f6", padding:"3px", borderRadius:4, display:"flex", alignItems:"center" }} title="Editar análisis"><FiEdit2 size={15} /></button>}
+                                {!soloLectura && <button onClick={() => setModalEliminar({ id: a.id, fecha: a.fecha })} style={{ background:"none", border:"none", cursor:"pointer", color:"#dc2626", padding:"3px", borderRadius:4, display:"flex", alignItems:"center" }} title="Eliminar análisis"><FiTrash2 size={15} /></button>}
                               </div>
                             </td>
                           </tr>
@@ -1277,8 +1279,8 @@ export default function PacienteDetalle() {
                         <td className="hide-tablet" style={{ maxWidth: 180, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.motivo_cambio || "—"}</td>
                         <td>
                           <div style={{ display: "flex", gap: 4 }}>
-                            <button onClick={() => abrirEditarInsulina(r)} style={{ background: "none", border: "none", cursor: "pointer", color: "#3b82f6", padding: "2px 6px", borderRadius: 4, display: "flex", alignItems: "center" }} title="Editar"><FiEdit2 size={15} /></button>
-                            <button onClick={() => setEliminarInsulina(r)} style={{ background: "none", border: "none", cursor: "pointer", color: "#dc2626", padding: "2px 6px", borderRadius: 4, display: "flex", alignItems: "center" }} title="Eliminar"><FiTrash2 size={15} /></button>
+                            {!soloLectura && <button onClick={() => abrirEditarInsulina(r)} style={{ background: "none", border: "none", cursor: "pointer", color: "#3b82f6", padding: "2px 6px", borderRadius: 4, display: "flex", alignItems: "center" }} title="Editar"><FiEdit2 size={15} /></button>}
+                            {!soloLectura && <button onClick={() => setEliminarInsulina(r)} style={{ background: "none", border: "none", cursor: "pointer", color: "#dc2626", padding: "2px 6px", borderRadius: 4, display: "flex", alignItems: "center" }} title="Eliminar"><FiTrash2 size={15} /></button>}
                           </div>
                         </td>
                       </tr>
@@ -1350,16 +1352,16 @@ export default function PacienteDetalle() {
                           >
                             <FiEye size={13} /> Ver
                           </button>
-                          <button
+                          {!soloLectura && <button
                             onClick={() => navigate(`/consultas/${c.id}/editar`)}
                             className="btn btn-sm btn-outline"
-                          >Editar</button>
-                          <button
+                          >Editar</button>}
+                          {!soloLectura && <button
                             onClick={() => setConfirmEliminarConsulta(c.id)}
                             className="btn btn-sm btn-danger"
                             title="Eliminar consulta"
                             style={{ display: "flex", alignItems: "center" }}
-                          ><FiTrash2 size={14} /></button>
+                          ><FiTrash2 size={14} /></button>}
                         </div>
                       </td>
                     </tr>
@@ -1389,8 +1391,8 @@ export default function PacienteDetalle() {
             refOMS={refOMS}
             setRefOMS={setRefOMS}
             onNuevo={abrirNuevoCrec}
-            onEditar={abrirEditarCrec}
-            onEliminar={setEliminarCrec}
+            onEditar={soloLectura ? null : abrirEditarCrec}
+            onEliminar={soloLectura ? null : setEliminarCrec}
           />
         )}
 
@@ -1421,8 +1423,8 @@ export default function PacienteDetalle() {
                         {p.elaborado_por && <div style={{ fontSize: "0.78rem", color: "#64748b", marginTop: 2 }}>Elaborado por: {p.elaborado_por}</div>}
                       </div>
                       <div style={{ display: "flex", gap: 4 }}>
-                        <button onClick={() => abrirEditarAlimentacion(p)} style={{ background: "none", border: "none", cursor: "pointer", color: "#3b82f6", padding: "4px 6px", borderRadius: 4, display: "flex", alignItems: "center" }} title="Editar"><FiEdit2 size={15} /></button>
-                        <button onClick={() => setEliminarAlimentacion(p)} style={{ background: "none", border: "none", cursor: "pointer", color: "#dc2626", padding: "4px 6px", borderRadius: 4, display: "flex", alignItems: "center" }} title="Eliminar"><FiTrash2 size={15} /></button>
+                        {!soloLectura && <button onClick={() => abrirEditarAlimentacion(p)} style={{ background: "none", border: "none", cursor: "pointer", color: "#3b82f6", padding: "4px 6px", borderRadius: 4, display: "flex", alignItems: "center" }} title="Editar"><FiEdit2 size={15} /></button>}
+                        {!soloLectura && <button onClick={() => setEliminarAlimentacion(p)} style={{ background: "none", border: "none", cursor: "pointer", color: "#dc2626", padding: "4px 6px", borderRadius: 4, display: "flex", alignItems: "center" }} title="Eliminar"><FiTrash2 size={15} /></button>}
                       </div>
                     </div>
 
@@ -3365,8 +3367,8 @@ function TabCrecimiento({ paciente, crecimiento, isMobile, isTablet, tabGrafica,
                       <div style={{ fontSize: "0.72rem", color: "#64748b" }}>Edad: {edad}</div>
                     </div>
                     <div style={{ display: "flex", gap: 4 }}>
-                      <button onClick={() => onEditar(r)} style={{ background: "#dbeafe", border: "none", cursor: "pointer", color: "#2563eb", padding: "5px 8px", borderRadius: 6 }} title="Editar"><FiEdit2 size={14} /></button>
-                      <button onClick={() => onEliminar(r)} style={{ background: "#fee2e2", border: "none", cursor: "pointer", color: "#dc2626", padding: "5px 8px", borderRadius: 6 }} title="Eliminar"><FiTrash2 size={14} /></button>
+                      {onEditar && <button onClick={() => onEditar(r)} style={{ background: "#dbeafe", border: "none", cursor: "pointer", color: "#2563eb", padding: "5px 8px", borderRadius: 6 }} title="Editar"><FiEdit2 size={14} /></button>}
+                      {onEliminar && <button onClick={() => onEliminar(r)} style={{ background: "#fee2e2", border: "none", cursor: "pointer", color: "#dc2626", padding: "5px 8px", borderRadius: 6 }} title="Eliminar"><FiTrash2 size={14} /></button>}
                     </div>
                   </div>
                   {/* Medidas */}
@@ -3447,8 +3449,8 @@ function TabCrecimiento({ paciente, crecimiento, isMobile, isTablet, tabGrafica,
                       <td style={{ padding: "9px 10px" }}><BadgeEstado estado={est} /></td>
                       <td style={{ padding: "9px 10px" }}>
                         <div style={{ display: "flex", gap: 4 }}>
-                          <button onClick={() => onEditar(r)} style={{ background: "#dbeafe", border: "none", cursor: "pointer", color: "#2563eb", padding: "4px 7px", borderRadius: 6, display: "flex", alignItems: "center" }} title="Editar"><FiEdit2 size={13} /></button>
-                          <button onClick={() => onEliminar(r)} style={{ background: "#fee2e2", border: "none", cursor: "pointer", color: "#dc2626", padding: "4px 7px", borderRadius: 6, display: "flex", alignItems: "center" }} title="Eliminar"><FiTrash2 size={13} /></button>
+                          {onEditar && <button onClick={() => onEditar(r)} style={{ background: "#dbeafe", border: "none", cursor: "pointer", color: "#2563eb", padding: "4px 7px", borderRadius: 6, display: "flex", alignItems: "center" }} title="Editar"><FiEdit2 size={13} /></button>}
+                          {onEliminar && <button onClick={() => onEliminar(r)} style={{ background: "#fee2e2", border: "none", cursor: "pointer", color: "#dc2626", padding: "4px 7px", borderRadius: 6, display: "flex", alignItems: "center" }} title="Eliminar"><FiTrash2 size={13} /></button>}
                         </div>
                       </td>
                     </tr>

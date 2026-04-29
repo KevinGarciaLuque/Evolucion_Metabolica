@@ -57,8 +57,10 @@ export function AuthProvider({ children }) {
     setPermisos(null);
   }
 
+  const soloLectura = usuario?.rol === "asistente";
+
   return (
-    <AuthContext.Provider value={{ usuario, permisos, cargarPermisos, login, logout, cargando }}>
+    <AuthContext.Provider value={{ usuario, permisos, soloLectura, cargarPermisos, login, logout, cargando }}>
       {children}
     </AuthContext.Provider>
   );

@@ -21,3 +21,10 @@ export function soloAdmin(req, res, next) {
   }
   next();
 }
+
+export function noAsistente(req, res, next) {
+  if (req.usuario?.rol === "asistente") {
+    return res.status(403).json({ error: "Acceso denegado: el rol asistente no puede modificar ni eliminar registros" });
+  }
+  next();
+}

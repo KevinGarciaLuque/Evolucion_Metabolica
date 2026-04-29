@@ -5,9 +5,11 @@ import Layout from "../../components/Layout";
 import { IoLogoWhatsapp } from "react-icons/io";
 import { FiTrash2 } from "react-icons/fi";
 import ConfirmModal from "../../components/ConfirmModal";
+import { useAuth } from "../../context/AuthContext";
 
 export default function PacientesList() {
   const navigate  = useNavigate();
+  const { soloLectura } = useAuth();
   const [pacientes, setPacientes]   = useState([]);
   const [deptos, setDeptos]         = useState([]);
   const [cargando, setCargando]     = useState(true);
@@ -278,7 +280,7 @@ export default function PacientesList() {
                     <td>
                       <div className="acciones">
                         <button className="btn btn-sm btn-outline" onClick={() => navigate(`/pacientes/${p.id}`)}>Ver</button>
-                        <button className="btn btn-sm btn-outline" onClick={() => navigate(`/pacientes/${p.id}/editar`)}>Editar</button>
+                        {!soloLectura && <button className="btn btn-sm btn-outline" onClick={() => navigate(`/pacientes/${p.id}/editar`)}>Editar</button>}
                         <button
                           className="btn btn-sm btn-whatsapp"
                           onClick={() => abrirModalWA(p)}
@@ -286,7 +288,7 @@ export default function PacientesList() {
                         >
                           <IoLogoWhatsapp size={15} />
                         </button>
-                        <button className="btn btn-sm btn-danger" onClick={() => setConfirmEliminar(p.id)} title="Eliminar paciente" style={{ display: "flex", alignItems: "center" }}><FiTrash2 size={14} /></button>
+                        {!soloLectura && <button className="btn btn-sm btn-danger" onClick={() => setConfirmEliminar(p.id)} title="Eliminar paciente" style={{ display: "flex", alignItems: "center" }}><FiTrash2 size={14} /></button>}
                       </div>
                     </td>
                   </tr>

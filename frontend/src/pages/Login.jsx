@@ -1,7 +1,78 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { FiInfo } from "react-icons/fi";
 import "./Login.css";
+
+function ModalAcercaDe({ onClose, origin }) {
+  const [cerrando, setCerrando] = useState(false);
+
+  function handleClose() {
+    setCerrando(true);
+    setTimeout(onClose, 280);
+  }
+
+  return (
+    <div
+      className={`modal-overlay${cerrando ? " modal-overlay-out" : ""}`}
+      onClick={handleClose}
+    >
+      <div
+        className={`modal-acerca${cerrando ? " modal-acerca-out" : ""}`}
+        style={{ transformOrigin: `${origin.x}px ${origin.y}px` }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button className="modal-close-btn" onClick={handleClose} aria-label="Cerrar">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+
+        <div className="modal-acerca-header">
+          <span style={{ fontSize: "2rem" }}>🩺</span>
+          <h2>Evolución Metabólica</h2>
+          <p className="modal-version">Versión 1.0 · 2026</p>
+        </div>
+
+        <p className="modal-descripcion">
+          Sistema de Monitoreo Continuo de Glucosa con inteligencia artificial para el seguimiento de pacientes con diabetes.
+        </p>
+
+        <div className="modal-seccion">
+          <h3>Equipo médico</h3>
+          <div className="modal-doctor">
+            <span className="modal-doctor-icon">👩‍⚕️</span>
+            <div>
+              <strong>Dra. Lesby Espinoza</strong>
+              <span></span>
+            </div>
+          </div>
+          <div className="modal-doctor">
+            <span className="modal-doctor-icon">👩‍⚕️</span>
+            <div>
+              <strong>Dra. Leonela Membreño</strong>
+              <span></span>
+            </div>
+          </div>
+        </div>
+
+        <div className="modal-seccion">
+          <h3>Tecnología</h3>
+          <div className="modal-tags">
+            <span>Syai X1</span>
+            <span>ISPAD Guidelines</span>
+            <span>IA clínica</span>
+          </div>
+        </div>
+
+        <p className="modal-acerca-footer">
+          Desarrollado por <strong style={{ color: "#1d4ed8" }}>Kevin Garcia</strong> para el seguimiento especializado de pacientes pediátricos con diabetes.
+        </p>
+      </div>
+    </div>
+  );
+}
 
 export default function Login() {
   const { login } = useAuth();
@@ -10,6 +81,23 @@ export default function Login() {
   const [error, setError]     = useState("");
   const [cargando, setCargando] = useState(false);
   const [verPass, setVerPass] = useState(false);
+  const [mostrarAcerca, setMostrarAcerca] = useState(false);
+  const [btnOrigin, setBtnOrigin] = useState({ x: 0, y: 0 });
+  const btnRef = useRef(null);
+
+  function handleAbrirAcerca() {
+    if (btnRef.current) {
+      const rect = btnRef.current.getBoundingClientRect();
+      const bx = rect.left + rect.width / 2;
+      const by = rect.top + rect.height / 2;
+      const modalW = 420;
+      const modalH = 430;
+      const modalLeft = (window.innerWidth - modalW) / 2;
+      const modalTop = (window.innerHeight - modalH) / 2;
+      setBtnOrigin({ x: Math.round(bx - modalLeft), y: Math.round(by - modalTop) });
+    }
+    setMostrarAcerca(true);
+  }
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -82,15 +170,32 @@ export default function Login() {
             </div>
           </div>
 
-          <button type="submit" className="btn btn-primary btn-full" disabled={cargando}>
+          <button type="submit" className="btn btn-primary btn-full" disabled={cargando} style={{ marginTop: "20px" }}>
             {cargando ? "Ingresando..." : "Ingresar al sistema"}
           </button>
         </form>
+
+        <button
+            ref={btnRef}
+            type="button"
+            className="btn-acerca"
+            onClick={handleAbrirAcerca}
+            aria-label="Acerca de"
+          >
+            <FiInfo size={20} />
+          </button>
 
         <p className="login-footer">
           Monitoreo continuo con IA · Syai X1 · ISPAD Guidelines
         </p>
       </div>
+
+      {mostrarAcerca && (
+        <ModalAcercaDe
+          onClose={() => setMostrarAcerca(false)}
+          origin={btnOrigin}
+        />
+      )}
     </div>
   );
 }
