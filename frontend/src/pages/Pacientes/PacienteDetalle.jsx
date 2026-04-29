@@ -1169,8 +1169,25 @@ export default function PacienteDetalle() {
                 </div>
 
               {relacionIC.filter(r => r.icr != null).length === 0 ? (
-                <div style={{ textAlign: "center", padding: "32px 0", color: "#94a3b8", fontSize: "0.88rem" }}>
-                  Sin datos de ICR aún. Agrega registros de insulina con dosis corta y planes de alimentación con carbohidratos para calcular la relación.
+                <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 10, padding: "24px 20px", textAlign: "center" }}>
+                  <div style={{ fontSize: "0.92rem", color: "#64748b", marginBottom: 14 }}>
+                    Sin datos de ICR aún. Agrega registros de insulina con dosis corta y planes de alimentación con carbohidratos para calcular la relación.
+                  </div>
+                  <div style={{ display: "inline-flex", flexDirection: "column", gap: 8, textAlign: "left", background: "#fffbeb", border: "1px solid #fde68a", borderRadius: 8, padding: "12px 16px", fontSize: "0.78rem", color: "#92400e", maxWidth: 480 }}>
+                    <div style={{ fontWeight: 700, marginBottom: 2 }}>💡 Para que aparezca la gráfica necesitas:</div>
+                    <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
+                      <span style={{ background: "#fef3c7", borderRadius: 4, padding: "1px 6px", fontWeight: 700, whiteSpace: "nowrap" }}>1</span>
+                      Un registro de insulina con <strong>Dosis Corta (UI) &gt; 0</strong>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
+                      <span style={{ background: "#fef3c7", borderRadius: 4, padding: "1px 6px", fontWeight: 700, whiteSpace: "nowrap" }}>2</span>
+                      Un plan de alimentación con <strong>Carbohidratos (g) &gt; 0</strong>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
+                      <span style={{ background: "#fef3c7", borderRadius: 4, padding: "1px 6px", fontWeight: 700, whiteSpace: "nowrap" }}>3</span>
+                      Ambos registros con fechas a <strong>máximo 30 días de diferencia</strong>
+                    </div>
+                  </div>
                 </div>
               ) : (<>
                 {/* Tarjetas resumen */}
