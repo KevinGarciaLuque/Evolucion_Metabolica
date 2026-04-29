@@ -428,7 +428,8 @@ export default function PacienteDetalle() {
         const faltaIMC   = r.zscore_imc_edad   == null && r.talla_cm != null && r.peso_kg != null && !isNaN(edad);
         const faltaPeso  = r.zscore_peso_edad  == null && r.peso_kg  != null && !isNaN(edad);
         const faltaPC    = r.zscore_pc_edad    == null && r.pc_cm    != null && !isNaN(edad);
-        if (faltaTalla || faltaIMC || faltaPeso || faltaPC) {
+        const faltaPT    = r.zscore_peso_talla == null && r.peso_kg  != null && r.talla_cm != null;
+        if (faltaTalla || faltaIMC || faltaPeso || faltaPC || faltaPT) {
           const zs = calcularZScores({
             peso_kg: r.peso_kg, talla_cm: r.talla_cm, pc_cm: r.pc_cm, edad_meses: r.edad_meses,
           }, sexo);
@@ -447,6 +448,9 @@ export default function PacienteDetalle() {
             zscore_pc_edad:       r.zscore_pc_edad      ?? zs.zscore_pc_edad      ?? null,
             percentil_pc_edad:    r.percentil_pc_edad   ?? zs.percentil_pc_edad   ?? null,
             estado_pc_edad:       r.estado_pc_edad      ?? zs.estado_pc_edad      ?? null,
+            zscore_peso_talla:    r.zscore_peso_talla   ?? zs.zscore_peso_talla   ?? null,
+            percentil_peso_talla: r.percentil_peso_talla ?? zs.percentil_peso_talla ?? null,
+            estado_peso_talla:    r.estado_peso_talla   ?? zs.estado_peso_talla   ?? null,
           };
         }
         return r;
@@ -2555,20 +2559,23 @@ function TabCrecimiento({ paciente, crecimiento, isMobile, isTablet, tabGrafica,
   })();
 
   // ── Helpers z-score ──────────────────────────────────────────────────────
-  const indicadorActivo = tabGrafica === "peso_edad" ? "zscore_peso_edad"
-    : tabGrafica === "talla_edad" ? "zscore_talla_edad"
-    : tabGrafica === "imc_edad"   ? "zscore_imc_edad"
-    : tabGrafica === "pc_edad"    ? "zscore_pc_edad"
+  const indicadorActivo = tabGrafica === "peso_edad"   ? "zscore_peso_edad"
+    : tabGrafica === "talla_edad"  ? "zscore_talla_edad"
+    : tabGrafica === "imc_edad"    ? "zscore_imc_edad"
+    : tabGrafica === "pc_edad"     ? "zscore_pc_edad"
+    : tabGrafica === "peso_talla"  ? "zscore_peso_talla"
     : null;
-  const estadoActivo = tabGrafica === "peso_edad" ? "estado_peso_edad"
-    : tabGrafica === "talla_edad" ? "estado_talla_edad"
-    : tabGrafica === "imc_edad"   ? "estado_imc_edad"
-    : tabGrafica === "pc_edad"    ? "estado_pc_edad"
+  const estadoActivo = tabGrafica === "peso_edad"   ? "estado_peso_edad"
+    : tabGrafica === "talla_edad"  ? "estado_talla_edad"
+    : tabGrafica === "imc_edad"    ? "estado_imc_edad"
+    : tabGrafica === "pc_edad"     ? "estado_pc_edad"
+    : tabGrafica === "peso_talla"  ? "estado_peso_talla"
     : null;
-  const percentilActivo = tabGrafica === "peso_edad" ? "percentil_peso_edad"
-    : tabGrafica === "talla_edad" ? "percentil_talla_edad"
-    : tabGrafica === "imc_edad"   ? "percentil_imc_edad"
-    : tabGrafica === "pc_edad"    ? "percentil_pc_edad"
+  const percentilActivo = tabGrafica === "peso_edad"   ? "percentil_peso_edad"
+    : tabGrafica === "talla_edad"  ? "percentil_talla_edad"
+    : tabGrafica === "imc_edad"    ? "percentil_imc_edad"
+    : tabGrafica === "pc_edad"     ? "percentil_pc_edad"
+    : tabGrafica === "peso_talla"  ? "percentil_peso_talla"
     : null;
 
   // ── Chart data builder ───────────────────────────────────────────────────
@@ -3409,6 +3416,7 @@ function TabCrecimiento({ paciente, crecimiento, isMobile, isTablet, tabGrafica,
               const bg  = col === "#dc2626" ? "#fef2f2" : col === "#d97706" ? "#fffbeb" : col === "#16a34a" ? "#f0fdf4" : "#f8f8ff";
               const sinRefPC   = z == null && tabGrafica === "pc_edad"    && Number(r.edad_meses) > 60;
               const sinRefPeso = z == null && tabGrafica === "peso_edad"  && Number(r.edad_meses) > 120;
+              const sinRefPT   = z == null && tabGrafica === "peso_talla" && r.peso_kg != null && r.talla_cm != null && (Number(r.talla_cm) < 45 || Number(r.talla_cm) > 110);
               const fecha = r.fecha ? new Date(String(r.fecha).substring(0,10) + "T00:00:00").toLocaleDateString("es-HN", { day: "2-digit", month: "short", year: "2-digit" }) : "—";
               const edad  = r.edad_meses != null ? (r.edad_meses < 24 ? `${r.edad_meses}m` : `${Math.floor(r.edad_meses/12)}a ${r.edad_meses%12}m`) : "—";
               return (
@@ -3436,8 +3444,8 @@ function TabCrecimiento({ paciente, crecimiento, isMobile, isTablet, tabGrafica,
                       <span style={{ fontSize: "0.82rem", color: "#64748b" }}>
                         Z: <strong style={{ color: col, fontSize: "0.95rem" }}>{Number(z).toFixed(2)}</strong>
                       </span>
-                    ) : (sinRefPC || sinRefPeso) ? (
-                      <span title={sinRefPC ? "WHO 2007 no incluye referencia de P.C. para >60 meses" : "WHO 2007 no incluye referencia de Peso para >10 años"}
+                    ) : (sinRefPC || sinRefPeso || sinRefPT) ? (
+                      <span title={sinRefPC ? "WHO 2007 no incluye referencia de P.C. para >60 meses" : sinRefPeso ? "WHO 2007 no incluye referencia de Peso para >10 años" : "Talla fuera del rango OMS Peso/Talla (45–110 cm)"}
                         style={{ background: "#f1f5f9", color: "#94a3b8", borderRadius: 6, padding: "2px 8px", fontSize: "0.68rem", fontWeight: 600, cursor: "help" }}>
                         Sin ref. OMS
                       </span>
@@ -3445,8 +3453,8 @@ function TabCrecimiento({ paciente, crecimiento, isMobile, isTablet, tabGrafica,
                     {pct && (
                       <span style={{ background: "#f0f9ff", color: "#0369a1", borderRadius: 20, padding: "2px 8px", fontSize: "0.7rem", fontWeight: 700 }}>{pct}</span>
                     )}
-                    {!(sinRefPC || sinRefPeso) && <BadgeEstado estado={est} />}
-                    {(sinRefPC || sinRefPeso) && (
+                    {!(sinRefPC || sinRefPeso || sinRefPT) && <BadgeEstado estado={est} />}
+                    {(sinRefPC || sinRefPeso || sinRefPT) && (
                       <span style={{ color: "#94a3b8", fontSize: "0.68rem", fontStyle: "italic" }}>Sin referencia disponible</span>
                     )}
                   </div>
@@ -3460,10 +3468,10 @@ function TabCrecimiento({ paciente, crecimiento, isMobile, isTablet, tabGrafica,
         ) : (
           /* ── Vista tabla (tablet / desktop) ─────────────────────── */
           <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", minWidth: isTablet ? 520 : 640 }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 640 }}>
               <thead>
                 <tr style={{ borderBottom: "2px solid #f1f5f9" }}>
-                  {["Fecha", "Edad", "Peso (kg)", "Talla (cm)", "IMC", !isTablet && "P.C. (cm)", "Z-score", "Percentil", "Estado", ""].filter(Boolean).map(h => (
+                  {["Fecha", "Edad", "Peso (kg)", "Talla (cm)", "IMC", "P.C. (cm)", "Z-score", "Percentil", "Estado", ""].filter(Boolean).map(h => (
                     <th key={h} style={{ padding: "8px 10px", fontSize: "0.72rem", fontWeight: 700, color: "#64748b", textAlign: "left", whiteSpace: "nowrap", textTransform: "uppercase", letterSpacing: "0.04em" }}>{h}</th>
                   ))}
                 </tr>
@@ -3475,8 +3483,9 @@ function TabCrecimiento({ paciente, crecimiento, isMobile, isTablet, tabGrafica,
                   const pct = percentilActivo ? r[percentilActivo] : r.percentil_peso_edad;
                   const col = colorEstado(est);
                   // Mostrar aviso cuando no hay z-score pero sí hay razón conocida
-                  const sinRefPC = z == null && tabGrafica === "pc_edad" && Number(r.edad_meses) > 60;
-                  const sinRefPeso = z == null && tabGrafica === "peso_edad" && Number(r.edad_meses) > 120;
+                  const sinRefPC   = z == null && tabGrafica === "pc_edad"    && Number(r.edad_meses) > 60;
+                  const sinRefPeso = z == null && tabGrafica === "peso_edad"  && Number(r.edad_meses) > 120;
+                  const sinRefPT   = z == null && tabGrafica === "peso_talla" && r.peso_kg != null && r.talla_cm != null && (Number(r.talla_cm) < 45 || Number(r.talla_cm) > 110);
                   const chipSinRef = (texto) => (
                     <span title={texto} style={{ background: "#f1f5f9", color: "#94a3b8", borderRadius: 6, padding: "2px 7px", fontSize: "0.65rem", fontWeight: 600, whiteSpace: "nowrap", cursor: "help" }}>
                       Sin ref. OMS
@@ -3501,29 +3510,27 @@ function TabCrecimiento({ paciente, crecimiento, isMobile, isTablet, tabGrafica,
                       <td style={{ padding: "9px 10px", fontSize: "0.82rem", color: "#64748b" }}>
                         {r.imc != null ? Number(r.imc).toFixed(1) : "—"}
                       </td>
-                      {!isTablet && (
-                        <td style={{ padding: "9px 10px", fontSize: "0.82rem", color: "#64748b" }}>
-                          {r.pc_cm != null
-                            ? Number(r.pc_cm).toFixed(1)
-                            : <span title="No se registró P.C. en esta medición"
-                                style={{ color: "#cbd5e1", fontSize: "0.72rem", fontStyle: "italic" }}>No reg.</span>}
-                        </td>
-                      )}
+                      <td style={{ padding: "9px 10px", fontSize: "0.82rem", color: "#64748b" }}>
+                        {r.pc_cm != null
+                          ? Number(r.pc_cm).toFixed(1)
+                          : <span title="No se registró P.C. en esta medición"
+                              style={{ color: "#cbd5e1", fontSize: "0.72rem", fontStyle: "italic" }}>No reg.</span>}
+                      </td>
                       <td style={{ padding: "9px 10px", fontWeight: 700, color: z != null ? col : "#94a3b8", fontSize: "0.92rem" }}>
                         {z != null ? Number(z).toFixed(2)
-                          : (sinRefPC || sinRefPeso)
-                            ? chipSinRef(sinRefPC ? "WHO 2007 no incluye referencia de P.C. para mayores de 60 meses" : "WHO 2007 no incluye referencia de Peso para mayores de 10 años")
+                          : (sinRefPC || sinRefPeso || sinRefPT)
+                            ? chipSinRef(sinRefPC ? "WHO 2007 no incluye referencia de P.C. para mayores de 60 meses" : sinRefPeso ? "WHO 2007 no incluye referencia de Peso para mayores de 10 años" : "Talla fuera del rango de referencia OMS Peso/Talla (45–110 cm)")
                             : "—"}
                       </td>
                       <td style={{ padding: "9px 10px" }}>
                         {pct ? (
                           <span style={{ background: "#f0f9ff", color: "#0369a1", borderRadius: 20, padding: "2px 10px", fontSize: "0.7rem", fontWeight: 700 }}>{pct}</span>
-                        ) : (sinRefPC || sinRefPeso)
+                        ) : (sinRefPC || sinRefPeso || sinRefPT)
                           ? chipSinRef()
                           : <span style={{ color: "#cbd5e1" }}>—</span>}
                       </td>
                       <td style={{ padding: "9px 10px" }}>
-                        {(sinRefPC || sinRefPeso)
+                        {(sinRefPC || sinRefPeso || sinRefPT)
                           ? <span style={{ color: "#94a3b8", fontSize: "0.72rem", fontStyle: "italic" }}>Sin referencia</span>
                           : <BadgeEstado estado={est} />}
                       </td>
