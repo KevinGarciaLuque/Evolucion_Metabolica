@@ -1522,8 +1522,9 @@ export default function PacienteDetalle() {
             {Number(formCrec.edad_meses) > 60 && (
               <div style={{ background: "#fffbeb", border: "1px solid #fde68a", borderRadius: 8, padding: "8px 12px", marginBottom: 12 }}>
                 <p style={{ margin: 0, fontSize: "0.72rem", color: "#92400e" }}>
-                  ⚠️ <strong>Edad mayor a 60 meses</strong> — los z-scores OMS 2006 (incluyendo P.C./Edad) solo están disponibles para 0–60 meses.
-                  El valor de P.C. (cm) se guardará pero sin z-score ni percentil.
+                  ℹ️ <strong>Edad mayor a 60 meses</strong> — se usarán los estándares <strong>WHO 2007 (5–19 años)</strong> para calcular Z-scores de Talla/Edad e IMC/Edad
+                  {Number(formCrec.edad_meses) <= 120 ? " y Peso/Edad" : ""}.{" "}
+                  El <strong>P.C. (perímetro cefálico)</strong> se guardará pero sin z-score ni percentil, ya que WHO 2007 no incluye esa referencia.
                 </p>
               </div>
             )}
