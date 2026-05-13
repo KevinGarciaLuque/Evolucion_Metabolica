@@ -1,0 +1,142 @@
+﻿{\rtf1\ansi\deff0
+{\fonttbl{\f0 Calibri;}}
+\fs22
+\b Documento Gu\'eda para Presentaci\'f3n (15 minutos)\b0\line
+\b Proyecto:\b0 Evoluci\'f3n Metab\'f3lica\line
+\b Objetivo:\b0 Tener un guion claro para una presentaci\'f3n ejecutiva-cl\'ednica, con capturas sugeridas, beneficios y arquitectura.\line
+\line
+\b 1) Estructura recomendada (14-15 minutos)\b0\line
+1. Portada (0:40)\line
+2. Problema cl\'ednico y necesidad (1:00)\line
+3. Soluci\'f3n: \ldblquote Evoluci\'f3n Metab\'f3lica\rdblquote  (1:10)\line
+4. Flujo completo del sistema (2:00)\line
+5. M\'f3dulos clave (3:30)\line
+6. Tiempo estimado por paciente (1:20)\line
+7. Ventajas para hospital/m\'e9dico/paciente (1:40)\line
+8. Servidores, capacidad y escalabilidad (2:00)\line
+9. Cierre y siguientes pasos (1:00)\line
+\line
+\b 2) Diapositivas y capturas sugeridas\b0\line
+\b Diapositiva 1 - Portada\b0\line
+T\'edtulo: Evoluci\'f3n Metab\'f3lica\line
+Subt\'edtulo: Plataforma para seguimiento de pacientes con diabetes pedi\'e1trica y an\'e1lisis MCG.\line
+Captura sugerida: Pantalla de login o Dashboard principal.\line
+\line
+\b Diapositiva 2 - Problema\b0\line
+Puntos:\line
+- El seguimiento de MCG y consultas suele estar disperso en archivos/manuales.\line
+- Se pierde tiempo consolidando datos para decisiones cl\'ednicas.\line
+- Falta trazabilidad de acciones y comunicaci\'f3n estructurada al paciente.\line
+Captura sugerida: Flujo manual (imagen conceptual) + pantalla de lista de pacientes.\line
+\line
+\b Diapositiva 3 - \ldblquote Qu\'e9 es el sistema\rdblquote \b0\line
+Puntos:\line
+- Plataforma web para registrar pacientes, consultas, an\'e1lisis MCG y evoluci\'f3n cl\'ednica.\line
+- Calcula clasificaci\'f3n ISPAD autom\'e1ticamente (\ldblquote \''d3ptimo / Moderado / Alto Riesgo\rdblquote).\line
+- Incluye auditor\'eda, control de permisos y mensajer\'eda WhatsApp.\line
+Captura sugerida: Men\'fa lateral con m\'f3dulos visibles.\line
+\line
+\b Diapositiva 4 - C\'f3mo funciona (flujo real)\b0\line
+Paso 1: Usuario inicia sesi\'f3n.\line
+Paso 2: Registra/selecciona paciente.\line
+Paso 3: Sube PDF del monitor (Syai X1) y el sistema extrae datos autom\'e1ticamente.\line
+Paso 4: M\'e9dico revisa/corrige m\'e9tricas y confirma guardado.\line
+Paso 5: Dashboard y detalle de paciente se actualizan para seguimiento.\line
+Paso 6: Si es necesario, se env\'eda mensaje WhatsApp individual o masivo por riesgo.\line
+Capturas sugeridas: Subir PDF -> Revisi\'f3n de datos -> Detalle paciente -> Dashboard.\line
+\line
+\b Diapositiva 5 - M\'f3dulo Dashboard\b0\line
+Puntos a explicar:\line
+- Indicadores globales: total pacientes, TIR promedio, GMI, glucosa promedio, total an\'e1lisis.\line
+- Gr\'e1ficos por departamento, tendencias mensuales, comparativa por g\'e9nero.\line
+- Filtro por instituci\'f3n (HMEP/IHSS).\line
+Captura sugerida: Dashboard completo con tarjetas y gr\'e1ficos.\line
+\line
+\b Diapositiva 6 - M\'f3dulo Pacientes y detalle cl\'ednico\b0\line
+Puntos:\line
+- Historial de an\'e1lisis MCG por paciente.\line
+- Registros de insulina, alimentaci\'f3n, crecimiento (z-scores OMS) y consultas.\line
+- Vista integral en un solo perfil para decisiones cl\'ednicas.\line
+Captura sugerida: Pantalla PacienteDetalle con gr\'e1ficas e historial.\line
+\line
+\b Diapositiva 7 - M\'f3dulo Consultas\b0\line
+Puntos:\line
+- Registro estructurado: signos vitales, HbA1c, glucosa, plan de tratamiento, Tanner, pr\'f3xima cita.\line
+- Opcion de guardar autom\'e1ticamente crecimiento OMS desde la misma consulta.\line
+Captura sugerida: Formulario de Nueva Consulta (secci\'f3n principal + bloque Tanner).\line
+\line
+\b Diapositiva 8 - An\'e1lisis PDF automatizado\b0\line
+Puntos:\line
+- Lectura de PDF y extracci\'f3n de TIR, TAR, TBR, GMI, CV, eventos hipo, etc.\line
+- Reduce digitaci\'f3n manual y errores de transcripci\'f3n.\line
+- Clasificaci\'f3n ISPAD en tiempo real antes de guardar.\line
+Captura sugerida: Vista \ldblquote Datos extra\'eddos autom\'e1ticamente\rdblquote + sem\'e1foro ISPAD.\line
+\line
+\b Diapositiva 9 - Mensajer\'eda y seguimiento\b0\line
+Puntos:\line
+- Env\'edo individual o masivo por clasificaci\'f3n (Twilio WhatsApp).\line
+- Historial de env\'edos y estado (enviado/error).\line
+- Favorece adherencia y seguimiento oportuno de pacientes en alto riesgo.\line
+Captura sugerida: Panel de mensajes + ejemplo de mensaje.\line
+\line
+\b Diapositiva 10 - Seguridad, auditor\'eda y roles\b0\line
+Puntos:\line
+- Autenticaci\'f3n con JWT.\line
+- Permisos por m\'f3dulo y rol (admin, etc.).\line
+- Auditor\'eda de acciones (login, crear/editar/eliminar).\line
+- Trazabilidad para control interno y cumplimiento.\line
+Captura sugerida: Pantalla de Auditor\'eda y/o Permisos.\line
+\line
+\b Diapositiva 11 - Tiempo aproximado por paciente\b0\line
+\b Escenario con sistema:\b0\line
+- Consulta de control con datos ya cargados: 6 a 10 minutos.\line
+- Consulta con an\'e1lisis PDF nuevo (subida + revisi\'f3n + confirmaci\'f3n): 9 a 14 minutos.\line
+\b Escenario tradicional manual (referencial):\b0 12 a 20 minutos.\line
+\b Ahorro estimado:\b0 25% a 40% por paciente en tareas administrativas/documentales.\line
+Nota: tiempo depende de complejidad cl\'ednica y experiencia del usuario.\line
+\line
+\b Diapositiva 12 - Servidores, capacidad y escalabilidad\b0\line
+\b Arquitectura actual:\b0\line
+- Frontend: React + Vite en Vercel (SPA).\line
+- Backend: Node.js + Express en Railway.\line
+- Base de datos: MySQL en Railway.\line
+- Archivos PDF: volumen persistente en Railway (/app/uploads/pdfs).\line
+\line
+\b Escalabilidad t\'e9cnica:\b0\line
+- Despliegue continuo autom\'e1tico por Git (Vercel + Railway).\line
+- Separaci\'f3n de capas: UI, API y BD (facilita escalar por componente).\line
+- Railway permite incrementar recursos (CPU/RAM) y escalar servicio backend seg\'fan demanda.\line
+- MySQL puede optimizarse con \'edndices y r\'e9plicas conforme crece el volumen.\line
+\line
+\b Capacidad inicial recomendada (orientativa):\b0\line
+- 20 a 50 usuarios concurrentes sin cambios mayores de arquitectura.\line
+- 5,000 a 20,000 pacientes con tuning de BD y buenas pr\'e1cticas de consulta.\line
+- Escala superior posible con cache, colas y balanceo horizontal progresivo.\line
+\line
+\b Diapositiva 13 - Ventajas del sistema\b0\line
+- Centralizaci\'f3n de datos cl\'ednicos en un solo expediente digital.\line
+- Decisiones m\'e1s r\'e1pidas con indicadores autom\'e1ticos (ISPAD, TIR/TAR/TBR, GMI).\line
+- Menos errores por transcripci\'f3n manual de reportes PDF.\line
+- Mayor continuidad del seguimiento por mensajer\'eda proactiva.\line
+- Transparencia operativa por auditor\'eda y control de permisos.\line
+\line
+\b Diapositiva 14 - Cierre (1 minuto)\b0\line
+Mensaje sugerido:\line
+\ldblquote Evoluci\'f3n Metab\'f3lica transforma datos dispersos en decisiones cl\'ednicas accionables. Reduce tiempo operativo, mejora el seguimiento del paciente y deja una base escalable para crecer institucionalmente.\rdblquote\line
+\line
+\b 3) Recomendaciones para tus capturas\b0\line
+- Usa un mismo navegador y zoom 100% para uniformidad visual.\line
+- Evita datos sensibles reales; usa nombres de prueba cuando sea posible.\line
+- Captura en este orden: Login, Dashboard, Pacientes, Detalle, Subir PDF, Revisi\'f3n PDF, Consultas, Mensajes, Auditor\'eda, Permisos.\line
+- Si puedes, agrega 1 diapositiva final con \ldblquote antes vs despu\'e9s\rdblquote  (manual vs sistema).\line
+\line
+\b 4) Guion corto para hablar (resumen)\b0\line
+- Min 0-2: Problema y visi\'f3n general.\line
+- Min 2-7: Demostraci\'f3n del flujo (paciente -> PDF -> resultado -> dashboard).\line
+- Min 7-10: M\'f3dulos de alto impacto (consulta, mensajes, auditor\'eda).\line
+- Min 10-12: Tiempos por paciente y beneficios medibles.\line
+- Min 12-14: Arquitectura, servidores y escalabilidad.\line
+- Min 14-15: Cierre y llamado a implementaci\'f3n.\line
+\line
+\b Fin del documento\b0\line
+}

@@ -10,6 +10,9 @@ const MODULOS = [
   { key: "consultas",   label: "Consultas" },
   { key: "mapa",        label: "Mapa" },
   { key: "mensajes",    label: "Mensajes" },
+  { key: "reportes_visuales", label: "Reportes" },
+  { key: "backup_pacientes", label: "Backup de pacientes" },
+  { key: "importaciones_heu", label: "Importación HEU" },
   { key: "acerca",      label: "Acerca del sistema" },
 ];
 
@@ -43,7 +46,9 @@ export default function PermisosList() {
         const inicial = {};
         r.data.forEach((u) => {
           // null significa "sin configurar" → mostramos todos marcados por defecto
-          inicial[u.id] = u.modulos ?? MODULOS.map((m) => m.key);
+          const modulosNormalizados = (u.modulos ?? MODULOS.map((m) => m.key))
+            .map((m) => (m === "reportes" ? "backup_pacientes" : m));
+          inicial[u.id] = [...new Set(modulosNormalizados)];
         });
         setPermisos(inicial);
       })

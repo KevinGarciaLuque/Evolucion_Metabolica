@@ -422,6 +422,161 @@ const doc = new Document({
           indent: { left: 720 }, spacing: { before: 40, after: 80 },
         }),
 
+        // ── 7. COSTOS DE OPERACIÓN EN LA NUBE ────────────────────────────────
+        h1("7. Costos Aproximados de Operación en la Nube"),
+        p("El proyecto puede desplegarse en varias plataformas según el presupuesto y el nivel de control técnico que se desee. A continuación se describe cada opción y sus costos mensuales para una clínica con 30–150 pacientes activos."),
+
+        // ── Comparativa ──────────────────────────────────────────────────────
+        h2("7.1 Comparativa de Plataformas de Alojamiento"),
+        metricTable([
+          ["Plataforma",          "Costo mensual aprox.  ·  Dificultad de configuración  ·  Ideal para"],
+          ["Railway",             "~$10 – $25 / mes  ·  ★☆☆ Fácil  ·  Despliegue rápido desde GitHub, recomendado"],
+          ["Hostinger VPS",       "~$5 – $12 / mes   ·  ★★☆ Medio  ·  Presupuesto reducido, control total del servidor"],
+          ["Amazon AWS",          "~$20 – $50 / mes  ·  ★★★ Avanzado  ·  Escalabilidad empresarial, cumplimiento HIPAA"],
+          ["DigitalOcean / Render","~$7 – $20 / mes  ·  ★☆☆ Fácil  ·  Alternativa a Railway similar en precio"],
+          ["Vercel (frontend)",   "$0 / mes (Hobby)  ·  ★☆☆ Fácil  ·  Solo interfaz React, siempre gratuito"],
+        ]),
+        note("Para una clínica pequeña o mediana se recomienda Railway (backend + MySQL) + Vercel (frontend). Es la configuración más simple, con deploy automático desde GitHub."),
+
+        // ── Railway ───────────────────────────────────────────────────────────
+        h2("7.2 Railway — Opción Recomendada (Configuración Actual)"),
+        p("Railway aloja el servidor Node.js/Express, la base de datos MySQL y el volumen de PDFs. Todo se despliega automáticamente con cada push a GitHub."),
+        metricTable([
+          ["Plan Hobby (base)",        "$5 USD / mes — incluye $5 en créditos de consumo"],
+          ["Backend Node.js/Express",  "~$5 – $10 USD / mes  (0.5 vCPU · 512 MB RAM)"],
+          ["Base de datos MySQL",      "~$5 – $10 USD / mes  (hasta 1 GB de datos)"],
+          ["Volumen persistente (PDFs)","~$0.25 USD / GB / mes  (ej. 2 GB = $0.50 / mes)"],
+          ["Red de salida (egress)",   "Primeros 100 GB / mes incluidos; luego $0.10 / GB"],
+          ["TOTAL Railway",            "$10 – $25 USD / mes"],
+        ]),
+        metricTable([
+          ["Ventajas",    "Deploy automático desde GitHub · sin gestión de SO · SSL incluido · logs en tiempo real"],
+          ["Limitaciones","Costo escala con uso · no apto para volúmenes muy altos sin plan Pro"],
+          ["URL de precios", "railway.app/pricing"],
+        ]),
+
+        // ── Hostinger VPS ─────────────────────────────────────────────────────
+        h2("7.3 Hostinger VPS — Opción Económica con Control Total"),
+        p("Hostinger ofrece servidores VPS (Servidor Privado Virtual) donde se instala el entorno completo: Node.js, MySQL, Nginx y PM2. Es la opción más barata si se tiene conocimiento básico de Linux."),
+        metricTable([
+          ["KVM 1 (plan mínimo)",      "$3.99 – $5.99 USD / mes  ·  1 vCPU · 4 GB RAM · 50 GB NVMe"],
+          ["KVM 2 (recomendado)",      "$7.99 – $9.99 USD / mes  ·  2 vCPU · 8 GB RAM · 100 GB NVMe"],
+          ["Sistema operativo",        "Ubuntu 22.04 LTS (gratuito) — el más común para Node.js"],
+          ["SSL (HTTPS)",              "Gratuito con Let's Encrypt (certbot)"],
+          ["Backups automáticos",      "$1 – $2 USD / mes adicionales (opcional)"],
+          ["TOTAL Hostinger",          "$4 – $12 USD / mes"],
+        ]),
+        p("Componentes a instalar manualmente en el VPS:"),
+        bullet("Node.js 20 LTS + npm"),
+        bullet("MySQL Server 8 + usuario y base de datos"),
+        bullet("Nginx como proxy inverso (puerto 80/443 → 3001)"),
+        bullet("PM2 para mantener el servidor corriendo y reiniciarlo automáticamente"),
+        bullet("Certbot (Let's Encrypt) para certificado SSL gratuito"),
+        metricTable([
+          ["Ventajas",    "Costo muy bajo · recursos dedicados · control total · backups incluibles"],
+          ["Limitaciones","Requiere configuración manual de Linux · sin deploy automático desde GitHub por defecto"],
+          ["URL",         "hostinger.com/vps-hosting"],
+        ]),
+        note("Con Hostinger también se puede alojar el frontend directamente en Nginx (sin Vercel), sirviendo el build de React desde /var/www/html. Esto elimina la necesidad de Vercel."),
+
+        // ── Amazon AWS ────────────────────────────────────────────────────────
+        h2("7.4 Amazon AWS — Opción Empresarial y Escalable"),
+        p("Amazon Web Services (AWS) es la plataforma en la nube más usada a nivel mundial. Ofrece mayor escalabilidad, cumplimiento de normas de salud (HIPAA eligible) y herramientas avanzadas de monitoreo. Requiere conocimientos técnicos para su configuración."),
+        metricTable([
+          ["EC2 t3.micro (Free Tier)", "Gratuito 12 meses; luego ~$8 – $10 USD / mes"],
+          ["EC2 t3.small (recomendado)","~$15 – $18 USD / mes  ·  2 vCPU · 2 GB RAM"],
+          ["RDS MySQL t3.micro",       "~$15 – $25 USD / mes  ·  base de datos gestionada"],
+          ["S3 (almacenamiento PDFs)", "~$0.023 USD / GB / mes  ·  50 GB = $1.15 / mes"],
+          ["Elastic Load Balancer",    "~$16 USD / mes (opcional, solo si se necesita alta disponibilidad)"],
+          ["Route 53 (DNS)",           "~$0.50 USD / zona / mes"],
+          ["Certificate Manager (SSL)","$0.00 — gratuito para recursos AWS"],
+          ["TOTAL AWS (básico)",       "$25 – $50 USD / mes sin alta disponibilidad"],
+        ]),
+        p("Servicios AWS más utilizados para este proyecto:"),
+        bullet("EC2 — servidor virtual donde corre Node.js/Express (equivalente al VPS de Hostinger)."),
+        bullet("RDS — base de datos MySQL gestionada: backups automáticos, failover, parches de seguridad."),
+        bullet("S3 — almacenamiento de los PDFs subidos por los usuarios (reemplaza el volumen de Railway)."),
+        bullet("CloudFront — CDN para servir el frontend React (alternativa a Vercel, gratuito hasta 1 TB/mes)."),
+        bullet("Route 53 — DNS gestionado para el dominio del sistema."),
+        metricTable([
+          ["Ventajas",    "Altamente escalable · HIPAA eligible · SLA 99.99% · integración con servicios de IA/ML de AWS"],
+          ["Limitaciones","Configuración compleja · costo superior · requiere conocimientos de AWS IAM y redes"],
+          ["Nivel gratuito", "aws.amazon.com/free — 12 meses gratis en servicios elegibles"],
+          ["URL de precios",  "aws.amazon.com/pricing"],
+        ]),
+        note("Para una clínica pequeña, AWS puede ser excesivo. Se recomienda Railway o Hostinger en etapa inicial y migrar a AWS si el sistema escala a nivel institucional o nacional."),
+
+        // ── Alternativas ─────────────────────────────────────────────────────
+        h2("7.5 Otras Alternativas de Alojamiento"),
+        metricTable([
+          ["DigitalOcean Droplet",  "$6 / mes (1 vCPU · 1 GB RAM) — similar a Hostinger VPS, muy popular entre desarrolladores"],
+          ["Render.com",            "$7 / mes backend + $0 frontend — similar a Railway, con plan gratuito más limitado"],
+          ["Fly.io",                "$5 – $15 / mes — despliegue con contenedores Docker, buena latencia en Latinoamérica"],
+          ["Google Cloud Run",      "Pago por uso — puede ser $0 en tráfico bajo; escala automáticamente"],
+          ["Azure App Service",     "$10 – $30 / mes — opción Microsoft, similar a AWS en complejidad"],
+        ]),
+
+        // ── Dominio Web ──────────────────────────────────────────────────────
+        h2("7.6 Dominio Web (Nombre de la Página)"),
+        p("Para acceder al sistema con un nombre propio (ej. evolucionmetabolica.com) se necesita registrar un dominio. El costo es anual y varía según el registrador y la extensión elegida."),
+        metricTable([
+          ["Extensión .com",    "$9 – $15 USD / año — la más reconocida internacionalmente"],
+          ["Extensión .hn",     "$25 – $60 USD / año — dominio nacional de Honduras (requiere gestión local)"],
+          ["Extensión .clinic", "$25 – $40 USD / año — específica para clínicas y centros de salud"],
+          ["Extensión .health", "$35 – $50 USD / año — especializada en salud"],
+          ["Extensión .app",    "$14 – $20 USD / año — moderna, fuerza HTTPS obligatorio"],
+        ]),
+        p("Registradores recomendados:"),
+        metricTable([
+          ["Namecheap",           "namecheap.com — precio más bajo · interfaz sencilla · DNS gratuito incluido"],
+          ["Cloudflare Registrar","cloudflare.com — precio al costo (sin margen) · protección DDoS incluida"],
+          ["GoDaddy",             "godaddy.com — frecuentes promociones primer año (~$1–3) · renovación más cara"],
+          ["Google Domains",      "domains.google — ~$12 / año .com · privacidad WHOIS gratuita"],
+          ["Route 53 (AWS)",      "~$12 / año .com — recomendado si ya se usa AWS"],
+        ]),
+        note("El dominio es independiente del servidor. Se puede comprar el dominio en Namecheap y apuntarlo a Railway, Hostinger o AWS usando los registros DNS que cada plataforma indica."),
+        p("Costo total del dominio convertido a Lempiras (referencial):"),
+        metricTable([
+          [".com en Namecheap",  "~$10 / año ≈ 250 HNL / año ≈ 21 HNL / mes"],
+          [".hn nacional",       "~$35 / año ≈ 875 HNL / año ≈ 73 HNL / mes"],
+        ]),
+
+        // ── Twilio WhatsApp ──────────────────────────────────────────────────
+        h2("7.7 Twilio — Mensajes de WhatsApp"),
+        p("Los mensajes de WhatsApp se envían automáticamente a los pacientes (recordatorios, alertas de citas, etc.) mediante la API de Twilio. El costo es independiente del servidor elegido."),
+        metricTable([
+          ["Número de WhatsApp (sender)", "$1.00 USD / mes — número de teléfono dedicado en Twilio"],
+          ["Mensaje saliente (outbound)", "~$0.005 USD por mensaje enviado"],
+          ["Mensaje entrante (inbound)",  "~$0.005 USD por mensaje recibido"],
+          ["Conversación 24 h (Meta fee)","~$0.006 – $0.015 USD por conversación iniciada"],
+          ["Sandbox de desarrollo",       "$0.00 USD — gratuito, sólo para pruebas internas"],
+        ]),
+        note("Meta cobra adicionalmente una tarifa por conversación según la categoría (utilidad, marketing, autenticación). Para Honduras la tarifa de conversación de utilidad es ~$0.006 USD."),
+        p("Estimado mensual según volumen de pacientes:"),
+        metricTable([
+          ["30 pacientes · 2 mensajes c/u",  "60 mensajes ≈ $0.30 + $1.00 número = ~$1.30 / mes"],
+          ["80 pacientes · 3 mensajes c/u",  "240 mensajes ≈ $1.20 + $1.00 número = ~$2.20 / mes"],
+          ["150 pacientes · 4 mensajes c/u", "600 mensajes ≈ $3.00 + $1.00 número = ~$4.00 / mes"],
+        ]),
+
+        // ── Resumen total ─────────────────────────────────────────────────────
+        h2("7.8 Resumen Total Mensual por Escenario"),
+        p("Costo mensual completo (servidor + dominio + WhatsApp) según la plataforma elegida, para una clínica con ~80 pacientes activos:"),
+        metricTable([
+          ["Componente",                       "Railway",     ],
+          ["Servidor backend + MySQL",         "$10 – $25 / mes"],
+          ["Frontend (Vercel)",                "$0 / mes"],
+          ["Dominio (.com)",                   "~$1 / mes (≈$10/año)"],
+          ["WhatsApp Twilio (80 pacientes)",   "~$2.20 / mes"],
+          ["──────────────────────────────────","─────────────────────"],
+          ["TOTAL con Railway",                "$13 – $28 USD / mes  (~325 – 700 HNL)"],
+        ]),
+        metricTable([
+          ["TOTAL con Hostinger VPS",          "$8 – $15 USD / mes  (~200 – 375 HNL)  ← más económico"],
+          ["TOTAL con AWS (básico)",            "$28 – $55 USD / mes  (~700 – 1 375 HNL)  ← más escalable"],
+        ]),
+        note("Estos valores son aproximados. Los precios pueden variar según región, promociones vigentes y consumo real. Se recomienda revisar railway.app/pricing, hostinger.com, aws.amazon.com/pricing, twilio.com/whatsapp/pricing y namecheap.com periódicamente."),
+
         // ── PIE ───────────────────────────────────────────────────────────────
         divider(),
         new Paragraph({

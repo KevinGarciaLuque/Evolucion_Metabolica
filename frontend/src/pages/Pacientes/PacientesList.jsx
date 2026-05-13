@@ -20,6 +20,7 @@ export default function PacientesList() {
   const [mostrarFiltros, setMostrarFiltros] = useState(false);
   const [clsVis, setClsVis] = useState({ OPTIMO: true, MODERADO: true, ALTO_RIESGO: true });
   const [confirmEliminar, setConfirmEliminar] = useState(null);
+  const institucionesDisponibles = ["HMEP", "IHSS", "HEU"];
 
   // ── WhatsApp modal ────────────────────────────────────────────────────────
   const [modalWA,    setModalWA]    = useState(null); // paciente seleccionado
@@ -113,15 +114,17 @@ export default function PacientesList() {
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 10, alignSelf: "flex-end", marginBottom: 6 }}>
           <span style={{ fontSize: 13, color: "#94a3b8" }}>Institución:</span>
-          <div
-            className={`toggle-pill ${institucion === "IHSS" ? "is-ihss" : ""}`}
-            onClick={() => setInstitucion(institucion === "HMEP" ? "IHSS" : "HMEP")}
-            role="switch"
-            aria-checked={institucion === "HMEP"}
-            title={`Cambiar a ${institucion === "HMEP" ? "IHSS" : "HMEP"}`}
-          >
-            <span className="toggle-label">{institucion}</span>
-            <span className="toggle-thumb" />
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            {institucionesDisponibles.map((inst) => (
+              <button
+                key={inst}
+                type="button"
+                className={`btn btn-sm ${institucion === inst ? "btn-primary" : "btn-outline"}`}
+                onClick={() => setInstitucion(inst)}
+              >
+                {inst}
+              </button>
+            ))}
           </div>
         </div>
       </div>

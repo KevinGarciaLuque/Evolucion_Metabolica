@@ -5,9 +5,11 @@ import { auditarAccion } from "../utils/helpers.js";
 export async function listar(req, res) {
   const { paciente_nombre, paciente_id, fecha_desde, fecha_hasta } = req.query;
   let sql = `
-    SELECT b.*, p.nombre AS paciente_nombre, p.dni AS paciente_dni
+    SELECT b.*, p.nombre AS paciente_nombre, p.dni AS paciente_dni,
+           (d.consulta_id IS NOT NULL) AS tiene_detalle_heu
     FROM consultas b
     JOIN pacientes p ON p.id = b.paciente_id
+    LEFT JOIN consultas_heu_detalle d ON d.consulta_id = b.id
     WHERE 1=1
   `;
   const params = [];
@@ -32,9 +34,18 @@ export async function listar(req, res) {
 export async function obtener(req, res) {
   try {
     const [rows] = await pool.query(
-      `SELECT b.*, p.nombre AS paciente_nombre, p.dni AS paciente_dni
+      `SELECT b.*, p.nombre AS paciente_nombre, p.dni AS paciente_dni,
+              d.institucion AS heu_institucion,
+              d.grupo_etario AS heu_grupo_etario,
+              d.antecedentes_json,
+              d.gineco_json,
+              d.evaluacion_clinica_json,
+              d.terapia_adherencia_json,
+              d.evaluacion_psicosocial_json,
+              d.seguimiento_json
        FROM consultas b
        JOIN pacientes p ON p.id = b.paciente_id
+       LEFT JOIN consultas_heu_detalle d ON d.consulta_id = b.id
        WHERE b.id = ?`,
       [req.params.id]
     );

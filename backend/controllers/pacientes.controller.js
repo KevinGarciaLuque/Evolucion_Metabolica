@@ -1,6 +1,29 @@
-import pool from "../config/db.js";
+﻿import pool from "../config/db.js";
 import { calcularEdad, auditarAccion } from "../utils/helpers.js";
 import { geocodificar } from "../services/geocoding.js";
+
+const INSTITUCIONES_VALIDAS = ["HMEP", "IHSS", "HEU"];
+
+function institucionesPermitidas(usuario) {
+  if (usuario?.rol === "admin") return INSTITUCIONES_VALIDAS;
+  if (!Array.isArray(usuario?.instituciones_acceso)) return INSTITUCIONES_VALIDAS;
+  const permitidas = usuario.instituciones_acceso
+    .map((i) => String(i || "").trim().toUpperCase())
+    .filter((i) => INSTITUCIONES_VALIDAS.includes(i));
+  return permitidas.length ? [...new Set(permitidas)] : INSTITUCIONES_VALIDAS;
+}
+
+function resolverInstitucionParaListado(req) {
+  const permitidas = institucionesPermitidas(req.usuario);
+  const solicitada = String(req.query?.institucion || "").trim().toUpperCase();
+  if (!solicitada) return null;
+  return permitidas.includes(solicitada) ? solicitada : "__DENEGADA__";
+}
+
+function puedeUsarInstitucion(req, institucion) {
+  const permitidas = institucionesPermitidas(req.usuario);
+  return permitidas.includes(String(institucion || "").trim().toUpperCase());
+}
 
 export async function listarMapa(req, res) {
   try {
@@ -24,7 +47,8 @@ export async function listarMapa(req, res) {
 }
 
 export async function listar(req, res) {
-  const { departamento, sexo, edad_min, edad_max, buscar, institucion, con_monitor } = req.query;
+  const { departamento, sexo, edad_min, edad_max, buscar, con_monitor } = req.query;
+  const institucion = resolverInstitucionParaListado(req);
   let sql = `
     SELECT p.*,
       sub.tir_promedio,
@@ -42,7 +66,12 @@ export async function listar(req, res) {
     WHERE p.estado = 1`;
   const params = [];
 
-  if (institucion)  { sql += " AND p.institucion = ?";  params.push(institucion); }
+  if (institucion === "__DENEGADA__") {
+    sql += " AND 1 = 0";
+  } else if (institucion) {
+    sql += " AND p.institucion = ?";
+    params.push(institucion);
+  }
   if (departamento) { sql += " AND p.departamento = ?"; params.push(departamento); }
   if (sexo)         { sql += " AND p.sexo = ?";         params.push(sexo); }
   if (buscar)       { sql += " AND p.nombre LIKE ?";    params.push(`%${buscar}%`); }
@@ -83,7 +112,11 @@ export async function crear(req, res) {
     return res.status(400).json({ error: "Nombre, sexo y departamento son obligatorios" });
 
   const edad = fecha_nacimiento ? calcularEdad(fecha_nacimiento) : null;
-  const inst = institucion || 'HMEP';
+  const inst = (institucion || "HMEP").toUpperCase();
+
+  if (!puedeUsarInstitucion(req, inst)) {
+    return res.status(403).json({ error: "No tienes acceso a esa institución" });
+  }
 
   try {
     const [result] = await pool.query(
@@ -107,7 +140,6 @@ export async function crear(req, res) {
     );
     auditarAccion(pool, req, { accion: "crear_paciente", entidad: "paciente", entidad_id: result.insertId, descripcion: `Nuevo paciente: ${nombre}` });
 
-    // Geocodificar en background (no bloquea la respuesta)
     if (municipio || departamento) {
       geocodificar(municipio, departamento).then(coords => {
         if (coords) {
@@ -135,6 +167,11 @@ export async function actualizar(req, res) {
     edad_debut, direccion, antecedente_familiar, nombre_tutor, telefono_tutor, con_monitor,
   } = req.body;
   const edad = fecha_nacimiento ? calcularEdad(fecha_nacimiento) : null;
+  const inst = (institucion || "HMEP").toUpperCase();
+
+  if (!puedeUsarInstitucion(req, inst)) {
+    return res.status(403).json({ error: "No tienes acceso a esa institución" });
+  }
 
   try {
     await pool.query(
@@ -149,7 +186,7 @@ export async function actualizar(req, res) {
       [
         dni, nombre, fecha_nacimiento, edad, edad_debut || null, sexo, departamento,
         municipio || null, procedencia_tipo || null, direccion || null,
-        antecedente_familiar || null, institucion || 'HMEP', peso, talla,
+        antecedente_familiar || null, inst, peso, talla,
         tipo_diabetes, subtipo_monogenica || null,
         hba1c_previo || null, tipo_insulina || null, dosis_insulina_prolongada || null,
         tipo_insulina_2 || null, dosis_insulina_corta || null,
@@ -159,7 +196,6 @@ export async function actualizar(req, res) {
     );
     auditarAccion(pool, req, { accion: "editar_paciente", entidad: "paciente", entidad_id: Number(req.params.id), descripcion: `Editó paciente: ${nombre}` });
 
-    // Re-geocodificar si cambió municipio/departamento
     if (municipio || departamento) {
       geocodificar(municipio, departamento).then(coords => {
         if (coords) {

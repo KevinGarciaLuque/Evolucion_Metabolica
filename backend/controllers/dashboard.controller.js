@@ -1,10 +1,40 @@
-import pool from "../config/db.js";
+﻿import pool from "../config/db.js";
 import { grupoEtario } from "../utils/helpers.js";
+
+const INSTITUCIONES_VALIDAS = ["HMEP", "IHSS", "HEU"];
+
+function institucionesPermitidas(usuario) {
+  if (usuario?.rol === "admin") return INSTITUCIONES_VALIDAS;
+  if (!Array.isArray(usuario?.instituciones_acceso)) return INSTITUCIONES_VALIDAS;
+  const permitidas = usuario.instituciones_acceso
+    .map((i) => String(i || "").trim().toUpperCase())
+    .filter((i) => INSTITUCIONES_VALIDAS.includes(i));
+  return permitidas.length ? [...new Set(permitidas)] : INSTITUCIONES_VALIDAS;
+}
+
+function resolverInstitucionSolicitada(req) {
+  const permitidas = institucionesPermitidas(req.usuario);
+  const solicitada = String(req.query?.institucion || "").trim().toUpperCase();
+  if (!solicitada) return null;
+  return permitidas.includes(solicitada) ? solicitada : "__DENEGADA__";
+}
+
+function whereInstitucionPacientes(inst) {
+  if (!inst) return { sql: "", params: [] };
+  if (inst === "__DENEGADA__") return { sql: " AND 1 = 0", params: [] };
+  return { sql: " AND p.institucion = ?", params: [inst] };
+}
+
+function whereInstitucionAnalisis(inst) {
+  if (!inst) return { join: "", where: "", params: [] };
+  if (inst === "__DENEGADA__") return { join: "", where: "WHERE 1 = 0", params: [] };
+  return { join: "JOIN pacientes p ON p.id = a.paciente_id", where: "WHERE p.institucion = ?", params: [inst] };
+}
 
 export async function statsGlobales(req, res) {
   try {
-    const { institucion } = req.query;
-    const where = institucion ? `AND p.institucion = '${institucion}'` : "";
+    const inst = resolverInstitucionSolicitada(req);
+    const filtro = whereInstitucionPacientes(inst);
     const [[totales]] = await pool.query(`
       SELECT
         COUNT(DISTINCT p.id) AS total_pacientes,
@@ -18,8 +48,8 @@ export async function statsGlobales(req, res) {
         SUM(a.clasificacion = 'ALTO_RIESGO') AS alto_riesgo
       FROM pacientes p
       LEFT JOIN analisis a ON a.paciente_id = p.id
-      WHERE p.estado = 1 ${where}
-    `);
+      WHERE p.estado = 1${filtro.sql}
+    `, filtro.params);
     res.json(totales);
   } catch (err) {
     res.status(500).json({ error: "Error al obtener estadísticas globales" });
@@ -28,8 +58,8 @@ export async function statsGlobales(req, res) {
 
 export async function porDepartamento(req, res) {
   try {
-    const { institucion } = req.query;
-    const where = institucion ? `AND p.institucion = '${institucion}'` : "";
+    const inst = resolverInstitucionSolicitada(req);
+    const filtro = whereInstitucionPacientes(inst);
     const [rows] = await pool.query(`
       SELECT
         p.departamento,
@@ -41,10 +71,10 @@ export async function porDepartamento(req, res) {
         SUM(a.clasificacion = 'ALTO_RIESGO') AS alto_riesgo
       FROM pacientes p
       LEFT JOIN analisis a ON a.paciente_id = p.id
-      WHERE p.estado = 1 ${where}
+      WHERE p.estado = 1${filtro.sql}
       GROUP BY p.departamento
       ORDER BY p.departamento
-    `);
+    `, filtro.params);
     res.json(rows);
   } catch (err) {
     res.status(500).json({ error: "Error al obtener datos por departamento" });
@@ -53,8 +83,8 @@ export async function porDepartamento(req, res) {
 
 export async function porGenero(req, res) {
   try {
-    const { institucion } = req.query;
-    const where = institucion ? `AND p.institucion = '${institucion}'` : "";
+    const inst = resolverInstitucionSolicitada(req);
+    const filtro = whereInstitucionPacientes(inst);
     const [rows] = await pool.query(`
       SELECT
         p.sexo,
@@ -65,9 +95,9 @@ export async function porGenero(req, res) {
         ROUND(AVG(a.glucosa_promedio), 1) AS glucosa_promedio
       FROM pacientes p
       LEFT JOIN analisis a ON a.paciente_id = p.id
-      WHERE p.estado = 1 AND p.sexo IS NOT NULL ${where}
+      WHERE p.estado = 1 AND p.sexo IS NOT NULL${filtro.sql}
       GROUP BY p.sexo
-    `);
+    `, filtro.params);
     res.json(rows);
   } catch (err) {
     res.status(500).json({ error: "Error al obtener datos por género" });
@@ -86,7 +116,6 @@ export async function porEdad(req, res) {
       ORDER BY p.edad
     `);
 
-    // Agrupar en rangos etarios
     const grupos = {};
     for (const row of rows) {
       const grupo = grupoEtario(row.edad);
@@ -113,9 +142,8 @@ export async function porEdad(req, res) {
 
 export async function tendencias(req, res) {
   try {
-    const { institucion } = req.query;
-    const join  = institucion ? "JOIN pacientes p ON p.id = a.paciente_id" : "";
-    const where = institucion ? `WHERE p.institucion = '${institucion}'` : "";
+    const inst = resolverInstitucionSolicitada(req);
+    const filtro = whereInstitucionAnalisis(inst);
     const [rows] = await pool.query(`
       SELECT
         DATE_FORMAT(a.fecha, '%Y-%m') AS mes,
@@ -125,12 +153,12 @@ export async function tendencias(req, res) {
         ROUND(AVG(a.cv), 1)            AS cv_promedio,
         ROUND(AVG(a.glucosa_promedio), 1) AS glucosa_promedio
       FROM analisis a
-      ${join}
-      ${where}
+      ${filtro.join}
+      ${filtro.where}
       GROUP BY DATE_FORMAT(a.fecha, '%Y-%m')
       ORDER BY mes DESC
       LIMIT 12
-    `);
+    `, filtro.params);
     res.json(rows.reverse());
   } catch (err) {
     res.status(500).json({ error: "Error al obtener tendencias" });
@@ -139,9 +167,8 @@ export async function tendencias(req, res) {
 
 export async function distribucionGlucosa(req, res) {
   try {
-    const { institucion } = req.query;
-    const join  = institucion ? "JOIN pacientes p ON p.id = a.paciente_id" : "";
-    const where = institucion ? `WHERE p.institucion = '${institucion}'` : "";
+    const inst = resolverInstitucionSolicitada(req);
+    const filtro = whereInstitucionAnalisis(inst);
     const [[rows]] = await pool.query(`
       SELECT
         ROUND(AVG(a.tar_muy_alto), 1) AS muy_alto,
@@ -150,9 +177,9 @@ export async function distribucionGlucosa(req, res) {
         ROUND(AVG(a.tbr_bajo), 1)     AS bajo,
         ROUND(AVG(a.tbr_muy_bajo), 1) AS muy_bajo
       FROM analisis a
-      ${join}
-      ${where}
-    `);
+      ${filtro.join}
+      ${filtro.where}
+    `, filtro.params);
     res.json(rows);
   } catch (err) {
     res.status(500).json({ error: "Error al obtener distribución de glucosa" });
@@ -161,17 +188,17 @@ export async function distribucionGlucosa(req, res) {
 
 export async function recientes(req, res) {
   try {
-    const { institucion } = req.query;
-    const where = institucion ? `AND p.institucion = '${institucion}'` : "";
+    const inst = resolverInstitucionSolicitada(req);
+    const filtro = whereInstitucionPacientes(inst);
     const [rows] = await pool.query(`
       SELECT a.id, a.fecha, a.tir, a.gmi, a.clasificacion, a.archivo_pdf,
              p.nombre AS paciente_nombre, p.sexo, p.departamento
       FROM analisis a
       JOIN pacientes p ON p.id = a.paciente_id
-      WHERE 1=1 ${where}
+      WHERE 1=1${filtro.sql}
       ORDER BY a.created_at DESC
       LIMIT 10
-    `);
+    `, filtro.params);
     res.json(rows);
   } catch (err) {
     res.status(500).json({ error: "Error al obtener análisis recientes" });

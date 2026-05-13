@@ -118,6 +118,7 @@ export default function ConsultasList() {
                   <th className="hide-mobile">Glucosa ayunas</th>
                   <th className="hide-mobile">HbA1c</th>
                   <th className="hide-mobile">Próxima cita</th>
+                  <th className="hide-mobile">Origen</th>
                   <th>Acciones</th>
                 </tr>
               </thead>
@@ -133,6 +134,7 @@ export default function ConsultasList() {
                       <div className="show-mobile-only" style={{ marginTop: 4, display: "flex", gap: 6, flexWrap: "wrap" }}>
                         <span className={`badge ${TIPO_BADGE[e.tipo_consulta] || "badge-gray"}`}>{e.tipo_consulta}</span>
                         {e.hba1c != null && <span className="badge badge-gray">HbA1c: {e.hba1c}%</span>}
+                        {Number(e.tiene_detalle_heu) === 1 && <span className="badge badge-blue">HEU</span>}
                       </div>
                     </td>
                     <td className="hide-mobile">
@@ -143,6 +145,7 @@ export default function ConsultasList() {
                     <td className="hide-mobile">{e.glucosa_ayunas != null ? `${e.glucosa_ayunas} mg/dL` : "—"}</td>
                     <td className="hide-mobile">{e.hba1c != null ? `${e.hba1c}%` : "—"}</td>
                     <td className="hide-mobile">{e.proxima_cita?.split("T")[0] || "—"}</td>
+                    <td className="hide-mobile">{Number(e.tiene_detalle_heu) === 1 ? <span className="badge badge-blue">HEU</span> : "—"}</td>
                     <td>
                       <div className="acciones">
                         <button

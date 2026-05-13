@@ -17,6 +17,9 @@ import Auditoria       from "./pages/Auditoria/Auditoria";
 import MensajesPanel   from "./pages/Mensajes/MensajesPanel";
 import MapaPacientes   from "./pages/Mapa/MapaPacientes";
 import PermisosList    from "./pages/Permisos/PermisosList";
+import BackupPacientes from "./pages/Reportes/Reportes";
+import ReportesVisuales from "./pages/ReportesVisuales/ReportesVisuales";
+import ImportacionHEU from "./pages/Importaciones/ImportacionHEU";
 
 function App() {
   return (
@@ -41,6 +44,9 @@ function App() {
           <Route path="/mensajes"              element={<ProtectedRoute><MensajesPanel /></ProtectedRoute>} />
           <Route path="/mapa"                  element={<ProtectedRoute><MapaPacientes /></ProtectedRoute>} />
           <Route path="/permisos"              element={<ProtectedRoute><PermisosList /></ProtectedRoute>} />
+          <Route path="/backup-pacientes"      element={<ProtectedRoute><BackupPacientes /></ProtectedRoute>} />
+          <Route path="/reportes"              element={<ProtectedRoute><ReportesVisuales /></ProtectedRoute>} />
+          <Route path="/importaciones/heu"     element={<ProtectedRoute><ImportacionHEU /></ProtectedRoute>} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </BrowserRouter>

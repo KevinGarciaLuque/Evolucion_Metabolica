@@ -147,7 +147,7 @@ export default function Layout({ children }) {
                   </li>
                   <li>
                     <span className="info-badge info-badge-yellow">Subir PDF</span>
-                    Carga y procesamiento automático de reportes PDF del MCG. El sistema extrae los valores de TIR, TAR, TBR, GMI y HbA1c mediante inteligencia artificial.
+                    Carga y procesamiento automático de archivos PDF del MCG. El sistema extrae los valores de TIR, TAR, TBR, GMI y HbA1c mediante inteligencia artificial.
                   </li>
                   <li>
                     <span className="info-badge info-badge-teal">Registro Clínico</span>

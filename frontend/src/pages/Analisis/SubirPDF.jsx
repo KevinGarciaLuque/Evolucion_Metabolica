@@ -673,7 +673,7 @@ export default function SubirPDF() {
                   Análisis con Inteligencia Artificial
                 </p>
                 <p style={{ margin: 0, fontSize: 11, color: "#94a3b8", lineHeight: 1.3 }}>
-                  Modelo entrenado en reportes Syai X1
+                  Modelo entrenado en archivos Syai X1
                 </p>
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 5, flexShrink: 0 }}>

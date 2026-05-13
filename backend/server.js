@@ -16,6 +16,9 @@ import auditoriaRoutes  from "./routes/auditoria.routes.js";
 import mensajesRoutes   from "./routes/mensajes.routes.js";
 import permisosRoutes   from "./routes/permisos.routes.js";
 import crecimientoRoutes from "./routes/crecimiento.routes.js";
+import reportesRoutes from "./routes/reportes.routes.js";
+import reportesVisualesRoutes from "./routes/reportesVisuales.routes.js";
+import importacionesRoutes from "./routes/importaciones.routes.js";
 
 dotenv.config();
 
@@ -54,6 +57,10 @@ app.use("/api/auditoria", auditoriaRoutes);
 app.use("/api/mensajes",  mensajesRoutes);
 app.use("/api/permisos",    permisosRoutes);
 app.use("/api/pacientes",   crecimientoRoutes);
+app.use("/api/backup-pacientes", reportesRoutes);
+app.use("/api/reportes", reportesRoutes);
+app.use("/api/reportes-visuales", reportesVisualesRoutes);
+app.use("/api/importaciones", importacionesRoutes);
 
 // Health check
 app.get("/api/health", (_req, res) => res.json({ status: "ok", timestamp: new Date().toISOString() }));

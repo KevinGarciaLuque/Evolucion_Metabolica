@@ -364,6 +364,34 @@ function FilaDato({ label, valor }) {
   );
 }
 
+function parseMaybeJson(v) {
+  if (!v) return {};
+  if (typeof v === "object") return v;
+  try {
+    return JSON.parse(v);
+  } catch {
+    return {};
+  }
+}
+
+function LabelValueTable({ data }) {
+  const entries = Object.entries(data || {}).filter(([, v]) => v !== null && v !== undefined && v !== "");
+  if (!entries.length) {
+    return <div style={{ color: "#94a3b8", fontSize: "0.8rem", padding: "4px 0" }}>Sin datos registrados.</div>;
+  }
+  return (
+    <div>
+      {entries.map(([k, v]) => (
+        <FilaDato
+          key={k}
+          label={k.replaceAll("_", " ")}
+          valor={Array.isArray(v) ? v.join(", ") : String(v)}
+        />
+      ))}
+    </div>
+  );
+}
+
 const TANNER_LABEL_SHORT = { "1": "I", "2": "II", "3": "III", "4": "IV", "5": "V" };
 
 function PreviewConsulta({ consulta, paciente, doctor }) {
@@ -371,6 +399,20 @@ function PreviewConsulta({ consulta, paciente, doctor }) {
   const edad = calcularEdad(paciente?.fecha_nacimiento);
   const tannerPrincipal = esFemenino ? consulta.tanner_mama : consulta.tanner_genitales;
   const hayTanner = tannerPrincipal || consulta.tanner_vello_pubico || consulta.tanner_observaciones;
+  const antecedentes = parseMaybeJson(consulta.antecedentes_json);
+  const gineco = parseMaybeJson(consulta.gineco_json);
+  const evalClinica = parseMaybeJson(consulta.evaluacion_clinica_json);
+  const terapia = parseMaybeJson(consulta.terapia_adherencia_json);
+  const psicosocial = parseMaybeJson(consulta.evaluacion_psicosocial_json);
+  const seguimiento = parseMaybeJson(consulta.seguimiento_json);
+  const tieneDetalleHeu = [
+    consulta.antecedentes_json,
+    consulta.gineco_json,
+    consulta.evaluacion_clinica_json,
+    consulta.terapia_adherencia_json,
+    consulta.evaluacion_psicosocial_json,
+    consulta.seguimiento_json,
+  ].some((x) => x);
 
   return (
     <div style={{ fontFamily: "'Segoe UI', sans-serif" }}>
@@ -509,6 +551,32 @@ function PreviewConsulta({ consulta, paciente, doctor }) {
       )}
 
       {/* Footer */}
+      {tieneDetalleHeu && (
+        <>
+          <Seccion titulo={`Detalle clinico HEU${consulta.heu_institucion ? ` (${consulta.heu_institucion})` : ""}`}>
+            <LabelValueTable data={{ grupo_etario: consulta.heu_grupo_etario }} />
+          </Seccion>
+          <Seccion titulo="HEU - Antecedentes">
+            <LabelValueTable data={antecedentes} />
+          </Seccion>
+          <Seccion titulo="HEU - Ginecoobstetricos">
+            <LabelValueTable data={gineco} />
+          </Seccion>
+          <Seccion titulo="HEU - Evaluacion clinica">
+            <LabelValueTable data={evalClinica} />
+          </Seccion>
+          <Seccion titulo="HEU - Terapia y adherencia">
+            <LabelValueTable data={terapia} />
+          </Seccion>
+          <Seccion titulo="HEU - Evaluacion psicosocial">
+            <LabelValueTable data={psicosocial} />
+          </Seccion>
+          <Seccion titulo="HEU - Seguimiento">
+            <LabelValueTable data={seguimiento} />
+          </Seccion>
+        </>
+      )}
+
       <div style={{ marginTop: 24, borderTop: "1px solid #e2e8f0", paddingTop: 16, display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
         <div style={{ fontSize: "0.82rem" }}>
           {consulta.proxima_cita

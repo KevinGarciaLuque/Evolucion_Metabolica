@@ -1,6 +1,37 @@
-import pool from "../config/db.js";
+﻿import pool from "../config/db.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+
+const INSTITUCIONES_VALIDAS = ["HMEP", "IHSS", "HEU"];
+
+function normalizarInstituciones(valor) {
+  if (!Array.isArray(valor)) return null;
+  const limpias = [...new Set(valor.map((v) => String(v || "").trim().toUpperCase()))]
+    .filter((v) => INSTITUCIONES_VALIDAS.includes(v));
+  return limpias.length ? limpias : null;
+}
+
+function parsearInstitucionesDB(valor) {
+  if (!valor) return null;
+  try {
+    const arr = typeof valor === "string" ? JSON.parse(valor) : valor;
+    return normalizarInstituciones(arr);
+  } catch {
+    return null;
+  }
+}
+
+function construirPayloadUsuario(usuario) {
+  return {
+    id: usuario.id,
+    nombre: usuario.nombre,
+    email: usuario.email,
+    rol: usuario.rol,
+    sexo: usuario.sexo ?? null,
+    mostrar_info_graficas: usuario.mostrar_info_graficas ? 1 : 0,
+    instituciones_acceso: parsearInstitucionesDB(usuario.instituciones_acceso) || INSTITUCIONES_VALIDAS,
+  };
+}
 
 export async function login(req, res) {
   const { email, password } = req.body;
@@ -17,7 +48,6 @@ export async function login(req, res) {
 
     const usuario = rows[0];
 
-    // Soporte para contraseñas en texto plano (migración) y bcrypt
     let valido = false;
     if (usuario.password.startsWith("$2")) {
       valido = await bcrypt.compare(password, usuario.password);
@@ -28,13 +58,14 @@ export async function login(req, res) {
     if (!valido)
       return res.status(401).json({ error: "Credenciales incorrectas" });
 
+    const usuarioPayload = construirPayloadUsuario(usuario);
+
     const token = jwt.sign(
-      { id: usuario.id, nombre: usuario.nombre, email: usuario.email, rol: usuario.rol, sexo: usuario.sexo ?? null, mostrar_info_graficas: usuario.mostrar_info_graficas ? 1 : 0 },
+      usuarioPayload,
       process.env.JWT_SECRET,
       { expiresIn: "8h" }
     );
 
-    // Registrar auditoría de inicio de sesión
     const ip = req.headers["x-forwarded-for"]?.split(",")[0].trim() || req.socket?.remoteAddress || null;
     const ua = req.headers["user-agent"] || null;
     const desc = `Acceso al sistema desde ${ua ? ua.split(" ").slice(-1)[0] : "navegador desconocido"}`;
@@ -43,10 +74,7 @@ export async function login(req, res) {
       [usuario.id, usuario.nombre, usuario.email, usuario.rol, desc, ip, ua]
     ).catch((e) => console.error("Auditoría login error:", e));
 
-    res.json({
-      token,
-      usuario: { id: usuario.id, nombre: usuario.nombre, email: usuario.email, rol: usuario.rol, sexo: usuario.sexo ?? null, mostrar_info_graficas: usuario.mostrar_info_graficas ? 1 : 0 },
-    });
+    res.json({ token, usuario: usuarioPayload });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Error del servidor" });
@@ -56,11 +84,11 @@ export async function login(req, res) {
 export async function me(req, res) {
   try {
     const [rows] = await pool.query(
-      "SELECT id, nombre, email, rol, sexo, mostrar_info_graficas FROM usuarios WHERE id = ?",
+      "SELECT id, nombre, email, rol, sexo, mostrar_info_graficas, instituciones_acceso FROM usuarios WHERE id = ?",
       [req.usuario.id]
     );
     if (rows.length === 0) return res.status(404).json({ error: "Usuario no encontrado" });
-    res.json(rows[0]);
+    res.json(construirPayloadUsuario(rows[0]));
   } catch (err) {
     res.status(500).json({ error: "Error del servidor" });
   }
