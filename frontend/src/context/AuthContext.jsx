@@ -21,18 +21,18 @@ export function AuthProvider({ children }) {
   }
 
   useEffect(() => {
-    const token    = localStorage.getItem("token");
-    const usuGuard = localStorage.getItem("usuario");
+    const token     = localStorage.getItem("token");
+    const usuGuard  = localStorage.getItem("usuario");
     const permGuard = localStorage.getItem("permisos");
     if (token && usuGuard) {
       const u = JSON.parse(usuGuard);
       setUsuario(u);
-      // Admins no tienen restricciones
       if (u.rol === "admin") {
         setPermisos(null);
       } else {
+        // Carga rápida desde caché para no bloquear el render
         setPermisos(permGuard !== null ? JSON.parse(permGuard) : null);
-        // Validar que la institución guardada sea accesible para este usuario
+        // Validar institución guardada
         const instGuardada = localStorage.getItem("institucion_activa") || "HMEP";
         const acceso = Array.isArray(u.instituciones_acceso) ? u.instituciones_acceso : INSTITUCIONES_VALIDAS;
         if (!acceso.includes(instGuardada)) {
@@ -40,6 +40,12 @@ export function AuthProvider({ children }) {
           setInstitucionState(primera);
           localStorage.setItem("institucion_activa", primera);
         }
+        // Refresca permisos desde el servidor en segundo plano
+        // para que cambios del admin se reflejen sin necesidad de re-login
+        api.get("/permisos/mios").then(({ data }) => {
+          setPermisos(data.modulos);
+          localStorage.setItem("permisos", JSON.stringify(data.modulos));
+        }).catch(() => {});
       }
     }
     setCargando(false);
