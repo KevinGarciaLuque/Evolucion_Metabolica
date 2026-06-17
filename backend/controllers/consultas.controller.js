@@ -1,11 +1,13 @@
 import pool from "../config/db.js";
 import { auditarAccion } from "../utils/helpers.js";
 
+const INSTITUCIONES_VALIDAS = ["HMEP", "IHSS", "HEU"];
+
 /* ── Listar ─────────────────────────────────────── */
 export async function listar(req, res) {
-  const { paciente_nombre, paciente_id, fecha_desde, fecha_hasta } = req.query;
+  const { paciente_nombre, paciente_id, fecha_desde, fecha_hasta, institucion } = req.query;
   let sql = `
-    SELECT b.*, p.nombre AS paciente_nombre, p.dni AS paciente_dni,
+    SELECT b.*, p.nombre AS paciente_nombre, p.dni AS paciente_dni, p.institucion AS paciente_institucion,
            (d.consulta_id IS NOT NULL) AS tiene_detalle_heu
     FROM consultas b
     JOIN pacientes p ON p.id = b.paciente_id
@@ -14,6 +16,8 @@ export async function listar(req, res) {
   `;
   const params = [];
 
+  const inst = String(institucion || "").trim().toUpperCase();
+  if (INSTITUCIONES_VALIDAS.includes(inst)) { sql += " AND p.institucion = ?"; params.push(inst); }
   if (paciente_nombre) { sql += " AND p.nombre LIKE ?";    params.push(`%${paciente_nombre}%`); }
   if (paciente_id)     { sql += " AND b.paciente_id = ?";  params.push(paciente_id); }
   if (fecha_desde)     { sql += " AND b.fecha >= ?";        params.push(fecha_desde); }

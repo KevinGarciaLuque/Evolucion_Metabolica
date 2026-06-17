@@ -26,8 +26,9 @@ function puedeUsarInstitucion(req, institucion) {
 }
 
 export async function listarMapa(req, res) {
+  const institucion = resolverInstitucionParaListado(req);
   try {
-    const [rows] = await pool.query(`
+    let sql = `
       SELECT p.id, p.nombre, p.departamento, p.municipio, p.sexo,
              p.edad, p.institucion, p.latitud, p.longitud,
              (
@@ -36,9 +37,18 @@ export async function listarMapa(req, res) {
                ORDER BY a.fecha DESC LIMIT 1
              ) AS clasificacion
       FROM pacientes p
-      WHERE p.estado = 1 AND p.latitud IS NOT NULL AND p.longitud IS NOT NULL
-      ORDER BY p.nombre ASC
-    `);
+      WHERE p.estado = 1 AND p.latitud IS NOT NULL AND p.longitud IS NOT NULL`;
+    const params = [];
+
+    if (institucion === "__DENEGADA__") {
+      sql += " AND 1 = 0";
+    } else if (institucion) {
+      sql += " AND p.institucion = ?";
+      params.push(institucion);
+    }
+
+    sql += " ORDER BY p.nombre ASC";
+    const [rows] = await pool.query(sql, params);
     res.json(rows);
   } catch (err) {
     console.error(err);

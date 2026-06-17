@@ -5,6 +5,8 @@ import {
 } from "recharts";
 import Layout from "../../components/Layout";
 import api from "../../api/axios";
+import { useAuth } from "../../context/AuthContext";
+import InstSelector from "../../components/InstSelector";
 
 function descargarBlob(blob, filename) {
   const url = window.URL.createObjectURL(blob);
@@ -24,6 +26,7 @@ function promedio(arr, key, dec = 1) {
 }
 
 export default function ReportesVisuales() {
+  const { usuario, institucion, setInstitucion } = useAuth();
   const [rows, setRows] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [exportando, setExportando] = useState(false);
@@ -32,15 +35,15 @@ export default function ReportesVisuales() {
     departamento: "",
     sexo: "",
     clasificacion: "",
-    institucion: "",
+    institucion,
     fecha_desde: "",
     fecha_hasta: "",
   });
 
-  const cargar = async () => {
+  const cargar = async (f = filtros) => {
     setCargando(true);
     try {
-      const params = Object.fromEntries(Object.entries(filtros).filter(([, v]) => v !== ""));
+      const params = Object.fromEntries(Object.entries(f).filter(([, v]) => v !== ""));
       const { data } = await api.get("/reportes-visuales", { params });
       setRows(data || []);
     } finally {
@@ -48,9 +51,12 @@ export default function ReportesVisuales() {
     }
   };
 
+  // Re-carga automáticamente cuando cambia la institución global
   useEffect(() => {
-    cargar();
-  }, []);
+    const nuevosFiltros = { ...filtros, institucion };
+    setFiltros(nuevosFiltros);
+    cargar(nuevosFiltros);
+  }, [institucion]);
 
   const departamentos = useMemo(() => {
     return [...new Set(rows.map((r) => r.departamento).filter(Boolean))].sort((a, b) => a.localeCompare(b));
@@ -115,6 +121,7 @@ export default function ReportesVisuales() {
           <h1>Reportes</h1>
           <p className="page-subtitle">Informes visuales clínicos con filtros y exportación profesional a Excel</p>
         </div>
+        <InstSelector institucion={institucion} setInstitucion={setInstitucion} usuario={usuario} />
       </div>
 
       <div className="card filtros-card">
@@ -166,7 +173,7 @@ export default function ReportesVisuales() {
         </div>
         <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
           <button className="btn btn-primary" onClick={cargar}>Aplicar filtros</button>
-          <button className="btn btn-outline" onClick={() => { setFiltros({ buscar: "", departamento: "", sexo: "", clasificacion: "", institucion: "", fecha_desde: "", fecha_hasta: "" }); }}>Limpiar</button>
+          <button className="btn btn-outline" onClick={() => { setFiltros({ buscar: "", departamento: "", sexo: "", clasificacion: "", institucion, fecha_desde: "", fecha_hasta: "" }); }}>Limpiar</button>
           <button className="btn btn-outline" onClick={exportarExcel} disabled={exportando}>
             {exportando ? "Exportando..." : "Exportar Excel"}
           </button>

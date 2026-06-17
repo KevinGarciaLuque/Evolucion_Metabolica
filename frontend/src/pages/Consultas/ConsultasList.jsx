@@ -6,6 +6,7 @@ import Layout from "../../components/Layout";
 import ConsultaPrintModal from "./ConsultaPrintModal";
 import ConfirmModal from "../../components/ConfirmModal";
 import { useAuth } from "../../context/AuthContext";
+import InstSelector from "../../components/InstSelector";
 
 const TIPO_BADGE = {
   Presencial:   "badge-green",
@@ -22,7 +23,7 @@ function hoy() {
 
 export default function ConsultasList() {
   const navigate = useNavigate();
-  const { soloLectura } = useAuth();
+  const { soloLectura, usuario, institucion, setInstitucion } = useAuth();
   const [entradas, setEntradas] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [printId, setPrintId] = useState(null);
@@ -32,7 +33,7 @@ export default function ConsultasList() {
   });
 
   useEffect(() => {
-    const params = {};
+    const params = { institucion };
     if (filtros.paciente_nombre) params.paciente_nombre = filtros.paciente_nombre;
     if (filtros.fecha_desde)     params.fecha_desde     = filtros.fecha_desde;
     if (filtros.fecha_hasta)     params.fecha_hasta     = filtros.fecha_hasta;
@@ -40,7 +41,7 @@ export default function ConsultasList() {
     api.get("/consultas", { params })
       .then((r) => setEntradas(r.data))
       .finally(() => setCargando(false));
-  }, [filtros]);
+  }, [filtros, institucion]);
 
   function cambiarFiltro(e) {
     setFiltros({ ...filtros, [e.target.name]: e.target.value });
@@ -69,8 +70,9 @@ export default function ConsultasList() {
         <div>
           <h1>Consultas</h1>
           <p className="page-subtitle">Registro de consultas y seguimiento de pacientes</p>
+          <Link to="/consultas/nueva" className="btn btn-primary" style={{ marginTop: 8 }}>+ Nueva Consulta</Link>
         </div>
-        <Link to="/consultas/nueva" className="btn btn-primary">+ Nueva Consulta</Link>
+        <InstSelector institucion={institucion} setInstitucion={setInstitucion} usuario={usuario} />
       </div>
 
       {/* Filtros */}

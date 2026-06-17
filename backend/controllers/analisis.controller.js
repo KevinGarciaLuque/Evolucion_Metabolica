@@ -1,14 +1,25 @@
 import pool from "../config/db.js";
 import { clasificarISPAD } from "../utils/helpers.js";
 
+const INSTITUCIONES_VALIDAS = ["HMEP", "IHSS", "HEU"];
+
 export async function listar(req, res) {
+  const inst = String(req.query.institucion || "").trim().toUpperCase();
+  let sql = `SELECT a.*, p.nombre AS paciente_nombre, p.sexo, p.departamento, p.edad, p.institucion
+             FROM analisis a
+             JOIN pacientes p ON p.id = a.paciente_id
+             WHERE 1=1`;
+  const params = [];
+
+  if (INSTITUCIONES_VALIDAS.includes(inst)) {
+    sql += " AND p.institucion = ?";
+    params.push(inst);
+  }
+
+  sql += " ORDER BY a.fecha DESC";
+
   try {
-    const [rows] = await pool.query(
-      `SELECT a.*, p.nombre AS paciente_nombre, p.sexo, p.departamento, p.edad
-       FROM analisis a
-       JOIN pacientes p ON p.id = a.paciente_id
-       ORDER BY a.fecha DESC`
-    );
+    const [rows] = await pool.query(sql, params);
     res.json(rows);
   } catch (err) {
     res.status(500).json({ error: "Error al listar análisis" });

@@ -5,6 +5,7 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import api from "../../api/axios";
 import Layout from "../../components/Layout";
+import { useAuth } from "../../context/AuthContext";
 import "./MapaPacientes.css";
 
 // ─── Fix iconos Leaflet con Vite ─────────────────────────────────────────────
@@ -79,16 +80,18 @@ const CENTRO_HN = [14.8628, -86.8731];
 
 export default function MapaPacientes() {
   const navigate = useNavigate();
+  const { institucion } = useAuth();
   const [pacientes, setPacientes] = useState([]);
   const [cargando,  setCargando]  = useState(true);
   const [filtro,    setFiltro]    = useState("TODOS");
   const [busqueda,  setBusqueda]  = useState("");
 
   useEffect(() => {
-    api.get("/pacientes/mapa")
+    setCargando(true);
+    api.get(`/pacientes/mapa?institucion=${institucion}`)
       .then(r => setPacientes(r.data))
       .finally(() => setCargando(false));
-  }, []);
+  }, [institucion]);
 
   const filtrados = (() => {
     let lista = filtro === "TODOS"

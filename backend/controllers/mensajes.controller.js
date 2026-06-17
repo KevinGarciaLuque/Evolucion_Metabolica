@@ -55,13 +55,18 @@ function generarMensajeClasificacion(paciente, clasificacion) {
  * Envía mensajes personalizados de WhatsApp a todos los pacientes con la clasificación
  * indicada que tengan teléfono registrado.
  */
+const INSTITUCIONES_VALIDAS_MSG = ["HMEP", "IHSS", "HEU"];
+
 export async function enviarAltoRiesgo(req, res) {
   const clasificacion = ["OPTIMO", "MODERADO", "ALTO_RIESGO"].includes(req.body.clasificacion)
     ? req.body.clasificacion
     : "ALTO_RIESGO";
 
+  const instRaw = String(req.body.institucion || "").trim().toUpperCase();
+  const inst = INSTITUCIONES_VALIDAS_MSG.includes(instRaw) ? instRaw : null;
+
   try {
-    const [pacientes] = await pool.query(`
+    let sql = `
       SELECT p.id, p.nombre, p.sexo, p.institucion,
              COALESCE(NULLIF(p.telefono,''), NULLIF(p.telefono_tutor,'')) AS telefono
       FROM pacientes p
@@ -76,8 +81,12 @@ export async function enviarAltoRiesgo(req, res) {
       ) ult_analisis ON ult_analisis.paciente_id = p.id
       WHERE ult_analisis.clasificacion = ?
         AND p.estado = 1
-        AND COALESCE(NULLIF(p.telefono,''), NULLIF(p.telefono_tutor,'')) IS NOT NULL
-    `, [clasificacion]);
+        AND COALESCE(NULLIF(p.telefono,''), NULLIF(p.telefono_tutor,'')) IS NOT NULL`;
+    const params = [clasificacion];
+
+    if (inst) { sql += " AND p.institucion = ?"; params.push(inst); }
+
+    const [pacientes] = await pool.query(sql, params);
 
     if (pacientes.length === 0) {
       return res.json({ enviados: 0, errores: 0, total: 0, mensaje: `No hay pacientes en ${clasificacion} con teléfono registrado.` });
@@ -123,6 +132,25 @@ export async function enviarAltoRiesgo(req, res) {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Error al enviar mensajes" });
+  }
+}
+
+/**
+ * DELETE /api/mensajes/:id
+ * Elimina un registro del historial (admin y doctor).
+ */
+export async function eliminar(req, res) {
+  const rol = req.usuario?.rol;
+  if (rol !== "admin" && rol !== "doctor") {
+    return res.status(403).json({ error: "No tienes permiso para eliminar mensajes" });
+  }
+  try {
+    const [result] = await pool.query("DELETE FROM mensajes_whatsapp WHERE id = ?", [req.params.id]);
+    if (result.affectedRows === 0) return res.status(404).json({ error: "Mensaje no encontrado" });
+    res.json({ mensaje: "Mensaje eliminado" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Error al eliminar mensaje" });
   }
 }
 

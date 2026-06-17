@@ -320,15 +320,42 @@ export async function relacionIC(req, res) {
          i.insulina_corta,
          i.dosis_corta_u,
          i.dosis_prolongada_u,
+         COALESCE(i.dosis_total_u,
+           (COALESCE(i.dosis_prolongada_u, 0) + COALESCE(i.dosis_corta_u, 0))
+         ) AS dtd,
          i.motivo_cambio,
          a.carbohidratos_g,
          a.calorias_dia,
          a.tipo_dieta,
+         -- ICR empírico: carbohidratos reales / dosis corta real
          CASE
            WHEN i.dosis_corta_u > 0 AND a.carbohidratos_g > 0
            THEN ROUND(a.carbohidratos_g / i.dosis_corta_u, 1)
            ELSE NULL
-         END AS icr
+         END AS icr,
+         -- RIC teórico: 450/DTD (insulina R) o 500/DTD (análogos)
+         CASE
+           WHEN COALESCE(i.dosis_total_u,
+             (COALESCE(i.dosis_prolongada_u,0) + COALESCE(i.dosis_corta_u,0))) > 0
+           THEN ROUND(
+             CASE WHEN LOWER(COALESCE(i.insulina_corta,'')) LIKE '%regular%' THEN 450 ELSE 500 END
+             / COALESCE(i.dosis_total_u,
+                 (COALESCE(i.dosis_prolongada_u,0) + COALESCE(i.dosis_corta_u,0))), 1)
+           ELSE NULL
+         END AS ric_teorico,
+         -- FSI: 1500/DTD (insulina R) o 1800/DTD (análogos)
+         CASE
+           WHEN COALESCE(i.dosis_total_u,
+             (COALESCE(i.dosis_prolongada_u,0) + COALESCE(i.dosis_corta_u,0))) > 0
+           THEN ROUND(
+             CASE WHEN LOWER(COALESCE(i.insulina_corta,'')) LIKE '%regular%' THEN 1500 ELSE 1800 END
+             / COALESCE(i.dosis_total_u,
+                 (COALESCE(i.dosis_prolongada_u,0) + COALESCE(i.dosis_corta_u,0))), 1)
+           ELSE NULL
+         END AS fsi,
+         -- Tipo de insulina corta para referencia en frontend
+         CASE WHEN LOWER(COALESCE(i.insulina_corta,'')) LIKE '%regular%'
+              THEN 'R' ELSE 'analogo' END AS tipo_insulina_corta
        FROM historial_insulina i
        LEFT JOIN planes_alimentacion a
          ON a.id = (

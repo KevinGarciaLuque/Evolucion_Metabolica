@@ -16,6 +16,12 @@ const MODULOS = [
   { key: "acerca",      label: "Acerca del sistema" },
 ];
 
+const INSTITUCIONES = [
+  { key: "HMEP", label: "HMEP", color: "#3b82f6" },
+  { key: "IHSS", label: "IHSS", color: "#8b5cf6" },
+  { key: "HEU",  label: "HEU",  color: "#ef4444" },
+];
+
 const ROL_BADGE = {
   doctor:    "badge-blue",
   asistente: "badge-pink",
@@ -35,22 +41,28 @@ export default function PermisosList() {
   const [buscar, setBuscar]       = useState("");
   // { [usuarioId]: string[] | null }
   const [permisos, setPermisos]   = useState({});
+  // { [usuarioId]: string[] }
+  const [instituciones, setInstituciones] = useState({});
   // { [usuarioId]: "idle" | "guardando" | "ok" | "error" }
   const [estados, setEstados]     = useState({});
+  // { [usuarioId]: "idle" | "guardando" | "ok" | "error" }
+  const [estadosInst, setEstadosInst] = useState({});
 
   useEffect(() => {
     setCargando(true);
     api.get("/permisos")
       .then((r) => {
         setUsuarios(r.data);
-        const inicial = {};
+        const inicialMod = {};
+        const inicialInst = {};
         r.data.forEach((u) => {
-          // null significa "sin configurar" → mostramos todos marcados por defecto
           const modulosNormalizados = (u.modulos ?? MODULOS.map((m) => m.key))
             .map((m) => (m === "reportes" ? "backup_pacientes" : m));
-          inicial[u.id] = [...new Set(modulosNormalizados)];
+          inicialMod[u.id] = [...new Set(modulosNormalizados)];
+          inicialInst[u.id] = u.instituciones_acceso ?? ["HMEP"];
         });
-        setPermisos(inicial);
+        setPermisos(inicialMod);
+        setInstituciones(inicialInst);
       })
       .catch((err) => setError(err.response?.data?.error || "Error al cargar permisos"))
       .finally(() => setCargando(false));
@@ -73,6 +85,17 @@ export default function PermisosList() {
     }));
   }
 
+  function toggleInstitucion(usuarioId, key) {
+    setInstituciones((prev) => {
+      const actuales = prev[usuarioId] ?? [];
+      const nuevo = actuales.includes(key)
+        ? actuales.filter((i) => i !== key)
+        : [...actuales, key];
+      // Siempre debe tener al menos una
+      return { ...prev, [usuarioId]: nuevo.length ? nuevo : actuales };
+    });
+  }
+
   async function guardar(usuarioId) {
     setEstados((prev) => ({ ...prev, [usuarioId]: "guardando" }));
     try {
@@ -82,6 +105,20 @@ export default function PermisosList() {
     } catch (err) {
       setEstados((prev) => ({ ...prev, [usuarioId]: "error" }));
       setTimeout(() => setEstados((prev) => ({ ...prev, [usuarioId]: "idle" })), 3000);
+    }
+  }
+
+  async function guardarInstituciones(usuarioId) {
+    const inst = instituciones[usuarioId] ?? [];
+    if (inst.length === 0) return;
+    setEstadosInst((prev) => ({ ...prev, [usuarioId]: "guardando" }));
+    try {
+      await api.put(`/permisos/${usuarioId}/instituciones`, { instituciones: inst });
+      setEstadosInst((prev) => ({ ...prev, [usuarioId]: "ok" }));
+      setTimeout(() => setEstadosInst((prev) => ({ ...prev, [usuarioId]: "idle" })), 2000);
+    } catch (err) {
+      setEstadosInst((prev) => ({ ...prev, [usuarioId]: "error" }));
+      setTimeout(() => setEstadosInst((prev) => ({ ...prev, [usuarioId]: "idle" })), 3000);
     }
   }
 
@@ -124,9 +161,11 @@ export default function PermisosList() {
         <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
           {filtrados.map((u) => {
             const modulosUsuario = permisos[u.id] ?? [];
+            const instUsuario = instituciones[u.id] ?? [];
             const todos = modulosUsuario.length === MODULOS.length;
             const ninguno = modulosUsuario.length === 0;
             const estado = estados[u.id] || "idle";
+            const estadoInst = estadosInst[u.id] || "idle";
 
             return (
               <div key={u.id} className="card" style={{ padding: "20px 24px" }}>
@@ -149,13 +188,71 @@ export default function PermisosList() {
                       {ROL_LABEL[u.rol] || u.rol}
                     </span>
                   </div>
+                </div>
 
-                  {/* Botones de atajos */}
+                {/* ── Sección: Acceso a Instituciones ────────────────────────── */}
+                <div style={{
+                  background: "#f8fafc", borderRadius: 10, padding: "14px 16px",
+                  marginBottom: 16, border: "1px solid #e2e8f0",
+                }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 10, marginBottom: 12 }}>
+                    <p style={{ margin: 0, fontWeight: 600, fontSize: "0.88rem", color: "#374151" }}>
+                      Acceso a Instituciones
+                    </p>
+                    <button
+                      className={`btn btn-sm ${estadoInst === "guardando" ? "btn-outline" : "btn-primary"}`}
+                      onClick={() => guardarInstituciones(u.id)}
+                      disabled={estadoInst === "guardando" || instUsuario.length === 0}
+                    >
+                      {estadoInst === "guardando" ? "Guardando..." :
+                       estadoInst === "ok"        ? "✓ Guardado"  :
+                       estadoInst === "error"     ? "Error"       : "Guardar acceso"}
+                    </button>
+                  </div>
+                  <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                    {INSTITUCIONES.map(({ key, label, color }) => {
+                      const activo = instUsuario.includes(key);
+                      return (
+                        <label
+                          key={key}
+                          style={{
+                            display: "flex", alignItems: "center", gap: 8,
+                            padding: "8px 16px", borderRadius: 8, cursor: "pointer",
+                            border: `2px solid ${activo ? color : "#e2e8f0"}`,
+                            background: activo ? `${color}18` : "#fff",
+                            transition: "all 0.15s",
+                            fontSize: "0.9rem", fontWeight: activo ? 700 : 400,
+                            color: activo ? color : "#64748b",
+                            userSelect: "none",
+                          }}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={activo}
+                            onChange={() => toggleInstitucion(u.id, key)}
+                            style={{ accentColor: color, width: 15, height: 15 }}
+                          />
+                          {label}
+                        </label>
+                      );
+                    })}
+                  </div>
+                  {instUsuario.includes("HEU") && (
+                    <p style={{ margin: "8px 0 0", fontSize: "0.78rem", color: "#ef4444" }}>
+                      Con acceso HEU este usuario podrá ver y gestionar pacientes del Hospital Escuela Universitario.
+                    </p>
+                  )}
+                </div>
+
+                {/* ── Sección: Módulos ───────────────────────────────────────── */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 10, marginBottom: 10 }}>
+                  <p style={{ margin: 0, fontWeight: 600, fontSize: "0.88rem", color: "#374151" }}>
+                    Módulos del sistema
+                  </p>
                   <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                     <button
                       className="btn btn-sm btn-outline"
                       onClick={() => toggleTodos(u.id, !todos)}
-                      title={todos ? "Desmarcar todos" : "Marcar todos"}
                     >
                       {todos ? "Quitar todos" : "Dar todos"}
                     </button>
@@ -166,12 +263,11 @@ export default function PermisosList() {
                     >
                       {estado === "guardando" ? "Guardando..." :
                        estado === "ok"        ? "✓ Guardado"  :
-                       estado === "error"     ? "Error"       : "Guardar"}
+                       estado === "error"     ? "Error"       : "Guardar módulos"}
                     </button>
                   </div>
                 </div>
 
-                {/* Grid de módulos */}
                 <div style={{
                   display: "grid",
                   gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))",

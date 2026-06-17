@@ -144,7 +144,7 @@ const fadeUp = { hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0 } };
 const stagger = { show: { transition: { staggerChildren: 0.08 } } };
 
 export default function Dashboard() {
-  const { usuario } = useAuth();
+  const { usuario, institucion, setInstitucion } = useAuth();
   const saludo = useSaludo();
   const { fechaFormateada, mensaje } = useFechaYMensaje();
   const colorGenero = usuario?.sexo === "F" ? "#f472b6"
@@ -158,7 +158,6 @@ export default function Dashboard() {
   const [glucosaRangos, setGlucosaRangos] = useState(null);
   const [cargando, setCargando]   = useState(true);
   const [isMobile, setIsMobile]   = useState(window.innerWidth < 768);
-  const [institucion, setInstitucion] = useState("HMEP");
   const [modalInfo, setModalInfo]     = useState(null);
 
   useEffect(() => {
@@ -266,16 +265,31 @@ export default function Dashboard() {
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 10, alignSelf: "flex-end", marginBottom: 6 }}>
           <span style={{ fontSize: 13, color: "#94a3b8" }}>Institución:</span>
-          <div
-            className={`toggle-pill ${institucion === "IHSS" ? "is-ihss" : ""}`}
-            onClick={() => setInstitucion(institucion === "HMEP" ? "IHSS" : "HMEP")}
-            role="switch"
-            aria-checked={institucion === "HMEP"}
-            title={`Cambiar a ${institucion === "HMEP" ? "IHSS" : "HMEP"}`}
-          >
-            <span className="toggle-label">{institucion}</span>
-            <span className="toggle-thumb" />
-          </div>
+          {(() => {
+            const instDisp = Array.isArray(usuario?.instituciones_acceso) && usuario.instituciones_acceso.length
+              ? usuario.instituciones_acceso
+              : ["HMEP", "IHSS"];
+            return (
+              <div style={{ display: "flex", gap: 6 }}>
+                {instDisp.map((inst) => (
+                  <button
+                    key={inst}
+                    onClick={() => setInstitucion(inst)}
+                    style={{
+                      padding: "5px 14px", borderRadius: 20, fontSize: 13, fontWeight: 600,
+                      border: "2px solid",
+                      borderColor: institucion === inst ? (inst === "HEU" ? "#ef4444" : inst === "IHSS" ? "#8b5cf6" : "#3b82f6") : "#e2e8f0",
+                      background: institucion === inst ? (inst === "HEU" ? "#fef2f2" : inst === "IHSS" ? "#f5f3ff" : "#eff6ff") : "#fff",
+                      color: institucion === inst ? (inst === "HEU" ? "#ef4444" : inst === "IHSS" ? "#8b5cf6" : "#3b82f6") : "#94a3b8",
+                      cursor: "pointer", transition: "all 0.15s",
+                    }}
+                  >
+                    {inst}
+                  </button>
+                ))}
+              </div>
+            );
+          })()}
         </div>
       </motion.div>
 

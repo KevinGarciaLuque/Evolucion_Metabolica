@@ -28,6 +28,7 @@ function CountUp({ end, duration = 1.2, decimals = 0, suffix = "" }) {
 import api from "../api/axios";
 import Layout from "../components/Layout";
 import { useAuth } from "../context/AuthContext";
+import InstSelector from "../components/InstSelector";
 
 const COLORS = ["#3b82f6", "#ec4899"];
 
@@ -133,7 +134,7 @@ function grupoEtario(edad) {
 }
 
 export default function Consolidado() {
-  const { usuario: yo } = useAuth();
+  const { usuario: yo, institucion, setInstitucion } = useAuth();
   const [todos, setTodos]     = useState([]);
   const [filtros, setFiltros] = useState({ departamento: "", sexo: "", edad_min: "", edad_max: "" });
   const [listaDeptos, setListaDeptos] = useState([]);
@@ -153,8 +154,14 @@ export default function Consolidado() {
 
   useEffect(() => {
     api.get("/pacientes/departamentos").then((r) => setListaDeptos(r.data));
-    api.get("/analisis").then((r) => setTodos(r.data)).finally(() => setCargando(false));
   }, []);
+
+  useEffect(() => {
+    setCargando(true);
+    api.get(`/analisis?institucion=${institucion}`)
+      .then((r) => setTodos(r.data))
+      .finally(() => setCargando(false));
+  }, [institucion]);
 
   function cambiar(e) { setFiltros({ ...filtros, [e.target.name]: e.target.value }); }
 
@@ -412,6 +419,7 @@ export default function Consolidado() {
           <h1>Consolidado Poblacional</h1>
           <p className="page-subtitle">Análisis comparativo por departamento, género y grupo etario</p>
         </div>
+        <InstSelector institucion={institucion} setInstitucion={setInstitucion} usuario={yo} />
       </div>
 
       {/* Filtros colapsables */}

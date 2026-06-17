@@ -1,7 +1,9 @@
 import { useEffect, useState, useCallback } from "react";
 import api from "../../api/axios";
 import Layout from "../../components/Layout";
-import { HiOutlineChatBubbleLeftEllipsis, HiOutlinePaperAirplane, HiOutlineCheckCircle, HiOutlineXCircle, HiArrowPath } from "react-icons/hi2";
+import { HiOutlineChatBubbleLeftEllipsis, HiOutlinePaperAirplane, HiOutlineCheckCircle, HiOutlineXCircle, HiArrowPath, HiOutlineTrash } from "react-icons/hi2";
+import { useAuth } from "../../context/AuthContext";
+import InstSelector from "../../components/InstSelector";
 import "./MensajesPanel.css";
 
 function formatFecha(iso) {
@@ -37,6 +39,7 @@ const CLASIFICACIONES = {
 };
 
 export default function MensajesPanel() {
+  const { usuario, institucion, setInstitucion } = useAuth();
   const [historial,   setHistorial]   = useState([]);
   const [total,       setTotal]       = useState(0);
   const [pagina,      setPagina]      = useState(1);
@@ -76,7 +79,7 @@ export default function MensajesPanel() {
     setResultado(null);
     setError(null);
     try {
-      const { data } = await api.post("/mensajes/enviar-alto-riesgo", { clasificacion: clasificacionSel, mensaje: mensajesEdit[clasificacionSel] });
+      const { data } = await api.post("/mensajes/enviar-alto-riesgo", { clasificacion: clasificacionSel, mensaje: mensajesEdit[clasificacionSel], institucion });
       setResultado(data);
       cargarHistorial(1);
     } catch (err) {
@@ -88,19 +91,35 @@ export default function MensajesPanel() {
 
   const totalPaginas = Math.ceil(total / LIMIT);
 
+  async function eliminarMensaje(id) {
+    if (!window.confirm("¿Eliminar este registro del historial?")) return;
+    try {
+      await api.delete(`/mensajes/${id}`);
+      setHistorial((prev) => prev.filter((m) => m.id !== id));
+      setTotal((prev) => prev - 1);
+    } catch (err) {
+      alert(err.response?.data?.error || "Error al eliminar");
+    }
+  }
+
+  const puedeEliminar = ["admin", "doctor"].includes(usuario?.rol);
+
   return (
     <Layout>
       <div className="mensajes-page">
 
         {/* Encabezado */}
-        <div className="mensajes-header">
-          <HiOutlineChatBubbleLeftEllipsis size={28} color="var(--color-primary, #2563eb)" />
-          <div>
-            <h1 style={{ margin: 0, fontSize: "1.4rem", fontWeight: 700 }}>Mensajes WhatsApp</h1>
-            <p style={{ margin: 0, fontSize: "0.85rem", color: "#6b7280" }}>
-              Envío masivo por clasificación TIR e historial de mensajes
-            </p>
+        <div className="mensajes-header" style={{ flexWrap: "wrap", gap: 12 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <HiOutlineChatBubbleLeftEllipsis size={28} color="var(--color-primary, #2563eb)" />
+            <div>
+              <h1 style={{ margin: 0, fontSize: "1.4rem", fontWeight: 700 }}>Mensajes WhatsApp</h1>
+              <p style={{ margin: 0, fontSize: "0.85rem", color: "#6b7280" }}>
+                Envío masivo por clasificación TIR e historial de mensajes
+              </p>
+            </div>
           </div>
+          <InstSelector institucion={institucion} setInstitucion={setInstitucion} usuario={usuario} />
         </div>
 
         {/* Tarjeta de envío masivo */}
@@ -242,8 +261,8 @@ export default function MensajesPanel() {
               <table className="mensajes-tabla">
                 <thead>
                   <tr style={{ background: "#f9fafb", borderBottom: "1px solid #e5e7eb" }}>
-                    {["Fecha", "Paciente", "Teléfono", "Mensaje", "Estado", "Enviado por"].map(h => (
-                      <th key={h} style={{ padding: "0.65rem 1rem", textAlign: "left", fontWeight: 600, color: "#374151", whiteSpace: "nowrap" }}>
+                    {["Fecha", "Paciente", "Teléfono", "Mensaje", "Estado", "Enviado por", ...(puedeEliminar ? [""] : [])].map((h, i) => (
+                      <th key={i} style={{ padding: "0.65rem 1rem", textAlign: "left", fontWeight: 600, color: "#374151", whiteSpace: "nowrap" }}>
                         {h}
                       </th>
                     ))}
@@ -287,6 +306,24 @@ export default function MensajesPanel() {
                         )}
                       </td>
                       <td style={{ padding: "0.65rem 1rem", color: "#6b7280" }}>{m.enviado_por_nombre || "—"}</td>
+                      {puedeEliminar && (
+                        <td style={{ padding: "0.65rem 1rem" }}>
+                          <button
+                            onClick={() => eliminarMensaje(m.id)}
+                            title="Eliminar registro"
+                            style={{
+                              background: "none", border: "none", cursor: "pointer",
+                              color: "#dc2626", padding: "4px", borderRadius: 6,
+                              display: "flex", alignItems: "center",
+                              transition: "background 0.15s",
+                            }}
+                            onMouseEnter={e => e.currentTarget.style.background = "#fee2e2"}
+                            onMouseLeave={e => e.currentTarget.style.background = "none"}
+                          >
+                            <HiOutlineTrash size={16} />
+                          </button>
+                        </td>
+                      )}
                     </tr>
                   ))}
                 </tbody>

@@ -1276,9 +1276,81 @@ export default function PacienteDetalle() {
                     <Line yAxisId="icr" type="monotone" dataKey="insulina" stroke="#0ea5e9" strokeWidth={1.5} strokeDasharray="3 3" dot={{ r: 3, fill: "#0ea5e9" }} />
                   </LineChart>
                 </ResponsiveContainer>
+
               </>)}
 
             </div>
+
+            {/* ─── FSI + RIC TEÓRICO ───────────────────────────────────── */}
+            {relacionIC.filter(r => r.fsi != null).length > 0 && (() => {
+              const fsiData = relacionIC.filter(r => r.fsi != null).map(r => ({
+                fecha:       String(r.fecha).substring(0, 10),
+                fsi:         Math.round(Number(r.fsi)),
+                ric_teorico: r.ric_teorico != null ? Math.round(Number(r.ric_teorico)) : null,
+                tipo:        r.tipo_insulina_corta === "R" ? "Insulina R" : "Análogo",
+                insulina:    r.insulina_corta || "",
+              }));
+              const ultimo    = fsiData[fsiData.length - 1];
+              const ultimoRaw = relacionIC.filter(r => r.fsi != null).slice(-1)[0];
+              return (
+                <div className="card">
+                  <div style={{ marginBottom: 16 }}>
+                    <h3 style={{ margin: "0 0 4px", display: "flex", alignItems: "center", gap: 8 }}>
+                      📐 FSI y RIC Teórico — Bolus Flexible
+                    </h3>
+                    <p style={{ margin: 0, fontSize: "0.78rem", color: "#64748b" }}>
+                      Insulina R: FSI = 1500/DTD · RIC = 450/DTD &nbsp;|&nbsp; Análogos: FSI = 1800/DTD · RIC = 500/DTD
+                    </p>
+                  </div>
+
+                  {/* Stats resumen */}
+                  <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 16 }}>
+                    {[
+                      { label: "FSI actual",      value: ultimo ? `${ultimo.fsi} mg/dL/UI` : "—", color: "#0ea5e9", bg: "#f0f9ff" },
+                      { label: "RIC teórico",     value: ultimo?.ric_teorico ? `${ultimo.ric_teorico} g/UI` : "—", color: "#8b5cf6", bg: "#f5f3ff" },
+                      { label: "Tipo insulina",   value: ultimo?.tipo || "—", color: "#64748b", bg: "#f8fafc" },
+                      { label: "DDT último reg.", value: ultimoRaw?.dtd ? `${Math.round(Number(ultimoRaw.dtd))} UI` : "—", color: "#f59e0b", bg: "#fffbeb" },
+                    ].map(c => (
+                      <div key={c.label} style={{ flex: "1 1 120px", background: c.bg, borderRadius: 10, padding: "12px 16px", textAlign: "center" }}>
+                        <div style={{ fontSize: "1.15rem", fontWeight: 700, color: c.color }}>{c.value}</div>
+                        <div style={{ fontSize: "0.72rem", color: "#64748b", marginTop: 2 }}>{c.label}</div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div style={{ background: "#f0f9ff", border: "1px solid #bae6fd", borderRadius: 10, padding: "10px 14px", marginBottom: 16, fontSize: "0.78rem", color: "#0369a1" }}>
+                    <strong>FSI ↑</strong> (ej. 40→55 mg/dL/UI) → más sensible, corrige más glucosa por unidad. &nbsp;
+                    <strong>FSI ↓</strong> → más resistencia, cada unidad corrige menos glucosa.
+                  </div>
+
+                  <ResponsiveContainer width="100%" height={220}>
+                    <LineChart data={fsiData} margin={{ top: 8, right: 20, left: 0, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                      <XAxis dataKey="fecha" tick={{ fontSize: 11 }} />
+                      <YAxis yAxisId="fsi" domain={[0, "auto"]} tick={{ fontSize: 11 }}
+                        label={{ value: "mg/dL/UI", angle: -90, position: "insideLeft", fontSize: 10, fill: "#94a3b8" }} />
+                      <YAxis yAxisId="ric" orientation="right" domain={[0, "auto"]} tick={{ fontSize: 11 }}
+                        label={{ value: "g/UI", angle: 90, position: "insideRight", fontSize: 10, fill: "#94a3b8" }} />
+                      <Tooltip
+                        contentStyle={{ background: "#1e293b", border: "none", borderRadius: 8, fontSize: 12 }}
+                        labelStyle={{ color: "#94a3b8" }}
+                        itemStyle={{ color: "#fff" }}
+                        formatter={(v, name) => [
+                          name === "fsi" ? `${v} mg/dL/UI` : `${v} g/UI`,
+                          name === "fsi" ? "FSI (Factor Sensibilidad)" : "RIC Teórico",
+                        ]}
+                      />
+                      <Legend formatter={n => n === "fsi" ? "FSI (mg/dL por UI)" : "RIC Teórico (g CHO por UI)"} />
+                      <Line yAxisId="fsi" type="monotone" dataKey="fsi"
+                        stroke="#0ea5e9" strokeWidth={2.5} dot={{ r: 4, fill: "#0ea5e9" }} activeDot={{ r: 6 }} />
+                      <Line yAxisId="ric" type="monotone" dataKey="ric_teorico"
+                        stroke="#8b5cf6" strokeWidth={2} strokeDasharray="5 4"
+                        dot={{ r: 3, fill: "#8b5cf6" }} activeDot={{ r: 5 }} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              );
+            })()}
 
             {/* ─── HISTORIAL DE INSULINA ───────────────────────────────── */}
             <div className="card">
@@ -1322,11 +1394,16 @@ export default function PacienteDetalle() {
                               : "—"}
                         </td>
                         <td className="hide-mobile" style={{ fontSize: "0.8rem", color: "#64748b" }}>
-                          {r.dosis_total_u > 0
-                            ? `${Math.round(1700 / r.dosis_total_u)} mg/dL/UI`
-                            : (r.dosis_prolongada_u != null || r.dosis_corta_u != null)
-                              ? (() => { const t = (r.dosis_prolongada_u ?? 0) + (r.dosis_corta_u ?? 0); return t > 0 ? `${Math.round(1700 / t)} mg/dL/UI` : "—"; })()
-                              : "—"}
+                          {(() => {
+                            const dtd = r.dosis_total_u > 0
+                              ? Number(r.dosis_total_u)
+                              : (r.dosis_prolongada_u != null || r.dosis_corta_u != null)
+                                ? ((r.dosis_prolongada_u ?? 0) + (r.dosis_corta_u ?? 0))
+                                : 0;
+                            if (dtd <= 0) return "—";
+                            const factor = /regular/i.test(r.insulina_corta || "") ? 1500 : 1800;
+                            return `${Math.round(factor / dtd)} mg/dL/UI`;
+                          })()}
                         </td>
                         <td className="hide-mobile">{r.via_administracion || "—"}</td>
                         <td className="hide-tablet" style={{ maxWidth: 180, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.motivo_cambio || "—"}</td>

@@ -4,11 +4,25 @@ export const MODULOS_VALIDOS = [
   "dashboard", "consolidado", "pacientes", "analisis", "consultas", "mapa", "mensajes", "reportes_visuales", "backup_pacientes", "importaciones_heu", "reportes", "acerca",
 ];
 
-// GET /api/permisos — admin: lista todos los usuarios no-admin con sus módulos
+const INSTITUCIONES_VALIDAS = ["HMEP", "IHSS", "HEU"];
+
+function parsearInstitucionesDB(valor) {
+  if (!valor) return null;
+  try {
+    const arr = typeof valor === "string" ? JSON.parse(valor) : valor;
+    if (!Array.isArray(arr)) return null;
+    const limpias = arr.map((v) => String(v || "").trim().toUpperCase()).filter((v) => INSTITUCIONES_VALIDAS.includes(v));
+    return limpias.length ? [...new Set(limpias)] : null;
+  } catch {
+    return null;
+  }
+}
+
+// GET /api/permisos — admin: lista todos los usuarios no-admin con sus módulos e instituciones
 export async function listarTodos(req, res) {
   try {
     const [usuarios] = await pool.query(
-      "SELECT id, nombre, email, rol FROM usuarios WHERE rol != 'admin' AND estado = 1 ORDER BY nombre ASC"
+      "SELECT id, nombre, email, rol, instituciones_acceso FROM usuarios WHERE rol != 'admin' AND estado = 1 ORDER BY nombre ASC"
     );
     const [permisos] = await pool.query("SELECT usuario_id, modulo FROM permisos_modulos");
 
@@ -20,7 +34,8 @@ export async function listarTodos(req, res) {
 
     const resultado = usuarios.map((u) => ({
       ...u,
-      modulos: mapa[u.id] ?? null, // null = sin configurar → acceso total
+      modulos: mapa[u.id] ?? null,
+      instituciones_acceso: parsearInstitucionesDB(u.instituciones_acceso),
     }));
 
     res.json(resultado);
@@ -91,5 +106,37 @@ export async function actualizarPermisos(req, res) {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Error al actualizar permisos" });
+  }
+}
+
+// PUT /api/permisos/:usuarioId/instituciones — actualiza instituciones_acceso (admin)
+export async function actualizarInstituciones(req, res) {
+  const { instituciones } = req.body;
+  if (!Array.isArray(instituciones))
+    return res.status(400).json({ error: "Se esperaba un array de instituciones" });
+
+  const invalidas = instituciones.filter((i) => !INSTITUCIONES_VALIDAS.includes(String(i).toUpperCase()));
+  if (invalidas.length > 0)
+    return res.status(400).json({ error: `Instituciones inválidas: ${invalidas.join(", ")}` });
+
+  if (instituciones.length === 0)
+    return res.status(400).json({ error: "Debe seleccionar al menos una institución" });
+
+  const usuarioId = req.params.usuarioId;
+
+  try {
+    const [users] = await pool.query("SELECT id, rol FROM usuarios WHERE id = ?", [usuarioId]);
+    if (users.length === 0)
+      return res.status(404).json({ error: "Usuario no encontrado" });
+    if (users[0].rol === "admin")
+      return res.status(400).json({ error: "Los administradores tienen acceso a todas las instituciones" });
+
+    const limpias = [...new Set(instituciones.map((i) => String(i).trim().toUpperCase()))];
+    await pool.query("UPDATE usuarios SET instituciones_acceso = ? WHERE id = ?", [JSON.stringify(limpias), usuarioId]);
+
+    res.json({ mensaje: "Acceso a instituciones actualizado correctamente" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Error al actualizar instituciones" });
   }
 }

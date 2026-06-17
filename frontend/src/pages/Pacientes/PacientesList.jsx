@@ -6,21 +6,26 @@ import { IoLogoWhatsapp } from "react-icons/io";
 import { FiTrash2 } from "react-icons/fi";
 import ConfirmModal from "../../components/ConfirmModal";
 import { useAuth } from "../../context/AuthContext";
+import {
+  ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid,
+  Tooltip, Cell, ReferenceLine,
+} from "recharts";
 
 export default function PacientesList() {
   const navigate  = useNavigate();
-  const { soloLectura } = useAuth();
+  const { soloLectura, usuario, institucion, setInstitucion } = useAuth();
   const [pacientes, setPacientes]   = useState([]);
   const [deptos, setDeptos]         = useState([]);
   const [cargando, setCargando]     = useState(true);
-  const [institucion, setInstitucion] = useState("HMEP");
   const [filtros, setFiltros]       = useState({
     buscar: "", departamento: "", sexo: "", edad_min: "", edad_max: "", con_monitor: "",
   });
   const [mostrarFiltros, setMostrarFiltros] = useState(false);
   const [clsVis, setClsVis] = useState({ OPTIMO: true, MODERADO: true, ALTO_RIESGO: true });
   const [confirmEliminar, setConfirmEliminar] = useState(null);
-  const institucionesDisponibles = ["HMEP", "IHSS", "HEU"];
+  const institucionesDisponibles = Array.isArray(usuario?.instituciones_acceso) && usuario.instituciones_acceso.length
+    ? usuario.instituciones_acceso
+    : ["HMEP", "IHSS", "HEU"];
 
   // ── WhatsApp modal ────────────────────────────────────────────────────────
   const [modalWA,    setModalWA]    = useState(null); // paciente seleccionado
@@ -185,6 +190,136 @@ export default function PacientesList() {
           </div>
         </div>
       </div>
+
+      {/* ── Gráficas Resumen ───────────────────────────────────────────────── */}
+      {(() => {
+        const conMonitor = pacientes.filter(p => p.con_monitor && p.tir_promedio != null);
+        const sinMonitor = pacientes.filter(p => !p.con_monitor && p.hba1c_previo != null);
+
+        // TIR: distribución por clasificación
+        const tirData = [
+          { nombre: "Óptimo", label: "≥ 70%", count: conMonitor.filter(p => p.tir_promedio >= 70).length, color: "#76B250" },
+          { nombre: "Moderado", label: "54–69%", count: conMonitor.filter(p => p.tir_promedio >= 54 && p.tir_promedio < 70).length, color: "#FEBF01" },
+          { nombre: "Alto Riesgo", label: "< 54%", count: conMonitor.filter(p => p.tir_promedio < 54).length, color: "#FB0D0A" },
+        ];
+        const promedioTIR = conMonitor.length
+          ? (conMonitor.reduce((s, p) => s + parseFloat(p.tir_promedio), 0) / conMonitor.length).toFixed(1)
+          : null;
+
+        // HbA1c: distribución por rangos
+        const hba1cData = [
+          { nombre: "< 7%",   count: sinMonitor.filter(p => p.hba1c_previo < 7).length,                             color: "#76B250" },
+          { nombre: "7–9%",   count: sinMonitor.filter(p => p.hba1c_previo >= 7 && p.hba1c_previo <= 9).length,     color: "#FEBF01" },
+          { nombre: "9–10%",  count: sinMonitor.filter(p => p.hba1c_previo > 9 && p.hba1c_previo <= 10).length,     color: "#FB6B00" },
+          { nombre: "> 10%",  count: sinMonitor.filter(p => p.hba1c_previo > 10).length,                            color: "#FB0D0A" },
+        ];
+        const promedioHbA1c = sinMonitor.length
+          ? (sinMonitor.reduce((s, p) => s + parseFloat(p.hba1c_previo), 0) / sinMonitor.length).toFixed(1)
+          : null;
+
+        const StatBox = ({ label, value, unit, sub }) => (
+          <div style={{ textAlign: "center", padding: "12px 20px", background: "#f8fafc", borderRadius: 10 }}>
+            <div style={{ fontSize: 11, color: "#94a3b8", marginBottom: 2 }}>{label}</div>
+            <div style={{ fontSize: 28, fontWeight: 700, color: "#0f172a", lineHeight: 1 }}>
+              {value ?? "—"}{value != null && <span style={{ fontSize: 14, fontWeight: 500, color: "#64748b", marginLeft: 2 }}>{unit}</span>}
+            </div>
+            {sub && <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 2 }}>{sub}</div>}
+          </div>
+        );
+
+        const CustomLabel = ({ x, y, width, value }) =>
+          value > 0 ? <text x={x + width / 2} y={y - 5} textAnchor="middle" fontSize={13} fontWeight={700} fill="#334155">{value}</text> : null;
+
+        return (
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 20 }}>
+
+            {/* Con Monitor — TIR */}
+            <div className="card" style={{ margin: 0 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 14 }}>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: "0.95rem", color: "#0f172a" }}>Con Monitor MCG</h3>
+                  <span style={{ fontSize: 12, color: "#94a3b8" }}>Distribución TIR · {conMonitor.length} pacientes</span>
+                </div>
+                <span style={{ fontSize: 11, background: "#ede9fe", color: "#6366f1", borderRadius: 20, padding: "3px 10px", fontWeight: 600 }}>TIR</span>
+              </div>
+              <div style={{ display: "flex", gap: 10, marginBottom: 16, justifyContent: "center", flexWrap: "wrap" }}>
+                <StatBox label="Promedio TIR" value={promedioTIR} unit="%" sub={`de ${conMonitor.length} pac.`} />
+                <StatBox label="Óptimo (≥70%)" value={tirData[0].count} unit=" pac." />
+                <StatBox label="Alto Riesgo (<54%)" value={tirData[2].count} unit=" pac." />
+              </div>
+              {conMonitor.length === 0 ? (
+                <div style={{ textAlign: "center", color: "#94a3b8", padding: "20px 0", fontSize: 13 }}>Sin datos</div>
+              ) : (
+                <ResponsiveContainer width="100%" height={200}>
+                  <BarChart data={tirData} margin={{ top: 20, right: 10, left: -20, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                    <XAxis dataKey="nombre" tick={{ fontSize: 12, fill: "#64748b" }} tickLine={false} axisLine={false} />
+                    <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} allowDecimals={false} />
+                    <Tooltip
+                      formatter={(v) => [`${v} pacientes`]}
+                      contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid #e2e8f0" }}
+                    />
+                    <Bar dataKey="count" radius={[6, 6, 0, 0]} maxBarSize={60} label={<CustomLabel />}>
+                      {tirData.map((e, i) => <Cell key={i} fill={e.color} />)}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
+              <div style={{ display: "flex", justifyContent: "center", gap: 14, marginTop: 8, flexWrap: "wrap" }}>
+                {tirData.map(t => (
+                  <span key={t.nombre} style={{ fontSize: 11, display: "flex", alignItems: "center", gap: 4, color: "#64748b" }}>
+                    <span style={{ width: 10, height: 10, borderRadius: 2, background: t.color, display: "inline-block" }} />
+                    {t.nombre} {t.label}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            {/* Sin Monitor — HbA1c */}
+            <div className="card" style={{ margin: 0 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 14 }}>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: "0.95rem", color: "#0f172a" }}>Sin Monitor MCG</h3>
+                  <span style={{ fontSize: 12, color: "#94a3b8" }}>Distribución HbA1c prev. · {sinMonitor.length} pacientes</span>
+                </div>
+                <span style={{ fontSize: 11, background: "#fef3c7", color: "#d97706", borderRadius: 20, padding: "3px 10px", fontWeight: 600 }}>HbA1c</span>
+              </div>
+              <div style={{ display: "flex", gap: 10, marginBottom: 16, justifyContent: "center", flexWrap: "wrap" }}>
+                <StatBox label="Promedio HbA1c" value={promedioHbA1c} unit="%" sub={`de ${sinMonitor.length} pac.`} />
+                <StatBox label="Control (< 7%)" value={hba1cData[0].count} unit=" pac." />
+                <StatBox label="Alto (> 10%)" value={hba1cData[3].count} unit=" pac." />
+              </div>
+              {sinMonitor.length === 0 ? (
+                <div style={{ textAlign: "center", color: "#94a3b8", padding: "20px 0", fontSize: 13 }}>Sin datos</div>
+              ) : (
+                <ResponsiveContainer width="100%" height={200}>
+                  <BarChart data={hba1cData} margin={{ top: 20, right: 10, left: -20, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                    <XAxis dataKey="nombre" tick={{ fontSize: 12, fill: "#64748b" }} tickLine={false} axisLine={false} />
+                    <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} allowDecimals={false} />
+                    <Tooltip
+                      formatter={(v) => [`${v} pacientes`]}
+                      contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid #e2e8f0" }}
+                    />
+                    <Bar dataKey="count" radius={[6, 6, 0, 0]} maxBarSize={60} label={<CustomLabel />}>
+                      {hba1cData.map((e, i) => <Cell key={i} fill={e.color} />)}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
+              <div style={{ display: "flex", justifyContent: "center", gap: 14, marginTop: 8, flexWrap: "wrap" }}>
+                {hba1cData.map(h => (
+                  <span key={h.nombre} style={{ fontSize: 11, display: "flex", alignItems: "center", gap: 4, color: "#64748b" }}>
+                    <span style={{ width: 10, height: 10, borderRadius: 2, background: h.color, display: "inline-block" }} />
+                    {h.nombre}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+          </div>
+        );
+      })()}
 
       {/* Tabla */}
       <div className="card">
