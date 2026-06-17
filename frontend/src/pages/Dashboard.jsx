@@ -36,6 +36,7 @@ import Layout from "../components/Layout";
 import SemaforoISPAD from "../components/SemaforoISPAD";
 import DiagramaISPAD from "../components/DiagramaISPAD";
 import { useAuth } from "../context/AuthContext";
+import InstSelector from "../components/InstSelector";
 
 // Fix interop Vite: lottie-react bundle exporta el módulo como default en vez del componente
 const Lottie = typeof _LottieLib === "function" ? _LottieLib : _LottieLib.default;
@@ -263,33 +264,8 @@ export default function Dashboard() {
           <h1>Dashboard Global</h1>
           <p className="page-subtitle">Resumen clínico del programa de monitoreo continuo</p>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, alignSelf: "flex-end", marginBottom: 6 }}>
-          <span style={{ fontSize: 13, color: "#94a3b8" }}>Institución:</span>
-          {(() => {
-            const instDisp = Array.isArray(usuario?.instituciones_acceso) && usuario.instituciones_acceso.length
-              ? usuario.instituciones_acceso
-              : ["HMEP", "IHSS"];
-            return (
-              <div style={{ display: "flex", gap: 6 }}>
-                {instDisp.map((inst) => (
-                  <button
-                    key={inst}
-                    onClick={() => setInstitucion(inst)}
-                    style={{
-                      padding: "5px 14px", borderRadius: 20, fontSize: 13, fontWeight: 600,
-                      border: "2px solid",
-                      borderColor: institucion === inst ? (inst === "HEU" ? "#ef4444" : inst === "IHSS" ? "#8b5cf6" : "#3b82f6") : "#e2e8f0",
-                      background: institucion === inst ? (inst === "HEU" ? "#fef2f2" : inst === "IHSS" ? "#f5f3ff" : "#eff6ff") : "#fff",
-                      color: institucion === inst ? (inst === "HEU" ? "#ef4444" : inst === "IHSS" ? "#8b5cf6" : "#3b82f6") : "#94a3b8",
-                      cursor: "pointer", transition: "all 0.15s",
-                    }}
-                  >
-                    {inst}
-                  </button>
-                ))}
-              </div>
-            );
-          })()}
+        <div style={{ alignSelf: "flex-end", marginBottom: 6 }}>
+          <InstSelector institucion={institucion} setInstitucion={setInstitucion} usuario={usuario} />
         </div>
       </motion.div>
 

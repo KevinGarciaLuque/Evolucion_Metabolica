@@ -6,6 +6,7 @@ import { IoLogoWhatsapp } from "react-icons/io";
 import { FiTrash2 } from "react-icons/fi";
 import ConfirmModal from "../../components/ConfirmModal";
 import { useAuth } from "../../context/AuthContext";
+import InstSelector from "../../components/InstSelector";
 import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip, Cell, ReferenceLine,
@@ -117,20 +118,8 @@ export default function PacientesList() {
           <p className="page-subtitle">Gestión y búsqueda de pacientes</p>
           <Link to="/pacientes/nuevo" className="btn btn-primary" style={{ marginTop: 8 }}>+ Nuevo Paciente</Link>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, alignSelf: "flex-end", marginBottom: 6 }}>
-          <span style={{ fontSize: 13, color: "#94a3b8" }}>Institución:</span>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            {institucionesDisponibles.map((inst) => (
-              <button
-                key={inst}
-                type="button"
-                className={`btn btn-sm ${institucion === inst ? "btn-primary" : "btn-outline"}`}
-                onClick={() => setInstitucion(inst)}
-              >
-                {inst}
-              </button>
-            ))}
-          </div>
+        <div style={{ alignSelf: "flex-end", marginBottom: 6 }}>
+          <InstSelector institucion={institucion} setInstitucion={setInstitucion} usuario={usuario} />
         </div>
       </div>
 
@@ -181,11 +170,74 @@ export default function PacientesList() {
             </div>
             <div className="form-group">
               <label>Monitor MCG</label>
-              <select name="con_monitor" value={filtros.con_monitor} onChange={cambiarFiltro}>
-                <option value="">Todos</option>
-                <option value="1">Con monitor</option>
-                <option value="0">Sin monitor</option>
-              </select>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 2 }}>
+                {/* Botón Todo */}
+                <button
+                  type="button"
+                  onClick={() => setFiltros(f => ({ ...f, con_monitor: "" }))}
+                  style={{
+                    padding: "5px 12px", borderRadius: 20, fontSize: 12, fontWeight: 600,
+                    border: "1.5px solid",
+                    borderColor: filtros.con_monitor === "" ? "#6366f1" : "#e2e8f0",
+                    background: filtros.con_monitor === "" ? "#ede9fe" : "#fff",
+                    color: filtros.con_monitor === "" ? "#6366f1" : "#94a3b8",
+                    cursor: "pointer", transition: "all 0.15s", whiteSpace: "nowrap",
+                  }}
+                >
+                  Todo
+                </button>
+
+                {/* Toggle switch Con / Sin monitor */}
+                <div
+                  role="switch"
+                  aria-checked={filtros.con_monitor === "1"}
+                  onClick={() => setFiltros(f => ({ ...f, con_monitor: f.con_monitor === "1" ? "0" : "1" }))}
+                  style={{
+                    position: "relative",
+                    width: 110,
+                    height: 34,
+                    borderRadius: 34,
+                    background: filtros.con_monitor === "" ? "#e2e8f0"
+                              : filtros.con_monitor === "1" ? "#22c55e" : "#3b82f6",
+                    cursor: "pointer",
+                    userSelect: "none",
+                    transition: "background 0.22s",
+                    boxShadow: "inset 0 1px 3px rgba(0,0,0,0.15)",
+                    flexShrink: 0,
+                  }}
+                >
+                  {/* Etiqueta */}
+                  <span style={{
+                    position: "absolute",
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    left:  filtros.con_monitor === "1" ? 10 : undefined,
+                    right: filtros.con_monitor !== "1" ? 10 : undefined,
+                    fontSize: 11,
+                    fontWeight: 700,
+                    color: filtros.con_monitor === "" ? "#94a3b8" : "#fff",
+                    letterSpacing: "0.02em",
+                    pointerEvents: "none",
+                    whiteSpace: "nowrap",
+                  }}>
+                    {filtros.con_monitor === "1" ? "Con MCG" : "Sin MCG"}
+                  </span>
+
+                  {/* Thumb blanco */}
+                  <div style={{
+                    position: "absolute",
+                    top: 3,
+                    width: 28,
+                    height: 28,
+                    borderRadius: "50%",
+                    background: "#fff",
+                    boxShadow: "0 2px 5px rgba(0,0,0,0.25)",
+                    left: filtros.con_monitor === "1" ? 110 - 28 - 3 : 3,
+                    transition: "left 0.22s cubic-bezier(0.4, 0, 0.2, 1)",
+                    pointerEvents: "none",
+                  }} />
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -217,18 +269,20 @@ export default function PacientesList() {
           ? (sinMonitor.reduce((s, p) => s + parseFloat(p.hba1c_previo), 0) / sinMonitor.length).toFixed(1)
           : null;
 
-        const StatBox = ({ label, value, unit, sub }) => (
-          <div style={{ textAlign: "center", padding: "12px 20px", background: "#f8fafc", borderRadius: 10 }}>
-            <div style={{ fontSize: 11, color: "#94a3b8", marginBottom: 2 }}>{label}</div>
-            <div style={{ fontSize: 28, fontWeight: 700, color: "#0f172a", lineHeight: 1 }}>
-              {value ?? "—"}{value != null && <span style={{ fontSize: 14, fontWeight: 500, color: "#64748b", marginLeft: 2 }}>{unit}</span>}
+        const StatBox = ({ label, value, unit, sub, color }) => (
+          <div style={{ textAlign: "center", padding: "10px 16px", background: "#f8fafc", borderRadius: 12, flex: "1 1 90px" }}>
+            <div style={{ fontSize: 10, color: "#94a3b8", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.05em" }}>{label}</div>
+            <div style={{ fontSize: 26, fontWeight: 800, color: color || "#0f172a", lineHeight: 1 }}>
+              {value ?? "—"}<span style={{ fontSize: 12, fontWeight: 500, color: "#64748b", marginLeft: 2 }}>{value != null ? unit : ""}</span>
             </div>
-            {sub && <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 2 }}>{sub}</div>}
+            {sub && <div style={{ fontSize: 10, color: "#94a3b8", marginTop: 3 }}>{sub}</div>}
           </div>
         );
 
         const CustomLabel = ({ x, y, width, value }) =>
-          value > 0 ? <text x={x + width / 2} y={y - 5} textAnchor="middle" fontSize={13} fontWeight={700} fill="#334155">{value}</text> : null;
+          value > 0 ? (
+            <text x={x + width / 2} y={y - 7} textAnchor="middle" fontSize={14} fontWeight={800} fill="#1e293b">{value}</text>
+          ) : null;
 
         return (
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 20 }}>
@@ -237,21 +291,27 @@ export default function PacientesList() {
             <div className="card" style={{ margin: 0 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 14 }}>
                 <div>
-                  <h3 style={{ margin: 0, fontSize: "0.95rem", color: "#0f172a" }}>Con Monitor MCG</h3>
-                  <span style={{ fontSize: 12, color: "#94a3b8" }}>Distribución TIR · {conMonitor.length} pacientes</span>
+                  <h3 style={{ margin: 0, fontSize: "0.95rem", color: "#0f172a", display: "flex", alignItems: "center", gap: 8 }}>
+                    Con Monitor MCG
+                    <span style={{ fontSize: 13, background: "#dcfce7", color: "#16a34a", borderRadius: 20, padding: "2px 10px", fontWeight: 700 }}>
+                      {conMonitor.length} pac.
+                    </span>
+                  </h3>
+                  <span style={{ fontSize: 12, color: "#94a3b8" }}>Distribución TIR</span>
                 </div>
                 <span style={{ fontSize: 11, background: "#ede9fe", color: "#6366f1", borderRadius: 20, padding: "3px 10px", fontWeight: 600 }}>TIR</span>
               </div>
-              <div style={{ display: "flex", gap: 10, marginBottom: 16, justifyContent: "center", flexWrap: "wrap" }}>
-                <StatBox label="Promedio TIR" value={promedioTIR} unit="%" sub={`de ${conMonitor.length} pac.`} />
-                <StatBox label="Óptimo (≥70%)" value={tirData[0].count} unit=" pac." />
-                <StatBox label="Alto Riesgo (<54%)" value={tirData[2].count} unit=" pac." />
+              <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
+                <StatBox label="Prom. TIR" value={promedioTIR} unit="%" sub={`total ${conMonitor.length}`} color="#6366f1" />
+                <StatBox label="Óptimo ≥70%" value={tirData[0].count} unit=" pac." color="#76B250" />
+                <StatBox label="Moderado" value={tirData[1].count} unit=" pac." color="#FEBF01" />
+                <StatBox label="Alto Riesgo" value={tirData[2].count} unit=" pac." color="#FB0D0A" />
               </div>
               {conMonitor.length === 0 ? (
                 <div style={{ textAlign: "center", color: "#94a3b8", padding: "20px 0", fontSize: 13 }}>Sin datos</div>
               ) : (
                 <ResponsiveContainer width="100%" height={200}>
-                  <BarChart data={tirData} margin={{ top: 20, right: 10, left: -20, bottom: 0 }}>
+                  <BarChart data={tirData} margin={{ top: 24, right: 10, left: -20, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                     <XAxis dataKey="nombre" tick={{ fontSize: 12, fill: "#64748b" }} tickLine={false} axisLine={false} />
                     <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} allowDecimals={false} />
@@ -259,17 +319,17 @@ export default function PacientesList() {
                       formatter={(v) => [`${v} pacientes`]}
                       contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid #e2e8f0" }}
                     />
-                    <Bar dataKey="count" radius={[6, 6, 0, 0]} maxBarSize={60} label={<CustomLabel />}>
+                    <Bar dataKey="count" radius={[8, 8, 0, 0]} maxBarSize={70} label={<CustomLabel />}>
                       {tirData.map((e, i) => <Cell key={i} fill={e.color} />)}
                     </Bar>
                   </BarChart>
                 </ResponsiveContainer>
               )}
-              <div style={{ display: "flex", justifyContent: "center", gap: 14, marginTop: 8, flexWrap: "wrap" }}>
+              <div style={{ display: "flex", justifyContent: "center", gap: 12, marginTop: 10, flexWrap: "wrap" }}>
                 {tirData.map(t => (
-                  <span key={t.nombre} style={{ fontSize: 11, display: "flex", alignItems: "center", gap: 4, color: "#64748b" }}>
-                    <span style={{ width: 10, height: 10, borderRadius: 2, background: t.color, display: "inline-block" }} />
-                    {t.nombre} {t.label}
+                  <span key={t.nombre} style={{ fontSize: 11, display: "flex", alignItems: "center", gap: 5, color: "#64748b" }}>
+                    <span style={{ width: 10, height: 10, borderRadius: 3, background: t.color, display: "inline-block" }} />
+                    {t.nombre} <strong style={{ color: t.color }}>{t.count}</strong>
                   </span>
                 ))}
               </div>
@@ -279,21 +339,27 @@ export default function PacientesList() {
             <div className="card" style={{ margin: 0 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 14 }}>
                 <div>
-                  <h3 style={{ margin: 0, fontSize: "0.95rem", color: "#0f172a" }}>Sin Monitor MCG</h3>
-                  <span style={{ fontSize: 12, color: "#94a3b8" }}>Distribución HbA1c prev. · {sinMonitor.length} pacientes</span>
+                  <h3 style={{ margin: 0, fontSize: "0.95rem", color: "#0f172a", display: "flex", alignItems: "center", gap: 8 }}>
+                    Sin Monitor MCG
+                    <span style={{ fontSize: 13, background: "#dbeafe", color: "#1d4ed8", borderRadius: 20, padding: "2px 10px", fontWeight: 700 }}>
+                      {sinMonitor.length} pac.
+                    </span>
+                  </h3>
+                  <span style={{ fontSize: 12, color: "#94a3b8" }}>Distribución HbA1c prev.</span>
                 </div>
                 <span style={{ fontSize: 11, background: "#fef3c7", color: "#d97706", borderRadius: 20, padding: "3px 10px", fontWeight: 600 }}>HbA1c</span>
               </div>
-              <div style={{ display: "flex", gap: 10, marginBottom: 16, justifyContent: "center", flexWrap: "wrap" }}>
-                <StatBox label="Promedio HbA1c" value={promedioHbA1c} unit="%" sub={`de ${sinMonitor.length} pac.`} />
-                <StatBox label="Control (< 7%)" value={hba1cData[0].count} unit=" pac." />
-                <StatBox label="Alto (> 10%)" value={hba1cData[3].count} unit=" pac." />
+              <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
+                <StatBox label="Prom. HbA1c" value={promedioHbA1c} unit="%" sub={`total ${sinMonitor.length}`} color="#d97706" />
+                <StatBox label="< 7%" value={hba1cData[0].count} unit=" pac." color="#76B250" />
+                <StatBox label="7–9%" value={hba1cData[1].count} unit=" pac." color="#FEBF01" />
+                <StatBox label="> 10%" value={hba1cData[3].count} unit=" pac." color="#FB0D0A" />
               </div>
               {sinMonitor.length === 0 ? (
                 <div style={{ textAlign: "center", color: "#94a3b8", padding: "20px 0", fontSize: 13 }}>Sin datos</div>
               ) : (
                 <ResponsiveContainer width="100%" height={200}>
-                  <BarChart data={hba1cData} margin={{ top: 20, right: 10, left: -20, bottom: 0 }}>
+                  <BarChart data={hba1cData} margin={{ top: 24, right: 10, left: -20, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                     <XAxis dataKey="nombre" tick={{ fontSize: 12, fill: "#64748b" }} tickLine={false} axisLine={false} />
                     <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} allowDecimals={false} />
@@ -301,17 +367,17 @@ export default function PacientesList() {
                       formatter={(v) => [`${v} pacientes`]}
                       contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid #e2e8f0" }}
                     />
-                    <Bar dataKey="count" radius={[6, 6, 0, 0]} maxBarSize={60} label={<CustomLabel />}>
+                    <Bar dataKey="count" radius={[8, 8, 0, 0]} maxBarSize={70} label={<CustomLabel />}>
                       {hba1cData.map((e, i) => <Cell key={i} fill={e.color} />)}
                     </Bar>
                   </BarChart>
                 </ResponsiveContainer>
               )}
-              <div style={{ display: "flex", justifyContent: "center", gap: 14, marginTop: 8, flexWrap: "wrap" }}>
+              <div style={{ display: "flex", justifyContent: "center", gap: 12, marginTop: 10, flexWrap: "wrap" }}>
                 {hba1cData.map(h => (
-                  <span key={h.nombre} style={{ fontSize: 11, display: "flex", alignItems: "center", gap: 4, color: "#64748b" }}>
-                    <span style={{ width: 10, height: 10, borderRadius: 2, background: h.color, display: "inline-block" }} />
-                    {h.nombre}
+                  <span key={h.nombre} style={{ fontSize: 11, display: "flex", alignItems: "center", gap: 5, color: "#64748b" }}>
+                    <span style={{ width: 10, height: 10, borderRadius: 3, background: h.color, display: "inline-block" }} />
+                    {h.nombre} <strong style={{ color: h.color }}>{h.count}</strong>
                   </span>
                 ))}
               </div>
