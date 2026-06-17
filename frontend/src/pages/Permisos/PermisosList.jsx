@@ -10,7 +10,7 @@ const MODULOS = [
   { key: "consultas",   label: "Consultas" },
   { key: "mapa",        label: "Mapa" },
   { key: "mensajes",    label: "Mensajes" },
-  { key: "reportes_visuales", label: "Reportes" },
+  { key: "reportes", label: "Reportes" },
   { key: "backup_pacientes", label: "Backup de pacientes" },
   { key: "importaciones_heu", label: "Importación HEU" },
   { key: "acerca",      label: "Acerca del sistema" },
@@ -57,7 +57,7 @@ export default function PermisosList() {
         const inicialInst = {};
         r.data.forEach((u) => {
           const modulosNormalizados = (u.modulos ?? MODULOS.map((m) => m.key))
-            .map((m) => (m === "reportes" ? "backup_pacientes" : m));
+            .map((m) => m === "reportes_visuales" ? "reportes" : m);
           inicialMod[u.id] = [...new Set(modulosNormalizados)];
           inicialInst[u.id] = u.instituciones_acceso ?? ["HMEP"];
         });
