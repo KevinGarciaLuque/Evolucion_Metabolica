@@ -1,7 +1,11 @@
 import pool from "../config/db.js";
 
 export const MODULOS_VALIDOS = [
-  "dashboard", "consolidado", "pacientes", "analisis", "consultas", "mapa", "mensajes", "reportes_visuales", "backup_pacientes", "importaciones_heu", "reportes", "acerca",
+  "dashboard", "consolidado", "pacientes", "analisis", "consultas", "mapa", "mensajes",
+  "reportes", "reportes_visuales",
+  "backup_pacientes",
+  "importaciones", "importaciones_heu",
+  "acerca",
 ];
 
 const INSTITUCIONES_VALIDAS = ["HMEP", "IHSS", "HEU"];
