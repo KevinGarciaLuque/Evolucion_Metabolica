@@ -15,7 +15,7 @@ const ROL_BADGE = {
 
 const ROL_LABEL = {
   admin:     "Admin",
-  doctor:    "Doctor",
+  doctor:    "Médico",
   asistente: "Asistente",
   enfermera: "Enfermera",
 };

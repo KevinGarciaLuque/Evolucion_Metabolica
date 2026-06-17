@@ -30,7 +30,7 @@ export default function Layout({ children }) {
     navigate("/login");
   }
 
-  const ROL_LABEL = { admin: "Administrador", doctor: "Doctor", asistente: "Asistente" };
+  const ROL_LABEL = { admin: "Administrador", doctor: "Médico", asistente: "Asistente" };
 
   return (
     <div className="layout">

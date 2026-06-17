@@ -29,7 +29,7 @@ const ROL_BADGE = {
 };
 
 const ROL_LABEL = {
-  doctor:    "Doctor",
+  doctor:    "Médico",
   asistente: "Asistente",
   enfermera: "Enfermera",
 };

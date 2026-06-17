@@ -152,7 +152,7 @@ export default function UsuarioForm() {
               <label>Rol *</label>
               <select name="rol" value={form.rol} onChange={cambiar} required>
                 <option value="admin">Administrador</option>
-                <option value="doctor">Doctor</option>
+                <option value="doctor">Médico</option>
                 <option value="asistente">Asistente</option>
                 <option value="enfermera">Enfermera</option>
               </select>
