@@ -12,13 +12,13 @@ import "./Layout.css";
 import "./Sidebar.css";
 
 const MENU_BASE = [
-  { to: "/renaced/dashboard",  icon: HiOutlineSquares2X2,            label: "Dashboard" },
-  { to: "/renaced/pacientes",  icon: HiOutlineUsers,                  label: "Pacientes" },
-  { to: "/renaced/consultas",  icon: HiOutlineClipboardDocumentList,  label: "Consultas" },
-  { to: "/renaced/reportes",   icon: HiOutlineDocumentArrowDown,      label: "Reportes"  },
+  { to: "/renaced/dashboard",  clave: "dashboard", icon: HiOutlineSquares2X2,            label: "Dashboard" },
+  { to: "/renaced/pacientes",  clave: "pacientes", icon: HiOutlineUsers,                  label: "Pacientes" },
+  { to: "/renaced/consultas",  clave: "consultas", icon: HiOutlineClipboardDocumentList,  label: "Consultas" },
+  { to: "/renaced/reportes",   clave: "reportes",  icon: HiOutlineDocumentArrowDown,      label: "Reportes"  },
 ];
 const MENU_ADMIN = [
-  { to: "/renaced/usuarios",  icon: HiOutlineUserGroup,         label: "Usuarios"  },
+  { to: "/renaced/usuarios",  clave: "usuarios", icon: HiOutlineUserGroup,         label: "Usuarios"  },
 ];
 
 const PERFIL_LABEL = { 1: "Administrador", 2: "Médico", 3: "Asistente", 4: "Enfermera" };
@@ -30,6 +30,10 @@ export default function RenacedLayout({ children }) {
   const { usuario, logout }           = useRenacedAuth();
   const navigate                      = useNavigate();
   const menuRef                       = useRef(null);
+
+  const modulosActivos = Array.isArray(usuario?.modulos) ? usuario.modulos : null;
+  const menuBaseVisible  = MENU_BASE.filter((m) => !modulosActivos || modulosActivos.includes(m.clave));
+  const menuAdminVisible = MENU_ADMIN.filter((m) => !modulosActivos || modulosActivos.includes(m.clave));
 
   useEffect(() => {
     function handleClick(e) {
@@ -111,20 +115,20 @@ export default function RenacedLayout({ children }) {
               )}
               {collapsed && <span style={{ display: "block", height: 1, background: "rgba(255,255,255,0.15)", margin: "6px 0" }} />}
             </div>
-            {MENU_BASE.map(({ to, icon: Icon, label }) => (
+            {menuBaseVisible.map(({ to, icon: Icon, label }) => (
               <NavLink key={to} to={to} onClick={() => setSidebarOpen(false)} title={label}
                 className={({ isActive }) => `sidebar-link${isActive ? " active" : ""}`}>
                 <span className="sidebar-icon"><Icon size={20} /></span>
                 <span className="sidebar-link-label">{label}</span>
               </NavLink>
             ))}
-            {usuario?.perfil_id === 1 && (
+            {usuario?.perfil_id === 1 && menuAdminVisible.length > 0 && (
               <>
                 <div className="sidebar-section-label" style={{ marginTop: 12 }}>
                   {!collapsed && <span>ADMINISTRACIÓN</span>}
                   {collapsed && <span style={{ display: "block", height: 1, background: "rgba(255,255,255,0.15)", margin: "6px 0" }} />}
                 </div>
-                {MENU_ADMIN.map(({ to, icon: Icon, label }) => (
+                {menuAdminVisible.map(({ to, icon: Icon, label }) => (
                   <NavLink key={to} to={to} onClick={() => setSidebarOpen(false)} title={label}
                     className={({ isActive }) => `sidebar-link${isActive ? " active" : ""}`}>
                     <span className="sidebar-icon"><Icon size={20} /></span>

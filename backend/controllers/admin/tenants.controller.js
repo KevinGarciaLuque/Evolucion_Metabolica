@@ -166,6 +166,7 @@ export const impersonarTenant = async (req, res) => {
       tenant_nombre: tenant.nombre,
       db_name: tenant.db_name,
       db_host: tenant.db_host,
+      modulos: tenant.modulos ?? null,
       tipo: "renaced",
       super_admin: true,
     };

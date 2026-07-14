@@ -44,8 +44,8 @@ export async function loginRenaced(req, res) {
 export async function meRenaced(req, res) {
   // Sesión de Super Admin (impersonación) — no corresponde a un usuario real del tenant
   if (req.usuario?.super_admin) {
-    const { id, nombre, email, perfil_id, tenant, tenant_nombre, db_name, db_host } = req.usuario;
-    return res.json({ id, nombre, email, perfil_id, tenant, tenant_nombre, db_name, db_host, tipo: "renaced" });
+    const { id, nombre, email, perfil_id, tenant, tenant_nombre, db_name, db_host, modulos } = req.usuario;
+    return res.json({ id, nombre, email, perfil_id, tenant, tenant_nombre, db_name, db_host, modulos: modulos ?? null, tipo: "renaced" });
   }
   try {
     const [rows] = await req.db.query(
@@ -57,7 +57,8 @@ export async function meRenaced(req, res) {
     res.json({
       id: u.id, nombre: u.nombre_completo, email: u.email || u.username, perfil_id: u.perfil_id,
       tenant: req.usuario.tenant, tenant_nombre: req.usuario.tenant_nombre,
-      db_name: req.usuario.db_name, db_host: req.usuario.db_host, tipo: "renaced",
+      db_name: req.usuario.db_name, db_host: req.usuario.db_host,
+      modulos: req.usuario.modulos ?? null, tipo: "renaced",
     });
   } catch (err) {
     res.status(500).json({ error: "Error del servidor" });

@@ -36,9 +36,9 @@ const menuHonduras = [
   { to: "/reportes",           icon: HiOutlinePresentationChartLine,  label: "Reportes",         modulo: "reportes"        },
   { to: "/importaciones/heu",  icon: HiOutlineDocumentArrowUp,        label: "Importación HEU",  modulo: "importaciones"   },
   { to: "/backup-pacientes",   icon: HiOutlineDocumentArrowUp,        label: "Backup Pacientes", modulo: "backup_pacientes"},
-  { to: "/permisos",           icon: HiOutlineLockOpen,               label: "Permisos",         modulo: null, rol: "admin"},
-  { to: "/usuarios",           icon: HiOutlineUserGroup,              label: "Usuarios",         modulo: null, rol: "admin"},
-  { to: "/auditoria",          icon: HiOutlineShieldCheck,            label: "Auditoría",        modulo: null, rol: "admin"},
+  { to: "/permisos",           icon: HiOutlineLockOpen,               label: "Permisos",         modulo: "permisos", rol: "admin"},
+  { to: "/usuarios",           icon: HiOutlineUserGroup,              label: "Usuarios",         modulo: "usuarios", rol: "admin"},
+  { to: "/auditoria",          icon: HiOutlineShieldCheck,            label: "Auditoría",        modulo: "auditoria", rol: "admin"},
 ];
 
 const menuRenacedMx = [
@@ -51,6 +51,9 @@ const menuRenacedMx = [
 
 function itemVisible(item, usuario, permisos) {
   const { rol, modulo } = item;
+  // Gate a nivel de país: si el Super Admin deshabilitó el módulo para este país,
+  // nadie lo ve — ni siquiera admin/SUPER_ADMIN.
+  if (modulo && Array.isArray(usuario?.modulos) && !usuario.modulos.includes(modulo)) return false;
   if (rol) return usuario?.rol === rol || (rol === "admin" && usuario?.rol === "SUPER_ADMIN");
   if (usuario?.rol === "admin" || usuario?.rol === "SUPER_ADMIN") return true;
   if (permisos === null) return true;

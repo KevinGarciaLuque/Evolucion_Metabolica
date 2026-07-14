@@ -7,8 +7,35 @@ import {
 import {
   HiOutlineGlobeAmericas, HiOutlinePlusCircle, HiOutlinePencilSquare,
   HiOutlineCheckCircle, HiOutlineXCircle, HiOutlineUsers, HiOutlineMagnifyingGlass,
-  HiOutlineChartBar, HiOutlineTrash, HiOutlinePower,
+  HiOutlineChartBar, HiOutlineTrash, HiOutlinePower, HiOutlineLockOpen,
 } from "react-icons/hi2";
+
+// Catálogo de módulos disponibles por tipo de sistema (según el sidebar real de cada país)
+const MODULOS_HONDURAS = [
+  { clave: "dashboard",         nombre: "Dashboard" },
+  { clave: "consolidado",       nombre: "Consolidado" },
+  { clave: "pacientes",         nombre: "Pacientes" },
+  { clave: "analisis",          nombre: "Analizar PDF" },
+  { clave: "consultas",         nombre: "Consultas" },
+  { clave: "mapa",              nombre: "Mapa" },
+  { clave: "mensajes",          nombre: "Mensajes" },
+  { clave: "reportes",          nombre: "Reportes" },
+  { clave: "importaciones",     nombre: "Importación HEU" },
+  { clave: "backup_pacientes",  nombre: "Backup Pacientes" },
+  { clave: "permisos",          nombre: "Permisos" },
+  { clave: "usuarios",          nombre: "Usuarios" },
+  { clave: "auditoria",         nombre: "Auditoría" },
+];
+const MODULOS_RENACED = [
+  { clave: "dashboard",  nombre: "Dashboard" },
+  { clave: "pacientes",  nombre: "Pacientes" },
+  { clave: "consultas",  nombre: "Consultas" },
+  { clave: "reportes",   nombre: "Reportes" },
+  { clave: "usuarios",   nombre: "Usuarios" },
+];
+function catalogoModulos(codigo) {
+  return codigo === "hn" ? MODULOS_HONDURAS : MODULOS_RENACED;
+}
 
 const EMPTY_FORM = {
   nombre: "", codigo: "", subdominio: "", db_name: "", db_host: "",
@@ -66,6 +93,9 @@ export default function AdminPanel() {
   const [cargandoStats, setCargandoStats] = useState(false);
   const [eliminarTarget, setEliminarTarget] = useState(null);
   const [eliminando, setEliminando] = useState(false);
+  const [permisosModal, setPermisosModal] = useState(null); // tenant actual
+  const [permisosSeleccion, setPermisosSeleccion] = useState([]);
+  const [guardandoPermisos, setGuardandoPermisos] = useState(false);
 
   useEffect(() => { cargar(); }, []);
 
@@ -91,6 +121,33 @@ export default function AdminPanel() {
     setEditTarget(t);
     setError("");
     setModal("editar");
+  }
+
+  function abrirPermisos(t) {
+    const catalogo = catalogoModulos(t.codigo);
+    const activos = Array.isArray(t.modulos) ? t.modulos : catalogo.map((m) => m.clave);
+    setPermisosSeleccion(activos.filter((m) => catalogo.some((c) => c.clave === m)));
+    setPermisosModal(t);
+  }
+
+  function toggleModulo(clave) {
+    setPermisosSeleccion((prev) =>
+      prev.includes(clave) ? prev.filter((m) => m !== clave) : [...prev, clave]
+    );
+  }
+
+  async function guardarPermisos() {
+    if (!permisosModal) return;
+    setGuardandoPermisos(true);
+    try {
+      await updateTenant(permisosModal.id, { modulos: permisosSeleccion });
+      await cargar();
+      setPermisosModal(null);
+    } catch (err) {
+      setError(err.response?.data?.error || "Error al guardar permisos");
+    } finally {
+      setGuardandoPermisos(false);
+    }
   }
 
   async function guardar(e) {
@@ -261,6 +318,10 @@ export default function AdminPanel() {
                 </p>
 
                 <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                  <button className="btn btn-outline btn-sm" onClick={() => abrirPermisos(t)} title="Permisos de módulos"
+                    style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                    <HiOutlineLockOpen size={14} />
+                  </button>
                   <button className="btn btn-outline btn-sm" onClick={() => verStats(t)} title="Ver estadísticas"
                     style={{ display: "flex", alignItems: "center", gap: 4 }}>
                     <HiOutlineChartBar size={14} />
@@ -492,6 +553,60 @@ export default function AdminPanel() {
             ) : (
               <p style={{ color: "#dc2626", fontSize: 13 }}>No se pudieron cargar las estadísticas.</p>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* ── Modal permisos de módulos por país ────────────────────────────── */}
+      {permisosModal && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 9999, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}
+          onClick={() => setPermisosModal(null)}>
+          <div style={{ background: "#fff", borderRadius: 14, padding: 28, maxWidth: 440, width: "100%", maxHeight: "85vh", display: "flex", flexDirection: "column", boxShadow: "0 24px 64px rgba(0,0,0,0.25)" }}
+            onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+              <h3 style={{ margin: 0, display: "flex", alignItems: "center", gap: 8 }}>
+                <FlagIcon codigo={permisosModal.codigo} size={16} /> Permisos — {permisosModal.nombre}
+              </h3>
+              <button onClick={() => setPermisosModal(null)} style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer", color: "#94a3b8" }}>✕</button>
+            </div>
+            <p style={{ margin: "4px 0 16px", fontSize: 12, color: "#94a3b8" }}>
+              Módulos habilitados en el sidebar de este país.
+            </p>
+
+            {error && (
+              <div style={{ background: "#fef2f2", color: "#dc2626", padding: "10px 14px", borderRadius: 8, marginBottom: 14, fontSize: 13 }}>
+                {error}
+              </div>
+            )}
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 4, overflowY: "auto", flex: 1 }}>
+              {catalogoModulos(permisosModal.codigo).map((m) => {
+                const activo = permisosSeleccion.includes(m.clave);
+                return (
+                  <label key={m.clave} style={{
+                    display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10,
+                    padding: "9px 12px", borderRadius: 8, cursor: "pointer",
+                    background: activo ? "#eff6ff" : "#f8fafc",
+                    border: `1px solid ${activo ? "#bfdbfe" : "#e2e8f0"}`,
+                  }}>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: "#334155" }}>{m.nombre}</span>
+                    <input
+                      type="checkbox"
+                      checked={activo}
+                      onChange={() => toggleModulo(m.clave)}
+                      style={{ width: 16, height: 16, cursor: "pointer" }}
+                    />
+                  </label>
+                );
+              })}
+            </div>
+
+            <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 20 }}>
+              <button type="button" className="btn btn-outline" onClick={() => setPermisosModal(null)}>Cancelar</button>
+              <button type="button" className="btn btn-primary" disabled={guardandoPermisos} onClick={guardarPermisos}>
+                {guardandoPermisos ? "Guardando…" : "Guardar permisos"}
+              </button>
+            </div>
           </div>
         </div>
       )}

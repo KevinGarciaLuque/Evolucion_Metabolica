@@ -23,7 +23,7 @@ function parsearInstitucionesDB(valor) {
   }
 }
 
-function construirPayloadUsuario(usuario) {
+function construirPayloadUsuario(usuario, modulosHonduras) {
   return {
     id: usuario.id,
     nombre: usuario.nombre,
@@ -32,8 +32,22 @@ function construirPayloadUsuario(usuario) {
     sexo: usuario.sexo ?? null,
     mostrar_info_graficas: usuario.mostrar_info_graficas ? 1 : 0,
     instituciones_acceso: parsearInstitucionesDB(usuario.instituciones_acceso) || INSTITUCIONES_VALIDAS,
+    modulos: modulosHonduras ?? null,
     tipo: "evolucion",
   };
+}
+
+// Módulos habilitados para Honduras en el catálogo de países (Panel Super Admin).
+// null = sin restricción (todos los módulos visibles).
+async function obtenerModulosHonduras() {
+  try {
+    const [[tenant]] = await poolMaster.query(
+      "SELECT modulos FROM tenants WHERE codigo = 'hn' AND activo = 1"
+    );
+    return tenant?.modulos ?? null;
+  } catch {
+    return null;
+  }
 }
 
 // Busca el usuario en todos los tenants RENACED activos
@@ -86,6 +100,7 @@ async function buscarEnRenaced(email, password) {
           tenant_nombre: tenant.nombre,
           db_name: tenant.db_name,
           db_host: tenant.db_host,
+          modulos: tenant.modulos ?? null,
           tipo: "renaced",
         },
         tenant,
@@ -117,7 +132,8 @@ export async function login(req, res) {
         : password === usuario.password;
 
       if (valido) {
-        const usuarioPayload = construirPayloadUsuario(usuario);
+        const modulosHonduras = await obtenerModulosHonduras();
+        const usuarioPayload = construirPayloadUsuario(usuario, modulosHonduras);
         const token = jwt.sign(usuarioPayload, process.env.JWT_SECRET, { expiresIn: "8h" });
 
         const ip = req.headers["x-forwarded-for"]?.split(",")[0].trim() || req.socket?.remoteAddress || null;
@@ -152,7 +168,8 @@ export async function me(req, res) {
       [req.usuario.id]
     );
     if (rows.length === 0) return res.status(404).json({ error: "Usuario no encontrado" });
-    res.json(construirPayloadUsuario(rows[0]));
+    const modulosHonduras = await obtenerModulosHonduras();
+    res.json(construirPayloadUsuario(rows[0], modulosHonduras));
   } catch (err) {
     res.status(500).json({ error: "Error del servidor" });
   }
