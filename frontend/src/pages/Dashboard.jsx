@@ -160,6 +160,7 @@ export default function Dashboard() {
   const [cargando, setCargando]   = useState(true);
   const [isMobile, setIsMobile]   = useState(window.innerWidth < 768);
   const [modalInfo, setModalInfo]     = useState(null);
+  const bannerRef = useRef(null);
 
   useEffect(() => {
     const onResize = () => setIsMobile(window.innerWidth < 768);
@@ -269,13 +270,16 @@ export default function Dashboard() {
         </div>
       </motion.div>
 
-      {/* Bienvenida */}
+      {/* Bienvenida - Mundial 2026 */}
       <motion.div
+        ref={bannerRef}
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.45, delay: 0.08 }}
         style={{
-          background: `linear-gradient(135deg, ${colorGenero}18 0%, ${colorGenero}08 100%)`,
+          position: "relative",
+          overflow: "hidden",
+          background: `linear-gradient(135deg, ${colorGenero}18 0%, ${colorGenero}0a 60%, #f59e0b0a 100%)`,
           border: `1px solid ${colorGenero}44`,
           borderRadius: 16,
           padding: isMobile ? "16px 16px" : "24px 28px",
@@ -283,20 +287,20 @@ export default function Dashboard() {
           display: "flex",
           alignItems: isMobile ? "flex-start" : "center",
           gap: isMobile ? 12 : 18,
-          boxShadow: `0 2px 16px ${colorGenero}18`,
+          boxShadow: `0 2px 24px ${colorGenero}22, 0 0 0 0.5px #f59e0b1a`,
         }}
       >
         {/* Ícono animado clima */}
         <motion.span
           animate={{ rotate: saludo.emoji === "☀️" ? [0, 15, -15, 0] : saludo.emoji === "🌙" ? [0, -10, 10, 0] : [0, -5, 5, 0] }}
           transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-          style={{ fontSize: isMobile ? 48 : 64, lineHeight: 1, flexShrink: 0, display: "block" }}
+          style={{ fontSize: isMobile ? 48 : 64, lineHeight: 1, flexShrink: 0, display: "block", position: "relative", zIndex: 1 }}
         >
           {saludo.emoji}
         </motion.span>
 
         {/* Contenido */}
-        <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ flex: 1, minWidth: 0, position: "relative", zIndex: 1 }}>
           {/* Saludo + nombre */}
           <div style={{ display: "flex", alignItems: "baseline", gap: isMobile ? 4 : 8, flexWrap: "wrap" }}>
             <span style={{
@@ -320,8 +324,8 @@ export default function Dashboard() {
             📅 {fechaFormateada}
           </p>
 
-          {/* Línea separadora */}
-          <div style={{ height: 1, margin: "8px 0", background: `linear-gradient(90deg, ${colorGenero}55, transparent)` }} />
+          {/* Línea separadora con toque dorado Mundial */}
+          <div style={{ height: 1, margin: "8px 0", background: `linear-gradient(90deg, ${colorGenero}66, #f59e0b55, transparent)` }} />
 
           {/* Mensaje motivacional */}
           <p style={{ margin: 0, fontSize: isMobile ? 13 : 15, lineHeight: 1.6, display: "flex", alignItems: "flex-start", gap: 8 }}>
@@ -340,7 +344,6 @@ export default function Dashboard() {
               )}
             </span>
           </p>
-          {/* Mensaje en móvil va en línea separada para no colapsar */}
           {isMobile && (
             <p style={{ margin: "4px 0 0 30px", fontSize: 12, color: "var(--text-muted, #94a3b8)", fontStyle: "italic", lineHeight: 1.5 }}>
               {mensaje}

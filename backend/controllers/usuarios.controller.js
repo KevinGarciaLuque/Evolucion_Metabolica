@@ -54,7 +54,7 @@ export async function crear(req, res) {
     return res.status(400).json({ error: "Nombre, email y contraseña son obligatorios" });
 
   const rolFinal = rol || "doctor";
-  const rolesValidos = ["admin", "doctor", "asistente", "enfermera"];
+  const rolesValidos = ["admin", "doctor", "asistente", "enfermera", "SUPER_ADMIN"];
   if (!rolesValidos.includes(rolFinal))
     return res.status(400).json({ error: "Rol inválido" });
 
@@ -63,7 +63,7 @@ export async function crear(req, res) {
     return res.status(400).json({ error: "Sexo inválido" });
 
   const instituciones = normalizarInstituciones(instituciones_acceso);
-  if (rolFinal !== "admin" && !instituciones)
+  if (rolFinal !== "admin" && rolFinal !== "SUPER_ADMIN" && !instituciones)
     return res.status(400).json({ error: "Debe seleccionar al menos una institución para el usuario" });
 
   try {
@@ -88,12 +88,12 @@ export async function actualizar(req, res) {
     return res.status(400).json({ error: "Nombre y email son obligatorios" });
 
   const rolFinal = rol || "doctor";
-  const rolesValidos = ["admin", "doctor", "asistente", "enfermera"];
+  const rolesValidos = ["admin", "doctor", "asistente", "enfermera", "SUPER_ADMIN"];
   if (!rolesValidos.includes(rolFinal))
     return res.status(400).json({ error: "Rol inválido" });
 
   const instituciones = normalizarInstituciones(instituciones_acceso);
-  if (rolFinal !== "admin" && !instituciones)
+  if (rolFinal !== "admin" && rolFinal !== "SUPER_ADMIN" && !instituciones)
     return res.status(400).json({ error: "Debe seleccionar al menos una institución para el usuario" });
 
   try {

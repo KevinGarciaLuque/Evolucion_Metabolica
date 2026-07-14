@@ -16,7 +16,7 @@ export function verificarToken(req, res, next) {
 }
 
 export function soloAdmin(req, res, next) {
-  if (req.usuario?.rol !== "admin") {
+  if (req.usuario?.rol !== "admin" && req.usuario?.rol !== "SUPER_ADMIN") {
     return res.status(403).json({ error: "Acceso denegado: se requiere rol administrador" });
   }
   next();

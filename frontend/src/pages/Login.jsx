@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { useRenacedAuth } from "../context/RenacedAuthContext";
 import { FiInfo } from "react-icons/fi";
 import "./Login.css";
 
@@ -75,8 +76,9 @@ function ModalAcercaDe({ onClose, origin }) {
 }
 
 export default function Login() {
-  const { login } = useAuth();
-  const navigate  = useNavigate();
+  const { login }            = useAuth();
+  const { setSession }       = useRenacedAuth();
+  const navigate             = useNavigate();
   const [form, setForm]       = useState({ email: "", password: "" });
   const [error, setError]     = useState("");
   const [cargando, setCargando] = useState(false);
@@ -104,8 +106,13 @@ export default function Login() {
     setError("");
     setCargando(true);
     try {
-      await login(form.email, form.password);
-      navigate("/dashboard");
+      const result = await login(form.email, form.password);
+      if (result?._tipo === "renaced") {
+        setSession(result.token, result.usuario);
+        navigate("/renaced/dashboard");
+      } else {
+        navigate("/dashboard");
+      }
     } catch (err) {
       setError(err.response?.data?.error || "Error al iniciar sesión");
     } finally {

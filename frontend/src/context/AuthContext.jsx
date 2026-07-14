@@ -68,6 +68,12 @@ export function AuthProvider({ children }) {
 
   async function login(email, password) {
     const { data } = await api.post("/auth/login", { email, password });
+
+    if (data.tipo === "renaced") {
+      // Devolver los datos crudos — Login.jsx se encarga de setSession en RenacedAuthContext
+      return { _tipo: "renaced", token: data.token, usuario: data.usuario };
+    }
+
     localStorage.setItem("token", data.token);
     localStorage.setItem("usuario", JSON.stringify(data.usuario));
     setUsuario(data.usuario);

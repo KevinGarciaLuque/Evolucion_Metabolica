@@ -151,6 +151,7 @@ export default function UsuarioForm() {
             <div className="form-group">
               <label>Rol *</label>
               <select name="rol" value={form.rol} onChange={cambiar} required>
+                <option value="SUPER_ADMIN">Super Admin</option>
                 <option value="admin">Administrador</option>
                 <option value="doctor">Médico</option>
                 <option value="asistente">Asistente</option>

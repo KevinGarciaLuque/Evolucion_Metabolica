@@ -20,6 +20,32 @@ import reportesRoutes from "./routes/reportes.routes.js";
 import reportesVisualesRoutes from "./routes/reportesVisuales.routes.js";
 import importacionesRoutes from "./routes/importaciones.routes.js";
 
+// ── Módulo RENACED (base de datos renaced_mexico — aislada) ──────────────────
+import renacedAuthRoutes        from "./routes/renaced/auth.routes.js";
+import renacedPacientesRoutes   from "./routes/renaced/pacientes.routes.js";
+import renacedConsultasRoutes   from "./routes/renaced/consultas.routes.js";
+import renacedLaboratorioRoutes from "./routes/renaced/laboratorio.routes.js";
+import renacedDashboardRoutes   from "./routes/renaced/dashboard.routes.js";
+import renacedTratamientoRoutes from "./routes/renaced/tratamiento.routes.js";
+import renacedEvaluacionRoutes  from "./routes/renaced/evaluacion.routes.js";
+import renacedMonitoreoRoutes   from "./routes/renaced/monitoreo.routes.js";
+import renacedEducacionRoutes   from "./routes/renaced/educacion.routes.js";
+import renacedCatalogosRoutes   from "./routes/renaced/catalogos.routes.js";
+import renacedReportesRoutes    from "./routes/renaced/reportes.routes.js";
+import renacedUsuariosRoutes      from "./routes/renaced/usuarios.routes.js";
+import renacedDiagnosticoRoutes    from "./routes/renaced/diagnostico.routes.js";
+import renacedComorbilidadRoutes   from "./routes/renaced/comorbilidad.routes.js";
+import renacedPatologiaRoutes      from "./routes/renaced/patologia.routes.js";
+import renacedAntecedentesGORoutes from "./routes/renaced/antecedentesgo.routes.js";
+import renacedEventoRoutes         from "./routes/renaced/evento.routes.js";
+import renacedEstiloVidaRoutes     from "./routes/renaced/estilovida.routes.js";
+import renacedToxicomaniasRoutes   from "./routes/renaced/toxicomanias.routes.js";
+import renacedReclasificacionRoutes from "./routes/renaced/reclasificacion.routes.js";
+import renacedEmbarazoRoutes       from "./routes/renaced/embarazo.routes.js";
+
+// ── Super Admin ALAD (base de datos alad_master) ─────────────────────────────
+import adminTenantsRoutes from "./routes/admin/tenants.routes.js";
+
 dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
@@ -61,6 +87,32 @@ app.use("/api/backup-pacientes", reportesRoutes);
 app.use("/api/reportes", reportesRoutes);
 app.use("/api/reportes-visuales", reportesVisualesRoutes);
 app.use("/api/importaciones", importacionesRoutes);
+
+// ── Rutas RENACED (prefijo /api/renaced — DB renaced_mexico, aislada) ────────
+app.use("/api/renaced/auth",     renacedAuthRoutes);
+app.use("/api/renaced/pacientes", renacedPacientesRoutes);
+app.use("/api/renaced/pacientes/:paciente_id/consultas", renacedConsultasRoutes);
+app.use("/api/renaced/pacientes/:paciente_id/laboratorio", renacedLaboratorioRoutes);
+app.use("/api/renaced/dashboard", renacedDashboardRoutes);
+app.use("/api/renaced/pacientes/:paciente_id/tratamiento", renacedTratamientoRoutes);
+app.use("/api/renaced/pacientes/:paciente_id/evaluacion",  renacedEvaluacionRoutes);
+app.use("/api/renaced/pacientes/:paciente_id/monitoreo",   renacedMonitoreoRoutes);
+app.use("/api/renaced/pacientes/:paciente_id/educacion",   renacedEducacionRoutes);
+app.use("/api/renaced/catalogos",                          renacedCatalogosRoutes);
+app.use("/api/renaced/reportes",                           renacedReportesRoutes);
+app.use("/api/renaced/usuarios",                           renacedUsuariosRoutes);
+app.use("/api/renaced/diagnostico",                          renacedDiagnosticoRoutes);
+app.use("/api/renaced/pacientes/:paciente_id/comorbilidad",  renacedComorbilidadRoutes);
+app.use("/api/renaced/pacientes/:paciente_id/patologia",     renacedPatologiaRoutes);
+app.use("/api/renaced/pacientes/:paciente_id/antecedentes-go", renacedAntecedentesGORoutes);
+app.use("/api/renaced/pacientes/:paciente_id/eventos",       renacedEventoRoutes);
+app.use("/api/renaced/pacientes/:paciente_id/estilovida",    renacedEstiloVidaRoutes);
+app.use("/api/renaced/pacientes/:paciente_id/toxicomanias",  renacedToxicomaniasRoutes);
+app.use("/api/renaced/pacientes/:paciente_id/reclasificacion", renacedReclasificacionRoutes);
+app.use("/api/renaced/pacientes/:paciente_id/embarazos",     renacedEmbarazoRoutes);
+
+// ── Rutas Super Admin ALAD (prefijo /api/admin — DB alad_master) ──────────
+app.use("/api/admin/tenants", adminTenantsRoutes);
 
 // Health check
 app.get("/api/health", (_req, res) => res.json({ status: "ok", timestamp: new Date().toISOString() }));

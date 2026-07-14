@@ -264,9 +264,9 @@ body {
 .form-group   { display: flex; flex-direction: column; gap: 5px; }
 .form-group label { font-size: 0.83rem; font-weight: 600; color: var(--gray-600); }
 
-.form-group input,
-.form-group select,
-.form-group textarea {
+input,
+select,
+textarea {
   padding: 9px 12px;
   border: 1.5px solid var(--gray-200);
   border-radius: 7px;
@@ -276,13 +276,39 @@ body {
   background: #fff;
   transition: border-color 0.15s;
   outline: none;
+  width: 100%;
+  box-sizing: border-box;
 }
 
-.form-group input:focus,
-.form-group select:focus,
-.form-group textarea:focus {
+input:focus,
+select:focus,
+textarea:focus {
   border-color: var(--blue);
   box-shadow: 0 0 0 3px rgba(29,78,216,0.1);
+}
+
+input[type="checkbox"],
+input[type="radio"] {
+  width: auto;
+  padding: 0;
+  border: none;
+  box-shadow: none;
+  background: none;
+  accent-color: var(--blue);
+}
+
+input[type="submit"],
+input[type="button"],
+input[type="reset"] {
+  width: auto;
+}
+
+.form-label {
+  display: block;
+  font-size: 0.83rem;
+  font-weight: 600;
+  color: var(--gray-600);
+  margin-bottom: 5px;
 }
 
 .form-grid {
@@ -1218,4 +1244,34 @@ body {
 }
 
 /* Fin de estilos */
+
+/* ── Sistema de tabs agrupados (RenacedPacienteDetalle) ────────────────────── */
+.tab-grupos-desktop { display: block; }
+.tab-select-mobile  { display: none !important; }
+
+/* Grids responsivos para el detalle del paciente */
+.detalle-2col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.detalle-3col {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0 20px;
+}
+
+@media (max-width: 900px) {
+  /* En tablet los tabs pasan a select */
+  .tab-grupos-desktop { display: none !important; }
+  .tab-select-mobile  { display: block !important; }
+
+  /* Grids colapsan a 1 columna */
+  .detalle-2col { grid-template-columns: 1fr; }
+  .detalle-3col { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 600px) {
+  .detalle-3col { grid-template-columns: 1fr; }
+}
 

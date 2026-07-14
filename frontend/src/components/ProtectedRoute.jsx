@@ -24,11 +24,11 @@ export default function ProtectedRoute({ children }) {
 
   // Verificar rutas de admin
   const esRutaAdmin = RUTAS_ADMIN.some((r) => pathname.startsWith(r));
-  if (esRutaAdmin && usuario.rol !== "admin")
+  if (esRutaAdmin && usuario.rol !== "admin" && usuario.rol !== "SUPER_ADMIN")
     return <Navigate to="/dashboard" replace />;
 
-  // Admin siempre tiene acceso
-  if (usuario.rol === "admin") return children;
+  // Admin y Super Admin siempre tienen acceso
+  if (usuario.rol === "admin" || usuario.rol === "SUPER_ADMIN") return children;
 
   // Si no hay permisos configurados (null) → acceso total
   if (permisos === null) return children;
