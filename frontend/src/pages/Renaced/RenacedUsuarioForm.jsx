@@ -30,6 +30,7 @@ export default function RenacedUsuarioForm() {
   const [guardando, setGuardando] = useState(false);
   const [error, setError]     = useState("");
   const [exito, setExito]     = useState("");
+  const [verPass, setVerPass] = useState(false);
 
   useEffect(() => {
     if (!esEdicion) return;
@@ -160,15 +161,28 @@ export default function RenacedUsuarioForm() {
               <label className="form-label">
                 Contraseña {esEdicion ? "(dejar vacío para no cambiar)" : "*"}
               </label>
-              <input
-                name="password"
-                type="password"
-                value={form.password}
-                onChange={handleChange}
-                placeholder={esEdicion ? "Nueva contraseña (opcional)" : "Contraseña"}
-                autoComplete="new-password"
-                required={!esEdicion}
-              />
+              <div style={{ position: "relative" }}>
+                <input
+                  name="password"
+                  type={verPass ? "text" : "password"}
+                  value={form.password}
+                  onChange={handleChange}
+                  placeholder={esEdicion ? "Nueva contraseña (opcional)" : "Contraseña"}
+                  autoComplete="new-password"
+                  required={!esEdicion}
+                  style={{ paddingRight: 56 }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setVerPass((v) => !v)}
+                  style={{
+                    position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)",
+                    background: "none", border: "none", cursor: "pointer", color: "#64748b", fontSize: 12, fontWeight: 600,
+                  }}
+                >
+                  {verPass ? "Ocultar" : "Ver"}
+                </button>
+              </div>
             </div>
 
             <div>

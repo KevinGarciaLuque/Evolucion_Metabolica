@@ -18,6 +18,23 @@ export const getTenants = async (req, res) => {
   }
 };
 
+// Honduras (SAAPD) usa el esquema original de Evolución Metabólica (tabla `pacientes`,
+// columna `estado`); los demás tenants usan el esquema RENACED (tabla `paciente`, `estatus_id`).
+async function consultarStatsTenant(dbPool, tenant) {
+  if (tenant.codigo === "hn") {
+    const [[s]] = await dbPool.query(
+      `SELECT COUNT(*) AS total_pacientes, SUM(sexo='F') AS mujeres, SUM(sexo='M') AS hombres
+       FROM pacientes WHERE estado = 1`
+    );
+    return s;
+  }
+  const [[s]] = await dbPool.query(
+    `SELECT COUNT(*) AS total_pacientes, SUM(sexo='F') AS mujeres, SUM(sexo='M') AS hombres
+     FROM paciente WHERE estatus_id = 1`
+  );
+  return s;
+}
+
 export const getTenantById = async (req, res) => {
   try {
     const [[tenant]] = await pool.query(
@@ -29,17 +46,14 @@ export const getTenantById = async (req, res) => {
     let stats = null;
     try {
       const tenantPool = mysql.createPool({
-        host: tenant.db_host,
+        host: tenant.db_host || process.env.DB_HOST,
         user: process.env.DB_USER,
         password: process.env.DB_PASSWORD,
         database: tenant.db_name,
         port: process.env.DB_PORT,
         connectionLimit: 2,
       });
-      const [[s]] = await tenantPool.query(
-        `SELECT COUNT(*) AS total_pacientes FROM paciente WHERE estatus_id = 1`
-      );
-      stats = s;
+      stats = await consultarStatsTenant(tenantPool, tenant);
       await tenantPool.end();
     } catch (_) {
       stats = { total_pacientes: null, error: "DB no disponible" };
@@ -227,19 +241,14 @@ export const getEstadisticasGlobales = async (req, res) => {
       tenants.map(async (t) => {
         try {
           const tp = mysql.createPool({
-            host: t.db_host,
+            host: t.db_host || process.env.DB_HOST,
             user: process.env.DB_USER,
             password: process.env.DB_PASSWORD,
             database: t.db_name,
             port: process.env.DB_PORT,
             connectionLimit: 1,
           });
-          const [[s]] = await tp.query(
-            `SELECT COUNT(*) AS total_pacientes,
-                    SUM(sexo='F') AS mujeres,
-                    SUM(sexo='M') AS hombres
-             FROM paciente WHERE estatus_id = 1`
-          );
+          const s = await consultarStatsTenant(tp, t);
           await tp.end();
           return { pais: t.nombre, codigo: t.codigo, ...s };
         } catch (_) {

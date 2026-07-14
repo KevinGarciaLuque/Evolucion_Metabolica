@@ -21,7 +21,6 @@ import {
   HiOutlineGlobeAmericas,
   HiOutlineClipboardDocumentList,
 } from "react-icons/hi2";
-import { RiHeartPulseFill } from "react-icons/ri";
 import "./Sidebar.css";
 
 // modulo: clave para verificar permiso | rol: restringe a ese rol exacto | null = público
@@ -178,11 +177,11 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
 
         <div className="sidebar-brand">
           <div className="sidebar-logo-wrap">
-            <RiHeartPulseFill size={22} color="#fff" />
+            <span style={{ fontSize: 20 }}>🇭🇳</span>
           </div>
           <div className="sidebar-brand-text">
-            <p className="sidebar-title">Evolución</p>
-            <p className="sidebar-subtitle">Metabólica</p>
+            <p className="sidebar-title">SAAPD</p>
+            <p className="sidebar-subtitle">Honduras</p>
           </div>
         </div>
 
