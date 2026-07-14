@@ -42,6 +42,11 @@ export async function loginRenaced(req, res) {
 }
 
 export async function meRenaced(req, res) {
+  // Sesión de Super Admin (impersonación) — no corresponde a un usuario real del tenant
+  if (req.usuario?.super_admin) {
+    const { id, nombre, email, perfil_id, tenant, tenant_nombre, db_name, db_host } = req.usuario;
+    return res.json({ id, nombre, email, perfil_id, tenant, tenant_nombre, db_name, db_host, tipo: "renaced" });
+  }
   try {
     const [rows] = await req.db.query(
       "SELECT id, username, nombre_completo, email, perfil_id FROM usuario WHERE id = ? AND activo = 1",

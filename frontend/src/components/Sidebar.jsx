@@ -1,12 +1,17 @@
-import { NavLink } from "react-router-dom";
+import { useState } from "react";
+import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { useRenacedAuth } from "../context/RenacedAuthContext";
+import { impersonarTenant } from "../api/adminApi";
 import {
   HiOutlineSquares2X2,
   HiOutlineUsers,
   HiOutlineDocumentArrowUp,
+  HiOutlineDocumentArrowDown,
   HiOutlinePresentationChartLine,
   HiChevronLeft,
   HiChevronRight,
+  HiChevronDown,
   HiOutlineUserGroup,
   HiOutlineBookOpen,
   HiOutlineShieldCheck,
@@ -20,10 +25,7 @@ import { RiHeartPulseFill } from "react-icons/ri";
 import "./Sidebar.css";
 
 // modulo: clave para verificar permiso | rol: restringe a ese rol exacto | null = público
-// seccion: agrupa ítems con un separador visual
-const menu = [
-  // ── Evolucion Metabólica ────────────────────────────────────────────────────
-  { seccion: "EVOLUCIÓN METABÓLICA" },
+const menuHonduras = [
   { to: "/dashboard",          icon: HiOutlineSquares2X2,             label: "Dashboard",        modulo: "dashboard"       },
   { to: "/consolidado",        icon: HiOutlinePresentationChartLine,  label: "Consolidado",      modulo: "consolidado"     },
   { to: "/pacientes",          icon: HiOutlineUsers,                  label: "Pacientes",        modulo: "pacientes"       },
@@ -37,32 +39,126 @@ const menu = [
   { to: "/permisos",           icon: HiOutlineLockOpen,               label: "Permisos",         modulo: null, rol: "admin"},
   { to: "/usuarios",           icon: HiOutlineUserGroup,              label: "Usuarios",         modulo: null, rol: "admin"},
   { to: "/auditoria",          icon: HiOutlineShieldCheck,            label: "Auditoría",        modulo: null, rol: "admin"},
-
-  // ── Super Admin ─────────────────────────────────────────────────────────────
-  { seccion: "SUPER ADMIN", rol: "SUPER_ADMIN" },
-  { to: "/admin/panel", icon: HiOutlineGlobeAmericas, label: "Panel Admin", modulo: null, rol: "SUPER_ADMIN" },
-
-  // ── RENACED México ──────────────────────────────────────────────────────────
-  { seccion: "RENACED 🇲🇽" },
-  { to: "/renaced/dashboard",  icon: HiOutlineGlobeAmericas,          label: "Dashboard",        modulo: "renaced"         },
-  { to: "/renaced/pacientes",  icon: HiOutlineClipboardDocumentList,  label: "Pacientes",        modulo: "renaced"         },
 ];
+
+const menuRenacedMx = [
+  { to: "/renaced/dashboard",  icon: HiOutlineSquares2X2,             label: "Dashboard" },
+  { to: "/renaced/pacientes",  icon: HiOutlineClipboardDocumentList,  label: "Pacientes" },
+  { to: "/renaced/consultas",  icon: HiOutlineBookOpen,               label: "Consultas" },
+  { to: "/renaced/reportes",   icon: HiOutlineDocumentArrowDown,      label: "Reportes"  },
+  { to: "/renaced/usuarios",   icon: HiOutlineUserGroup,              label: "Usuarios"  },
+];
+
+function itemVisible(item, usuario, permisos) {
+  const { rol, modulo } = item;
+  if (rol) return usuario?.rol === rol || (rol === "admin" && usuario?.rol === "SUPER_ADMIN");
+  if (usuario?.rol === "admin" || usuario?.rol === "SUPER_ADMIN") return true;
+  if (permisos === null) return true;
+  return modulo ? permisos.includes(modulo) : true;
+}
 
 export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }) {
   const { usuario, permisos } = useAuth();
+  const { usuario: usuarioRenaced, setSession: setSessionRenaced } = useRenacedAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const esSuperAdmin = usuario?.rol === "SUPER_ADMIN";
+  const [entrandoTenant, setEntrandoTenant] = useState(null);
 
-  const itemsVisibles = menu.filter((item) => {
-    if (item.seccion) {
-      // Ocultar sección SUPER ADMIN si no tiene ese rol
-      if (item.rol) return usuario?.rol === item.rol;
-      return true;
+  async function entrarComoSuperAdmin(codigo, to) {
+    try {
+      if (usuarioRenaced?.tenant !== codigo) {
+        setEntrandoTenant(codigo);
+        const { data } = await impersonarTenant(codigo);
+        setSessionRenaced(data.token, data.usuario);
+      }
+      onClose?.();
+      navigate(to);
+    } catch (err) {
+      alert(err.response?.data?.error || "No se pudo acceder al país");
+    } finally {
+      setEntrandoTenant(null);
     }
-    const { rol, modulo } = item;
-    if (rol) return usuario?.rol === rol || (rol === "admin" && usuario?.rol === "SUPER_ADMIN");
-    if (usuario?.rol === "admin" || usuario?.rol === "SUPER_ADMIN") return true;
-    if (permisos === null) return true;
-    return modulo ? permisos.includes(modulo) : true;
+  }
+
+  const [gruposAbiertos, setGruposAbiertos] = useState(() => {
+    try {
+      const guardado = localStorage.getItem("sidebar_grupos_abiertos");
+      return guardado ? JSON.parse(guardado) : { honduras: true, mexico: true };
+    } catch {
+      return { honduras: true, mexico: true };
+    }
   });
+
+  function toggleGrupo(key) {
+    setGruposAbiertos((prev) => {
+      const next = { ...prev, [key]: !prev[key] };
+      localStorage.setItem("sidebar_grupos_abiertos", JSON.stringify(next));
+      return next;
+    });
+  }
+
+  const itemsHonduras = menuHonduras.filter((item) => itemVisible(item, usuario, permisos));
+
+  function renderLink(item) {
+    const { to, icon: Icon, label } = item;
+    return (
+      <NavLink
+        key={to}
+        to={to}
+        onClick={onClose}
+        title={label}
+        className={({ isActive }) => `sidebar-link${isActive ? " active" : ""}`}
+      >
+        <span className="sidebar-icon"><Icon size={20} /></span>
+        <span className="sidebar-link-label">{label}</span>
+      </NavLink>
+    );
+  }
+
+  function renderLinkTenant(item, codigo) {
+    const { to, icon: Icon, label } = item;
+    const activo = location.pathname === to || location.pathname.startsWith(`${to}/`);
+    return (
+      <button
+        key={to}
+        type="button"
+        className={`sidebar-link${activo ? " active" : ""}`}
+        disabled={entrandoTenant === codigo}
+        onClick={() => entrarComoSuperAdmin(codigo, to)}
+      >
+        <span className="sidebar-icon"><Icon size={20} /></span>
+        <span className="sidebar-link-label">{label}</span>
+      </button>
+    );
+  }
+
+  function renderSeccion(titulo) {
+    return (
+      <div className="sidebar-section-label">
+        {!collapsed && <span>{titulo}</span>}
+        {collapsed && <span style={{ display: "block", height: 1, background: "rgba(255,255,255,0.15)", margin: "6px 0" }} />}
+      </div>
+    );
+  }
+
+  function renderGrupo(key, titulo, items, renderItem = renderLink) {
+    const abierto = gruposAbiertos[key] !== false;
+    return (
+      <div key={key} className="sidebar-group">
+        <button
+          type="button"
+          className="sidebar-section-label sidebar-section-toggle"
+          onClick={() => toggleGrupo(key)}
+        >
+          {!collapsed && <span>{titulo}</span>}
+          {collapsed && <span style={{ display: "block", height: 1, background: "rgba(255,255,255,0.15)", margin: "6px 0" }} />}
+          {!collapsed && <HiChevronDown size={13} className={`sidebar-section-chevron${abierto ? " open" : ""}`} />}
+        </button>
+        {(abierto || collapsed) && items.map(renderItem)}
+      </div>
+    );
+  }
 
   return (
     <aside className={`sidebar${isOpen ? " sidebar--open" : ""}${collapsed ? " sidebar--collapsed" : ""}`}>
@@ -91,29 +187,19 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
         </div>
 
         <nav className="sidebar-nav">
-          {itemsVisibles.map((item, idx) => {
-            if (item.seccion) {
-              return (
-                <div key={`sec-${idx}`} className="sidebar-section-label">
-                  {!collapsed && <span>{item.seccion}</span>}
-                  {collapsed && <span style={{ display: "block", height: 1, background: "rgba(255,255,255,0.15)", margin: "6px 0" }} />}
-                </div>
-              );
-            }
-            const { to, icon: Icon, label } = item;
-            return (
-              <NavLink
-                key={to}
-                to={to}
-                onClick={onClose}
-                title={label}
-                className={({ isActive }) => `sidebar-link${isActive ? " active" : ""}`}
-              >
-                <span className="sidebar-icon"><Icon size={20} /></span>
-                <span className="sidebar-link-label">{label}</span>
-              </NavLink>
-            );
-          })}
+          {esSuperAdmin ? (
+            <>
+              {renderSeccion("SUPER ADMIN")}
+              {renderLink({ to: "/admin/panel", icon: HiOutlineGlobeAmericas, label: "Panel Admin" })}
+              {renderGrupo("honduras", "HONDURAS · SAAPD", itemsHonduras)}
+              {renderGrupo("mexico", "MÉXICO · RENACED", menuRenacedMx, (item) => renderLinkTenant(item, "mx"))}
+            </>
+          ) : (
+            <>
+              {renderSeccion("EVOLUCIÓN METABÓLICA")}
+              {itemsHonduras.map(renderLink)}
+            </>
+          )}
         </nav>
 
         <div className="sidebar-version">
@@ -129,4 +215,3 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
     </aside>
   );
 }
-

@@ -16,6 +16,33 @@
   display: none;
 }
 
+/* Encabezados de grupo colapsables (Super Admin: Honduras / México) */
+.sidebar-section-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font: inherit;
+}
+.sidebar-section-toggle:hover {
+  color: rgba(255,255,255,0.55);
+}
+.sidebar-section-chevron {
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+  transform: rotate(-90deg);
+}
+.sidebar-section-chevron.open {
+  transform: rotate(0deg);
+}
+.sidebar-group {
+  display: flex;
+  flex-direction: column;
+}
+
 .sidebar {
   width: 240px;
   height: 100vh;
@@ -206,6 +233,20 @@
   position: relative;
   white-space: nowrap;
   overflow: hidden;
+}
+
+/* Reset para links de tenant renderizados como <button> (impersonación Super Admin) */
+button.sidebar-link {
+  background: none;
+  border: none;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+}
+button.sidebar-link:disabled {
+  opacity: 0.5;
+  cursor: wait;
 }
 
 .sidebar-link:hover {

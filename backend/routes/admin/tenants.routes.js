@@ -7,6 +7,7 @@ import {
   updateTenant,
   deleteTenant,
   getEstadisticasGlobales,
+  impersonarTenant,
 } from "../../controllers/admin/tenants.controller.js";
 
 const router = Router();
@@ -24,6 +25,7 @@ router.use(verificarToken, soloSuperAdmin);
 router.get("/",                    getTenants);
 router.get("/estadisticas-globales", getEstadisticasGlobales);
 router.get("/:id",                 getTenantById);
+router.post("/by-codigo/:codigo/impersonate", impersonarTenant);
 router.post("/",                   createTenant);
 router.put("/:id",                 updateTenant);
 router.delete("/:id",              deleteTenant);

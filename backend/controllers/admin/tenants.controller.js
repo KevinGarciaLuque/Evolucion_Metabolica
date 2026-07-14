@@ -1,5 +1,6 @@
 import pool from "../../config/db.master.js";
 import mysql from "mysql2/promise";
+import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -130,6 +131,42 @@ export const createTenant = async (req, res) => {
     }
     console.error(err);
     res.status(500).json({ error: "Error al crear país" });
+  }
+};
+
+export const impersonarTenant = async (req, res) => {
+  try {
+    const { codigo } = req.params;
+    const [[tenant]] = await pool.query(
+      `SELECT * FROM tenants WHERE codigo = ? AND activo = 1`, [codigo]
+    );
+    if (!tenant) return res.status(404).json({ error: "País no encontrado o inactivo" });
+
+    // id: 0 — no corresponde a un usuario real del tenant, marca sesión de Super Admin
+    const payload = {
+      id: 0,
+      nombre: `Super Admin (${req.usuario?.nombre || req.usuario?.email || "Global"})`,
+      email: req.usuario?.email || null,
+      perfil_id: 1,
+      tenant: tenant.codigo,
+      tenant_nombre: tenant.nombre,
+      db_name: tenant.db_name,
+      db_host: tenant.db_host,
+      tipo: "renaced",
+      super_admin: true,
+    };
+    const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "4h" });
+
+    await pool.query(
+      `INSERT INTO auditoria_global (tenant_id, usuario_id, rol, accion, detalle)
+       VALUES (?, ?, 'SUPER_ADMIN', 'IMPERSONAR_TENANT', ?)`,
+      [tenant.id, req.usuario?.id || null, `Super Admin accedió al país ${tenant.nombre} (${tenant.codigo})`]
+    );
+
+    res.json({ token, usuario: payload });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Error al generar acceso al país" });
   }
 };
 
