@@ -7,6 +7,7 @@ import {
   HiChevronLeft, HiChevronRight, HiOutlineUserGroup,
   HiOutlineClipboardDocumentList,
 } from "react-icons/hi2";
+import FlagIcon from "./FlagIcon";
 import "./Layout.css";
 import "./Sidebar.css";
 
@@ -52,7 +53,9 @@ export default function RenacedLayout({ children }) {
         <button className="hamburger" onClick={() => setSidebarOpen((o) => !o)} aria-label="Abrir menú">
           <span /><span /><span />
         </button>
-        <span className="mobile-brand">🇲🇽 RENACED</span>
+        <span className="mobile-brand" style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <FlagIcon codigo={usuario?.tenant} size={14} /> RENACED
+        </span>
         <div style={{ flex: 1 }} />
 
         <div className="topbar-user" ref={menuRef}>
@@ -90,17 +93,22 @@ export default function RenacedLayout({ children }) {
         <div className="sidebar-content">
           <div className="sidebar-brand">
             <div className="sidebar-logo-wrap" style={{ background: "#1a4a7a" }}>
-              <span style={{ fontSize: 18 }}>🇲🇽</span>
+              <FlagIcon codigo={usuario?.tenant} size={18} />
             </div>
             <div className="sidebar-brand-text">
               <p className="sidebar-title">RENACED</p>
-              <p className="sidebar-subtitle">México</p>
+              <p className="sidebar-subtitle">{usuario?.tenant_nombre || "—"}</p>
             </div>
           </div>
 
           <nav className="sidebar-nav">
             <div className="sidebar-section-label">
-              {!collapsed && <span>RENACED MX</span>}
+              {!collapsed && (
+                <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <FlagIcon codigo={usuario?.tenant} size={12} />
+                  RENACED {(usuario?.tenant || "").toUpperCase()}
+                </span>
+              )}
               {collapsed && <span style={{ display: "block", height: 1, background: "rgba(255,255,255,0.15)", margin: "6px 0" }} />}
             </div>
             {MENU_BASE.map(({ to, icon: Icon, label }) => (

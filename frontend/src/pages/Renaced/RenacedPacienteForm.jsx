@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import RenacedLayout from "../../components/RenacedLayout";
+import FlagIcon from "../../components/FlagIcon";
 import { getPaciente, createPaciente, updatePaciente } from "../../api/renacedApi";
 
 const ESTADOS_MX = [
@@ -172,7 +173,9 @@ export default function RenacedPacienteForm() {
       <div className="page-header">
         <div>
           <h1>{esEdicion ? "Editar Paciente" : "Nuevo Paciente"} — RENACED</h1>
-          <p className="page-subtitle">🇲🇽 Registro Nacional de Diabetes</p>
+          <p className="page-subtitle" style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <FlagIcon codigo="mx" size={13} /> Registro Nacional de Diabetes
+          </p>
         </div>
         {tipoDM && (
           <span style={{

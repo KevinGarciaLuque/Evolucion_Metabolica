@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import RenacedLayout from "../../components/RenacedLayout";
+import FlagIcon from "../../components/FlagIcon";
+import { useRenacedAuth } from "../../context/RenacedAuthContext";
 import { getDashboardResumen } from "../../api/renacedApi";
 import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis,
@@ -89,6 +91,7 @@ const tipStyle = { fontSize: 12, borderRadius: 10, boxShadow: "0 4px 16px rgba(0
 
 /* ══════════════════════════════════════════════════════════════════════════ */
 export default function RenacedDashboard() {
+  const { usuario } = useRenacedAuth();
   const [data, setData]         = useState(null);
   const [cargando, setCargando] = useState(true);
   const [error, setError]       = useState(null);
@@ -116,11 +119,11 @@ export default function RenacedDashboard() {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12, marginBottom: 4 }}>
         <div>
           <h1 style={{ margin: 0, fontSize: "1.5rem", fontWeight: 800, color: "#0f172a" }}>Dashboard RENACED</h1>
-          <p style={{ margin: "3px 0 0", fontSize: 13, color: "#94a3b8" }}>Registro Nacional de Diabetes Tipo 1 — México</p>
+          <p style={{ margin: "3px 0 0", fontSize: 13, color: "#94a3b8" }}>Registro Nacional de Diabetes Tipo 1 — {usuario?.tenant_nombre}</p>
         </div>
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          <span style={{ background: "#f0fdf4", color: "#16a34a", border: "1px solid #bbf7d0", borderRadius: 20, padding: "5px 14px", fontWeight: 700, fontSize: 12 }}>
-            🇲🇽 México
+          <span style={{ background: "#f0fdf4", color: "#16a34a", border: "1px solid #bbf7d0", borderRadius: 20, padding: "5px 14px", fontWeight: 700, fontSize: 12, display: "flex", alignItems: "center", gap: 6 }}>
+            <FlagIcon codigo={usuario?.tenant} size={13} /> {usuario?.tenant_nombre}
           </span>
         </div>
       </div>

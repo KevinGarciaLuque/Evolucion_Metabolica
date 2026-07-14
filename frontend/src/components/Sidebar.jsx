@@ -3,6 +3,7 @@ import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useRenacedAuth } from "../context/RenacedAuthContext";
 import { impersonarTenant } from "../api/adminApi";
+import FlagIcon from "./FlagIcon";
 import {
   HiOutlineSquares2X2,
   HiOutlineUsers,
@@ -141,7 +142,7 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
     );
   }
 
-  function renderGrupo(key, titulo, items, renderItem = renderLink) {
+  function renderGrupo(key, titulo, items, renderItem = renderLink, codigoBandera = null) {
     const abierto = gruposAbiertos[key] !== false;
     return (
       <div key={key} className="sidebar-group">
@@ -150,7 +151,12 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
           className="sidebar-section-label sidebar-section-toggle"
           onClick={() => toggleGrupo(key)}
         >
-          {!collapsed && <span>{titulo}</span>}
+          {!collapsed && (
+            <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              {codigoBandera && <FlagIcon codigo={codigoBandera} size={12} />}
+              {titulo}
+            </span>
+          )}
           {collapsed && <span style={{ display: "block", height: 1, background: "rgba(255,255,255,0.15)", margin: "6px 0" }} />}
           {!collapsed && <HiChevronDown size={13} className={`sidebar-section-chevron${abierto ? " open" : ""}`} />}
         </button>
@@ -177,7 +183,7 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
 
         <div className="sidebar-brand">
           <div className="sidebar-logo-wrap">
-            <span style={{ fontSize: 20 }}>🇭🇳</span>
+            <FlagIcon codigo="hn" size={22} />
           </div>
           <div className="sidebar-brand-text">
             <p className="sidebar-title">SAAPD</p>
@@ -190,8 +196,8 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
             <>
               {renderSeccion("SUPER ADMIN")}
               {renderLink({ to: "/admin/panel", icon: HiOutlineGlobeAmericas, label: "Panel Admin" })}
-              {renderGrupo("honduras", "HONDURAS · SAAPD", itemsHonduras)}
-              {renderGrupo("mexico", "MÉXICO · RENACED", menuRenacedMx, (item) => renderLinkTenant(item, "mx"))}
+              {renderGrupo("honduras", "HONDURAS · SAAPD", itemsHonduras, renderLink, "hn")}
+              {renderGrupo("mexico", "MÉXICO · RENACED", menuRenacedMx, (item) => renderLinkTenant(item, "mx"), "mx")}
             </>
           ) : (
             <>

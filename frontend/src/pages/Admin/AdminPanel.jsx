@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import Layout from "../../components/Layout";
+import FlagIcon from "../../components/FlagIcon";
 import {
   getTenants, createTenant, updateTenant, deleteTenant, getTenantById, getEstadisticasGlobales,
 } from "../../api/adminApi";
@@ -13,6 +14,42 @@ const EMPTY_FORM = {
   nombre: "", codigo: "", subdominio: "", db_name: "", db_host: "",
   admin_nombre: "", admin_email: "", admin_password: "",
 };
+
+// Catálogo ALAD — países de Latinoamérica (20)
+const PAISES_ALAD = [
+  { codigo: "ar", nombre: "Argentina" },
+  { codigo: "bo", nombre: "Bolivia" },
+  { codigo: "br", nombre: "Brasil" },
+  { codigo: "cl", nombre: "Chile" },
+  { codigo: "co", nombre: "Colombia" },
+  { codigo: "cr", nombre: "Costa Rica" },
+  { codigo: "cu", nombre: "Cuba" },
+  { codigo: "do", nombre: "República Dominicana" },
+  { codigo: "ec", nombre: "Ecuador" },
+  { codigo: "sv", nombre: "El Salvador" },
+  { codigo: "gt", nombre: "Guatemala" },
+  { codigo: "ht", nombre: "Haití" },
+  { codigo: "hn", nombre: "Honduras" },
+  { codigo: "mx", nombre: "México" },
+  { codigo: "ni", nombre: "Nicaragua" },
+  { codigo: "pa", nombre: "Panamá" },
+  { codigo: "py", nombre: "Paraguay" },
+  { codigo: "pe", nombre: "Perú" },
+  { codigo: "uy", nombre: "Uruguay" },
+  { codigo: "ve", nombre: "Venezuela" },
+];
+
+function normalizarNombre(nombre) {
+  return nombre
+    .replace(/[áàäâã]/gi, "a")
+    .replace(/[éèëê]/gi, "e")
+    .replace(/[íìïî]/gi, "i")
+    .replace(/[óòöôõ]/gi, "o")
+    .replace(/[úùüû]/gi, "u")
+    .replace(/ñ/gi, "n")
+    .toLowerCase()
+    .replace(/\s+/g, "_");
+}
 
 export default function AdminPanel() {
   const [tenants, setTenants]     = useState([]);
@@ -152,7 +189,7 @@ export default function AdminPanel() {
             value={cargando ? "…" : totalPacientes.toLocaleString()} color="#ecfeff" />
           {stats.map((s) => (
             <StatCard key={s.codigo}
-              icon={<span style={{ fontSize: 20 }}>🌐</span>}
+              icon={<FlagIcon codigo={s.codigo} size={20} />}
               label={s.pais}
               value={s.error ? "Sin conexión" : (s.total_pacientes || 0).toLocaleString()}
               sub={s.error ? undefined : `${s.mujeres || 0}F · ${s.hombres || 0}M`}
@@ -190,10 +227,10 @@ export default function AdminPanel() {
                 <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                     <div style={{
-                      width: 42, height: 42, borderRadius: 10, background: "#eef2ff", color: "#4f46e5",
-                      display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: 16, flexShrink: 0,
+                      width: 42, height: 42, borderRadius: 10, background: "#eef2ff",
+                      display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, overflow: "hidden",
                     }}>
-                      {t.nombre.slice(0, 2).toUpperCase()}
+                      <FlagIcon codigo={t.codigo} size={24} />
                     </div>
                     <div>
                       <p style={{ margin: 0, fontWeight: 700, fontSize: 15 }}>{t.nombre}</p>
@@ -252,7 +289,7 @@ export default function AdminPanel() {
       {/* ── Modal crear / editar ─────────────────────────────────────────── */}
       {modal && (
         <div style={{ position: "fixed", inset: 0, zIndex: 9999, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
-          <div style={{ background: "#fff", borderRadius: 14, padding: 28, maxWidth: 520, width: "100%", boxShadow: "0 24px 64px rgba(0,0,0,0.25)" }}>
+          <div style={{ background: "#fff", borderRadius: 14, padding: 28, maxWidth: modal === "crear" ? 640 : 520, width: "100%", boxShadow: "0 24px 64px rgba(0,0,0,0.25)" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
               <h3 style={{ margin: 0 }}>{modal === "crear" ? "Nuevo País" : `Editar — ${editTarget?.nombre}`}</h3>
               <button onClick={() => setModal(false)} style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer", color: "#94a3b8" }}>✕</button>
@@ -265,18 +302,65 @@ export default function AdminPanel() {
             )}
 
             <form onSubmit={guardar}>
+              {modal === "crear" && (
+                <div className="form-group" style={{ marginBottom: 16 }}>
+                  <label style={{ fontSize: 12 }}>País * (catálogo ALAD)</label>
+                  <div style={{
+                    display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(108px, 1fr))", gap: 8,
+                    maxHeight: 260, overflowY: "auto", padding: "4px 2px", marginTop: 4,
+                  }}>
+                    {PAISES_ALAD.map((p) => {
+                      const yaExiste = tenants.some((t) => t.codigo === p.codigo);
+                      const seleccionado = form.codigo === p.codigo;
+                      return (
+                        <button
+                          key={p.codigo}
+                          type="button"
+                          disabled={yaExiste}
+                          onClick={() => setForm((f) => ({
+                            ...f,
+                            nombre: p.nombre,
+                            codigo: p.codigo,
+                            subdominio: `${p.codigo}.alad.org`,
+                            db_name: `renaced_${normalizarNombre(p.nombre)}`,
+                          }))}
+                          title={yaExiste ? "Ya registrado" : p.nombre}
+                          style={{
+                            display: "flex", flexDirection: "column", alignItems: "center", gap: 5,
+                            padding: "10px 4px", borderRadius: 10,
+                            border: seleccionado ? "2px solid #2563eb" : "1px solid #e2e8f0",
+                            background: yaExiste ? "#f1f5f9" : seleccionado ? "#eff6ff" : "#fff",
+                            cursor: yaExiste ? "not-allowed" : "pointer",
+                            opacity: yaExiste ? 0.5 : 1,
+                            fontSize: 11, fontWeight: 600, color: "#334155",
+                          }}
+                        >
+                          <FlagIcon codigo={p.codigo} size={22} />
+                          <span style={{ textAlign: "center", lineHeight: 1.2 }}>{p.nombre}</span>
+                          {yaExiste && <span style={{ fontSize: 9, color: "#94a3b8", fontWeight: 500 }}>Ya registrado</span>}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
-                <div className="form-group" style={{ gridColumn: "1/-1" }}>
-                  <label style={{ fontSize: 12 }}>Nombre del país *</label>
-                  <input type="text" placeholder="Ej: México" value={form.nombre}
-                    onChange={(e) => setForm((f) => ({ ...f, nombre: e.target.value }))} required />
-                </div>
-                <div className="form-group">
-                  <label style={{ fontSize: 12 }}>Código (3 letras) *</label>
-                  <input type="text" placeholder="Ej: mx" maxLength={5} value={form.codigo}
-                    onChange={(e) => setForm((f) => ({ ...f, codigo: e.target.value.toLowerCase() }))}
-                    required disabled={modal === "editar"} />
-                </div>
+                {modal === "editar" && (
+                  <>
+                    <div className="form-group" style={{ gridColumn: "1/-1" }}>
+                      <label style={{ fontSize: 12 }}>Nombre del país *</label>
+                      <input type="text" placeholder="Ej: México" value={form.nombre}
+                        onChange={(e) => setForm((f) => ({ ...f, nombre: e.target.value }))} required />
+                    </div>
+                    <div className="form-group">
+                      <label style={{ fontSize: 12 }}>Código (3 letras) *</label>
+                      <input type="text" placeholder="Ej: mx" maxLength={5} value={form.codigo}
+                        onChange={(e) => setForm((f) => ({ ...f, codigo: e.target.value.toLowerCase() }))}
+                        required disabled />
+                    </div>
+                  </>
+                )}
                 <div className="form-group">
                   <label style={{ fontSize: 12 }}>Subdominio</label>
                   <input type="text" placeholder="Ej: mexico" value={form.subdominio}
@@ -326,7 +410,7 @@ export default function AdminPanel() {
 
               <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 20 }}>
                 <button type="button" className="btn btn-outline" onClick={() => setModal(false)}>Cancelar</button>
-                <button type="submit" className="btn btn-primary" disabled={guardando}>
+                <button type="submit" className="btn btn-primary" disabled={guardando || (modal === "crear" && !form.codigo)}>
                   {guardando ? "Guardando…" : modal === "crear" ? "Crear País" : "Guardar cambios"}
                 </button>
               </div>

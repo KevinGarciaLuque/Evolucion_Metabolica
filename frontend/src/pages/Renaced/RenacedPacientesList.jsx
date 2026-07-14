@@ -1,10 +1,13 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import RenacedLayout from "../../components/RenacedLayout";
+import FlagIcon from "../../components/FlagIcon";
+import { useRenacedAuth } from "../../context/RenacedAuthContext";
 import { getPacientes } from "../../api/renacedApi";
 import { HiOutlineMagnifyingGlass, HiOutlineFunnel, HiOutlineUserPlus } from "react-icons/hi2";
 
 export default function RenacedPacientesList() {
+  const { usuario } = useRenacedAuth();
   const navigate = useNavigate();
   const [pacientes, setPacientes] = useState([]);
   const [cargando, setCargando]   = useState(true);
@@ -50,7 +53,9 @@ export default function RenacedPacientesList() {
       <div className="page-header">
         <div>
           <h1>Pacientes RENACED</h1>
-          <p className="page-subtitle">Registro Nacional de Diabetes — México 🇲🇽</p>
+          <p className="page-subtitle" style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            Registro Nacional de Diabetes — {usuario?.tenant_nombre} <FlagIcon codigo={usuario?.tenant} size={13} />
+          </p>
         </div>
         <Link to="/renaced/pacientes/nuevo" className="btn btn-primary" style={{ display: "flex", alignItems: "center", gap: 6 }}>
           <HiOutlineUserPlus size={16} /> Nuevo Paciente
