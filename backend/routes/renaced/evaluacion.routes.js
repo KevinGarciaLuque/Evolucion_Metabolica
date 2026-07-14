@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { verificarToken } from "../../middlewares/auth.js";
+import { resolverTenantDB } from "../../middlewares/tenantDb.js";
 import {
   getEvaluacionesByPaciente, createEvaluacion,
   getEvaluacionesComplementarias, createEvaluacionComplementaria,
@@ -7,7 +8,7 @@ import {
 } from "../../controllers/renaced/evaluacion.controller.js";
 
 const router = Router({ mergeParams: true });
-router.use(verificarToken);
+router.use(verificarToken, resolverTenantDB);
 router.get("/complementarias",            getEvaluacionesComplementarias);
 router.post("/complementarias",           createEvaluacionComplementaria);
 router.put("/complementarias/:compId",    updateEvaluacionComplementaria);

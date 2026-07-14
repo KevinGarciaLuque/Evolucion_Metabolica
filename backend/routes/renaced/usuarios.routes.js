@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { verificarToken } from "../../middlewares/auth.js";
+import { resolverTenantDB } from "../../middlewares/tenantDb.js";
 import {
   getUsuarios, getUsuarioById, createUsuario, updateUsuario, toggleUsuario,
 } from "../../controllers/renaced/usuarios.controller.js";
@@ -13,7 +14,7 @@ function soloAdminRenaced(req, res, next) {
   next();
 }
 
-router.use(verificarToken, soloAdminRenaced);
+router.use(verificarToken, resolverTenantDB, soloAdminRenaced);
 
 router.get("/",          getUsuarios);
 router.get("/:id",       getUsuarioById);

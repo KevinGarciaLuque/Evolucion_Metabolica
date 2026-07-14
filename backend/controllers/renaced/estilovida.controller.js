@@ -1,8 +1,7 @@
-import pool from "../../config/db.renaced.js";
 
 export const getEstiloVida = async (req, res) => {
   try {
-    const [rows] = await pool.query(
+    const [rows] = await req.db.query(
       "SELECT * FROM estilovida WHERE paciente_id = ? ORDER BY fecha_captura DESC",
       [req.params.paciente_id]
     );
@@ -17,7 +16,7 @@ export const createEstiloVida = async (req, res) => {
   try {
     const { paciente_id } = req.params;
     const f = req.body;
-    const [result] = await pool.query(
+    const [result] = await req.db.query(
       `INSERT INTO estilovida (paciente_id, actividad_fisica, tipo_actividad, minutos_semana, dieta_especial, tipo_dieta, tabaquismo, cigarros_dia, alcoholismo, frecuencia_alcohol, usuario_id)
        VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
       [
@@ -43,7 +42,7 @@ export const createEstiloVida = async (req, res) => {
 
 export const deleteEstiloVida = async (req, res) => {
   try {
-    await pool.query(
+    await req.db.query(
       "DELETE FROM estilovida WHERE id = ? AND paciente_id = ?",
       [req.params.id, req.params.paciente_id]
     );

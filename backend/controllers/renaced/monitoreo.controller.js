@@ -1,4 +1,3 @@
-import pool from "../../config/db.renaced.js";
 
 // Columnas editables de monitoreo_periodo (id, paciente_id y fecha_captura se gestionan aparte)
 const MON_COLS = [
@@ -21,7 +20,7 @@ const MON_COLS = [
 export const getMonitoreoByPaciente = async (req, res) => {
   const { paciente_id } = req.params;
   try {
-    const [rows] = await pool.query(
+    const [rows] = await req.db.query(
       `SELECT * FROM monitoreo_periodo
        WHERE paciente_id = ?
        ORDER BY fecha_registro DESC, id DESC`,
@@ -36,7 +35,7 @@ export const getMonitoreoByPaciente = async (req, res) => {
 
 export const createMonitoreo = async (req, res) => {
   const { paciente_id } = req.params;
-  const conn = await pool.getConnection();
+  const conn = await req.db.getConnection();
   try {
     await conn.beginTransaction();
     const [[{ m: id }]] = await conn.query("SELECT COALESCE(MAX(id),0)+1 AS m FROM monitoreo_periodo");
@@ -66,7 +65,7 @@ export const updateMonitoreo = async (req, res) => {
   if (!sets.length) return res.json({ updated: 0 });
   vals.push(monId);
   try {
-    await pool.query(`UPDATE monitoreo_periodo SET ${sets.join(",")} WHERE id=?`, vals);
+    await req.db.query(`UPDATE monitoreo_periodo SET ${sets.join(",")} WHERE id=?`, vals);
     res.json({ updated: 1 });
   } catch (err) {
     console.error(err);
@@ -76,7 +75,7 @@ export const updateMonitoreo = async (req, res) => {
 
 export const deleteMonitoreo = async (req, res) => {
   try {
-    await pool.query("DELETE FROM monitoreo_periodo WHERE id=?", [req.params.monId]);
+    await req.db.query("DELETE FROM monitoreo_periodo WHERE id=?", [req.params.monId]);
     res.json({ deleted: 1 });
   } catch (err) {
     console.error(err);

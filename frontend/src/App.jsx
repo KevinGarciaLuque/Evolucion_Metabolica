@@ -27,7 +27,6 @@ import ImportacionHEU from "./pages/Importaciones/ImportacionHEU";
 import AdminPanel from "./pages/Admin/AdminPanel";
 
 // ── Módulo RENACED ────────────────────────────────────────────────────────────
-import RenacedLogin           from "./pages/Renaced/RenacedLogin";
 import RenacedDashboard       from "./pages/Renaced/RenacedDashboard";
 import RenacedPacientesList   from "./pages/Renaced/RenacedPacientesList";
 import RenacedPacienteForm    from "./pages/Renaced/RenacedPacienteForm";

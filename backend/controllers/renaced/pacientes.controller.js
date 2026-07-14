@@ -1,4 +1,3 @@
-import pool from "../../config/db.renaced.js";
 
 export const getPacientes = async (req, res) => {
   try {
@@ -16,7 +15,7 @@ export const getPacientes = async (req, res) => {
     if (unidad_id)  { where += " AND p.unidad_servicio_id = ?"; params.push(unidad_id); }
     if (estatus_id) { where += " AND p.estatus_id = ?";        params.push(estatus_id); }
 
-    const [rows] = await pool.query(
+    const [rows] = await req.db.query(
       `SELECT p.id, p.expediente, p.iniciales, p.nombre, p.ap_pat, p.ap_mat,
               p.sexo, p.fecha_nacimiento, p.curp,
               TIMESTAMPDIFF(YEAR, p.fecha_nacimiento, CURDATE()) AS edad,
@@ -36,7 +35,7 @@ export const getPacientes = async (req, res) => {
       [...params, parseInt(limit), offset]
     );
 
-    const [[{ total }]] = await pool.query(
+    const [[{ total }]] = await req.db.query(
       `SELECT COUNT(*) AS total FROM paciente p ${where}`,
       params
     );
@@ -51,7 +50,7 @@ export const getPacientes = async (req, res) => {
 export const getPacienteById = async (req, res) => {
   try {
     const { id } = req.params;
-    const [[paciente]] = await pool.query(
+    const [[paciente]] = await req.db.query(
       `SELECT p.*,
               TIMESTAMPDIFF(YEAR, p.fecha_nacimiento, CURDATE()) AS edad,
               pe.descripcion AS estatus,
@@ -64,7 +63,7 @@ export const getPacienteById = async (req, res) => {
     );
     if (!paciente) return res.status(404).json({ error: "Paciente no encontrado" });
 
-    const [diagnostico] = await pool.query(
+    const [diagnostico] = await req.db.query(
       `SELECT d.*, td.descripcion AS tipo_diabetes,
               tdo.descripcion AS tipo_diabetes_otra
        FROM diagnostico d
@@ -83,7 +82,7 @@ export const getPacienteById = async (req, res) => {
 };
 
 export const createPaciente = async (req, res) => {
-  const conn = await pool.getConnection();
+  const conn = await req.db.getConnection();
   try {
     const {
       tipo_diabetes_id, tipo_diabetes_otra_id,
@@ -150,7 +149,7 @@ export const createPaciente = async (req, res) => {
 };
 
 export const updatePaciente = async (req, res) => {
-  const conn = await pool.getConnection();
+  const conn = await req.db.getConnection();
   try {
     const { id } = req.params;
     const campos = req.body;

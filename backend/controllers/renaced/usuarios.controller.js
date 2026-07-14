@@ -1,4 +1,3 @@
-import poolRenaced from "../../config/db.renaced.js";
 import bcrypt from "bcryptjs";
 
 // perfil_id permitidos al crear (no se puede crear otro admin desde aquí)
@@ -6,7 +5,7 @@ const PERFILES_VALIDOS = [2, 3, 4]; // Médico, Asistente, Enfermera
 
 export async function getUsuarios(req, res) {
   try {
-    const [rows] = await poolRenaced.query(
+    const [rows] = await req.db.query(
       `SELECT u.id, u.username, u.nombre_completo, u.email, u.perfil_id,
               u.activo, u.ultimo_acceso, p.nombre AS perfil_nombre
        FROM usuario u
@@ -22,7 +21,7 @@ export async function getUsuarios(req, res) {
 
 export async function getUsuarioById(req, res) {
   try {
-    const [[row]] = await poolRenaced.query(
+    const [[row]] = await req.db.query(
       `SELECT u.id, u.username, u.nombre_completo, u.email, u.perfil_id,
               u.activo, u.ultimo_acceso, p.nombre AS perfil_nombre
        FROM usuario u
@@ -49,7 +48,7 @@ export async function createUsuario(req, res) {
   }
 
   try {
-    const [exist] = await poolRenaced.query(
+    const [exist] = await req.db.query(
       "SELECT id FROM usuario WHERE username = ? OR (email = ? AND email IS NOT NULL AND email != '')",
       [username, email || ""]
     );
@@ -58,7 +57,7 @@ export async function createUsuario(req, res) {
     }
 
     const hash = await bcrypt.hash(password, 10);
-    const [result] = await poolRenaced.query(
+    const [result] = await req.db.query(
       `INSERT INTO usuario (username, password_hash, nombre_completo, email, perfil_id, activo)
        VALUES (?, ?, ?, ?, ?, 1)`,
       [username, hash, nombre_completo, email || null, perfil_id]
@@ -80,12 +79,12 @@ export async function updateUsuario(req, res) {
   }
 
   try {
-    const [[current]] = await poolRenaced.query("SELECT id FROM usuario WHERE id = ?", [id]);
+    const [[current]] = await req.db.query("SELECT id FROM usuario WHERE id = ?", [id]);
     if (!current) return res.status(404).json({ error: "Usuario no encontrado" });
 
     // Check username/email conflict on other users
     if (username || email) {
-      const [conflict] = await poolRenaced.query(
+      const [conflict] = await req.db.query(
         "SELECT id FROM usuario WHERE (username = ? OR (email = ? AND email IS NOT NULL AND email != '')) AND id != ?",
         [username || "", email || "", id]
       );
@@ -103,7 +102,7 @@ export async function updateUsuario(req, res) {
       params.push(hash);
     }
 
-    await poolRenaced.query(
+    await req.db.query(
       `UPDATE usuario SET
         nombre_completo = COALESCE(?, nombre_completo),
         username        = COALESCE(?, username),
@@ -126,7 +125,7 @@ export async function updateUsuario(req, res) {
 export async function toggleUsuario(req, res) {
   const { id } = req.params;
   try {
-    const [[u]] = await poolRenaced.query("SELECT id, activo FROM usuario WHERE id = ?", [id]);
+    const [[u]] = await req.db.query("SELECT id, activo FROM usuario WHERE id = ?", [id]);
     if (!u) return res.status(404).json({ error: "Usuario no encontrado" });
 
     // Prevent self-deactivation
@@ -135,7 +134,7 @@ export async function toggleUsuario(req, res) {
     }
 
     const nuevoEstado = u.activo ? 0 : 1;
-    await poolRenaced.query("UPDATE usuario SET activo = ? WHERE id = ?", [nuevoEstado, id]);
+    await req.db.query("UPDATE usuario SET activo = ? WHERE id = ?", [nuevoEstado, id]);
     res.json({ activo: nuevoEstado, message: nuevoEstado ? "Usuario activado" : "Usuario desactivado" });
   } catch (err) {
     console.error(err);

@@ -1,8 +1,7 @@
-import pool from "../../config/db.renaced.js";
 
 export const getEventos = async (req, res) => {
   try {
-    const [rows] = await pool.query(
+    const [rows] = await req.db.query(
       "SELECT * FROM evento WHERE paciente_id = ? ORDER BY fecha_captura DESC",
       [req.params.paciente_id]
     );
@@ -17,7 +16,7 @@ export const createEvento = async (req, res) => {
   try {
     const { paciente_id } = req.params;
     const f = req.body;
-    const [result] = await pool.query(
+    const [result] = await req.db.query(
       `INSERT INTO evento (
         paciente_id,
         hipo_leve, hipo_leve_num,
@@ -48,7 +47,7 @@ export const createEvento = async (req, res) => {
 
 export const deleteEvento = async (req, res) => {
   try {
-    await pool.query(
+    await req.db.query(
       "DELETE FROM evento WHERE id = ? AND paciente_id = ?",
       [req.params.id, req.params.paciente_id]
     );

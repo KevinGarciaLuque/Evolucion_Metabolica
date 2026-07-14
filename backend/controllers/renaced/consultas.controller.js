@@ -1,9 +1,8 @@
-import pool from "../../config/db.renaced.js";
 
 export const getConsultasByPaciente = async (req, res) => {
   try {
     const { paciente_id } = req.params;
-    const [rows] = await pool.query(
+    const [rows] = await req.db.query(
       `SELECT c.*, m.nombre AS medico_nombre, m.ap_pat AS medico_ap_pat
        FROM consulta c
        LEFT JOIN medico m ON m.curp = c.medico_curp
@@ -28,7 +27,7 @@ export const createConsulta = async (req, res) => {
 
     const imcCalc = imc || (peso && estatura ? (peso / (estatura * estatura)).toFixed(2) : null);
 
-    const [result] = await pool.query(
+    const [result] = await req.db.query(
       `INSERT INTO consulta (
         paciente_id, medico_curp, fecha_consulta, peso, estatura, imc,
         percentil, cintura, cadera, indice_cc, pa_sistolica, pa_diastolica, usuario_id

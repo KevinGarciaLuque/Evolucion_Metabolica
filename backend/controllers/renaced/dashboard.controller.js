@@ -1,4 +1,3 @@
-import pool from "../../config/db.renaced.js";
 
 export const getResumen = async (req, res) => {
   try {
@@ -7,7 +6,7 @@ export const getResumen = async (req, res) => {
     const params = unidad_id ? [unidad_id] : [];
 
     // ── Totales básicos ─────────────────────────────────────────────────────
-    const [[totales]] = await pool.query(
+    const [[totales]] = await req.db.query(
       `SELECT
         COUNT(*)                             AS total_pacientes,
         SUM(p.sexo = 'F')                    AS mujeres,
@@ -20,7 +19,7 @@ export const getResumen = async (req, res) => {
     );
 
     // ── Distribución por tipo de diabetes ───────────────────────────────────
-    const [por_tipo] = await pool.query(
+    const [por_tipo] = await req.db.query(
       `SELECT td.descripcion AS tipo, COUNT(*) AS total
        FROM diagnostico d
        JOIN paciente p ON p.id = d.paciente_id
@@ -31,7 +30,7 @@ export const getResumen = async (req, res) => {
     );
 
     // ── Control glucémico (último HbA1c por paciente) ───────────────────────
-    const [[control_hba1c]] = await pool.query(
+    const [[control_hba1c]] = await req.db.query(
       `SELECT
         ROUND(AVG(hba1c), 1)              AS promedio,
         SUM(hba1c < 7)                    AS optimo,
@@ -49,7 +48,7 @@ export const getResumen = async (req, res) => {
     );
 
     // ── Pacientes sin consulta en los últimos 6 meses ──────────────────────
-    const [[{ sin_consulta }]] = await pool.query(
+    const [[{ sin_consulta }]] = await req.db.query(
       `SELECT COUNT(DISTINCT p.id) AS sin_consulta
        FROM paciente p
        LEFT JOIN consulta c
@@ -62,7 +61,7 @@ export const getResumen = async (req, res) => {
     );
 
     // ── Eventos adversos totales ────────────────────────────────────────────
-    const [[eventos_resumen]] = await pool.query(
+    const [[eventos_resumen]] = await req.db.query(
       `SELECT
         SUM(tipo = 'CETOACIDOSIS')        AS cetoacidosis,
         SUM(tipo = 'HIPOGLUCEMIA_SEVERA') AS hipo_severa,
@@ -75,7 +74,7 @@ export const getResumen = async (req, res) => {
     );
 
     // ── Distribución por edad al diagnóstico ────────────────────────────────
-    const [edad_dx] = await pool.query(
+    const [edad_dx] = await req.db.query(
       `SELECT
         CASE
           WHEN edad_diagnostico < 1  THEN '< 1'
@@ -97,7 +96,7 @@ export const getResumen = async (req, res) => {
     );
 
     // ── Nuevos pacientes por mes (últimos 12 meses) ─────────────────────────
-    const [nuevos_por_mes] = await pool.query(
+    const [nuevos_por_mes] = await req.db.query(
       `SELECT DATE_FORMAT(fecha_alta, '%Y-%m')        AS mes,
               MIN(DATE_FORMAT(fecha_alta, '%b %Y'))   AS mes_label,
               COUNT(*) AS n
@@ -109,7 +108,7 @@ export const getResumen = async (req, res) => {
     );
 
     // ── Top unidades por pacientes ──────────────────────────────────────────
-    const [top_unidades] = await pool.query(
+    const [top_unidades] = await req.db.query(
       `SELECT u.nombre AS unidad, COUNT(*) AS n
        FROM paciente p
        JOIN unidad_servicio_salud u ON u.id = p.unidad_servicio_id
@@ -118,7 +117,7 @@ export const getResumen = async (req, res) => {
     );
 
     // ── HbA1c recientes (para la lista del lado derecho) ───────────────────
-    const [hba1c_recientes] = await pool.query(
+    const [hba1c_recientes] = await req.db.query(
       `SELECT l.paciente_id, l.hba1c, l.fecha_muestra,
               p.nombre, p.ap_pat
        FROM laboratorio l

@@ -1,8 +1,7 @@
-import pool from "../../config/db.renaced.js";
 
 export const getReclasificaciones = async (req, res) => {
   try {
-    const [rows] = await pool.query(
+    const [rows] = await req.db.query(
       "SELECT * FROM reclasificacion WHERE paciente_id = ? ORDER BY fecha_captura DESC",
       [req.params.paciente_id]
     );
@@ -17,7 +16,7 @@ export const createReclasificacion = async (req, res) => {
   try {
     const { paciente_id } = req.params;
     const f = req.body;
-    const [result] = await pool.query(
+    const [result] = await req.db.query(
       `INSERT INTO reclasificacion (
         paciente_id,
         glucosa_ayuno, fecha_glucosa,
@@ -47,7 +46,7 @@ export const createReclasificacion = async (req, res) => {
 
 export const deleteReclasificacion = async (req, res) => {
   try {
-    await pool.query(
+    await req.db.query(
       "DELETE FROM reclasificacion WHERE id = ? AND paciente_id = ?",
       [req.params.id, req.params.paciente_id]
     );

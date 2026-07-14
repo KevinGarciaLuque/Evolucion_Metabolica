@@ -1,9 +1,8 @@
-import pool from "../../config/db.renaced.js";
 
 export const getLaboratoriosByPaciente = async (req, res) => {
   try {
     const { paciente_id } = req.params;
-    const [rows] = await pool.query(
+    const [rows] = await req.db.query(
       `SELECT * FROM laboratorio WHERE paciente_id = ? ORDER BY fecha_muestra DESC`,
       [paciente_id]
     );
@@ -24,7 +23,7 @@ export const createLaboratorio = async (req, res) => {
       anti_gad, anti_ia2, insulinemia, observaciones
     } = req.body;
 
-    const [result] = await pool.query(
+    const [result] = await req.db.query(
       `INSERT INTO laboratorio (
         paciente_id, consulta_id, fecha_muestra, hba1c, glucosa_ayuno,
         glucosa_postprandial, colesterol_total, hdl, ldl, trigliceridos,

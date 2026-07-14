@@ -1,8 +1,7 @@
-import pool from "../../config/db.renaced.js";
 
 export const getEmbarazos = async (req, res) => {
   try {
-    const [rows] = await pool.query(
+    const [rows] = await req.db.query(
       "SELECT * FROM embarazo WHERE paciente_id = ? ORDER BY fecha_captura DESC",
       [req.params.paciente_id]
     );
@@ -17,7 +16,7 @@ export const createEmbarazo = async (req, res) => {
   try {
     const { paciente_id } = req.params;
     const f = req.body;
-    const [result] = await pool.query(
+    const [result] = await req.db.query(
       `INSERT INTO embarazo (
         paciente_id, fecha_um, fecha_pp, tipo_embarazo, logro_embarazo, estatus_embarazo,
         hba1c_dx, fecha_hba1c_dx, glucosa_ayunas, glucosa_50gr,
@@ -54,7 +53,7 @@ export const updateEmbarazo = async (req, res) => {
   try {
     const { paciente_id, id } = req.params;
     const f = req.body;
-    await pool.query(
+    await req.db.query(
       `UPDATE embarazo SET
         fecha_um=?, fecha_pp=?, tipo_embarazo=?, logro_embarazo=?, estatus_embarazo=?,
         hba1c_dx=?, fecha_hba1c_dx=?, glucosa_ayunas=?, glucosa_50gr=?,
@@ -88,7 +87,7 @@ export const updateEmbarazo = async (req, res) => {
 
 export const deleteEmbarazo = async (req, res) => {
   try {
-    await pool.query(
+    await req.db.query(
       "DELETE FROM embarazo WHERE id = ? AND paciente_id = ?",
       [req.params.id, req.params.paciente_id]
     );

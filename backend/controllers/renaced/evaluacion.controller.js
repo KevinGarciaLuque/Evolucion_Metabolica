@@ -1,9 +1,8 @@
-import pool from "../../config/db.renaced.js";
 
 export const getEvaluacionesByPaciente = async (req, res) => {
   const { paciente_id } = req.params;
   try {
-    const [rows] = await pool.query(
+    const [rows] = await req.db.query(
       `SELECT e.*,
               cr.descripcion  AS retinopatia,
               cn.descripcion  AS nefropatia,
@@ -45,7 +44,7 @@ const COMP_COLS = [
 export const getEvaluacionesComplementarias = async (req, res) => {
   const { paciente_id } = req.params;
   try {
-    const [rows] = await pool.query(
+    const [rows] = await req.db.query(
       `SELECT * FROM evaluacion_complementaria
        WHERE paciente_id = ?
        ORDER BY COALESCE(fecha_ojos, fecha_pies) DESC, id DESC`,
@@ -60,7 +59,7 @@ export const getEvaluacionesComplementarias = async (req, res) => {
 
 export const createEvaluacionComplementaria = async (req, res) => {
   const { paciente_id } = req.params;
-  const conn = await pool.getConnection();
+  const conn = await req.db.getConnection();
   try {
     await conn.beginTransaction();
     const [[{ m: id }]] = await conn.query("SELECT COALESCE(MAX(id),0)+1 AS m FROM evaluacion_complementaria");
@@ -90,7 +89,7 @@ export const updateEvaluacionComplementaria = async (req, res) => {
   if (!sets.length) return res.json({ updated: 0 });
   vals.push(compId);
   try {
-    await pool.query(`UPDATE evaluacion_complementaria SET ${sets.join(",")} WHERE id=?`, vals);
+    await req.db.query(`UPDATE evaluacion_complementaria SET ${sets.join(",")} WHERE id=?`, vals);
     res.json({ updated: 1 });
   } catch (err) {
     console.error(err);
@@ -100,7 +99,7 @@ export const updateEvaluacionComplementaria = async (req, res) => {
 
 export const deleteEvaluacionComplementaria = async (req, res) => {
   try {
-    await pool.query("DELETE FROM evaluacion_complementaria WHERE id=?", [req.params.compId]);
+    await req.db.query("DELETE FROM evaluacion_complementaria WHERE id=?", [req.params.compId]);
     res.json({ deleted: 1 });
   } catch (err) {
     console.error(err);
@@ -116,7 +115,7 @@ export const createEvaluacion = async (req, res) => {
     enf_vascular_id, observaciones,
   } = req.body;
   try {
-    const [result] = await pool.query(
+    const [result] = await req.db.query(
       `INSERT INTO evaluacion (paciente_id, fecha_evaluacion, retinopatia_id, nefropatia_id,
         neuropatia_id, neuropatia_autonomica_id, pie_diabetico_id, enf_cardiovascular_id,
         enf_vascular_id, observaciones)

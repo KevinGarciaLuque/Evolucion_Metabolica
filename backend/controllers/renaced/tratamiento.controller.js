@@ -1,9 +1,8 @@
-import pool from "../../config/db.renaced.js";
 
 export const getTratamientoByPaciente = async (req, res) => {
   const { paciente_id } = req.params;
   try {
-    const [rows] = await pool.query(
+    const [rows] = await req.db.query(
       `SELECT t.*,
               ct.descripcion AS terapia,
               ce.descripcion AS esquema_insulina,
@@ -17,7 +16,7 @@ export const getTratamientoByPaciente = async (req, res) => {
       [paciente_id]
     );
 
-    const [insulinas] = await pool.query(
+    const [insulinas] = await req.db.query(
       `SELECT tid.*, ci.nombre AS insulina
        FROM tratamiento_insulina_detalle tid
        JOIN cat_insulina ci ON ci.id = tid.insulina_id
@@ -27,7 +26,7 @@ export const getTratamientoByPaciente = async (req, res) => {
       [paciente_id]
     );
 
-    const [orales] = await pool.query(
+    const [orales] = await req.db.query(
       `SELECT tor.*, ca.nombre AS antidiabetico
        FROM tratamiento_oral tor
        LEFT JOIN cat_antidiabetico ca ON ca.id = tor.antidiabetico_id
@@ -39,7 +38,7 @@ export const getTratamientoByPaciente = async (req, res) => {
     // Otros tratamientos (betabloqueadores, IECA, estatinas, etc.) — opcional
     let otros = [];
     try {
-      [otros] = await pool.query(
+      [otros] = await req.db.query(
         `SELECT * FROM tratamiento_otx
          WHERE paciente_id = ?
          ORDER BY fecha_inicio DESC, id DESC`,
@@ -50,7 +49,7 @@ export const getTratamientoByPaciente = async (req, res) => {
     // Ajustes de dosis de insulina (cabecera + detalle por insulina) — opcional
     let ajustes = [];
     try {
-      [ajustes] = await pool.query(
+      [ajustes] = await req.db.query(
         `SELECT * FROM tratamiento_ajuste_dosis
          WHERE paciente_id = ?
          ORDER BY fecha_ajuste DESC, id DESC`,
@@ -58,7 +57,7 @@ export const getTratamientoByPaciente = async (req, res) => {
       );
       if (ajustes.length) {
         const ids = ajustes.map((a) => a.id);
-        const [det] = await pool.query(
+        const [det] = await req.db.query(
           `SELECT dt.ajuste_id, dt.insulina_id, dt.dosis, dt.inyecciones, ci.nombre AS insulina
            FROM tratamiento_ajuste_dosis_detalle dt
            JOIN cat_insulina ci ON ci.id = dt.insulina_id
@@ -81,7 +80,7 @@ export const getTratamientoByPaciente = async (req, res) => {
 export const createTratamiento = async (req, res) => {
   const { paciente_id } = req.params;
   const { terapia_id, esquema_insulina_id, dispositivo_id, fecha_inicio, insulinas = [], orales = [] } = req.body;
-  const conn = await pool.getConnection();
+  const conn = await req.db.getConnection();
   try {
     await conn.beginTransaction();
 
@@ -135,7 +134,7 @@ export const createTratamientoOtx = async (req, res) => {
   cols.push("usuario_id"); ph.push("?"); vals.push(req.usuario?.id || null);
   cols.push("fecha_captura"); ph.push("NOW()");
   try {
-    const [r] = await pool.query(`INSERT INTO tratamiento_otx (${cols.join(",")}) VALUES (${ph.join(",")})`, vals);
+    const [r] = await req.db.query(`INSERT INTO tratamiento_otx (${cols.join(",")}) VALUES (${ph.join(",")})`, vals);
     res.status(201).json({ id: r.insertId });
   } catch (err) {
     console.error(err);
@@ -152,7 +151,7 @@ export const updateTratamientoOtx = async (req, res) => {
   if (!sets.length) return res.json({ updated: 0 });
   vals.push(otxId);
   try {
-    await pool.query(`UPDATE tratamiento_otx SET ${sets.join(",")} WHERE id=?`, vals);
+    await req.db.query(`UPDATE tratamiento_otx SET ${sets.join(",")} WHERE id=?`, vals);
     res.json({ updated: 1 });
   } catch (err) {
     console.error(err);
@@ -162,7 +161,7 @@ export const updateTratamientoOtx = async (req, res) => {
 
 export const deleteTratamientoOtx = async (req, res) => {
   try {
-    await pool.query("DELETE FROM tratamiento_otx WHERE id=?", [req.params.otxId]);
+    await req.db.query("DELETE FROM tratamiento_otx WHERE id=?", [req.params.otxId]);
     res.json({ deleted: 1 });
   } catch (err) {
     console.error(err);
@@ -179,7 +178,7 @@ async function siguienteId(conn, tabla) {
 export const createAjusteDosis = async (req, res) => {
   const { paciente_id } = req.params;
   const { fecha_ajuste, dosis_total_dia, dosis_total_kg_dia, detalle = [] } = req.body;
-  const conn = await pool.getConnection();
+  const conn = await req.db.getConnection();
   try {
     await conn.beginTransaction();
     const id = await siguienteId(conn, "tratamiento_ajuste_dosis");
@@ -210,7 +209,7 @@ export const createAjusteDosis = async (req, res) => {
 export const updateAjusteDosis = async (req, res) => {
   const { ajusteId } = req.params;
   const { fecha_ajuste, dosis_total_dia, dosis_total_kg_dia, detalle } = req.body;
-  const conn = await pool.getConnection();
+  const conn = await req.db.getConnection();
   try {
     await conn.beginTransaction();
     await conn.query(
@@ -242,7 +241,7 @@ export const updateAjusteDosis = async (req, res) => {
 };
 
 export const deleteAjusteDosis = async (req, res) => {
-  const conn = await pool.getConnection();
+  const conn = await req.db.getConnection();
   try {
     await conn.beginTransaction();
     await conn.query("DELETE FROM tratamiento_ajuste_dosis_detalle WHERE ajuste_id=?", [req.params.ajusteId]);

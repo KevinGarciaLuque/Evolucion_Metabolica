@@ -1,8 +1,7 @@
-import pool from "../../config/db.renaced.js";
 
 export const getAntecedentesGO = async (req, res) => {
   try {
-    const [rows] = await pool.query(
+    const [rows] = await req.db.query(
       "SELECT * FROM antecedentes_go WHERE paciente_id = ?",
       [req.params.paciente_id]
     );
@@ -31,7 +30,7 @@ export const saveAntecedentesGO = async (req, res) => {
     const ph     = cols.map(() => "?").join(",");
     const onDup  = cols.filter(c => c !== "paciente_id").map(c => `${c}=VALUES(${c})`).join(",");
 
-    await pool.query(
+    await req.db.query(
       `INSERT INTO antecedentes_go (${cols.join(",")}) VALUES (${ph}) ON DUPLICATE KEY UPDATE ${onDup}`,
       vals
     );

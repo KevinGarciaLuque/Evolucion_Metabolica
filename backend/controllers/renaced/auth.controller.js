@@ -43,13 +43,17 @@ export async function loginRenaced(req, res) {
 
 export async function meRenaced(req, res) {
   try {
-    const [rows] = await poolRenaced.query(
+    const [rows] = await req.db.query(
       "SELECT id, username, nombre_completo, email, perfil_id FROM usuario WHERE id = ? AND activo = 1",
       [req.usuario.id]
     );
     if (rows.length === 0) return res.status(404).json({ error: "Usuario no encontrado" });
     const u = rows[0];
-    res.json({ id: u.id, nombre: u.nombre_completo, email: u.email || u.username, perfil_id: u.perfil_id, tenant: "mx", tipo: "renaced" });
+    res.json({
+      id: u.id, nombre: u.nombre_completo, email: u.email || u.username, perfil_id: u.perfil_id,
+      tenant: req.usuario.tenant, tenant_nombre: req.usuario.tenant_nombre,
+      db_name: req.usuario.db_name, db_host: req.usuario.db_host, tipo: "renaced",
+    });
   } catch (err) {
     res.status(500).json({ error: "Error del servidor" });
   }

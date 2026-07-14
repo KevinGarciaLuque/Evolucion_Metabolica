@@ -1,6 +1,5 @@
 import XLSX from "xlsx";
 import PDFDocument from "pdfkit";
-import pool from "../../config/db.renaced.js";
 
 function formatDate(value) {
   if (!value) return "";
@@ -12,7 +11,7 @@ function formatDate(value) {
 // ── Excel (multi-hoja: Pacientes, Laboratorio, Consultas) ────────────────────
 export const exportarExcel = async (req, res) => {
   try {
-    const [pacientes] = await pool.query(`
+    const [pacientes] = await req.db.query(`
       SELECT p.expediente, p.ap_pat, p.ap_mat, p.nombre, p.sexo,
              p.fecha_nacimiento,
              TIMESTAMPDIFF(YEAR, p.fecha_nacimiento, CURDATE()) AS edad,
@@ -35,7 +34,7 @@ export const exportarExcel = async (req, res) => {
       ORDER BY p.ap_pat, p.nombre
     `);
 
-    const [laboratorio] = await pool.query(`
+    const [laboratorio] = await req.db.query(`
       SELECT CONCAT(p.ap_pat, ' ', IFNULL(p.ap_mat,''), ', ', p.nombre) AS paciente,
              p.expediente, l.fecha_muestra, l.hba1c, l.glucosa_ayuno,
              l.colesterol_total, l.hdl, l.ldl, l.trigliceridos, l.creatinina
@@ -45,7 +44,7 @@ export const exportarExcel = async (req, res) => {
       ORDER BY p.ap_pat, p.nombre
     `);
 
-    const [consultas] = await pool.query(`
+    const [consultas] = await req.db.query(`
       SELECT CONCAT(p.ap_pat, ' ', IFNULL(p.ap_mat,''), ', ', p.nombre) AS paciente,
              p.expediente, c.fecha_consulta, c.peso, c.estatura, c.imc,
              c.cintura, c.pa_sistolica, c.pa_diastolica
@@ -126,7 +125,7 @@ export const exportarExcel = async (req, res) => {
 // ── CSV (lista de pacientes) ─────────────────────────────────────────────────
 export const exportarCSV = async (req, res) => {
   try {
-    const [pacientes] = await pool.query(`
+    const [pacientes] = await req.db.query(`
       SELECT p.expediente, p.ap_pat, p.ap_mat, p.nombre, p.sexo,
              p.fecha_nacimiento,
              TIMESTAMPDIFF(YEAR, p.fecha_nacimiento, CURDATE()) AS edad,
@@ -180,7 +179,7 @@ export const exportarCSV = async (req, res) => {
 // ── PDF (reporte estadístico para la ALAD) ───────────────────────────────────
 export const exportarPDF = async (req, res) => {
   try {
-    const [[totales]] = await pool.query(`
+    const [[totales]] = await req.db.query(`
       SELECT COUNT(*) AS total,
              SUM(sexo = 'F') AS mujeres,
              SUM(sexo = 'M') AS hombres,
@@ -189,14 +188,14 @@ export const exportarPDF = async (req, res) => {
       FROM paciente
     `);
 
-    const [por_tipo] = await pool.query(`
+    const [por_tipo] = await req.db.query(`
       SELECT td.descripcion AS tipo, COUNT(*) AS total
       FROM diagnostico d
       JOIN cat_tipo_diabetes td ON td.id = d.tipo_diabetes_id
       GROUP BY td.id ORDER BY total DESC
     `);
 
-    const [[hba]] = await pool.query(`
+    const [[hba]] = await req.db.query(`
       SELECT
         SUM(hba1c < 7)             AS optimo,
         SUM(hba1c BETWEEN 7 AND 9) AS moderado,
@@ -208,7 +207,7 @@ export const exportarPDF = async (req, res) => {
         AND hba1c IS NOT NULL
     `);
 
-    const [complicaciones] = await pool.query(`
+    const [complicaciones] = await req.db.query(`
       SELECT
         COUNT(retinopatia_id)       AS con_retinopatia,
         COUNT(nefropatia_id)        AS con_nefropatia,

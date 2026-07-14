@@ -1,4 +1,3 @@
-import pool from "../../config/db.renaced.js";
 
 const CAMPOS_PERMITIDOS = [
   "fecha_diagnostico","fecha_approx","fecha_approx_anio","fecha_approx_mes",
@@ -28,7 +27,7 @@ const nullify = (v) => (v === "" || v === undefined ? null : v);
 export async function getDiagnostico(req, res) {
   try {
     const { pacienteId } = req.params;
-    const [[row]] = await pool.query(
+    const [[row]] = await req.db.query(
       `SELECT d.*,
               td.descripcion  AS tipo_diabetes,
               tdo.descripcion AS tipo_diabetes_otra,
@@ -69,7 +68,7 @@ export async function saveDiagnostico(req, res) {
 
     // Auto-calcular edad al diagnóstico
     if (body.fecha_diagnostico) {
-      const [[pac]] = await pool.query(
+      const [[pac]] = await req.db.query(
         `SELECT fecha_nacimiento FROM paciente WHERE id = ?`,
         [pacienteId]
       );
@@ -91,21 +90,21 @@ export async function saveDiagnostico(req, res) {
     const valores = camposEnviados.map((k) => nullify(body[k]));
     const userId  = req.usuario?.id || null;
 
-    const [[existing]] = await pool.query(
+    const [[existing]] = await req.db.query(
       `SELECT id FROM diagnostico WHERE paciente_id = ? LIMIT 1`,
       [pacienteId]
     );
 
     if (existing) {
       const sets = camposEnviados.map((k) => `${k} = ?`).join(", ");
-      await pool.query(
+      await req.db.query(
         `UPDATE diagnostico SET ${sets}, usuario_id = ? WHERE id = ?`,
         [...valores, userId, existing.id]
       );
     } else {
       const cols = ["paciente_id", ...camposEnviados, "usuario_id"].join(", ");
       const ph   = Array(camposEnviados.length + 2).fill("?").join(", ");
-      await pool.query(
+      await req.db.query(
         `INSERT INTO diagnostico (${cols}) VALUES (${ph})`,
         [pacienteId, ...valores, userId]
       );

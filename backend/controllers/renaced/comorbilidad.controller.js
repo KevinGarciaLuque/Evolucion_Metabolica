@@ -1,8 +1,7 @@
-import pool from "../../config/db.renaced.js";
 
 export const getComorbilidad = async (req, res) => {
   try {
-    const [rows] = await pool.query(
+    const [rows] = await req.db.query(
       `SELECT c.*,
         CASE c.retinopatia_tipo WHEN 1 THEN 'No proliferativa' WHEN 2 THEN 'Proliferativa' WHEN 3 THEN 'Macular' END AS retinopatia_tipo_label,
         CASE c.nefropatia_tipo  WHEN 1 THEN 'Microalbuminuria' WHEN 2 THEN 'Macroalbuminuria' WHEN 3 THEN 'IRC' END AS nefropatia_tipo_label,
@@ -21,7 +20,7 @@ export const saveComorbilidad = async (req, res) => {
   try {
     const { paciente_id } = req.params;
     const f = req.body;
-    await pool.query(
+    await req.db.query(
       `INSERT INTO comorbilidad (
         paciente_id,
         retinopatia, retinopatia_fecha, retinopatia_tipo, retinopatia_laser,

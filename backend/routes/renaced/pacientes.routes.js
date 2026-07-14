@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { verificarToken } from "../../middlewares/auth.js";
+import { resolverTenantDB } from "../../middlewares/tenantDb.js";
 import {
   getPacientes,
   getPacienteById,
@@ -9,7 +10,7 @@ import {
 
 const router = Router();
 
-router.use(verificarToken);
+router.use(verificarToken, resolverTenantDB);
 
 router.get("/",       getPacientes);
 router.get("/:id",    getPacienteById);

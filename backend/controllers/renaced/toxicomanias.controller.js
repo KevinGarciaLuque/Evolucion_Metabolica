@@ -1,8 +1,7 @@
-import pool from "../../config/db.renaced.js";
 
 export const getToxicomanias = async (req, res) => {
   try {
-    const [rows] = await pool.query(
+    const [rows] = await req.db.query(
       "SELECT * FROM toxicomanias WHERE paciente_id = ? ORDER BY fecha_captura DESC",
       [req.params.paciente_id]
     );
@@ -17,7 +16,7 @@ export const createToxicomanias = async (req, res) => {
   try {
     const { paciente_id } = req.params;
     const f = req.body;
-    const [result] = await pool.query(
+    const [result] = await req.db.query(
       `INSERT INTO toxicomanias (paciente_id, tabaco, alcohol, drogas, observaciones, usuario_id)
        VALUES (?,?,?,?,?,?)`,
       [
@@ -38,7 +37,7 @@ export const createToxicomanias = async (req, res) => {
 
 export const deleteToxicomanias = async (req, res) => {
   try {
-    await pool.query(
+    await req.db.query(
       "DELETE FROM toxicomanias WHERE id = ? AND paciente_id = ?",
       [req.params.id, req.params.paciente_id]
     );
