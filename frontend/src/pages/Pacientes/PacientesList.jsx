@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import api from "../../api/axios";
 import Layout from "../../components/Layout";
 import { IoLogoWhatsapp } from "react-icons/io";
@@ -14,6 +14,7 @@ import {
 
 export default function PacientesList() {
   const navigate  = useNavigate();
+  const location  = useLocation();
   const { soloLectura, usuario, institucion, setInstitucion } = useAuth();
   const [pacientes, setPacientes]   = useState([]);
   const [deptos, setDeptos]         = useState([]);
@@ -22,7 +23,13 @@ export default function PacientesList() {
     buscar: "", departamento: "", sexo: "", edad_min: "", edad_max: "", con_monitor: "",
   });
   const [mostrarFiltros, setMostrarFiltros] = useState(false);
-  const [clsVis, setClsVis] = useState({ OPTIMO: true, MODERADO: true, ALTO_RIESGO: true });
+  const [clsVis, setClsVis] = useState(() => {
+    const cls = new URLSearchParams(location.search).get("clasificacion");
+    if (["OPTIMO", "MODERADO", "ALTO_RIESGO"].includes(cls)) {
+      return { OPTIMO: cls === "OPTIMO", MODERADO: cls === "MODERADO", ALTO_RIESGO: cls === "ALTO_RIESGO" };
+    }
+    return { OPTIMO: true, MODERADO: true, ALTO_RIESGO: true };
+  });
   const [confirmEliminar, setConfirmEliminar] = useState(null);
   const institucionesDisponibles = Array.isArray(usuario?.instituciones_acceso) && usuario.instituciones_acceso.length
     ? usuario.instituciones_acceso

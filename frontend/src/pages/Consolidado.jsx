@@ -498,7 +498,12 @@ export default function Consolidado() {
             <p className="stat-label">GMI Promedio grupo</p>
           </div>
         </motion.div>
-        <motion.div className="stat-card stat-card-green" variants={fadeUp} {...hoverCard}>
+        <motion.div
+          className="stat-card stat-card-green" variants={fadeUp} {...hoverCard}
+          onClick={() => navigate("/pacientes?clasificacion=OPTIMO")}
+          role="button" tabIndex={0} style={{ cursor: "pointer" }}
+          onKeyDown={(e) => { if (e.key === "Enter") navigate("/pacientes?clasificacion=OPTIMO"); }}
+        >
           <div className="stat-icon">✅</div>
           <div>
             <p className="stat-value">
@@ -507,7 +512,12 @@ export default function Consolidado() {
             <p className="stat-label">En control óptimo</p>
           </div>
         </motion.div>
-        <motion.div className="stat-card stat-card-orange" variants={fadeUp} {...hoverCard}>
+        <motion.div
+          className="stat-card stat-card-orange" variants={fadeUp} {...hoverCard}
+          onClick={() => navigate("/pacientes?clasificacion=MODERADO")}
+          role="button" tabIndex={0} style={{ cursor: "pointer" }}
+          onKeyDown={(e) => { if (e.key === "Enter") navigate("/pacientes?clasificacion=MODERADO"); }}
+        >
           <div className="stat-icon">🟡</div>
           <div>
             <p className="stat-value">
@@ -516,7 +526,12 @@ export default function Consolidado() {
             <p className="stat-label">Moderado</p>
           </div>
         </motion.div>
-        <motion.div className="stat-card stat-card-red" variants={fadeUp} {...hoverCard}>
+        <motion.div
+          className="stat-card stat-card-red" variants={fadeUp} {...hoverCard}
+          onClick={() => navigate("/pacientes?clasificacion=ALTO_RIESGO")}
+          role="button" tabIndex={0} style={{ cursor: "pointer" }}
+          onKeyDown={(e) => { if (e.key === "Enter") navigate("/pacientes?clasificacion=ALTO_RIESGO"); }}
+        >
           <div className="stat-icon">⚠️</div>
           <div>
             <p className="stat-value">
