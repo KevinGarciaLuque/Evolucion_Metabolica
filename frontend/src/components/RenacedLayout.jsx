@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate, NavLink } from "react-router-dom";
 import { useRenacedAuth } from "../context/RenacedAuthContext";
+import { useAuth } from "../context/AuthContext";
 import {
   HiOutlineArrowRightOnRectangle, HiChevronDown,
   HiOutlineSquares2X2, HiOutlineUsers, HiOutlineDocumentArrowDown,
@@ -8,6 +9,7 @@ import {
   HiOutlineClipboardDocumentList,
 } from "react-icons/hi2";
 import FlagIcon from "./FlagIcon";
+import Layout from "./Layout";
 import "./Layout.css";
 import "./Sidebar.css";
 
@@ -28,8 +30,10 @@ export default function RenacedLayout({ children }) {
   const [collapsed, setCollapsed]     = useState(() => localStorage.getItem("renaced_sidebar_collapsed") === "true");
   const [menuOpen, setMenuOpen]       = useState(false);
   const { usuario, logout }           = useRenacedAuth();
+  const { usuario: usuarioSuperAdmin } = useAuth();
   const navigate                      = useNavigate();
   const menuRef                       = useRef(null);
+  const esSuperAdmin                  = usuarioSuperAdmin?.rol === "SUPER_ADMIN" || !!usuario?.super_admin;
 
   const modulosActivos = Array.isArray(usuario?.modulos) ? usuario.modulos : null;
   const menuBaseVisible  = MENU_BASE.filter((m) => !modulosActivos || modulosActivos.includes(m.clave));
@@ -46,6 +50,13 @@ export default function RenacedLayout({ children }) {
   function handleLogout() {
     logout();
     navigate("/login");
+  }
+
+  // El Super Admin navega con el sidebar único (Sidebar.jsx), que ya lista
+  // Honduras y todos los países RENACED juntos — así nunca "sale" a un
+  // sidebar aparte al entrar a un país.
+  if (esSuperAdmin) {
+    return <Layout>{children}</Layout>;
   }
 
   return (

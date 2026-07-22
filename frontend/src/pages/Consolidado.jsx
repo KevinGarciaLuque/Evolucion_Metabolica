@@ -173,11 +173,13 @@ export default function Consolidado() {
     return true;
   });
 
-  const promedioTIR = filtrados.length
-    ? (filtrados.reduce((s, a) => s + Number(a.tir || 0), 0) / filtrados.length).toFixed(1)
+  const conTIR = filtrados.filter((a) => a.tir != null && a.tir !== "");
+  const promedioTIR = conTIR.length
+    ? (conTIR.reduce((s, a) => s + Number(a.tir), 0) / conTIR.length).toFixed(1)
     : "—";
-  const promedioGMI = filtrados.length
-    ? (filtrados.reduce((s, a) => s + Number(a.gmi || 0), 0) / filtrados.length).toFixed(2)
+  const conGMI = filtrados.filter((a) => a.gmi != null && a.gmi !== "");
+  const promedioGMI = conGMI.length
+    ? (conGMI.reduce((s, a) => s + Number(a.gmi), 0) / conGMI.length).toFixed(2)
     : "—";
 
   // ── Computar todos los datos de gráficos desde filtrados ──────────────
@@ -499,6 +501,15 @@ export default function Consolidado() {
               <CountUp end={filtrados.filter((a) => a.clasificacion === "OPTIMO").length} duration={1.2} />
             </p>
             <p className="stat-label">En control óptimo</p>
+          </div>
+        </motion.div>
+        <motion.div className="stat-card stat-card-orange" variants={fadeUp}>
+          <div className="stat-icon">🟡</div>
+          <div>
+            <p className="stat-value">
+              <CountUp end={filtrados.filter((a) => a.clasificacion === "MODERADO").length} duration={1.2} />
+            </p>
+            <p className="stat-label">Moderado</p>
           </div>
         </motion.div>
         <motion.div className="stat-card stat-card-red" variants={fadeUp}>

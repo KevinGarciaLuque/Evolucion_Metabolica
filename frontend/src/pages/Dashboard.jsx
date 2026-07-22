@@ -357,6 +357,7 @@ export default function Dashboard() {
         <StatCard icon="👥" label="Total Pacientes"  value={stats?.total_pacientes ?? 0}  rawValue={stats?.total_pacientes ?? 0}  color="blue"   suffix="" />
         <StatCard icon="📊" label="TIR Promedio"     value={stats?.tir_promedio ?? 0}     rawValue={stats?.tir_promedio ?? 0}     color={stats?.tir_promedio >= 70 ? "green" : "orange"} suffix="%" />
         <StatCard icon="🟢" label="En Control"       value={stats?.en_control ?? 0}       rawValue={stats?.en_control ?? 0}       color="green"  suffix="" />
+        <StatCard icon="🟡" label="Moderado"         value={stats?.moderado ?? 0}         rawValue={stats?.moderado ?? 0}         color="orange" suffix="" />
         <StatCard icon="🔴" label="Alto Riesgo"      value={stats?.alto_riesgo ?? 0}      rawValue={stats?.alto_riesgo ?? 0}      color="red"    suffix="" />
         <StatCard icon="🩸" label="Glucosa Promedio" value={stats?.glucosa_promedio ?? 0} rawValue={stats?.glucosa_promedio ?? 0} color="purple" suffix=" mg/dL" />
         <StatCard icon="📋" label="Total Análisis"   value={stats?.total_analisis ?? 0}   rawValue={stats?.total_analisis ?? 0}   color="blue"   suffix="" />

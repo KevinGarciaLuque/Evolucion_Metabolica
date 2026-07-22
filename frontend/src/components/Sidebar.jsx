@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useRenacedAuth } from "../context/RenacedAuthContext";
-import { impersonarTenant } from "../api/adminApi";
+import { impersonarTenant, getTenants } from "../api/adminApi";
 import FlagIcon from "./FlagIcon";
 import {
   HiOutlineSquares2X2,
@@ -41,7 +41,9 @@ const menuHonduras = [
   { to: "/auditoria",          icon: HiOutlineShieldCheck,            label: "Auditoría",        modulo: "auditoria", rol: "admin"},
 ];
 
-const menuRenacedMx = [
+// Menú RENACED — igual para cualquier país (el tenant se decide por impersonación,
+// no por la URL), así que un país nuevo lo hereda automáticamente.
+const menuRenaced = [
   { to: "/renaced/dashboard",  icon: HiOutlineSquares2X2,             label: "Dashboard" },
   { to: "/renaced/pacientes",  icon: HiOutlineClipboardDocumentList,  label: "Pacientes" },
   { to: "/renaced/consultas",  icon: HiOutlineBookOpen,               label: "Consultas" },
@@ -67,6 +69,19 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
   const location = useLocation();
   const esSuperAdmin = usuario?.rol === "SUPER_ADMIN";
   const [entrandoTenant, setEntrandoTenant] = useState(null);
+  const [paisesRenaced, setPaisesRenaced] = useState([]);
+
+  useEffect(() => {
+    if (!esSuperAdmin) return;
+    getTenants()
+      .then(({ data }) => {
+        const activos = (Array.isArray(data) ? data : []).filter(
+          (t) => t.codigo !== "hn" && t.activo
+        );
+        setPaisesRenaced(activos);
+      })
+      .catch(() => setPaisesRenaced([]));
+  }, [esSuperAdmin]);
 
   async function entrarComoSuperAdmin(codigo, to) {
     try {
@@ -200,7 +215,15 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
               {renderSeccion("SUPER ADMIN")}
               {renderLink({ to: "/admin/panel", icon: HiOutlineGlobeAmericas, label: "Panel Admin" })}
               {renderGrupo("honduras", "HONDURAS · SAAPD", itemsHonduras, renderLink, "hn")}
-              {renderGrupo("mexico", "MÉXICO · RENACED", menuRenacedMx, (item) => renderLinkTenant(item, "mx"), "mx")}
+              {paisesRenaced.map((t) =>
+                renderGrupo(
+                  t.codigo,
+                  `${t.nombre.toUpperCase()} · RENACED`,
+                  menuRenaced,
+                  (item) => renderLinkTenant(item, t.codigo),
+                  t.codigo
+                )
+              )}
             </>
           ) : (
             <>
