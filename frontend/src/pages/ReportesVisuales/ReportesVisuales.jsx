@@ -3,10 +3,16 @@ import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Cell,
   LineChart, Line, Legend,
 } from "recharts";
+import { motion } from "framer-motion";
 import Layout from "../../components/Layout";
 import api from "../../api/axios";
 import { useAuth } from "../../context/AuthContext";
 import InstSelector from "../../components/InstSelector";
+
+const hoverCard = {
+  whileHover: { y: -6, scale: 1.03, boxShadow: "0 14px 28px rgba(0,0,0,0.14)", transition: { type: "spring", stiffness: 320, damping: 22 } },
+  whileTap: { scale: 0.98 },
+};
 
 function descargarBlob(blob, filename) {
   const url = window.URL.createObjectURL(blob);
@@ -181,11 +187,11 @@ export default function ReportesVisuales() {
       </div>
 
       <div className="stats-grid">
-        <div className="stat-card stat-card-blue"><div><p className="stat-value">{kpis.total}</p><p className="stat-label">Total análisis</p></div></div>
-        <div className="stat-card stat-card-green"><div><p className="stat-value">{kpis.pacientesUnicos}</p><p className="stat-label">Pacientes únicos</p></div></div>
-        <div className="stat-card stat-card-orange"><div><p className="stat-value">{kpis.tir}%</p><p className="stat-label">TIR promedio</p></div></div>
-        <div className="stat-card stat-card-purple"><div><p className="stat-value">{kpis.gmi}%</p><p className="stat-label">GMI promedio</p></div></div>
-        <div className="stat-card stat-card-red"><div><p className="stat-value">{kpis.pctOptimos}%</p><p className="stat-label">% en óptimo</p></div></div>
+        <motion.div className="stat-card stat-card-blue" {...hoverCard}><div><p className="stat-value">{kpis.total}</p><p className="stat-label">Total análisis</p></div></motion.div>
+        <motion.div className="stat-card stat-card-green" {...hoverCard}><div><p className="stat-value">{kpis.pacientesUnicos}</p><p className="stat-label">Pacientes únicos</p></div></motion.div>
+        <motion.div className="stat-card stat-card-orange" {...hoverCard}><div><p className="stat-value">{kpis.tir}%</p><p className="stat-label">TIR promedio</p></div></motion.div>
+        <motion.div className="stat-card stat-card-purple" {...hoverCard}><div><p className="stat-value">{kpis.gmi}%</p><p className="stat-label">GMI promedio</p></div></motion.div>
+        <motion.div className="stat-card stat-card-red" {...hoverCard}><div><p className="stat-value">{kpis.pctOptimos}%</p><p className="stat-label">% en óptimo</p></div></motion.div>
       </div>
 
       <div className="dashboard-row">

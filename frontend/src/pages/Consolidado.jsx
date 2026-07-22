@@ -123,6 +123,10 @@ function TooltipGrupoEtario({ active, payload, label }) {
 
 const fadeUp = { hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0 } };
 const stagger = { show: { transition: { staggerChildren: 0.08 } } };
+const hoverCard = {
+  whileHover: { y: -6, scale: 1.03, boxShadow: "0 14px 28px rgba(0,0,0,0.14)", transition: { type: "spring", stiffness: 320, damping: 22 } },
+  whileTap: { scale: 0.98 },
+};
 
 const GRUPOS_ORDER = ["0-5 años", "6-9 años", "10-12 años", "13-17 años", "18+ años"];
 function grupoEtario(edad) {
@@ -465,14 +469,14 @@ export default function Consolidado() {
 
       {/* Métricas del grupo filtrado */}
       <motion.div className="stats-grid" style={{ marginBottom: 24 }} variants={stagger} initial="hidden" animate="show">
-        <motion.div className="stat-card stat-card-blue" variants={fadeUp}>
+        <motion.div className="stat-card stat-card-blue" variants={fadeUp} {...hoverCard}>
           <div className="stat-icon">📋</div>
           <div>
             <p className="stat-value"><CountUp end={filtrados.length} duration={1.2} /></p>
             <p className="stat-label">Análisis seleccionados</p>
           </div>
         </motion.div>
-        <motion.div className="stat-card stat-card-green" variants={fadeUp}>
+        <motion.div className="stat-card stat-card-green" variants={fadeUp} {...hoverCard}>
           <div className="stat-icon">📊</div>
           <div>
             <p className="stat-value">
@@ -483,7 +487,7 @@ export default function Consolidado() {
             <p className="stat-label">TIR Promedio grupo</p>
           </div>
         </motion.div>
-        <motion.div className="stat-card stat-card-orange" variants={fadeUp}>
+        <motion.div className="stat-card stat-card-orange" variants={fadeUp} {...hoverCard}>
           <div className="stat-icon">🔬</div>
           <div>
             <p className="stat-value">
@@ -494,7 +498,7 @@ export default function Consolidado() {
             <p className="stat-label">GMI Promedio grupo</p>
           </div>
         </motion.div>
-        <motion.div className="stat-card stat-card-green" variants={fadeUp}>
+        <motion.div className="stat-card stat-card-green" variants={fadeUp} {...hoverCard}>
           <div className="stat-icon">✅</div>
           <div>
             <p className="stat-value">
@@ -503,7 +507,7 @@ export default function Consolidado() {
             <p className="stat-label">En control óptimo</p>
           </div>
         </motion.div>
-        <motion.div className="stat-card stat-card-orange" variants={fadeUp}>
+        <motion.div className="stat-card stat-card-orange" variants={fadeUp} {...hoverCard}>
           <div className="stat-icon">🟡</div>
           <div>
             <p className="stat-value">
@@ -512,7 +516,7 @@ export default function Consolidado() {
             <p className="stat-label">Moderado</p>
           </div>
         </motion.div>
-        <motion.div className="stat-card stat-card-red" variants={fadeUp}>
+        <motion.div className="stat-card stat-card-red" variants={fadeUp} {...hoverCard}>
           <div className="stat-icon">⚠️</div>
           <div>
             <p className="stat-value">

@@ -708,7 +708,12 @@ function Pie3DChart({ data, isMobile }) {
 function StatCard({ icon, label, rawValue, color, suffix }) {
   const isFloat = !Number.isInteger(Number(rawValue));
   return (
-    <motion.div className={`stat-card stat-card-${color}`} variants={fadeUp}>
+    <motion.div
+      className={`stat-card stat-card-${color}`}
+      variants={fadeUp}
+      whileHover={{ y: -6, scale: 1.03, boxShadow: "0 14px 28px rgba(0,0,0,0.14)", transition: { type: "spring", stiffness: 320, damping: 22 } }}
+      whileTap={{ scale: 0.98 }}
+    >
       <div className="stat-icon">{icon}</div>
       <div>
         <p className="stat-value">

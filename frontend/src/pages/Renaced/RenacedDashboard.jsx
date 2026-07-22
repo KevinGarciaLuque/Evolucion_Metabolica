@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
 import RenacedLayout from "../../components/RenacedLayout";
 import FlagIcon from "../../components/FlagIcon";
 import { useRenacedAuth } from "../../context/RenacedAuthContext";
@@ -8,6 +9,11 @@ import {
   CartesianGrid, Tooltip, Cell, PieChart, Pie, Legend,
   LineChart, Line, Area, AreaChart,
 } from "recharts";
+
+const hoverCard = {
+  whileHover: { y: -6, scale: 1.03, boxShadow: "0 14px 28px rgba(0,0,0,0.14)", transition: { type: "spring", stiffness: 320, damping: 22 } },
+  whileTap: { scale: 0.98 },
+};
 
 /* ── Paleta ─────────────────────────────────────────────────────────────── */
 const C = {
@@ -32,14 +38,17 @@ const PIE_CONTROL  = [
 /* ── KPI Card ────────────────────────────────────────────────────────────── */
 function KpiCard({ label, value, sub, accent = C.violet, icon }) {
   return (
-    <div style={{
-      background: "#fff",
-      borderRadius: 14,
-      padding: "20px 20px 16px",
-      boxShadow: "0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04)",
-      borderLeft: `4px solid ${accent}`,
-      display: "flex", flexDirection: "column", gap: 4,
-    }}>
+    <motion.div
+      style={{
+        background: "#fff",
+        borderRadius: 14,
+        padding: "20px 20px 16px",
+        boxShadow: "0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04)",
+        borderLeft: `4px solid ${accent}`,
+        display: "flex", flexDirection: "column", gap: 4,
+      }}
+      {...hoverCard}
+    >
       <div style={{ fontSize: 11, fontWeight: 600, color: C.slate, textTransform: "uppercase", letterSpacing: "0.07em" }}>
         {label}
       </div>
@@ -50,7 +59,7 @@ function KpiCard({ label, value, sub, accent = C.violet, icon }) {
         {icon && <span style={{ fontSize: 22, marginBottom: 2, opacity: 0.5 }}>{icon}</span>}
       </div>
       {sub && <div style={{ fontSize: 12, color: "#94a3b8", lineHeight: 1.3 }}>{sub}</div>}
-    </div>
+    </motion.div>
   );
 }
 
