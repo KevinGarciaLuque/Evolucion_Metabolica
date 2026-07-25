@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import RenacedLayout from "../../components/RenacedLayout";
 import FlagIcon from "../../components/FlagIcon";
@@ -36,9 +37,10 @@ const PIE_CONTROL  = [
 ];
 
 /* ── KPI Card ────────────────────────────────────────────────────────────── */
-function KpiCard({ label, value, sub, accent = C.violet, icon }) {
+function KpiCard({ label, value, sub, accent = C.violet, icon, onClick }) {
   return (
     <motion.div
+      onClick={onClick}
       style={{
         background: "#fff",
         borderRadius: 14,
@@ -46,6 +48,7 @@ function KpiCard({ label, value, sub, accent = C.violet, icon }) {
         boxShadow: "0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04)",
         borderLeft: `4px solid ${accent}`,
         display: "flex", flexDirection: "column", gap: 4,
+        cursor: onClick ? "pointer" : "default",
       }}
       {...hoverCard}
     >
@@ -101,6 +104,7 @@ const tipStyle = { fontSize: 12, borderRadius: 10, boxShadow: "0 4px 16px rgba(0
 /* ══════════════════════════════════════════════════════════════════════════ */
 export default function RenacedDashboard() {
   const { usuario } = useRenacedAuth();
+  const navigate = useNavigate();
   const [data, setData]         = useState(null);
   const [cargando, setCargando] = useState(true);
   const [error, setError]       = useState(null);
@@ -147,6 +151,17 @@ export default function RenacedDashboard() {
           sub={`${totales.nuevos_anio?.toLocaleString()} en el año`} />
         <KpiCard label="Sin consulta +6 meses"  value={totales.sin_consulta?.toLocaleString()}    accent={C.amber}  icon="⚠️"
           sub="Requieren seguimiento" />
+      </div>
+
+      {/* ── Estatus de pacientes ─────────────────────────────────────────── */}
+      <SLabel>Estatus de Pacientes</SLabel>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(175px, 1fr))", gap: 12 }}>
+        <KpiCard label="Activos"    value={totales.activos?.toLocaleString()}    accent={C.green} icon="✅"
+          sub="Ver pacientes" onClick={() => navigate("/renaced/pacientes?estatus_id=1")} />
+        <KpiCard label="De Baja"    value={totales.baja?.toLocaleString()}       accent={C.red}   icon="⛔"
+          sub="Ver pacientes" onClick={() => navigate("/renaced/pacientes?estatus_id=2")} />
+        <KpiCard label="Inactivos"  value={totales.inactivos?.toLocaleString()}  accent={C.amber} icon="💤"
+          sub="Ver pacientes" onClick={() => navigate("/renaced/pacientes?estatus_id=3")} />
       </div>
 
       {/* ── Control glucémico ────────────────────────────────────────────── */}

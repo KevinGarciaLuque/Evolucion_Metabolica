@@ -1,33 +1,49 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import RenacedLayout from "../../components/RenacedLayout";
 import FlagIcon from "../../components/FlagIcon";
 import { useRenacedAuth } from "../../context/RenacedAuthContext";
 import { getPacientes } from "../../api/renacedApi";
 import { HiOutlineMagnifyingGlass, HiOutlineFunnel, HiOutlineUserPlus } from "react-icons/hi2";
 
+const ESTATUS_LABEL = { 1: "Activo", 2: "Baja", 3: "Inactivo" };
+const ESTATUS_COLOR = {
+  1: { bg: "#dcfce7", color: "#166534" },
+  2: { bg: "#fee2e2", color: "#991b1b" },
+  3: { bg: "#fef9c3", color: "#854d0e" },
+};
+
 export default function RenacedPacientesList() {
   const { usuario } = useRenacedAuth();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [pacientes, setPacientes] = useState([]);
   const [cargando, setCargando]   = useState(true);
   const [total, setTotal]         = useState(0);
   const [page, setPage]           = useState(1);
   const [busqueda, setBusqueda]   = useState("");
   const [filtroSexo, setFiltroSexo] = useState("");
+  const [filtroEstatus, setFiltroEstatus] = useState(searchParams.get("estatus_id") || "");
   const limit = 25;
 
   useEffect(() => {
     setCargando(true);
     const params = { page, limit };
-    if (busqueda)   params.busqueda  = busqueda;
-    if (filtroSexo) params.sexo      = filtroSexo;
+    if (busqueda)      params.busqueda   = busqueda;
+    if (filtroSexo)    params.sexo       = filtroSexo;
+    if (filtroEstatus) params.estatus_id = filtroEstatus;
 
     getPacientes(params)
       .then((r) => { setPacientes(r.data.data); setTotal(r.data.total); })
       .catch(() => setPacientes([]))
       .finally(() => setCargando(false));
-  }, [page, busqueda, filtroSexo]);
+  }, [page, busqueda, filtroSexo, filtroEstatus]);
+
+  function handleFiltroEstatus(value) {
+    setFiltroEstatus(value);
+    setPage(1);
+    setSearchParams(value ? { estatus_id: value } : {});
+  }
 
   // Debounce búsqueda
   const [inputBusqueda, setInputBusqueda] = useState("");
@@ -86,6 +102,16 @@ export default function RenacedPacientesList() {
               <option value="F">Mujeres</option>
               <option value="M">Hombres</option>
             </select>
+            <select
+              value={filtroEstatus}
+              onChange={(e) => handleFiltroEstatus(e.target.value)}
+              style={{ minWidth: 110 }}
+            >
+              <option value="">Todos los estatus</option>
+              <option value="1">Activo</option>
+              <option value="2">Baja</option>
+              <option value="3">Inactivo</option>
+            </select>
           </div>
         </div>
       </div>
@@ -114,6 +140,7 @@ export default function RenacedPacientesList() {
                   <th className="hide-mobile">Edad</th>
                   <th className="hide-mobile">Tipo DM</th>
                   <th className="hide-mobile">Unidad</th>
+                  <th>Estatus</th>
                   <th>Acciones</th>
                 </tr>
               </thead>
@@ -149,6 +176,19 @@ export default function RenacedPacientesList() {
                       {p.unidad || "—"}
                     </td>
                     <td>
+                      {(() => {
+                        const ec = ESTATUS_COLOR[p.estatus_id] || { bg: "#f1f5f9", color: "#475569" };
+                        return (
+                          <span style={{
+                            padding: "2px 10px", borderRadius: 20, fontSize: 12, fontWeight: 600,
+                            background: ec.bg, color: ec.color,
+                          }}>
+                            {p.estatus || ESTATUS_LABEL[p.estatus_id] || "—"}
+                          </span>
+                        );
+                      })()}
+                    </td>
+                    <td>
                       <div className="acciones">
                         <button className="btn btn-sm btn-outline" onClick={() => navigate(`/renaced/pacientes/${p.id}`)}>Ver</button>
                         <button className="btn btn-sm btn-outline" onClick={() => navigate(`/renaced/pacientes/${p.id}/editar`)}>Editar</button>
@@ -158,7 +198,7 @@ export default function RenacedPacientesList() {
                 ))}
                 {!cargando && pacientes.length === 0 && (
                   <tr>
-                    <td colSpan={9} className="empty-cell">No se encontraron pacientes</td>
+                    <td colSpan={10} className="empty-cell">No se encontraron pacientes</td>
                   </tr>
                 )}
               </tbody>

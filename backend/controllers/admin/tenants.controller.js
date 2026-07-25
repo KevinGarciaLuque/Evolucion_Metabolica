@@ -170,7 +170,7 @@ export const impersonarTenant = async (req, res) => {
       tipo: "renaced",
       super_admin: true,
     };
-    const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "4h" });
+    const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "12h" });
 
     await pool.query(
       `INSERT INTO auditoria_global (tenant_id, usuario_id, rol, accion, detalle)

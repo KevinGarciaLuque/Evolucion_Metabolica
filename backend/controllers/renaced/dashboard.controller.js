@@ -12,6 +12,8 @@ export const getResumen = async (req, res) => {
         SUM(p.sexo = 'F')                    AS mujeres,
         SUM(p.sexo = 'M')                    AS hombres,
         SUM(p.estatus_id = 1)                AS activos,
+        SUM(p.estatus_id = 2)                AS baja,
+        SUM(p.estatus_id = 3)                AS inactivos,
         SUM(p.fecha_alta >= DATE_SUB(NOW(), INTERVAL 30 DAY))  AS nuevos_30d,
         SUM(p.fecha_alta >= DATE_SUB(NOW(), INTERVAL 365 DAY)) AS nuevos_anio
        FROM paciente p ${filtro}`,
