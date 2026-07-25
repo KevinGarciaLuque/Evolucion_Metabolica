@@ -7,6 +7,10 @@ export const getPacientes    = (params)  => api.get(`${BASE}/pacientes`, { param
 export const getPaciente     = (id)      => api.get(`${BASE}/pacientes/${id}`);
 export const createPaciente  = (data)    => api.post(`${BASE}/pacientes`, data);
 export const updatePaciente  = (id, data) => api.put(`${BASE}/pacientes/${id}`, data);
+export const checkCurpPaciente = (curp, excludeId) => api.get(
+  `${BASE}/pacientes/check-curp/${encodeURIComponent(curp)}`,
+  excludeId ? { params: { exclude_id: excludeId } } : undefined
+);
 
 // ── Diagnóstico clínico ───────────────────────────────────────────────────────
 export const getDiagnosticoClinico  = (pacId)       => api.get(`${BASE}/diagnostico/${pacId}`);
@@ -50,6 +54,9 @@ export const createEducacion   = (pacId, data) => api.post(`${BASE}/pacientes/${
 
 // ── Dashboard ─────────────────────────────────────────────────────────────────
 export const getDashboardResumen = (params) => api.get(`${BASE}/dashboard/resumen`, { params });
+
+// ── Mapa ──────────────────────────────────────────────────────────────────────
+export const getMapaPacientes = () => api.get(`${BASE}/mapa`);
 
 // ── Catálogos ─────────────────────────────────────────────────────────────────
 export const getCatalogosEvaluacion = () => api.get(`${BASE}/catalogos/evaluacion`);

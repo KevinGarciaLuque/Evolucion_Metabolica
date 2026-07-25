@@ -1,7 +1,7 @@
 
 export const getPacientes = async (req, res) => {
   try {
-    const { busqueda, unidad_id, estatus_id, page = 1, limit = 20 } = req.query;
+    const { busqueda, unidad_id, estatus_id, estado_residencia, municipio_residencia, page = 1, limit = 20 } = req.query;
     const offset = (parseInt(page) - 1) * parseInt(limit);
 
     let where = "WHERE 1=1";
@@ -14,6 +14,8 @@ export const getPacientes = async (req, res) => {
     }
     if (unidad_id)  { where += " AND p.unidad_servicio_id = ?"; params.push(unidad_id); }
     if (estatus_id) { where += " AND p.estatus_id = ?";        params.push(estatus_id); }
+    if (estado_residencia)     { where += " AND p.estado_residencia = ?";     params.push(estado_residencia); }
+    if (municipio_residencia) { where += " AND p.municipio_residencia = ?"; params.push(municipio_residencia); }
 
     const [rows] = await req.db.query(
       `SELECT p.id, p.expediente, p.iniciales, p.nombre, p.ap_pat, p.ap_mat,
@@ -44,6 +46,28 @@ export const getPacientes = async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Error al obtener pacientes" });
+  }
+};
+
+export const checkCurp = async (req, res) => {
+  try {
+    const curp = String(req.params.curp || "").toUpperCase().trim();
+    const excludeId = req.query.exclude_id ? Number(req.query.exclude_id) : null;
+    if (curp.length < 4) return res.json({ existe: false });
+
+    const [[paciente]] = await req.db.query(
+      `SELECT id, nombre, ap_pat, ap_mat, curp
+       FROM paciente
+       WHERE curp = ? ${excludeId ? "AND id != ?" : ""}
+       LIMIT 1`,
+      excludeId ? [curp, excludeId] : [curp]
+    );
+
+    if (!paciente) return res.json({ existe: false });
+    res.json({ existe: true, paciente });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Error al validar CURP" });
   }
 };
 

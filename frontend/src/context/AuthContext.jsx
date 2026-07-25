@@ -74,6 +74,12 @@ export function AuthProvider({ children }) {
       return { _tipo: "renaced", token: data.token, usuario: data.usuario };
     }
 
+    // Un login nuevo del panel principal invalida cualquier sesión de
+    // impersonación RENACED anterior — si no se limpia, el sidebar reutiliza
+    // un renaced_token viejo (ya vencido) en vez de pedir uno nuevo.
+    localStorage.removeItem("renaced_token");
+    localStorage.removeItem("renaced_usuario");
+
     localStorage.setItem("token", data.token);
     localStorage.setItem("usuario", JSON.stringify(data.usuario));
     setUsuario(data.usuario);

@@ -48,6 +48,7 @@ const menuRenaced = [
   { to: "/renaced/pacientes",  icon: HiOutlineClipboardDocumentList,  label: "Pacientes" },
   { to: "/renaced/consultas",  icon: HiOutlineBookOpen,               label: "Consultas" },
   { to: "/renaced/reportes",   icon: HiOutlineDocumentArrowDown,      label: "Reportes"  },
+  { to: "/renaced/mapa",       icon: HiOutlineMapPin,                 label: "Mapa"      },
   { to: "/renaced/usuarios",   icon: HiOutlineUserGroup,              label: "Usuarios"  },
 ];
 

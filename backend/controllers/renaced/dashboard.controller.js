@@ -75,6 +75,28 @@ export const getResumen = async (req, res) => {
       params
     );
 
+    // ── Calidad de datos ────────────────────────────────────────────────────
+    const [[calidad_datos]] = await req.db.query(
+      `SELECT
+        COUNT(*)                                                     AS total,
+        SUM(p.expediente IS NOT NULL AND p.expediente <> '')         AS con_expediente,
+        SUM(p.unidad_servicio_id IS NOT NULL)                        AS con_unidad,
+        SUM(EXISTS (
+          SELECT 1 FROM diagnostico d
+          WHERE d.paciente_id = p.id
+            AND (d.anti_gad IS NOT NULL OR d.anti_ia2 IS NOT NULL
+                 OR d.anti_islotes IS NOT NULL OR d.anti_zct8 IS NOT NULL)
+        ))                                                            AS con_autoanticuerpos,
+        SUM(EXISTS (
+          SELECT 1 FROM laboratorio l
+          WHERE l.paciente_id = p.id
+            AND l.hba1c IS NOT NULL
+            AND l.fecha_muestra >= DATE_SUB(NOW(), INTERVAL 6 MONTH)
+        ))                                                            AS con_hba1c_reciente
+       FROM paciente p ${filtro}`,
+      params
+    );
+
     // ── Distribución por edad al diagnóstico ────────────────────────────────
     const [edad_dx] = await req.db.query(
       `SELECT
@@ -132,6 +154,7 @@ export const getResumen = async (req, res) => {
 
     res.json({
       totales: { ...totales, sin_consulta },
+      calidad_datos,
       por_tipo,
       control_hba1c,
       edad_dx,

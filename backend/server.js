@@ -43,6 +43,7 @@ import renacedToxicomaniasRoutes   from "./routes/renaced/toxicomanias.routes.js
 import renacedReclasificacionRoutes from "./routes/renaced/reclasificacion.routes.js";
 import renacedEmbarazoRoutes       from "./routes/renaced/embarazo.routes.js";
 import renacedImportarBDRoutes     from "./routes/renaced/importarBD.routes.js";
+import renacedMapaRoutes           from "./routes/renaced/mapa.routes.js";
 
 // ── Super Admin ALAD (base de datos alad_master) ─────────────────────────────
 import adminTenantsRoutes from "./routes/admin/tenants.routes.js";
@@ -112,6 +113,7 @@ app.use("/api/renaced/pacientes/:paciente_id/toxicomanias",  renacedToxicomanias
 app.use("/api/renaced/pacientes/:paciente_id/reclasificacion", renacedReclasificacionRoutes);
 app.use("/api/renaced/pacientes/:paciente_id/embarazos",     renacedEmbarazoRoutes);
 app.use("/api/renaced/importar-bd",                          renacedImportarBDRoutes);
+app.use("/api/renaced/mapa",                                 renacedMapaRoutes);
 
 // ── Rutas Super Admin ALAD (prefijo /api/admin — DB alad_master) ──────────
 app.use("/api/admin/tenants", adminTenantsRoutes);

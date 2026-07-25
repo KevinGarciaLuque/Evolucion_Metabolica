@@ -37,6 +37,7 @@ import RenacedUsuarioForm     from "./pages/Renaced/RenacedUsuarioForm";
 import RenacedConsultasHub    from "./pages/Renaced/RenacedConsultasHub";
 import RenacedConsultasClinical from "./pages/Renaced/RenacedConsultasClinical";
 import RenacedImportarBD      from "./pages/Renaced/RenacedImportarBD";
+import RenacedMapaPacientes   from "./pages/Renaced/RenacedMapaPacientes";
 
 function App() {
   return (
@@ -76,6 +77,7 @@ function App() {
             <Route path="/renaced/consultas"              element={<RenacedProtectedRoute><RenacedConsultasHub /></RenacedProtectedRoute>} />
             <Route path="/renaced/consultas/:pacienteId" element={<RenacedProtectedRoute><RenacedConsultasClinical /></RenacedProtectedRoute>} />
             <Route path="/renaced/reportes"               element={<RenacedProtectedRoute><RenacedReportes /></RenacedProtectedRoute>} />
+            <Route path="/renaced/mapa"                   element={<RenacedProtectedRoute><RenacedMapaPacientes /></RenacedProtectedRoute>} />
             <Route path="/renaced/usuarios"              element={<RenacedProtectedRoute adminOnly><RenacedUsuariosList /></RenacedProtectedRoute>} />
             <Route path="/renaced/usuarios/nuevo"        element={<RenacedProtectedRoute adminOnly><RenacedUsuarioForm /></RenacedProtectedRoute>} />
             <Route path="/renaced/usuarios/:id/editar"   element={<RenacedProtectedRoute adminOnly><RenacedUsuarioForm /></RenacedProtectedRoute>} />

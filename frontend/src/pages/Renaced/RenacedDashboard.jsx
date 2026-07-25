@@ -119,12 +119,17 @@ export default function RenacedDashboard() {
   if (cargando) return <RenacedLayout><div className="loading">Cargando datos RENACED…</div></RenacedLayout>;
   if (error)    return <RenacedLayout><div className="card" style={{ color: "#dc2626", padding: 24 }}>{error}</div></RenacedLayout>;
 
-  const { totales, por_tipo, control_hba1c, edad_dx, nuevos_por_mes, top_unidades, hba1c_recientes, eventos_resumen } = data;
+  const { totales, calidad_datos, por_tipo, control_hba1c, edad_dx, nuevos_por_mes, top_unidades, hba1c_recientes, eventos_resumen } = data;
 
   const pieControl = PIE_CONTROL.map(p => ({ ...p, value: Number(control_hba1c[p.key] || 0) }));
   const pct = (n) => control_hba1c.total_medidos
     ? `${Math.round(n * 100 / control_hba1c.total_medidos)}% del total`
     : "";
+
+  const pctCalidad = (n) => calidad_datos?.total
+    ? Math.round(n * 100 / calidad_datos.total)
+    : 0;
+  const colorCalidad = (p) => (p >= 80 ? C.green : p >= 50 ? C.amber : C.red);
 
   return (
     <RenacedLayout>
@@ -163,6 +168,27 @@ export default function RenacedDashboard() {
         <KpiCard label="Inactivos"  value={totales.inactivos?.toLocaleString()}  accent={C.amber} icon="💤"
           sub="Ver pacientes" onClick={() => navigate("/renaced/pacientes?estatus_id=3")} />
       </div>
+
+      {/* ── Calidad de datos ─────────────────────────────────────────────── */}
+      {calidad_datos && (
+        <>
+          <SLabel>Calidad de Datos</SLabel>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(175px, 1fr))", gap: 12 }}>
+            {[
+              { label: "Con Expediente",       n: calidad_datos.con_expediente,       icon: "🗂️" },
+              { label: "Con Unidad Médica",     n: calidad_datos.con_unidad,           icon: "🏥" },
+              { label: "Con Autoanticuerpos",   n: calidad_datos.con_autoanticuerpos,  icon: "🧬" },
+              { label: "HbA1c en últimos 6m",   n: calidad_datos.con_hba1c_reciente,   icon: "🩸" },
+            ].map(({ label, n, icon }) => {
+              const p = pctCalidad(n);
+              return (
+                <KpiCard key={label} label={label} value={`${p}%`} accent={colorCalidad(p)} icon={icon}
+                  sub={`${Number(n).toLocaleString()} de ${calidad_datos.total.toLocaleString()} pacientes`} />
+              );
+            })}
+          </div>
+        </>
+      )}
 
       {/* ── Control glucémico ────────────────────────────────────────────── */}
       <SLabel>Control Glucémico (HbA1c — último resultado por paciente)</SLabel>

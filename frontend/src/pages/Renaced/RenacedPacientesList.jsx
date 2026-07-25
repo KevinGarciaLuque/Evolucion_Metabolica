@@ -24,20 +24,31 @@ export default function RenacedPacientesList() {
   const [busqueda, setBusqueda]   = useState("");
   const [filtroSexo, setFiltroSexo] = useState("");
   const [filtroEstatus, setFiltroEstatus] = useState(searchParams.get("estatus_id") || "");
+  const filtroEstado     = searchParams.get("estado_residencia") || "";
+  const filtroMunicipio  = searchParams.get("municipio_residencia") || "";
   const limit = 25;
 
   useEffect(() => {
     setCargando(true);
     const params = { page, limit };
-    if (busqueda)      params.busqueda   = busqueda;
-    if (filtroSexo)    params.sexo       = filtroSexo;
-    if (filtroEstatus) params.estatus_id = filtroEstatus;
+    if (busqueda)         params.busqueda             = busqueda;
+    if (filtroSexo)       params.sexo                 = filtroSexo;
+    if (filtroEstatus)    params.estatus_id           = filtroEstatus;
+    if (filtroEstado)     params.estado_residencia    = filtroEstado;
+    if (filtroMunicipio)  params.municipio_residencia = filtroMunicipio;
 
     getPacientes(params)
       .then((r) => { setPacientes(r.data.data); setTotal(r.data.total); })
       .catch(() => setPacientes([]))
       .finally(() => setCargando(false));
-  }, [page, busqueda, filtroSexo, filtroEstatus]);
+  }, [page, busqueda, filtroSexo, filtroEstatus, filtroEstado, filtroMunicipio]);
+
+  function limpiarFiltroZona() {
+    const next = new URLSearchParams(searchParams);
+    next.delete("estado_residencia");
+    next.delete("municipio_residencia");
+    setSearchParams(next);
+  }
 
   function handleFiltroEstatus(value) {
     setFiltroEstatus(value);
@@ -77,6 +88,22 @@ export default function RenacedPacientesList() {
           <HiOutlineUserPlus size={16} /> Nuevo Paciente
         </Link>
       </div>
+
+      {(filtroEstado || filtroMunicipio) && (
+        <div style={{
+          display: "flex", alignItems: "center", gap: 8, marginBottom: 12,
+          fontSize: 13, color: "#4338ca", background: "#eef2ff",
+          border: "1px solid #c7d2fe", borderRadius: 20, padding: "6px 14px", width: "fit-content",
+        }}>
+          📍 Filtrando por zona geográfica (desde el mapa)
+          <button
+            onClick={limpiarFiltroZona}
+            style={{ border: "none", background: "none", color: "#4338ca", cursor: "pointer", fontWeight: 700 }}
+          >
+            ✕
+          </button>
+        </div>
+      )}
 
       {/* Filtros */}
       <div className="card filtros-card">

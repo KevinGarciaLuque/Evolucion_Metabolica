@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import RenacedLayout from "../../components/RenacedLayout";
 import FlagIcon from "../../components/FlagIcon";
-import { getPaciente, createPaciente, updatePaciente } from "../../api/renacedApi";
+import { getPaciente, createPaciente, updatePaciente, checkCurpPaciente } from "../../api/renacedApi";
 
 const ESTADOS_MX = [
   "AGS","BC","BCS","CAMP","COAH","COL","CHIS","CHIH","CDMX","DGO",
@@ -34,8 +34,8 @@ const DM_COLOR = {
 
 const ESTATUS = [
   { id: 1, label: "Activo",   color: "#16a34a" },
-  { id: 2, label: "Inactivo", color: "#d97706" },
-  { id: 3, label: "Baja",     color: "#dc2626" },
+  { id: 2, label: "Baja",     color: "#dc2626" },
+  { id: 3, label: "Inactivo", color: "#d97706" },
 ];
 
 const INIT = {
@@ -68,6 +68,9 @@ export default function RenacedPacienteForm() {
   const [guardando, setGuardando]   = useState(false);
   const [error, setError]           = useState(null);
   const [inicialesAuto, setInicialesAuto] = useState(true);
+  const [curpDuplicado, setCurpDuplicado] = useState(null); // { id, nombre, ap_pat, ap_mat } | null
+  const [confirmaCurpDuplicado, setConfirmaCurpDuplicado] = useState(false);
+  const [verificandoCurp, setVerificandoCurp] = useState(false);
 
   useEffect(() => {
     if (!esEdicion) return;
@@ -128,6 +131,22 @@ export default function RenacedPacienteForm() {
     setForm((f) => ({ ...f, iniciales: e.target.value.toUpperCase() }));
   }
 
+  async function verificarCurp() {
+    const curp = form.curp.trim();
+    setCurpDuplicado(null);
+    setConfirmaCurpDuplicado(false);
+    if (curp.length < 18) return;
+    setVerificandoCurp(true);
+    try {
+      const { data } = await checkCurpPaciente(curp, esEdicion ? id : null);
+      if (data.existe) setCurpDuplicado(data.paciente);
+    } catch {
+      // si falla la verificación, no bloqueamos el flujo
+    } finally {
+      setVerificandoCurp(false);
+    }
+  }
+
   async function guardar(e) {
     e.preventDefault();
     if (!form.tipo_diabetes_id) {
@@ -136,6 +155,10 @@ export default function RenacedPacienteForm() {
     }
     if (String(form.tipo_diabetes_id) === "4" && !form.tipo_diabetes_otra_id) {
       setError("Selecciona el subtipo de diabetes");
+      return;
+    }
+    if (curpDuplicado && !confirmaCurpDuplicado) {
+      setError("Ya existe un paciente con este CURP. Confirma que quieres registrarlo de todas formas, o revisa el expediente existente.");
       return;
     }
     setError(null);
@@ -260,12 +283,39 @@ export default function RenacedPacienteForm() {
                 name="curp"
                 value={form.curp}
                 onChange={cambiar}
+                onBlur={verificarCurp}
                 maxLength={18}
                 style={{ textTransform: "uppercase", fontFamily: "monospace", letterSpacing: "0.05em" }}
                 placeholder="XXXX000000XXXXXXXX"
               />
+              {verificandoCurp && (
+                <span style={{ fontSize: 12, color: "#94a3b8" }}>Verificando…</span>
+              )}
             </Campo>
           </div>
+
+          {curpDuplicado && (
+            <div style={{
+              marginTop: 16, padding: "12px 16px", borderRadius: 8,
+              background: "#fffbeb", border: "1px solid #fde68a", color: "#92400e",
+              display: "flex", flexDirection: "column", gap: 8,
+            }}>
+              <div>
+                ⚠️ Ya existe un paciente con este CURP: <strong>{curpDuplicado.nombre} {curpDuplicado.ap_pat} {curpDuplicado.ap_mat || ""}</strong>.{" "}
+                <Link to={`/renaced/pacientes/${curpDuplicado.id}`} target="_blank" style={{ color: "#92400e", textDecoration: "underline" }}>
+                  Ver expediente existente
+                </Link>
+              </div>
+              <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", fontSize: 13 }}>
+                <input
+                  type="checkbox"
+                  checked={confirmaCurpDuplicado}
+                  onChange={(e) => setConfirmaCurpDuplicado(e.target.checked)}
+                />
+                Confirmo que es un paciente distinto y quiero registrarlo de todas formas
+              </label>
+            </div>
+          )}
         </div>
 
         {/* ── Datos Socioeconómicos ────────────────────────────────────────── */}

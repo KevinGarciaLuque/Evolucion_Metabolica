@@ -77,7 +77,7 @@ function ModalAcercaDe({ onClose, origin }) {
 
 export default function Login() {
   const { login }            = useAuth();
-  const { setSession }       = useRenacedAuth();
+  const { setSession, logout: logoutRenaced } = useRenacedAuth();
   const navigate             = useNavigate();
   const [form, setForm]       = useState({ email: "", password: "" });
   const [error, setError]     = useState("");
@@ -110,6 +110,9 @@ export default function Login() {
       if (result?._tipo === "renaced") {
         setSession(result.token, result.usuario);
         navigate("/renaced/dashboard");
+      } else if (result?.rol === "SUPER_ADMIN") {
+        logoutRenaced(); // limpia cualquier sesión RENACED impersonada previa (ya vencida)
+        navigate("/admin/panel");
       } else {
         navigate("/dashboard");
       }

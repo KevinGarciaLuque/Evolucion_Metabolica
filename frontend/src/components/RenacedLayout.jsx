@@ -6,7 +6,7 @@ import {
   HiOutlineArrowRightOnRectangle, HiChevronDown,
   HiOutlineSquares2X2, HiOutlineUsers, HiOutlineDocumentArrowDown,
   HiChevronLeft, HiChevronRight, HiOutlineUserGroup,
-  HiOutlineClipboardDocumentList, HiOutlineDocumentArrowUp,
+  HiOutlineClipboardDocumentList, HiOutlineDocumentArrowUp, HiOutlineMapPin,
 } from "react-icons/hi2";
 import FlagIcon from "./FlagIcon";
 import Layout from "./Layout";
@@ -18,6 +18,7 @@ const MENU_BASE = [
   { to: "/renaced/pacientes",  clave: "pacientes", icon: HiOutlineUsers,                  label: "Pacientes" },
   { to: "/renaced/consultas",  clave: "consultas", icon: HiOutlineClipboardDocumentList,  label: "Consultas" },
   { to: "/renaced/reportes",   clave: "reportes",  icon: HiOutlineDocumentArrowDown,      label: "Reportes"  },
+  { to: "/renaced/mapa",       clave: "mapa",      icon: HiOutlineMapPin,                 label: "Mapa"      },
 ];
 const MENU_ADMIN = [
   { to: "/renaced/usuarios",  clave: "usuarios", icon: HiOutlineUserGroup,         label: "Usuarios"  },
