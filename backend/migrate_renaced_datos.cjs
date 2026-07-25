@@ -1,5 +1,5 @@
 // migrate_renaced_datos.cjs
-// ETL: migra datos de renaced1test (schema PHP original) → renaced_mexico (schema moderno)
+// ETL: migra datos de renaced1 (schema PHP original) → renaced_mexico (schema moderno)
 // Ejecutar desde la carpeta backend: node migrate_renaced_datos.cjs
 
 const mysql = require("mysql2/promise");
@@ -11,7 +11,7 @@ const CFG_ORIGEN = {
   port:     3306,
   user:     "root",
   password: "123456789",
-  database: "renaced1test",
+  database: "renaced1",
 };
 
 // ── Destino: Railway (o local si cambias las vars) ────────────────────────────
@@ -21,6 +21,9 @@ const CFG_DESTINO = {
   user:     process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.RENACED_MX_DB_NAME || "renaced_mexico",
+  enableKeepAlive: true,
+  keepAliveInitialDelay: 10000,
+  connectTimeout: 20000,
 };
 
 async function migrar() {
@@ -163,7 +166,7 @@ async function migrar() {
     try {
       await destino.query(
         `INSERT INTO diagnostico (
-          paciente_id, tipo_diabetes_id, tipo_diabetes_otra_id,
+          id, paciente_id, tipo_diabetes_id, tipo_diabetes_otra_id,
           fecha_diagnostico, fecha_approx, fecha_approx_anio, fecha_approx_mes,
           peso, estatura, imc, pa_sistolica, pa_diastolica,
           cetoacidosis, cetoacidosis_ph, cetoacidosis_bicarbonato,
@@ -178,8 +181,13 @@ async function migrar() {
           dispositivo_id, institucion_id,
           tipo_mody, confirmacion_genetica, mutacion,
           fecha_captura
-        ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+        ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+        ON DUPLICATE KEY UPDATE
+          tipo_diabetes_id = VALUES(tipo_diabetes_id),
+          fecha_diagnostico = VALUES(fecha_diagnostico),
+          hba1c = VALUES(hba1c)`,
         [
+          d.paciente_cve, // id — alineado 1:1 con paciente_id (1 diagnóstico por paciente)
           d.paciente_cve,
           d.tipo_diabetes_cve       || null,
           d.tipo_diabetes_otras_cve || null,
@@ -358,7 +366,7 @@ async function migrar() {
 
   console.log("════════════════════════════════════════");
   console.log("✅  Migración completada exitosamente.");
-  console.log("    Todos los datos de renaced1test");
+  console.log("    Todos los datos de renaced1");
   console.log(`    están ahora en ${CFG_DESTINO.database}`);
   console.log("════════════════════════════════════════\n");
 }

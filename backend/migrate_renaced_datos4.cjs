@@ -5,7 +5,7 @@
 const mysql = require("mysql2/promise");
 require("dotenv").config({ path: require("path").join(__dirname, ".env") });
 
-const CFG_ORIGEN = { host: "localhost", port: 3306, user: "root", password: "123456789", database: "renaced1test" };
+const CFG_ORIGEN = { host: "localhost", port: 3306, user: "root", password: "123456789", database: "renaced1" };
 const CFG_DESTINO = {
   host: process.env.DB_HOST, port: process.env.DB_PORT,
   user: process.env.DB_USER, password: process.env.DB_PASSWORD,
@@ -70,11 +70,16 @@ async function migrar() {
       "INSERT IGNORE INTO cat_causa_cambio_tx (id,descripcion) VALUES",
       ccct.map(r => [r.causa_cambio_tx_cve, r.causa_cambio_tx_descripcion]));
 
-    // cat_terapia_gest — solo (id, descripcion)
-    const [ctg] = await o.query("SELECT * FROM cat_terapia_gest");
-    n += await insertBatch(d,
-      "INSERT IGNORE INTO cat_terapia_gest (id,descripcion) VALUES",
-      ctg.map(r => [r.terapia_cve, r.terapia_descripcion]));
+    // cat_terapia_gest — solo (id, descripcion). No todas las exportaciones traen esta tabla.
+    const [tgTables] = await o.query("SHOW TABLES LIKE 'cat_terapia_gest'");
+    if (tgTables.length) {
+      const [ctg] = await o.query("SELECT * FROM cat_terapia_gest");
+      n += await insertBatch(d,
+        "INSERT IGNORE INTO cat_terapia_gest (id,descripcion) VALUES",
+        ctg.map(r => [r.terapia_cve, r.terapia_descripcion]));
+    } else {
+      console.log("   ℹ️  Tabla cat_terapia_gest no existe en origen, omitiendo");
+    }
 
     console.log(`   ✅ ${n} registros en catálogos\n`);
   }

@@ -1,6 +1,6 @@
 // migrate_renaced_mexico.cjs
 // Crea la base de datos renaced_mexico con el schema completo del sistema RENACED
-// Basado en el análisis de renaced1test.sql (67 tablas originales en PHP/MariaDB)
+// Basado en el análisis de renaced1.sql (67 tablas originales en PHP/MariaDB)
 // Ejecutar: node backend/migrate_renaced_mexico.cjs
 
 const mysql = require("mysql2/promise");

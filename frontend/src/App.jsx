@@ -36,6 +36,7 @@ import RenacedUsuariosList    from "./pages/Renaced/RenacedUsuariosList";
 import RenacedUsuarioForm     from "./pages/Renaced/RenacedUsuarioForm";
 import RenacedConsultasHub    from "./pages/Renaced/RenacedConsultasHub";
 import RenacedConsultasClinical from "./pages/Renaced/RenacedConsultasClinical";
+import RenacedImportarBD      from "./pages/Renaced/RenacedImportarBD";
 
 function App() {
   return (
@@ -78,6 +79,7 @@ function App() {
             <Route path="/renaced/usuarios"              element={<RenacedProtectedRoute adminOnly><RenacedUsuariosList /></RenacedProtectedRoute>} />
             <Route path="/renaced/usuarios/nuevo"        element={<RenacedProtectedRoute adminOnly><RenacedUsuarioForm /></RenacedProtectedRoute>} />
             <Route path="/renaced/usuarios/:id/editar"   element={<RenacedProtectedRoute adminOnly><RenacedUsuarioForm /></RenacedProtectedRoute>} />
+            <Route path="/renaced/importar-bd"           element={<RenacedProtectedRoute adminOnly><RenacedImportarBD /></RenacedProtectedRoute>} />
 
             {/* ── Admin ───────────────────────────────────────────────── */}
             <Route path="/admin/panel" element={<ProtectedRoute><AdminPanel /></ProtectedRoute>} />

@@ -1,6 +1,6 @@
 // migrate_renaced_diagnostico_full.cjs
 // Backfill: completa TODOS los campos clínicos de `diagnostico` en renaced_mexico
-// a partir de la tabla origen renaced1test.diagnostico.
+// a partir de la tabla origen renaced1.diagnostico.
 // Hace UPDATE sobre los registros existentes (1 diagnóstico por paciente, ids alineados).
 // Ejecutar desde backend:  node migrate_renaced_diagnostico_full.cjs
 
@@ -8,7 +8,7 @@ const mysql = require("mysql2/promise");
 require("dotenv").config({ path: require("path").join(__dirname, ".env") });
 
 const CFG_ORIGEN = {
-  host: "localhost", port: 3306, user: "root", password: "123456789", database: "renaced1test",
+  host: "localhost", port: 3306, user: "root", password: "123456789", database: "renaced1",
 };
 const CFG_DESTINO = {
   host: process.env.DB_HOST,

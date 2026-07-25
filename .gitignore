@@ -68,3 +68,8 @@ frontend/dist/
 *.sql
 *.sqlite
 *.db
+
+# =========================
+# 📜 PROYECTO PHP ANTERIOR (referencia local, no subir)
+# =========================
+backend/RENACED PHP/

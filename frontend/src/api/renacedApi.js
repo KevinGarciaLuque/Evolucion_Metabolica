@@ -99,6 +99,16 @@ export const createEmbarazo  = (pacId, data)     => api.post(`${BASE}/pacientes/
 export const updateEmbarazo  = (pacId, id, data) => api.put(`${BASE}/pacientes/${pacId}/embarazos/${id}`, data);
 export const deleteEmbarazo  = (pacId, id)       => api.delete(`${BASE}/pacientes/${pacId}/embarazos/${id}`);
 
+// ── Importar base de datos (solo Admin, solo México) ─────────────────────────
+export const importarBaseDatosMexico = (archivo) => {
+  const formData = new FormData();
+  formData.append("archivo", archivo);
+  return api.post(`${BASE}/importar-bd`, formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+    timeout: 5 * 60 * 1000,
+  });
+};
+
 // ── Reportes / Exportación ────────────────────────────────────────────────────
 export const descargarExcel = () => api.get(`${BASE}/reportes/excel`, { responseType: "blob" });
 export const descargarCSV   = () => api.get(`${BASE}/reportes/csv`,   { responseType: "blob" });

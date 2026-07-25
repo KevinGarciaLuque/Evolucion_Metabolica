@@ -219,7 +219,9 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
                 renderGrupo(
                   t.codigo,
                   `${t.nombre.toUpperCase()} · RENACED`,
-                  menuRenaced,
+                  t.codigo === "mx"
+                    ? [...menuRenaced, { to: "/renaced/importar-bd", icon: HiOutlineDocumentArrowUp, label: "Importar BD" }]
+                    : menuRenaced,
                   (item) => renderLinkTenant(item, t.codigo),
                   t.codigo
                 )

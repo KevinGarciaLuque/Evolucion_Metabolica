@@ -7,7 +7,7 @@ const mysql = require("mysql2/promise");
 require("dotenv").config({ path: require("path").join(__dirname, ".env") });
 
 const CFG_ORIGEN = {
-  host: "localhost", port: 3306, user: "root", password: "123456789", database: "renaced1test",
+  host: "localhost", port: 3306, user: "root", password: "123456789", database: "renaced1",
 };
 const CFG_DESTINO = {
   host: process.env.DB_HOST,

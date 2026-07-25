@@ -6,7 +6,7 @@ import {
   HiOutlineArrowRightOnRectangle, HiChevronDown,
   HiOutlineSquares2X2, HiOutlineUsers, HiOutlineDocumentArrowDown,
   HiChevronLeft, HiChevronRight, HiOutlineUserGroup,
-  HiOutlineClipboardDocumentList,
+  HiOutlineClipboardDocumentList, HiOutlineDocumentArrowUp,
 } from "react-icons/hi2";
 import FlagIcon from "./FlagIcon";
 import Layout from "./Layout";
@@ -37,7 +37,14 @@ export default function RenacedLayout({ children }) {
 
   const modulosActivos = Array.isArray(usuario?.modulos) ? usuario.modulos : null;
   const menuBaseVisible  = MENU_BASE.filter((m) => !modulosActivos || modulosActivos.includes(m.clave));
-  const menuAdminVisible = MENU_ADMIN.filter((m) => !modulosActivos || modulosActivos.includes(m.clave));
+  let menuAdminVisible = MENU_ADMIN.filter((m) => !modulosActivos || modulosActivos.includes(m.clave));
+  // Importar base de datos: exclusivo de México, no aplica a otros países RENACED.
+  if (usuario?.tenant === "mx") {
+    menuAdminVisible = [
+      ...menuAdminVisible,
+      { to: "/renaced/importar-bd", clave: "importar_bd", icon: HiOutlineDocumentArrowUp, label: "Importar BD" },
+    ];
+  }
 
   useEffect(() => {
     function handleClick(e) {
