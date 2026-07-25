@@ -1,0 +1,257 @@
+/* ═══ Panel Super Admin — estilo elegante ═══════════════════════════════ */
+
+.admin-panel {
+  padding: 28px 24px 48px;
+  max-width: 1240px;
+  margin: 0 auto;
+}
+
+/* ─── Header ─────────────────────────────────────────────────────────── */
+.admin-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 55%, #1d4ed8 100%);
+  border-radius: 18px;
+  padding: 26px 30px;
+  margin-bottom: 26px;
+  box-shadow: 0 10px 30px -10px rgba(29, 78, 216, 0.45);
+  position: relative;
+  overflow: hidden;
+}
+
+.admin-hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 88% -10%, rgba(255,255,255,0.14), transparent 55%);
+  pointer-events: none;
+}
+
+.admin-hero-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #93c5fd;
+  margin-bottom: 6px;
+}
+
+.admin-hero h1 {
+  margin: 0;
+  font-size: 1.55rem;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -0.01em;
+}
+
+.admin-hero p {
+  margin: 4px 0 0;
+  color: #cbd5f5;
+  font-size: 13px;
+}
+
+.admin-hero .btn-primary {
+  background: #fff;
+  color: #1d4ed8;
+  border-radius: 10px;
+  font-weight: 700;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.18);
+}
+.admin-hero .btn-primary:hover { background: #eff6ff; }
+
+/* ─── Stat cards ─────────────────────────────────────────────────────── */
+.admin-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 16px;
+  margin-bottom: 26px;
+}
+
+.stat-tile {
+  background: #fff;
+  border-radius: 14px;
+  border: 1px solid var(--gray-200);
+  padding: 18px 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  transition: transform 0.16s ease, box-shadow 0.16s ease;
+}
+
+.stat-tile:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px -10px rgba(15, 23, 42, 0.18);
+}
+
+.stat-tile-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.stat-tile-label {
+  margin: 0;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--gray-400);
+}
+
+.stat-tile-value {
+  margin: 3px 0 0;
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: var(--gray-900);
+  line-height: 1;
+}
+
+.stat-tile-sub {
+  margin: 4px 0 0;
+  font-size: 11.5px;
+  color: var(--gray-400);
+  font-weight: 600;
+}
+
+/* ─── Search ─────────────────────────────────────────────────────────── */
+.admin-search {
+  position: relative;
+  margin-bottom: 22px;
+  max-width: 420px;
+}
+
+.admin-search svg {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--gray-400);
+}
+
+.admin-search input {
+  width: 100%;
+  padding: 11px 14px 11px 40px;
+  border-radius: 11px;
+  border: 1.5px solid var(--gray-200);
+  font-size: 13.5px;
+  background: #fff;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.admin-search input:focus {
+  outline: none;
+  border-color: #93c5fd;
+  box-shadow: 0 0 0 4px rgba(29, 78, 216, 0.1);
+}
+
+/* ─── Grid de países ─────────────────────────────────────────────────── */
+.admin-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+  gap: 18px;
+}
+
+.tenant-card {
+  background: #fff;
+  border-radius: 16px;
+  border: 1px solid var(--gray-200);
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
+}
+
+.tenant-card::before {
+  content: "";
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 4px;
+  background: var(--tenant-accent, var(--gray-200));
+}
+
+.tenant-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 16px 32px -16px rgba(15, 23, 42, 0.22);
+  border-color: #dbeafe;
+}
+
+.tenant-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.tenant-card-id {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.tenant-flag-wrap {
+  width: 44px;
+  height: 44px;
+  border-radius: 11px;
+  background: linear-gradient(155deg, #eef2ff, #e0e7ff);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  overflow: hidden;
+  border: 1px solid #e0e7ff;
+}
+
+.tenant-name { margin: 0; font-weight: 700; font-size: 15.5px; color: var(--gray-900); }
+.tenant-hash { margin: 2px 0 0; font-size: 11.5px; color: var(--gray-400); font-weight: 600; }
+
+.tenant-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  padding: 4px 11px;
+  border-radius: 20px;
+  font-size: 11.5px;
+  font-weight: 700;
+}
+.tenant-status.on  { background: #dcfce7; color: #16a34a; }
+.tenant-status.off { background: #fee2e2; color: #dc2626; }
+
+.tenant-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 14px 0 12px;
+}
+
+.tenant-db-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 16px;
+  font-size: 11.5px;
+  color: var(--gray-400);
+  font-family: 'Cascadia Code', 'Consolas', monospace;
+}
+
+.tenant-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  padding-top: 14px;
+  border-top: 1px solid var(--gray-100);
+}
+
+.tenant-actions .btn { border-radius: 8px; }
+.tenant-actions .btn-icon { padding: 7px 9px; }

@@ -8,7 +8,9 @@ import {
   HiOutlineGlobeAmericas, HiOutlinePlusCircle, HiOutlinePencilSquare,
   HiOutlineCheckCircle, HiOutlineXCircle, HiOutlineUsers, HiOutlineMagnifyingGlass,
   HiOutlineChartBar, HiOutlineTrash, HiOutlinePower, HiOutlineLockOpen,
+  HiOutlineCircleStack, HiOutlineSparkles,
 } from "react-icons/hi2";
+import "./AdminPanel.css";
 
 // Catálogo de módulos disponibles por tipo de sistema (según el sidebar real de cada país)
 const MODULOS_HONDURAS = [
@@ -30,6 +32,7 @@ const MODULOS_RENACED = [
   { clave: "dashboard",  nombre: "Dashboard" },
   { clave: "pacientes",  nombre: "Pacientes" },
   { clave: "consultas",  nombre: "Consultas" },
+  { clave: "mapa",       nombre: "Mapa" },
   { clave: "reportes",   nombre: "Reportes" },
   { clave: "usuarios",   nombre: "Usuarios" },
 ];
@@ -225,48 +228,45 @@ export default function AdminPanel() {
 
   return (
     <Layout>
-      <div style={{ padding: "24px 20px", maxWidth: 1200, margin: "0 auto" }}>
+      <div className="admin-panel">
 
         {/* ── Header ─────────────────────────────────────────────────────── */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24, flexWrap: "wrap", gap: 12 }}>
+        <div className="admin-hero">
           <div>
-            <h1 style={{ margin: 0, fontSize: "1.4rem", fontWeight: 700 }}>Panel Super Admin</h1>
-            <p style={{ margin: "4px 0 0", color: "#64748b", fontSize: 13 }}>Gestión de países / instancias RENACED</p>
+            <span className="admin-hero-eyebrow"><HiOutlineSparkles size={13} /> Super Admin</span>
+            <h1>Panel de Instancias</h1>
+            <p>Gestión de países / instancias RENACED</p>
           </div>
-          <button className="btn btn-primary" onClick={abrirCrear} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <button className="btn btn-primary" onClick={abrirCrear} style={{ display: "flex", alignItems: "center", gap: 6, position: "relative", zIndex: 1 }}>
             <HiOutlinePlusCircle size={18} /> Nuevo País
           </button>
         </div>
 
         {/* ── Tarjetas resumen global ─────────────────────────────────────── */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 14, marginBottom: 24 }}>
-          <StatCard icon={<HiOutlineGlobeAmericas size={22} color="#6366f1" />} label="Países activos"
-            value={tenants.filter((t) => t.activo).length} color="#eef2ff" />
-          <StatCard icon={<HiOutlineUsers size={22} color="#0891b2" />} label="Total pacientes (global)"
-            value={cargando ? "…" : totalPacientes.toLocaleString()} color="#ecfeff" />
+        <div className="admin-stats">
+          <StatCard icon={<HiOutlineGlobeAmericas size={21} color="#4f46e5" />} label="Países activos"
+            value={tenants.filter((t) => t.activo).length} bg="linear-gradient(155deg,#eef2ff,#e0e7ff)" />
+          <StatCard icon={<HiOutlineUsers size={21} color="#0891b2" />} label="Total pacientes (global)"
+            value={cargando ? "…" : totalPacientes.toLocaleString()} bg="linear-gradient(155deg,#ecfeff,#cffafe)" />
           {stats.map((s) => (
             <StatCard key={s.codigo}
               icon={<FlagIcon codigo={s.codigo} size={20} />}
               label={s.pais}
               value={s.error ? "Sin conexión" : (s.total_pacientes || 0).toLocaleString()}
               sub={s.error ? undefined : `${s.mujeres || 0}F · ${s.hombres || 0}M`}
-              color={s.error ? "#fef2f2" : "#f0fdf4"}
+              bg={s.error ? "linear-gradient(155deg,#fef2f2,#fee2e2)" : "linear-gradient(155deg,#f0fdf4,#dcfce7)"}
             />
           ))}
         </div>
 
         {/* ── Buscador ──────────────────────────────────────────────────── */}
-        <div style={{ position: "relative", marginBottom: 20, maxWidth: 420 }}>
-          <HiOutlineMagnifyingGlass size={18} color="#94a3b8" style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)" }} />
+        <div className="admin-search">
+          <HiOutlineMagnifyingGlass size={18} />
           <input
             type="text"
             placeholder="Buscar país por nombre o código…"
             value={busqueda}
             onChange={(e) => setBusqueda(e.target.value)}
-            style={{
-              width: "100%", padding: "10px 12px 10px 38px", borderRadius: 10,
-              border: "1px solid #e2e8f0", fontSize: 14, background: "#fff",
-            }}
           />
         </div>
 
@@ -278,52 +278,43 @@ export default function AdminPanel() {
             No hay países que coincidan con la búsqueda
           </div>
         ) : (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 16 }}>
+          <div className="admin-grid">
             {tenantsFiltrados.map((t) => (
-              <div key={t.id} className="card" style={{ padding: 18 }}>
-                <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                    <div style={{
-                      width: 42, height: 42, borderRadius: 10, background: "#eef2ff",
-                      display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, overflow: "hidden",
-                    }}>
+              <div key={t.id} className="tenant-card" style={{ "--tenant-accent": t.activo ? "#22c55e" : "#ef4444" }}>
+                <div className="tenant-card-top">
+                  <div className="tenant-card-id">
+                    <div className="tenant-flag-wrap">
                       <FlagIcon codigo={t.codigo} size={24} />
                     </div>
                     <div>
-                      <p style={{ margin: 0, fontWeight: 700, fontSize: 15 }}>{t.nombre}</p>
-                      <p style={{ margin: "2px 0 0", fontSize: 12, color: "#94a3b8" }}>#{t.id}</p>
+                      <p className="tenant-name">{t.nombre}</p>
+                      <p className="tenant-hash">#{t.id}</p>
                     </div>
                   </div>
-                  <span style={{
-                    display: "inline-flex", alignItems: "center", gap: 4, whiteSpace: "nowrap",
-                    padding: "3px 10px", borderRadius: 20, fontSize: 12, fontWeight: 600,
-                    background: t.activo ? "#dcfce7" : "#fee2e2",
-                    color: t.activo ? "#16a34a" : "#dc2626",
-                  }}>
+                  <span className={`tenant-status ${t.activo ? "on" : "off"}`}>
                     {t.activo
                       ? <><HiOutlineCheckCircle size={13} /> Activo</>
                       : <><HiOutlineXCircle size={13} /> Inactivo</>}
                   </span>
                 </div>
 
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 6, margin: "12px 0" }}>
+                <div className="tenant-badges">
                   <span className="badge badge-blue">
                     <code style={{ fontSize: 11 }}>{t.codigo}</code>
                   </span>
                   {t.subdominio && <span className="badge badge-purple">{t.subdominio}</span>}
                 </div>
 
-                <p style={{ margin: "0 0 14px", fontSize: 12, color: "#94a3b8" }}>
+                <p className="tenant-db-line">
+                  <HiOutlineCircleStack size={13} />
                   {t.db_name}{t.db_host ? ` · ${t.db_host}` : ""}
                 </p>
 
-                <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                  <button className="btn btn-outline btn-sm" onClick={() => abrirPermisos(t)} title="Permisos de módulos"
-                    style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                <div className="tenant-actions">
+                  <button className="btn btn-outline btn-sm btn-icon" onClick={() => abrirPermisos(t)} title="Permisos de módulos">
                     <HiOutlineLockOpen size={14} />
                   </button>
-                  <button className="btn btn-outline btn-sm" onClick={() => verStats(t)} title="Ver estadísticas"
-                    style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                  <button className="btn btn-outline btn-sm btn-icon" onClick={() => verStats(t)} title="Ver estadísticas">
                     <HiOutlineChartBar size={14} />
                   </button>
                   <button className="btn btn-outline btn-sm" onClick={() => abrirEditar(t)} title="Editar"
@@ -336,8 +327,8 @@ export default function AdminPanel() {
                     style={{ display: "flex", alignItems: "center", gap: 4 }}>
                     <HiOutlinePower size={14} /> {t.activo ? "Desactivar" : "Activar"}
                   </button>
-                  <button className="btn btn-danger btn-sm" onClick={() => setEliminarTarget(t)} title="Eliminar"
-                    style={{ display: "flex", alignItems: "center", gap: 4, marginLeft: "auto" }}>
+                  <button className="btn btn-danger btn-sm btn-icon" onClick={() => setEliminarTarget(t)} title="Eliminar"
+                    style={{ marginLeft: "auto" }}>
                     <HiOutlineTrash size={14} />
                   </button>
                 </div>
@@ -638,14 +629,14 @@ export default function AdminPanel() {
   );
 }
 
-function StatCard({ icon, label, value, sub, color }) {
+function StatCard({ icon, label, value, sub, bg }) {
   return (
-    <div style={{ background: color || "#f8fafc", borderRadius: 12, padding: "16px 20px", display: "flex", alignItems: "center", gap: 14 }}>
-      <div style={{ flexShrink: 0 }}>{icon}</div>
+    <div className="stat-tile">
+      <div className="stat-tile-icon" style={{ background: bg || "#f8fafc" }}>{icon}</div>
       <div>
-        <p style={{ margin: 0, fontSize: 11, color: "#64748b", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>{label}</p>
-        <p style={{ margin: "2px 0 0", fontSize: 22, fontWeight: 800, color: "#0f172a" }}>{value}</p>
-        {sub && <p style={{ margin: 0, fontSize: 11, color: "#94a3b8" }}>{sub}</p>}
+        <p className="stat-tile-label">{label}</p>
+        <p className="stat-tile-value">{value}</p>
+        {sub && <p className="stat-tile-sub">{sub}</p>}
       </div>
     </div>
   );
