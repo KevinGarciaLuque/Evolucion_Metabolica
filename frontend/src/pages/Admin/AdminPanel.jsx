@@ -34,6 +34,7 @@ const MODULOS_RENACED = [
   { clave: "consultas",  nombre: "Consultas" },
   { clave: "mapa",       nombre: "Mapa" },
   { clave: "reportes",   nombre: "Reportes" },
+  { clave: "clinicas",   nombre: "Clínicas" },
   { clave: "usuarios",   nombre: "Usuarios" },
 ];
 function catalogoModulos(codigo) {

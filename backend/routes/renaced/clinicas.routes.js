@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { verificarToken } from "../../middlewares/auth.js";
 import { resolverTenantDB } from "../../middlewares/tenantDb.js";
+import { verificarModulo } from "../../middlewares/verificarModulo.js";
 import {
   getClinicas, getEstablecimientosDisponibles, createClinica, updateClinica, toggleClinica,
 } from "../../controllers/renaced/clinicas.controller.js";
@@ -14,7 +15,7 @@ function soloAdminRenaced(req, res, next) {
   next();
 }
 
-router.use(verificarToken, resolverTenantDB, soloAdminRenaced);
+router.use(verificarToken, resolverTenantDB, soloAdminRenaced, verificarModulo("clinicas"));
 
 router.get("/",                       getClinicas);
 router.get("/establecimientos",       getEstablecimientosDisponibles);
