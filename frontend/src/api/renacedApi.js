@@ -68,6 +68,13 @@ export const createUsuarioRenaced  = (data)      => api.post(`${BASE}/usuarios`,
 export const updateUsuarioRenaced  = (id, data)  => api.put(`${BASE}/usuarios/${id}`, data);
 export const toggleUsuarioRenaced  = (id)        => api.patch(`${BASE}/usuarios/${id}/toggle`);
 
+// ── Clínicas (solo Admin) ──────────────────────────────────────────────────────
+export const getClinicasRenaced          = ()          => api.get(`${BASE}/clinicas`);
+export const getEstablecimientosRenaced  = (busqueda)  => api.get(`${BASE}/clinicas/establecimientos`, { params: { busqueda } });
+export const createClinicaRenaced        = (data)      => api.post(`${BASE}/clinicas`, data);
+export const updateClinicaRenaced        = (id, data)  => api.put(`${BASE}/clinicas/${id}`, data);
+export const toggleClinicaRenaced        = (id)        => api.patch(`${BASE}/clinicas/${id}/toggle`);
+
 // ── Comorbilidades crónicas ───────────────────────────────────────────────────
 export const getComorbilidad  = (pacId)       => api.get(`${BASE}/pacientes/${pacId}/comorbilidad`);
 export const saveComorbilidad = (pacId, data) => api.put(`${BASE}/pacientes/${pacId}/comorbilidad`, data);
@@ -120,3 +127,5 @@ export const importarBaseDatosMexico = (archivo) => {
 export const descargarExcel = () => api.get(`${BASE}/reportes/excel`, { responseType: "blob" });
 export const descargarCSV   = () => api.get(`${BASE}/reportes/csv`,   { responseType: "blob" });
 export const descargarPDF   = () => api.get(`${BASE}/reportes/pdf`,   { responseType: "blob" });
+export const descargarReporteClinica = (unidadId) =>
+  api.get(`${BASE}/reportes/clinica/${unidadId}`, { responseType: "blob" });

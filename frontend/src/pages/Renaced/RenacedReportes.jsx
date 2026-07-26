@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import RenacedLayout from "../../components/RenacedLayout";
-import { descargarExcel, descargarCSV, descargarPDF } from "../../api/renacedApi";
-import { HiOutlineTableCells, HiOutlineDocumentText, HiOutlineArrowDownTray } from "react-icons/hi2";
+import { descargarExcel, descargarCSV, descargarPDF, descargarReporteClinica, getClinicasRenaced } from "../../api/renacedApi";
+import { useRenacedAuth } from "../../context/RenacedAuthContext";
+import { HiOutlineTableCells, HiOutlineDocumentText, HiOutlineArrowDownTray, HiOutlineBuildingOffice2 } from "react-icons/hi2";
 
 function descargarBlob(blob, filename) {
   const url = window.URL.createObjectURL(blob);
@@ -62,8 +63,22 @@ const REPORTES = [
 ];
 
 export default function RenacedReportes() {
+  const { usuario } = useRenacedAuth();
+  const esAdmin = usuario?.perfil_id === 1;
+
   const [descargando, setDescargando] = useState(null);
   const [error, setError] = useState(null);
+
+  const [clinicas, setClinicas] = useState([]);
+  const [clinicaId, setClinicaId] = useState("");
+  const [descargandoClinica, setDescargandoClinica] = useState(false);
+
+  useEffect(() => {
+    if (!esAdmin) return;
+    getClinicasRenaced()
+      .then((r) => setClinicas(r.data.filter((c) => c.activo)))
+      .catch(() => setClinicas([]));
+  }, [esAdmin]);
 
   async function descargar(reporte) {
     setDescargando(reporte.id);
@@ -75,6 +90,22 @@ export default function RenacedReportes() {
       setError(`No se pudo generar el ${reporte.titulo}. Intenta de nuevo.`);
     } finally {
       setDescargando(null);
+    }
+  }
+
+  async function descargarPorClinica(idExplicito) {
+    const id = idExplicito ?? clinicaId;
+    if (!id) { setError("Selecciona una clínica"); return; }
+    setDescargandoClinica(true);
+    setError(null);
+    try {
+      const resp = await descargarReporteClinica(id);
+      const nombre = clinicas.find((c) => String(c.id) === String(id))?.nombre || "mi_clinica";
+      descargarBlob(resp.data, `RENACED_${nombre.replace(/[^a-zA-Z0-9]+/g, "_")}_${fecha()}.pdf`);
+    } catch (e) {
+      setError(e.response?.data?.error || "No se pudo generar el reporte de la clínica");
+    } finally {
+      setDescargandoClinica(false);
     }
   }
 
@@ -155,6 +186,60 @@ export default function RenacedReportes() {
             </div>
           );
         })}
+      </div>
+
+      {/* Reporte por clínica */}
+      <div className="card" style={{ marginTop: 20 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 14 }}>
+          <div style={{
+            width: 48, height: 48, borderRadius: 12, background: "#ede9fe",
+            display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+          }}>
+            <HiOutlineBuildingOffice2 size={24} color="#5b21b6" />
+          </div>
+          <div>
+            <div style={{ fontWeight: 700, fontSize: "0.95rem", color: "#0f172a" }}>Reporte por clínica</div>
+            <div style={{ fontSize: 12, color: "#94a3b8", marginTop: 2 }}>
+              {esAdmin
+                ? "Reporte estadístico de una clínica específica, con su nombre en el encabezado"
+                : "Reporte estadístico de tu clínica"}
+            </div>
+          </div>
+        </div>
+
+        {esAdmin ? (
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+            <select
+              value={clinicaId}
+              onChange={(e) => setClinicaId(e.target.value)}
+              style={{ maxWidth: 320 }}
+            >
+              <option value="">Selecciona una clínica…</option>
+              {clinicas.map((c) => (
+                <option key={c.id} value={c.id}>{c.nombre}</option>
+              ))}
+            </select>
+            <button
+              className="btn btn-primary"
+              onClick={() => descargarPorClinica()}
+              disabled={descargandoClinica || !clinicaId}
+              style={{ display: "flex", alignItems: "center", gap: 8 }}
+            >
+              <HiOutlineArrowDownTray size={16} />
+              {descargandoClinica ? "Generando…" : "Descargar reporte"}
+            </button>
+          </div>
+        ) : (
+          <button
+            className="btn btn-primary"
+            onClick={() => descargarPorClinica(usuario?.unidad_servicio_id)}
+            disabled={descargandoClinica || !usuario?.unidad_servicio_id}
+            style={{ display: "flex", alignItems: "center", gap: 8 }}
+          >
+            <HiOutlineArrowDownTray size={16} />
+            {descargandoClinica ? "Generando…" : "Descargar reporte de mi clínica"}
+          </button>
+        )}
       </div>
 
       {/* Spinner CSS */}

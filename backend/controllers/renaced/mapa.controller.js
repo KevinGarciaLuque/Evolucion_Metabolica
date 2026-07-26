@@ -52,7 +52,10 @@ function mapPunto(r, tipo) {
   };
 }
 
-async function getVistaResidencia(db) {
+async function getVistaResidencia(db, unidadId) {
+  const filtroUnidad = unidadId ? "AND p.unidad_servicio_id = ?" : "";
+  const paramsUnidad = unidadId ? [unidadId] : [];
+
   const [conMunicipio] = await db.query(`
     SELECT
       p.estado_residencia AS estado, p.municipio_residencia AS municipio,
@@ -67,9 +70,9 @@ async function getVistaResidencia(db) {
     JOIN cat_municipio m
       ON m.estado_cve = p.estado_residencia AND m.clave = p.municipio_residencia
     LEFT JOIN (${ULTIMA_HBA1C_CTE}) u ON u.paciente_id = p.id AND u.rn = 1
-    WHERE m.lat IS NOT NULL AND m.lng IS NOT NULL
+    WHERE m.lat IS NOT NULL AND m.lng IS NOT NULL ${filtroUnidad}
     GROUP BY p.estado_residencia, p.municipio_residencia, m.nombre, m.lat, m.lng
-  `);
+  `, paramsUnidad);
 
   const [sinMunicipio] = await db.query(`
     SELECT
@@ -87,18 +90,19 @@ async function getVistaResidencia(db) {
     LEFT JOIN (${ULTIMA_HBA1C_CTE}) u ON u.paciente_id = p.id AND u.rn = 1
     WHERE p.estado_residencia IS NOT NULL AND p.estado_residencia <> ''
       AND (m.lat IS NULL OR p.municipio_residencia IS NULL OR p.municipio_residencia = '')
+      ${filtroUnidad}
     GROUP BY p.estado_residencia
     HAVING lat IS NOT NULL
-  `);
+  `, paramsUnidad);
 
   const [topEstados] = await db.query(`
     SELECT p.estado_residencia AS estado, COUNT(*) AS total
     FROM paciente p
-    WHERE p.estado_residencia IS NOT NULL AND p.estado_residencia <> ''
+    WHERE p.estado_residencia IS NOT NULL AND p.estado_residencia <> '' ${filtroUnidad}
     GROUP BY p.estado_residencia
     ORDER BY total DESC
     LIMIT 10
-  `);
+  `, paramsUnidad);
 
   const puntos = [
     ...conMunicipio.map((r) => mapPunto(r, "municipio")),
@@ -112,7 +116,10 @@ async function getVistaResidencia(db) {
   };
 }
 
-async function getVistaAtencion(db) {
+async function getVistaAtencion(db, unidadId) {
+  const filtroUnidad = unidadId ? "AND p.unidad_servicio_id = ?" : "";
+  const paramsUnidad = unidadId ? [unidadId] : [];
+
   const [rows] = await db.query(`
     SELECT
       e.estado_cve AS estado_num,
@@ -126,9 +133,9 @@ async function getVistaAtencion(db) {
     JOIN unidad_servicio_salud us ON us.id = p.unidad_servicio_id
     JOIN establecimiento_salud e ON e.clave = us.establecimiento_cve
     LEFT JOIN (${ULTIMA_HBA1C_CTE}) u ON u.paciente_id = p.id AND u.rn = 1
-    WHERE e.estado_cve IS NOT NULL AND e.estado_cve <> ''
+    WHERE e.estado_cve IS NOT NULL AND e.estado_cve <> '' ${filtroUnidad}
     GROUP BY e.estado_cve
-  `);
+  `, paramsUnidad);
 
   const estadosCurp = [...new Set(rows.map((r) => NUMERICO_A_CURP[r.estado_num]).filter(Boolean))];
   const centroides = new Map();
@@ -162,12 +169,16 @@ async function getVistaAtencion(db) {
 
 export const getMapaPacientes = async (req, res) => {
   try {
+    const unidadId = req.alcance.esAdmin ? null : req.alcance.unidadId;
     const [residencia, atencion] = await Promise.all([
-      getVistaResidencia(req.db),
-      getVistaAtencion(req.db),
+      getVistaResidencia(req.db, unidadId),
+      getVistaAtencion(req.db, unidadId),
     ]);
 
-    const [[{ total_pacientes }]] = await req.db.query("SELECT COUNT(*) AS total_pacientes FROM paciente");
+    const [[{ total_pacientes }]] = await req.db.query(
+      `SELECT COUNT(*) AS total_pacientes FROM paciente ${unidadId ? "WHERE unidad_servicio_id = ?" : ""}`,
+      unidadId ? [unidadId] : []
+    );
 
     res.json({
       total_pacientes: Number(total_pacientes),

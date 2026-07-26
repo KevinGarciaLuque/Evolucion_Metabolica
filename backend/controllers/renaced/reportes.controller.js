@@ -11,6 +11,12 @@ function formatDate(value) {
 // ── Excel (multi-hoja: Pacientes, Laboratorio, Consultas) ────────────────────
 export const exportarExcel = async (req, res) => {
   try {
+    // El admin puede acotar el export a una clínica (query unidad_id) opcionalmente;
+    // sin acotar, exporta el país completo. El admin siempre ve el detalle
+    // completo — la restricción de identidad solo aplica a perfiles no admin.
+    const unidadId = req.alcance.esAdmin ? (req.query.unidad_id || null) : req.alcance.unidadId;
+    const scoped = !!unidadId;
+
     const [pacientes] = await req.db.query(`
       SELECT p.expediente, p.ap_pat, p.ap_mat, p.nombre, p.sexo,
              p.fecha_nacimiento,
@@ -31,8 +37,9 @@ export const exportarExcel = async (req, res) => {
       FROM paciente p
       LEFT JOIN cat_paciente_estatus pe ON pe.id = p.estatus_id
       LEFT JOIN unidad_servicio_salud u  ON u.id  = p.unidad_servicio_id
+      ${scoped ? "WHERE p.unidad_servicio_id = ?" : ""}
       ORDER BY p.ap_pat, p.nombre
-    `);
+    `, scoped ? [unidadId] : []);
 
     const [laboratorio] = await req.db.query(`
       SELECT CONCAT(p.ap_pat, ' ', IFNULL(p.ap_mat,''), ', ', p.nombre) AS paciente,
@@ -41,8 +48,9 @@ export const exportarExcel = async (req, res) => {
       FROM laboratorio l
       JOIN paciente p ON p.id = l.paciente_id
       WHERE l.id IN (SELECT MAX(id) FROM laboratorio GROUP BY paciente_id)
+        ${scoped ? "AND p.unidad_servicio_id = ?" : ""}
       ORDER BY p.ap_pat, p.nombre
-    `);
+    `, scoped ? [unidadId] : []);
 
     const [consultas] = await req.db.query(`
       SELECT CONCAT(p.ap_pat, ' ', IFNULL(p.ap_mat,''), ', ', p.nombre) AS paciente,
@@ -51,8 +59,9 @@ export const exportarExcel = async (req, res) => {
       FROM consulta c
       JOIN paciente p ON p.id = c.paciente_id
       WHERE c.id IN (SELECT MAX(id) FROM consulta GROUP BY paciente_id)
+        ${scoped ? "AND p.unidad_servicio_id = ?" : ""}
       ORDER BY p.ap_pat, p.nombre
-    `);
+    `, scoped ? [unidadId] : []);
 
     const wb = XLSX.utils.book_new();
 
@@ -125,6 +134,9 @@ export const exportarExcel = async (req, res) => {
 // ── CSV (lista de pacientes) ─────────────────────────────────────────────────
 export const exportarCSV = async (req, res) => {
   try {
+    const unidadId = req.alcance.esAdmin ? (req.query.unidad_id || null) : req.alcance.unidadId;
+    const scoped = !!unidadId;
+
     const [pacientes] = await req.db.query(`
       SELECT p.expediente, p.ap_pat, p.ap_mat, p.nombre, p.sexo,
              p.fecha_nacimiento,
@@ -141,8 +153,9 @@ export const exportarCSV = async (req, res) => {
              pe.descripcion AS estatus
       FROM paciente p
       LEFT JOIN cat_paciente_estatus pe ON pe.id = p.estatus_id
+      ${scoped ? "WHERE p.unidad_servicio_id = ?" : ""}
       ORDER BY p.ap_pat, p.nombre
-    `);
+    `, scoped ? [unidadId] : []);
 
     const rows = pacientes.map((p) => ({
       expediente:          p.expediente || "",
@@ -176,9 +189,12 @@ export const exportarCSV = async (req, res) => {
   }
 };
 
-// ── PDF (reporte estadístico para la ALAD) ───────────────────────────────────
-export const exportarPDF = async (req, res) => {
+// Genera el PDF estadístico, opcionalmente acotado a una clínica (unidadId).
+// nombreClinica solo se usa para el encabezado del documento.
+async function generarReportePDF(req, res, { unidadId, nombreClinica }) {
   try {
+    const scoped = !!unidadId;
+
     const [[totales]] = await req.db.query(`
       SELECT COUNT(*) AS total,
              SUM(sexo = 'F') AS mujeres,
@@ -186,14 +202,16 @@ export const exportarPDF = async (req, res) => {
              SUM(estatus_id = 1) AS activos,
              ROUND(AVG(TIMESTAMPDIFF(YEAR, fecha_nacimiento, CURDATE())), 1) AS edad_promedio
       FROM paciente
-    `);
+      ${scoped ? "WHERE unidad_servicio_id = ?" : ""}
+    `, scoped ? [unidadId] : []);
 
     const [por_tipo] = await req.db.query(`
       SELECT td.descripcion AS tipo, COUNT(*) AS total
       FROM diagnostico d
       JOIN cat_tipo_diabetes td ON td.id = d.tipo_diabetes_id
+      ${scoped ? "JOIN paciente p ON p.id = d.paciente_id WHERE p.unidad_servicio_id = ?" : ""}
       GROUP BY td.id ORDER BY total DESC
-    `);
+    `, scoped ? [unidadId] : []);
 
     const [[hba]] = await req.db.query(`
       SELECT
@@ -202,10 +220,12 @@ export const exportarPDF = async (req, res) => {
         SUM(hba1c > 9)             AS alto,
         COUNT(hba1c)               AS con_dato,
         ROUND(AVG(hba1c), 2)       AS promedio
-      FROM laboratorio
-      WHERE id IN (SELECT MAX(id) FROM laboratorio GROUP BY paciente_id)
+      FROM laboratorio l
+      ${scoped ? "JOIN paciente p ON p.id = l.paciente_id" : ""}
+      WHERE l.id IN (SELECT MAX(id) FROM laboratorio GROUP BY paciente_id)
         AND hba1c IS NOT NULL
-    `);
+        ${scoped ? "AND p.unidad_servicio_id = ?" : ""}
+    `, scoped ? [unidadId] : []);
 
     const [complicaciones] = await req.db.query(`
       SELECT
@@ -215,8 +235,9 @@ export const exportarPDF = async (req, res) => {
         COUNT(pie_diabetico_id)     AS con_pie_diabetico,
         COUNT(enf_cardiovascular_id) AS con_cardiovascular,
         COUNT(DISTINCT paciente_id) AS total_evaluados
-      FROM evaluacion
-    `);
+      FROM evaluacion ev
+      ${scoped ? "JOIN paciente p ON p.id = ev.paciente_id WHERE p.unidad_servicio_id = ?" : ""}
+    `, scoped ? [unidadId] : []);
     const comp = complicaciones[0];
 
     // ── Construir PDF ──
@@ -226,8 +247,11 @@ export const exportarPDF = async (req, res) => {
     doc.on("end", () => {
       const buf = Buffer.concat(chunks);
       const fecha = new Date().toISOString().slice(0, 10);
+      const slugClinica = nombreClinica
+        ? "_" + nombreClinica.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^A-Za-z0-9]+/g, "_")
+        : "";
       res.setHeader("Content-Type", "application/pdf");
-      res.setHeader("Content-Disposition", `attachment; filename="RENACED_Reporte_${fecha}.pdf"`);
+      res.setHeader("Content-Disposition", `attachment; filename="RENACED_Reporte${slugClinica}_${fecha}.pdf"`);
       res.send(buf);
     });
 
@@ -244,7 +268,10 @@ export const exportarPDF = async (req, res) => {
     doc.fillColor("#fff").fontSize(20).font("Helvetica-Bold")
       .text("RENACED — Reporte Estadístico", 50, 55, { width: 495, align: "center" });
     doc.fontSize(11).font("Helvetica")
-      .text("Registro Nacional de Diabetes Tipo 1 — México", 50, 82, { width: 495, align: "center" });
+      .text(
+        nombreClinica ? `${nombreClinica} — México` : "Registro Nacional de Diabetes Tipo 1 — México",
+        50, 82, { width: 495, align: "center" }
+      );
     doc.moveDown(0.5);
 
     doc.fillColor(GRAY).fontSize(10)
@@ -315,5 +342,44 @@ export const exportarPDF = async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Error al generar PDF" });
+  }
+}
+
+// ── PDF (reporte estadístico para la ALAD) ───────────────────────────────────
+// Sin unidad_id explícito: admin ve el país completo, cualquier otro perfil
+// queda forzado a su propia clínica (igual que en los demás reportes).
+export const exportarPDF = async (req, res) => {
+  const unidadId = req.alcance.esAdmin ? null : req.alcance.unidadId;
+  let nombreClinica = null;
+  if (unidadId) {
+    const [[clinica]] = await req.db.query("SELECT nombre FROM unidad_servicio_salud WHERE id = ?", [unidadId]);
+    nombreClinica = clinica?.nombre || null;
+  }
+  await generarReportePDF(req, res, { unidadId, nombreClinica });
+};
+
+// ── Reporte por clínica ───────────────────────────────────────────────────────
+// GET /renaced/reportes/clinica/:unidad_id — el investigador solo puede pedir
+// el de su propia clínica (403 si intenta otra); el admin de país puede pedir
+// el de cualquiera, y el nombre de la clínica aparece en el encabezado.
+export const exportarReporteClinica = async (req, res) => {
+  try {
+    const unidadId = Number(req.params.unidad_id);
+    if (!Number.isInteger(unidadId) || unidadId <= 0) {
+      return res.status(400).json({ error: "unidad_id inválido" });
+    }
+    if (!req.alcance.esAdmin && unidadId !== req.alcance.unidadId) {
+      return res.status(403).json({ error: "No tienes acceso al reporte de otra clínica" });
+    }
+
+    const [[clinica]] = await req.db.query(
+      "SELECT id, nombre FROM unidad_servicio_salud WHERE id = ?", [unidadId]
+    );
+    if (!clinica) return res.status(404).json({ error: "Clínica no encontrada" });
+
+    await generarReportePDF(req, res, { unidadId, nombreClinica: clinica.nombre });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Error al generar el reporte de la clínica" });
   }
 };

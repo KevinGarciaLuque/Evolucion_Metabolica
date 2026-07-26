@@ -4,6 +4,10 @@ import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
 
+import { verificarToken } from "./middlewares/auth.js";
+import { resolverTenantDB } from "./middlewares/tenantDb.js";
+import { resolverAlcanceClinica, verificarAccesoPaciente } from "./middlewares/scopeClinica.js";
+
 import authRoutes from "./routes/auth.routes.js";
 import pacientesRoutes from "./routes/pacientes.routes.js";
 import analisisRoutes from "./routes/analisis.routes.js";
@@ -33,6 +37,7 @@ import renacedEducacionRoutes   from "./routes/renaced/educacion.routes.js";
 import renacedCatalogosRoutes   from "./routes/renaced/catalogos.routes.js";
 import renacedReportesRoutes    from "./routes/renaced/reportes.routes.js";
 import renacedUsuariosRoutes      from "./routes/renaced/usuarios.routes.js";
+import renacedClinicasRoutes      from "./routes/renaced/clinicas.routes.js";
 import renacedDiagnosticoRoutes    from "./routes/renaced/diagnostico.routes.js";
 import renacedComorbilidadRoutes   from "./routes/renaced/comorbilidad.routes.js";
 import renacedPatologiaRoutes      from "./routes/renaced/patologia.routes.js";
@@ -92,6 +97,16 @@ app.use("/api/importaciones", importacionesRoutes);
 
 // ── Rutas RENACED (prefijo /api/renaced — DB renaced_mexico, aislada) ────────
 app.use("/api/renaced/auth",     renacedAuthRoutes);
+
+// Guarda de acceso para TODOS los sub-recursos de un paciente (consultas, laboratorio,
+// tratamiento, evaluación, etc.). Se registra antes de cada router específico y
+// corre primero para ese mismo prefijo — así ningún endpoint anidado bajo
+// /pacientes/:paciente_id/* queda sin validar la clínica del usuario.
+app.use(
+  "/api/renaced/pacientes/:paciente_id(\\d+)",
+  verificarToken, resolverTenantDB, resolverAlcanceClinica, verificarAccesoPaciente
+);
+
 app.use("/api/renaced/pacientes", renacedPacientesRoutes);
 app.use("/api/renaced/pacientes/:paciente_id/consultas", renacedConsultasRoutes);
 app.use("/api/renaced/pacientes/:paciente_id/laboratorio", renacedLaboratorioRoutes);
@@ -103,6 +118,7 @@ app.use("/api/renaced/pacientes/:paciente_id/educacion",   renacedEducacionRoute
 app.use("/api/renaced/catalogos",                          renacedCatalogosRoutes);
 app.use("/api/renaced/reportes",                           renacedReportesRoutes);
 app.use("/api/renaced/usuarios",                           renacedUsuariosRoutes);
+app.use("/api/renaced/clinicas",                           renacedClinicasRoutes);
 app.use("/api/renaced/diagnostico",                          renacedDiagnosticoRoutes);
 app.use("/api/renaced/pacientes/:paciente_id/comorbilidad",  renacedComorbilidadRoutes);
 app.use("/api/renaced/pacientes/:paciente_id/patologia",     renacedPatologiaRoutes);

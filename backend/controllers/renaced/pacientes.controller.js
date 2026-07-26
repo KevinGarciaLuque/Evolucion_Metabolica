@@ -12,7 +12,14 @@ export const getPacientes = async (req, res) => {
       const q = `%${busqueda}%`;
       params.push(q, q, q, q);
     }
-    if (unidad_id)  { where += " AND p.unidad_servicio_id = ?"; params.push(unidad_id); }
+    // El admin de país puede filtrar por cualquier clínica (drill-down); el resto
+    // queda forzado a su propia unidad sin importar lo que envíe el cliente.
+    if (!req.alcance.esAdmin) {
+      where += " AND p.unidad_servicio_id = ?";
+      params.push(req.alcance.unidadId);
+    } else if (unidad_id) {
+      where += " AND p.unidad_servicio_id = ?"; params.push(unidad_id);
+    }
     if (estatus_id) { where += " AND p.estatus_id = ?";        params.push(estatus_id); }
     if (estado_residencia)     { where += " AND p.estado_residencia = ?";     params.push(estado_residencia); }
     if (municipio_residencia) { where += " AND p.municipio_residencia = ?"; params.push(municipio_residencia); }
@@ -56,7 +63,7 @@ export const checkCurp = async (req, res) => {
     if (curp.length < 4) return res.json({ existe: false });
 
     const [[paciente]] = await req.db.query(
-      `SELECT id, nombre, ap_pat, ap_mat, curp
+      `SELECT id, nombre, ap_pat, ap_mat, curp, unidad_servicio_id
        FROM paciente
        WHERE curp = ? ${excludeId ? "AND id != ?" : ""}
        LIMIT 1`,
@@ -64,6 +71,12 @@ export const checkCurp = async (req, res) => {
     );
 
     if (!paciente) return res.json({ existe: false });
+
+    // Si el CURP pertenece a otra clínica, no se revela identidad del paciente
+    // a un investigador que no debería verla — solo que el CURP ya está en uso.
+    if (!req.alcance.esAdmin && paciente.unidad_servicio_id !== req.alcance.unidadId) {
+      return res.json({ existe: true, paciente: { id: paciente.id, curp: paciente.curp } });
+    }
     res.json({ existe: true, paciente });
   } catch (err) {
     console.error(err);
@@ -86,6 +99,9 @@ export const getPacienteById = async (req, res) => {
       [id]
     );
     if (!paciente) return res.status(404).json({ error: "Paciente no encontrado" });
+    if (!req.alcance.esAdmin && paciente.unidad_servicio_id !== req.alcance.unidadId) {
+      return res.status(403).json({ error: "No tienes acceso a pacientes de otra clínica" });
+    }
 
     const [diagnostico] = await req.db.query(
       `SELECT d.*, td.descripcion AS tipo_diabetes,
@@ -142,7 +158,9 @@ export const createPaciente = async (req, res) => {
         colonia              || null, calle_num  || null, codigo_postal || null,
         telefonos            || null, email      || null,
         seguro_medico_id     || null, establecimiento_cve || null,
-        unidad_servicio_id   || null,
+        // El médico/asistente/enfermera solo puede registrar pacientes en su propia
+        // clínica; solo el admin de país puede asignar libremente la unidad.
+        req.alcance.esAdmin ? (unidad_servicio_id || null) : req.alcance.unidadId,
         tiene_aviso_privacidad ? 1 : 0,
         tiene_consentimiento   ? 1 : 0,
       ]
@@ -179,13 +197,22 @@ export const updatePaciente = async (req, res) => {
     const campos = req.body;
     const { tipo_diabetes_id, tipo_diabetes_otra_id } = campos;
 
+    const [[actual]] = await conn.query("SELECT unidad_servicio_id FROM paciente WHERE id = ?", [id]);
+    if (!actual) { conn.release(); return res.status(404).json({ error: "Paciente no encontrado" }); }
+    if (!req.alcance.esAdmin && actual.unidad_servicio_id !== req.alcance.unidadId) {
+      conn.release();
+      return res.status(403).json({ error: "No tienes acceso a pacientes de otra clínica" });
+    }
+
     const permitidos = [
       "expediente","iniciales","nombre","ap_pat","ap_mat","sexo",
       "fecha_nacimiento","curp","estado_nacimiento","municipio_nacimiento",
       "pais_nacimiento_id","nivel_ingresos_id","nivel_educativo_id",
       "estado_residencia","municipio_residencia","colonia","calle_num",
       "codigo_postal","telefonos","email","seguro_medico_id",
-      "establecimiento_cve","unidad_servicio_id",
+      "establecimiento_cve",
+      // Solo el admin de país puede reasignar la clínica de un paciente.
+      ...(req.alcance.esAdmin ? ["unidad_servicio_id"] : []),
       "tiene_aviso_privacidad","tiene_consentimiento","estatus_id",
     ];
 

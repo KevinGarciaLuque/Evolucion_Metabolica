@@ -2,10 +2,11 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import RenacedLayout from "../../components/RenacedLayout";
 import {
-  getUsuarioRenaced, createUsuarioRenaced, updateUsuarioRenaced,
+  getUsuarioRenaced, createUsuarioRenaced, updateUsuarioRenaced, getClinicasRenaced,
 } from "../../api/renacedApi";
 
 const PERFILES = [
+  { id: 5, label: "Investigador de Clínica" },
   { id: 2, label: "Médico" },
   { id: 3, label: "Asistente" },
   { id: 4, label: "Enfermera" },
@@ -17,6 +18,7 @@ const INITIAL = {
   email: "",
   password: "",
   perfil_id: 2,
+  unidad_servicio_id: "",
   activo: 1,
 };
 
@@ -31,6 +33,13 @@ export default function RenacedUsuarioForm() {
   const [error, setError]     = useState("");
   const [exito, setExito]     = useState("");
   const [verPass, setVerPass] = useState(false);
+  const [clinicas, setClinicas] = useState([]);
+
+  useEffect(() => {
+    getClinicasRenaced()
+      .then((r) => setClinicas(r.data.filter((c) => c.activo)))
+      .catch(() => setClinicas([]));
+  }, []);
 
   useEffect(() => {
     if (!esEdicion) return;
@@ -43,6 +52,7 @@ export default function RenacedUsuarioForm() {
           email: u.email || "",
           password: "",
           perfil_id: u.perfil_id,
+          unidad_servicio_id: u.unidad_servicio_id || "",
           activo: u.activo,
         });
       })
@@ -66,6 +76,10 @@ export default function RenacedUsuarioForm() {
     }
     if (!esEdicion && !form.password.trim()) {
       setError("La contraseña es requerida al crear un usuario");
+      return;
+    }
+    if (!form.unidad_servicio_id) {
+      setError("Debes asignar una clínica al usuario");
       return;
     }
 
@@ -197,6 +211,24 @@ export default function RenacedUsuarioForm() {
                   <option key={p.id} value={p.id}>{p.label}</option>
                 ))}
               </select>
+            </div>
+
+            <div>
+              <label className="form-label">Clínica *</label>
+              <select
+                name="unidad_servicio_id"
+                value={form.unidad_servicio_id}
+                onChange={(e) => setForm((f) => ({ ...f, unidad_servicio_id: e.target.value }))}
+                required
+              >
+                <option value="">Selecciona una clínica…</option>
+                {clinicas.map((c) => (
+                  <option key={c.id} value={c.id}>{c.nombre}</option>
+                ))}
+              </select>
+              <p style={{ fontSize: 12, color: "#94a3b8", marginTop: 4 }}>
+                El usuario solo verá pacientes y reportes de esta clínica.
+              </p>
             </div>
 
             {esEdicion && (

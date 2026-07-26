@@ -1,7 +1,9 @@
 
 export const getResumen = async (req, res) => {
   try {
-    const { unidad_id } = req.query;
+    // El admin de país puede filtrar opcionalmente por clínica (drill-down) o ver
+    // el agregado nacional; cualquier otro perfil queda forzado a su propia unidad.
+    const unidad_id = req.alcance.esAdmin ? (req.query.unidad_id || null) : req.alcance.unidadId;
     const filtro = unidad_id ? "WHERE p.unidad_servicio_id = ?" : "";
     const params = unidad_id ? [unidad_id] : [];
 
@@ -131,14 +133,16 @@ export const getResumen = async (req, res) => {
       params
     );
 
-    // ── Top unidades por pacientes ──────────────────────────────────────────
-    const [top_unidades] = await req.db.query(
-      `SELECT u.nombre AS unidad, COUNT(*) AS n
-       FROM paciente p
-       JOIN unidad_servicio_salud u ON u.id = p.unidad_servicio_id
-       WHERE p.estatus_id = 1
-       GROUP BY u.id ORDER BY n DESC LIMIT 8`
-    );
+    // ── Top unidades por pacientes (comparativo entre clínicas — solo admin país) ──
+    const [top_unidades] = req.alcance.esAdmin
+      ? await req.db.query(
+          `SELECT u.nombre AS unidad, COUNT(*) AS n
+           FROM paciente p
+           JOIN unidad_servicio_salud u ON u.id = p.unidad_servicio_id
+           WHERE p.estatus_id = 1
+           GROUP BY u.id ORDER BY n DESC LIMIT 8`
+        )
+      : [[]];
 
     // ── HbA1c recientes (para la lista del lado derecho) ───────────────────
     const [hba1c_recientes] = await req.db.query(

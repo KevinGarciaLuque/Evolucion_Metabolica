@@ -108,7 +108,8 @@ export const createTenant = async (req, res) => {
         (1, 'Administrador', 1),
         (2, 'Médico', 2),
         (3, 'Asistente', 3),
-        (4, 'Enfermera', 4)
+        (4, 'Enfermera', 4),
+        (5, 'Investigador de Clínica', 2)
       `);
 
       // Crear usuario administrador inicial

@@ -21,6 +21,7 @@ import {
   HiOutlineLockOpen,
   HiOutlineGlobeAmericas,
   HiOutlineClipboardDocumentList,
+  HiOutlineBuildingOffice2,
 } from "react-icons/hi2";
 import "./Sidebar.css";
 
@@ -49,6 +50,7 @@ const menuRenaced = [
   { to: "/renaced/consultas",  icon: HiOutlineBookOpen,               label: "Consultas" },
   { to: "/renaced/reportes",   icon: HiOutlineDocumentArrowDown,      label: "Reportes"  },
   { to: "/renaced/mapa",       icon: HiOutlineMapPin,                 label: "Mapa"      },
+  { to: "/renaced/clinicas",   icon: HiOutlineBuildingOffice2,        label: "Clínicas"  },
   { to: "/renaced/usuarios",   icon: HiOutlineUserGroup,              label: "Usuarios"  },
 ];
 

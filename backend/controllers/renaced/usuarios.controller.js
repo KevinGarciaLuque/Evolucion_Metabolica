@@ -1,15 +1,17 @@
 import bcrypt from "bcryptjs";
 
 // perfil_id permitidos al crear (no se puede crear otro admin desde aquí)
-const PERFILES_VALIDOS = [2, 3, 4]; // Médico, Asistente, Enfermera
+const PERFILES_VALIDOS = [2, 3, 4, 5]; // Médico, Asistente, Enfermera, Investigador de Clínica
 
 export async function getUsuarios(req, res) {
   try {
     const [rows] = await req.db.query(
       `SELECT u.id, u.username, u.nombre_completo, u.email, u.perfil_id,
+              u.unidad_servicio_id, us.nombre AS unidad_nombre,
               u.activo, u.ultimo_acceso, p.nombre AS perfil_nombre
        FROM usuario u
        JOIN perfil p ON p.id = u.perfil_id
+       LEFT JOIN unidad_servicio_salud us ON us.id = u.unidad_servicio_id
        ORDER BY u.nombre_completo`
     );
     res.json(rows);
@@ -23,9 +25,11 @@ export async function getUsuarioById(req, res) {
   try {
     const [[row]] = await req.db.query(
       `SELECT u.id, u.username, u.nombre_completo, u.email, u.perfil_id,
+              u.unidad_servicio_id, us.nombre AS unidad_nombre,
               u.activo, u.ultimo_acceso, p.nombre AS perfil_nombre
        FROM usuario u
        JOIN perfil p ON p.id = u.perfil_id
+       LEFT JOIN unidad_servicio_salud us ON us.id = u.unidad_servicio_id
        WHERE u.id = ?`,
       [req.params.id]
     );
@@ -38,13 +42,17 @@ export async function getUsuarioById(req, res) {
 }
 
 export async function createUsuario(req, res) {
-  const { nombre_completo, username, email, password, perfil_id } = req.body;
+  const { nombre_completo, username, email, password, perfil_id, unidad_servicio_id } = req.body;
 
   if (!nombre_completo || !username || !password || !perfil_id) {
     return res.status(400).json({ error: "nombre_completo, username, contraseña y perfil son requeridos" });
   }
   if (!PERFILES_VALIDOS.includes(Number(perfil_id))) {
-    return res.status(400).json({ error: "Perfil no válido (2=Médico, 3=Asistente, 4=Enfermera)" });
+    return res.status(400).json({ error: "Perfil no válido (2=Médico, 3=Asistente, 4=Enfermera, 5=Investigador de Clínica)" });
+  }
+  // Médico, Asistente y Enfermera solo ven su propia clínica — deben tener una asignada.
+  if (!unidad_servicio_id) {
+    return res.status(400).json({ error: "Debes asignar una clínica al usuario" });
   }
 
   try {
@@ -56,11 +64,16 @@ export async function createUsuario(req, res) {
       return res.status(409).json({ error: "Ya existe un usuario con ese username o email" });
     }
 
+    const [[clinica]] = await req.db.query(
+      "SELECT id FROM unidad_servicio_salud WHERE id = ? AND activo = 1", [unidad_servicio_id]
+    );
+    if (!clinica) return res.status(400).json({ error: "La clínica indicada no existe o está inactiva" });
+
     const hash = await bcrypt.hash(password, 10);
     const [result] = await req.db.query(
-      `INSERT INTO usuario (username, password_hash, nombre_completo, email, perfil_id, activo)
-       VALUES (?, ?, ?, ?, ?, 1)`,
-      [username, hash, nombre_completo, email || null, perfil_id]
+      `INSERT INTO usuario (username, password_hash, nombre_completo, email, perfil_id, unidad_servicio_id, activo)
+       VALUES (?, ?, ?, ?, ?, ?, 1)`,
+      [username, hash, nombre_completo, email || null, perfil_id, unidad_servicio_id]
     );
 
     res.status(201).json({ id: result.insertId, message: "Usuario creado correctamente" });
@@ -72,10 +85,13 @@ export async function createUsuario(req, res) {
 
 export async function updateUsuario(req, res) {
   const { id } = req.params;
-  const { nombre_completo, username, email, password, perfil_id, activo } = req.body;
+  const { nombre_completo, username, email, password, perfil_id, unidad_servicio_id, activo } = req.body;
 
   if (perfil_id !== undefined && !PERFILES_VALIDOS.includes(Number(perfil_id))) {
-    return res.status(400).json({ error: "Perfil no válido (2=Médico, 3=Asistente, 4=Enfermera)" });
+    return res.status(400).json({ error: "Perfil no válido (2=Médico, 3=Asistente, 4=Enfermera, 5=Investigador de Clínica)" });
+  }
+  if (unidad_servicio_id !== undefined && !unidad_servicio_id) {
+    return res.status(400).json({ error: "Debes asignar una clínica al usuario" });
   }
 
   try {
@@ -93,6 +109,13 @@ export async function updateUsuario(req, res) {
       }
     }
 
+    if (unidad_servicio_id) {
+      const [[clinica]] = await req.db.query(
+        "SELECT id FROM unidad_servicio_salud WHERE id = ? AND activo = 1", [unidad_servicio_id]
+      );
+      if (!clinica) return res.status(400).json({ error: "La clínica indicada no existe o está inactiva" });
+    }
+
     let passwordClause = "";
     const params = [];
 
@@ -104,15 +127,16 @@ export async function updateUsuario(req, res) {
 
     await req.db.query(
       `UPDATE usuario SET
-        nombre_completo = COALESCE(?, nombre_completo),
-        username        = COALESCE(?, username),
-        email           = COALESCE(?, email),
-        perfil_id       = COALESCE(?, perfil_id),
-        activo          = COALESCE(?, activo)
+        nombre_completo    = COALESCE(?, nombre_completo),
+        username           = COALESCE(?, username),
+        email              = COALESCE(?, email),
+        perfil_id          = COALESCE(?, perfil_id),
+        unidad_servicio_id = COALESCE(?, unidad_servicio_id),
+        activo             = COALESCE(?, activo)
         ${passwordClause}
        WHERE id = ?`,
       [nombre_completo || null, username || null, email || null,
-       perfil_id ?? null, activo ?? null, ...params, id]
+       perfil_id ?? null, unidad_servicio_id ?? null, activo ?? null, ...params, id]
     );
 
     res.json({ message: "Usuario actualizado correctamente" });

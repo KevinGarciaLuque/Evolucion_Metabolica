@@ -7,6 +7,7 @@ import {
   HiOutlineSquares2X2, HiOutlineUsers, HiOutlineDocumentArrowDown,
   HiChevronLeft, HiChevronRight, HiOutlineUserGroup,
   HiOutlineClipboardDocumentList, HiOutlineDocumentArrowUp, HiOutlineMapPin,
+  HiOutlineBuildingOffice2,
 } from "react-icons/hi2";
 import FlagIcon from "./FlagIcon";
 import Layout from "./Layout";
@@ -21,10 +22,11 @@ const MENU_BASE = [
   { to: "/renaced/mapa",       clave: "mapa",      icon: HiOutlineMapPin,                 label: "Mapa"      },
 ];
 const MENU_ADMIN = [
+  { to: "/renaced/clinicas",  clave: "clinicas", icon: HiOutlineBuildingOffice2,   label: "Clínicas"  },
   { to: "/renaced/usuarios",  clave: "usuarios", icon: HiOutlineUserGroup,         label: "Usuarios"  },
 ];
 
-const PERFIL_LABEL = { 1: "Administrador", 2: "Médico", 3: "Asistente", 4: "Enfermera" };
+const PERFIL_LABEL = { 1: "Administrador", 2: "Médico", 3: "Asistente", 4: "Enfermera", 5: "Investigador de Clínica" };
 
 export default function RenacedLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);

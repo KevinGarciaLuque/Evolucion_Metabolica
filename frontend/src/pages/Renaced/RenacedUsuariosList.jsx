@@ -5,12 +5,13 @@ import { getUsuariosRenaced, toggleUsuarioRenaced } from "../../api/renacedApi";
 import { useRenacedAuth } from "../../context/RenacedAuthContext";
 import { HiOutlineUserPlus, HiOutlinePencilSquare, HiOutlineCheckCircle, HiOutlineXCircle } from "react-icons/hi2";
 
-const PERFIL_LABEL = { 1: "Administrador", 2: "Médico", 3: "Asistente", 4: "Enfermera" };
+const PERFIL_LABEL = { 1: "Administrador", 2: "Médico", 3: "Asistente", 4: "Enfermera", 5: "Investigador de Clínica" };
 const PERFIL_COLOR = {
   1: { bg: "#dbeafe", color: "#1d4ed8" },
   2: { bg: "#dcfce7", color: "#166534" },
   3: { bg: "#fef9c3", color: "#854d0e" },
   4: { bg: "#fce7f3", color: "#9d174d" },
+  5: { bg: "#ede9fe", color: "#5b21b6" },
 };
 
 export default function RenacedUsuariosList() {
@@ -98,6 +99,7 @@ export default function RenacedUsuariosList() {
                   <th>Username</th>
                   <th className="hide-mobile">Email</th>
                   <th>Perfil</th>
+                  <th className="hide-mobile">Clínica</th>
                   <th>Estado</th>
                   <th className="hide-mobile">Último acceso</th>
                   <th>Acciones</th>
@@ -124,6 +126,9 @@ export default function RenacedUsuariosList() {
                         }}>
                           {PERFIL_LABEL[u.perfil_id] || u.perfil_nombre}
                         </span>
+                      </td>
+                      <td className="hide-mobile" style={{ fontSize: 13, color: "#64748b" }}>
+                        {u.unidad_nombre || <span style={{ color: "#cbd5e1" }}>—</span>}
                       </td>
                       <td>
                         {u.activo
@@ -160,7 +165,7 @@ export default function RenacedUsuariosList() {
                   );
                 })}
                 {!cargando && filtrados.length === 0 && (
-                  <tr><td colSpan={7} className="empty-cell">No se encontraron usuarios</td></tr>
+                  <tr><td colSpan={8} className="empty-cell">No se encontraron usuarios</td></tr>
                 )}
               </tbody>
             </table>

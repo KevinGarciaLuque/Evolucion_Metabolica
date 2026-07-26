@@ -28,7 +28,14 @@ export async function loginRenaced(req, res) {
       nombre: usuario.nombre_completo,
       email: usuario.email || usuario.username,
       perfil_id: usuario.perfil_id,
+      unidad_servicio_id: usuario.unidad_servicio_id ?? null,
       tenant: "mx",
+      tenant_nombre: "México",
+      // Este login es específico de RENACED México (poolRenaced apunta siempre a
+      // renaced_mexico); resolverTenantDB exige db_name/db_host en el token para
+      // resolver la conexión del tenant, igual que en la sesión de impersonación.
+      db_name: process.env.RENACED_MX_DB_NAME || "renaced_mexico",
+      db_host: process.env.DB_HOST,
       tipo: "renaced",
     };
 
@@ -49,13 +56,14 @@ export async function meRenaced(req, res) {
   }
   try {
     const [rows] = await req.db.query(
-      "SELECT id, username, nombre_completo, email, perfil_id FROM usuario WHERE id = ? AND activo = 1",
+      "SELECT id, username, nombre_completo, email, perfil_id, unidad_servicio_id FROM usuario WHERE id = ? AND activo = 1",
       [req.usuario.id]
     );
     if (rows.length === 0) return res.status(404).json({ error: "Usuario no encontrado" });
     const u = rows[0];
     res.json({
       id: u.id, nombre: u.nombre_completo, email: u.email || u.username, perfil_id: u.perfil_id,
+      unidad_servicio_id: u.unidad_servicio_id ?? null,
       tenant: req.usuario.tenant, tenant_nombre: req.usuario.tenant_nombre,
       db_name: req.usuario.db_name, db_host: req.usuario.db_host,
       modulos: req.usuario.modulos ?? null, tipo: "renaced",
