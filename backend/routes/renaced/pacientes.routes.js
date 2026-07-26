@@ -2,6 +2,7 @@ import { Router } from "express";
 import { verificarToken } from "../../middlewares/auth.js";
 import { resolverTenantDB } from "../../middlewares/tenantDb.js";
 import { resolverAlcanceClinica } from "../../middlewares/scopeClinica.js";
+import { verificarModulo } from "../../middlewares/verificarModulo.js";
 import {
   getPacientes,
   getPacienteById,
@@ -12,7 +13,7 @@ import {
 
 const router = Router();
 
-router.use(verificarToken, resolverTenantDB, resolverAlcanceClinica);
+router.use(verificarToken, resolverTenantDB, resolverAlcanceClinica, verificarModulo("pacientes"));
 
 router.get("/",                 getPacientes);
 router.get("/check-curp/:curp", checkCurp);

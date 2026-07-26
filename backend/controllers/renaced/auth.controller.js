@@ -1,4 +1,5 @@
 import poolRenaced from "../../config/db.renaced.js";
+import poolMaster from "../../config/db.master.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
@@ -23,6 +24,18 @@ export async function loginRenaced(req, res) {
     // Actualizar último acceso
     poolRenaced.query("UPDATE usuario SET ultimo_acceso = NOW() WHERE id = ?", [usuario.id]).catch(() => {});
 
+    // Módulos habilitados para el país (toggle del Super Admin) — aplican a
+    // cualquier usuario que entre directo, sea Administrador o no.
+    let modulos = null;
+    try {
+      const [[tenantMx]] = await poolMaster.query(
+        "SELECT modulos FROM tenants WHERE codigo = 'mx'"
+      );
+      modulos = tenantMx?.modulos ?? null;
+    } catch (_) {
+      modulos = null; // si falla la consulta, no se restringe nada
+    }
+
     const payload = {
       id: usuario.id,
       nombre: usuario.nombre_completo,
@@ -31,6 +44,7 @@ export async function loginRenaced(req, res) {
       unidad_servicio_id: usuario.unidad_servicio_id ?? null,
       tenant: "mx",
       tenant_nombre: "México",
+      modulos,
       // Este login es específico de RENACED México (poolRenaced apunta siempre a
       // renaced_mexico); resolverTenantDB exige db_name/db_host en el token para
       // resolver la conexión del tenant, igual que en la sesión de impersonación.
@@ -52,7 +66,10 @@ export async function meRenaced(req, res) {
   // Sesión de Super Admin (impersonación) — no corresponde a un usuario real del tenant
   if (req.usuario?.super_admin) {
     const { id, nombre, email, perfil_id, tenant, tenant_nombre, db_name, db_host, modulos } = req.usuario;
-    return res.json({ id, nombre, email, perfil_id, tenant, tenant_nombre, db_name, db_host, modulos: modulos ?? null, tipo: "renaced" });
+    return res.json({
+      id, nombre, email, perfil_id, tenant, tenant_nombre, db_name, db_host,
+      modulos: modulos ?? null, tipo: "renaced", super_admin: true,
+    });
   }
   try {
     const [rows] = await req.db.query(

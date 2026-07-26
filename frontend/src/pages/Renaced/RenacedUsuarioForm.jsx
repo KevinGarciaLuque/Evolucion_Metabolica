@@ -1,16 +1,20 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import RenacedLayout from "../../components/RenacedLayout";
+import { useRenacedAuth } from "../../context/RenacedAuthContext";
 import {
   getUsuarioRenaced, createUsuarioRenaced, updateUsuarioRenaced, getClinicasRenaced,
 } from "../../api/renacedApi";
 
-const PERFILES = [
+const PERFILES_BASE = [
   { id: 5, label: "Investigador de Clínica" },
   { id: 2, label: "Médico" },
   { id: 3, label: "Asistente" },
   { id: 4, label: "Enfermera" },
 ];
+// Solo el Super Admin (sesión de impersonación) puede ascender a alguien a
+// Administrador del país — evita que un admin normal se auto-otorgue más acceso.
+const PERFIL_ADMIN = { id: 1, label: "Administrador" };
 
 const INITIAL = {
   nombre_completo: "",
@@ -34,6 +38,10 @@ export default function RenacedUsuarioForm() {
   const [exito, setExito]     = useState("");
   const [verPass, setVerPass] = useState(false);
   const [clinicas, setClinicas] = useState([]);
+  const { usuario: sesion } = useRenacedAuth();
+  const esSuperAdmin = !!sesion?.super_admin;
+  const PERFILES = esSuperAdmin ? [PERFIL_ADMIN, ...PERFILES_BASE] : PERFILES_BASE;
+  const esAdministrador = Number(form.perfil_id) === 1;
 
   useEffect(() => {
     getClinicasRenaced()
@@ -78,12 +86,13 @@ export default function RenacedUsuarioForm() {
       setError("La contraseña es requerida al crear un usuario");
       return;
     }
-    if (!form.unidad_servicio_id) {
+    if (!esAdministrador && !form.unidad_servicio_id) {
       setError("Debes asignar una clínica al usuario");
       return;
     }
 
     const payload = { ...form };
+    if (esAdministrador) payload.unidad_servicio_id = null;
     if (!payload.password) delete payload.password;
     if (!payload.email) delete payload.email;
 
@@ -213,23 +222,29 @@ export default function RenacedUsuarioForm() {
               </select>
             </div>
 
-            <div>
-              <label className="form-label">Clínica *</label>
-              <select
-                name="unidad_servicio_id"
-                value={form.unidad_servicio_id}
-                onChange={(e) => setForm((f) => ({ ...f, unidad_servicio_id: e.target.value }))}
-                required
-              >
-                <option value="">Selecciona una clínica…</option>
-                {clinicas.map((c) => (
-                  <option key={c.id} value={c.id}>{c.nombre}</option>
-                ))}
-              </select>
-              <p style={{ fontSize: 12, color: "#94a3b8", marginTop: 4 }}>
-                El usuario solo verá pacientes y reportes de esta clínica.
+            {esAdministrador ? (
+              <p style={{ fontSize: 13, color: "#64748b", margin: 0, background: "#f8fafc", padding: "10px 14px", borderRadius: 8 }}>
+                Un Administrador ve todas las clínicas del país — no se asigna a ninguna en particular.
               </p>
-            </div>
+            ) : (
+              <div>
+                <label className="form-label">Clínica *</label>
+                <select
+                  name="unidad_servicio_id"
+                  value={form.unidad_servicio_id}
+                  onChange={(e) => setForm((f) => ({ ...f, unidad_servicio_id: e.target.value }))}
+                  required
+                >
+                  <option value="">Selecciona una clínica…</option>
+                  {clinicas.map((c) => (
+                    <option key={c.id} value={c.id}>{c.nombre}</option>
+                  ))}
+                </select>
+                <p style={{ fontSize: 12, color: "#94a3b8", marginTop: 4 }}>
+                  El usuario solo verá pacientes y reportes de esta clínica.
+                </p>
+              </div>
+            )}
 
             {esEdicion && (
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
