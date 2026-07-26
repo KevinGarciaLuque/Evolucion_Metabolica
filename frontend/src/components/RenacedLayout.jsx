@@ -59,7 +59,10 @@ export default function RenacedLayout({ children }) {
 
   function handleLogout() {
     logout();
-    navigate("/login");
+    // Regresa al login del mismo país donde estaba (hoy solo existe /renaced/login
+    // para México; si se agregan más países RENACED, cada uno necesitará su propio
+    // login y esta ruta deberá resolverse según usuario.tenant).
+    navigate("/renaced/login");
   }
 
   // El Super Admin navega con el sidebar único (Sidebar.jsx), que ya lista

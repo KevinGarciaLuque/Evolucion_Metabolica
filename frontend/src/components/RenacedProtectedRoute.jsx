@@ -6,7 +6,7 @@ export default function RenacedProtectedRoute({ children, adminOnly = false }) {
 
   // Mientras valida el token en background, si hay usuario en estado no bloquear
   if (cargando && !usuario) return null;
-  if (!usuario) return <Navigate to="/login" replace />;
+  if (!usuario) return <Navigate to="/renaced/login" replace />;
   if (adminOnly && usuario.perfil_id !== 1) return <Navigate to="/renaced/dashboard" replace />;
   return children;
 }
