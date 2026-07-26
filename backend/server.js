@@ -53,6 +53,9 @@ import renacedMapaRoutes           from "./routes/renaced/mapa.routes.js";
 // ── Super Admin ALAD (base de datos alad_master) ─────────────────────────────
 import adminTenantsRoutes from "./routes/admin/tenants.routes.js";
 
+// ── Público (landing ALAD, sin autenticación) ────────────────────────────────
+import publicEstadisticasRoutes from "./routes/public/estadisticas.routes.js";
+
 dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
@@ -133,6 +136,9 @@ app.use("/api/renaced/mapa",                                 renacedMapaRoutes);
 
 // ── Rutas Super Admin ALAD (prefijo /api/admin — DB alad_master) ──────────
 app.use("/api/admin/tenants", adminTenantsRoutes);
+
+// ── Rutas públicas (prefijo /api/public — landing ALAD, sin login) ────────
+app.use("/api/public", publicEstadisticasRoutes);
 
 // Health check
 app.get("/api/health", (_req, res) => res.json({ status: "ok", timestamp: new Date().toISOString() }));

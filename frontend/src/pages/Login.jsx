@@ -2,7 +2,8 @@ import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useRenacedAuth } from "../context/RenacedAuthContext";
-import { FiInfo } from "react-icons/fi";
+import { FiInfo, FiArrowLeft } from "react-icons/fi";
+import FlagIcon from "../components/FlagIcon";
 import "./Login.css";
 
 function ModalAcercaDe({ onClose, origin }) {
@@ -31,8 +32,8 @@ function ModalAcercaDe({ onClose, origin }) {
         </button>
 
         <div className="modal-acerca-header">
-          <span style={{ fontSize: "2rem" }}>🩺</span>
-          <h2>Evolución Metabólica</h2>
+          <FlagIcon codigo="hn" size={32} />
+          <h2>SAAPD Honduras</h2>
           <p className="modal-version">Versión 1.0 · 2026</p>
         </div>
 
@@ -126,9 +127,14 @@ export default function Login() {
   return (
     <div className="login-page">
       <div className="login-card">
+        <button type="button" className="btn-volver-inicio" onClick={() => navigate("/")}>
+          <FiArrowLeft size={15} />
+          Volver al inicio
+        </button>
+
         <div className="login-header">
-          <span className="login-icon">🩺</span>
-          <h1>Evolución Metabólica</h1>
+          <FlagIcon codigo="hn" size={48} style={{ display: "block", margin: "0 auto 12px" }} />
+          <h1>SAAPD Honduras</h1>
           <p>Sistema de Monitoreo Continuo de Glucosa</p>
         </div>
 

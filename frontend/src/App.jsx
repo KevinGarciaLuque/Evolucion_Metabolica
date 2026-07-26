@@ -4,6 +4,7 @@ import { RenacedAuthProvider } from "./context/RenacedAuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import RenacedProtectedRoute from "./components/RenacedProtectedRoute";
 
+import Landing          from "./pages/Landing";
 import Login           from "./pages/Login";
 import Dashboard       from "./pages/Dashboard";
 import PacientesList   from "./pages/Pacientes/PacientesList";
@@ -27,6 +28,7 @@ import ImportacionHEU from "./pages/Importaciones/ImportacionHEU";
 import AdminPanel from "./pages/Admin/AdminPanel";
 
 // ── Módulo RENACED ────────────────────────────────────────────────────────────
+import RenacedLogin           from "./pages/Renaced/RenacedLogin";
 import RenacedDashboard       from "./pages/Renaced/RenacedDashboard";
 import RenacedPacientesList   from "./pages/Renaced/RenacedPacientesList";
 import RenacedPacienteForm    from "./pages/Renaced/RenacedPacienteForm";
@@ -46,6 +48,7 @@ function App() {
       <RenacedAuthProvider>
         <BrowserRouter>
           <Routes>
+            <Route path="/" element={<Landing />} />
             <Route path="/login" element={<Login />} />
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/pacientes"        element={<ProtectedRoute><PacientesList /></ProtectedRoute>} />
@@ -69,7 +72,7 @@ function App() {
             <Route path="/importaciones/heu"     element={<ProtectedRoute><ImportacionHEU /></ProtectedRoute>} />
 
             {/* ── RENACED ─────────────────────────────────────────────── */}
-            <Route path="/renaced/login" element={<Navigate to="/login" replace />} />
+            <Route path="/renaced/login" element={<RenacedLogin />} />
             <Route path="/renaced/dashboard"              element={<RenacedProtectedRoute><RenacedDashboard /></RenacedProtectedRoute>} />
             <Route path="/renaced/pacientes"              element={<RenacedProtectedRoute><RenacedPacientesList /></RenacedProtectedRoute>} />
             <Route path="/renaced/pacientes/nuevo"        element={<RenacedProtectedRoute><RenacedPacienteForm /></RenacedProtectedRoute>} />

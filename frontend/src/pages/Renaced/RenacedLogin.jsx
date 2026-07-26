@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useRenacedAuth } from "../../context/RenacedAuthContext";
+import { FiArrowLeft } from "react-icons/fi";
+import FlagIcon from "../../components/FlagIcon";
 import "../Login.css";
 
 export default function RenacedLogin() {
@@ -29,9 +31,14 @@ export default function RenacedLogin() {
   return (
     <div className="login-page" style={{ background: "linear-gradient(135deg, #0c2340 0%, #1a4a7a 100%)" }}>
       <div className="login-card">
+        <button type="button" className="btn-volver-inicio" onClick={() => navigate("/")}>
+          <FiArrowLeft size={15} />
+          Volver al inicio
+        </button>
+
         <div className="login-header">
           <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 10, marginBottom: 12 }}>
-            <span style={{ fontSize: 36 }}>🇲🇽</span>
+            <FlagIcon codigo="mx" size={36} />
           </div>
           <h1 style={{ margin: 0, fontSize: "1.5rem", fontWeight: 800, color: "#0f172a" }}>RENACED México</h1>
           <p style={{ margin: "6px 0 0", color: "#64748b", fontSize: 14 }}>

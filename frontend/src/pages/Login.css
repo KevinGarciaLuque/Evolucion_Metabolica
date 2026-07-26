@@ -111,6 +111,36 @@
   background: #eff6ff;
 }
 
+/* ── Botón "Volver al inicio" ── */
+.btn-volver-inicio {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #f1f5f9;
+  border: none;
+  border-radius: 20px;
+  padding: 7px 14px 7px 10px;
+  margin-bottom: 22px;
+  color: #475569;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease, transform 0.15s ease;
+}
+.btn-volver-inicio svg {
+  transition: transform 0.15s ease;
+}
+.btn-volver-inicio:hover {
+  background: #e0e7ff;
+  color: #1d4ed8;
+}
+.btn-volver-inicio:hover svg {
+  transform: translateX(-2px);
+}
+.btn-volver-inicio:active {
+  transform: scale(0.97);
+}
+
 /* ── Modal Acerca de ── */
 .modal-overlay {
   position: fixed;

@@ -20,7 +20,8 @@ export const getTenants = async (req, res) => {
 
 // Honduras (SAAPD) usa el esquema original de Evolución Metabólica (tabla `pacientes`,
 // columna `estado`); los demás tenants usan el esquema RENACED (tabla `paciente`, `estatus_id`).
-async function consultarStatsTenant(dbPool, tenant) {
+// Exportada para reutilizarse en el endpoint público de estadísticas (landing ALAD).
+export async function consultarStatsTenant(dbPool, tenant) {
   if (tenant.codigo === "hn") {
     const [[s]] = await dbPool.query(
       `SELECT COUNT(*) AS total_pacientes, SUM(sexo='F') AS mujeres, SUM(sexo='M') AS hombres
