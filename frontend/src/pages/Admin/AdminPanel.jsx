@@ -29,13 +29,14 @@ const MODULOS_HONDURAS = [
   { clave: "auditoria",         nombre: "Auditoría" },
 ];
 const MODULOS_RENACED = [
-  { clave: "dashboard",  nombre: "Dashboard" },
-  { clave: "pacientes",  nombre: "Pacientes" },
-  { clave: "consultas",  nombre: "Consultas" },
-  { clave: "mapa",       nombre: "Mapa" },
-  { clave: "reportes",   nombre: "Reportes" },
-  { clave: "clinicas",   nombre: "Clínicas" },
-  { clave: "usuarios",   nombre: "Usuarios" },
+  { clave: "dashboard",    nombre: "Dashboard" },
+  { clave: "pacientes",    nombre: "Pacientes" },
+  { clave: "consultas",    nombre: "Consultas" },
+  { clave: "mapa",         nombre: "Mapa" },
+  { clave: "reportes",     nombre: "Reportes" },
+  { clave: "clinicas",     nombre: "Clínicas" },
+  { clave: "usuarios",     nombre: "Usuarios" },
+  { clave: "importar_bd",  nombre: "Importar BD" },
 ];
 function catalogoModulos(codigo) {
   return codigo === "hn" ? MODULOS_HONDURAS : MODULOS_RENACED;

@@ -41,8 +41,9 @@ export default function RenacedLayout({ children }) {
   const modulosActivos = Array.isArray(usuario?.modulos) ? usuario.modulos : null;
   const menuBaseVisible  = MENU_BASE.filter((m) => !modulosActivos || modulosActivos.includes(m.clave));
   let menuAdminVisible = MENU_ADMIN.filter((m) => !modulosActivos || modulosActivos.includes(m.clave));
-  // Importar base de datos: exclusivo de México, no aplica a otros países RENACED.
-  if (usuario?.tenant === "mx") {
+  // Importar base de datos: exclusivo de México, no aplica a otros países RENACED,
+  // y respeta el mismo toggle de módulos que el resto del sidebar.
+  if (usuario?.tenant === "mx" && (!modulosActivos || modulosActivos.includes("importar_bd"))) {
     menuAdminVisible = [
       ...menuAdminVisible,
       { to: "/renaced/importar-bd", clave: "importar_bd", icon: HiOutlineDocumentArrowUp, label: "Importar BD" },
