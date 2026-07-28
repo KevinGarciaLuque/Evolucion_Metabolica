@@ -39,6 +39,23 @@ export default function Landing() {
       background: "linear-gradient(135deg, #0c2340 0%, #1a4a7a 100%)",
       display: "flex", flexDirection: "column", alignItems: "center",
     }}>
+      <style>{`
+        .landing-pais-btn {
+          transition: background-color 0.18s ease, padding-left 0.18s ease, color 0.18s ease;
+        }
+        .landing-pais-btn:hover {
+          background-color: #eff6ff !important;
+          padding-left: 22px !important;
+          color: #1d4ed8;
+        }
+        .landing-pais-btn:hover .landing-pais-flag {
+          transform: scale(1.15);
+        }
+        .landing-pais-flag {
+          transition: transform 0.18s ease;
+        }
+      `}</style>
+
       {/* Navbar */}
       <nav style={{
         width: "100%", position: "sticky", top: 0, zIndex: 30,
@@ -85,6 +102,7 @@ export default function Landing() {
                 {paises.map((p) => (
                   <button
                     key={p.codigo}
+                    className="landing-pais-btn"
                     onClick={() => navigate(loginDePais(p.codigo))}
                     style={{
                       display: "flex", alignItems: "center", gap: 10, width: "100%",
@@ -92,7 +110,7 @@ export default function Landing() {
                       borderTop: "1px solid #f1f5f9", cursor: "pointer", textAlign: "left", fontSize: 14,
                     }}
                   >
-                    <FlagIcon codigo={p.codigo} size={18} />
+                    <FlagIcon codigo={p.codigo} size={18} className="landing-pais-flag" />
                     {p.pais}
                   </button>
                 ))}

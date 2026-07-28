@@ -5,6 +5,10 @@
 // habilitados), igual que ya asume el frontend.
 export function verificarModulo(clave) {
   return (req, res, next) => {
+    // El Super Admin (sesión de impersonación) siempre debe poder ver todos los
+    // módulos de cualquier país — el toggle solo aplica a usuarios reales del tenant.
+    if (req.usuario?.super_admin) return next();
+
     const modulos = req.usuario?.modulos;
     if (Array.isArray(modulos) && !modulos.includes(clave)) {
       return res.status(403).json({ error: "Este módulo no está habilitado para tu país" });

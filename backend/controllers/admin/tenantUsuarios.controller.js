@@ -13,7 +13,7 @@ async function crearTablaPermisosSiNoExiste(dbPool) {
   await dbPool.query(`
     CREATE TABLE IF NOT EXISTS permisos_modulos (
       id          INT AUTO_INCREMENT PRIMARY KEY,
-      usuario_id  INT NOT NULL,
+      usuario_id  INT UNSIGNED NOT NULL,
       modulo      VARCHAR(50) NOT NULL,
       UNIQUE KEY uk_usuario_modulo (usuario_id, modulo),
       CONSTRAINT fk_pm_usuario FOREIGN KEY (usuario_id) REFERENCES usuario(id) ON DELETE CASCADE
