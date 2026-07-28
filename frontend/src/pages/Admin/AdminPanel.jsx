@@ -43,6 +43,10 @@ function catalogoModulos(codigo) {
   return codigo === "hn" ? MODULOS_HONDURAS : MODULOS_RENACED;
 }
 
+const PERFIL_LABELS = {
+  1: "Administrador", 2: "Médico", 3: "Asistente", 4: "Enfermera", 5: "Investigador",
+};
+
 const EMPTY_FORM = {
   nombre: "", codigo: "", subdominio: "", db_name: "", db_host: "",
   admin_nombre: "", admin_email: "", admin_password: "",
@@ -100,6 +104,7 @@ export default function AdminPanel() {
   const [eliminarTarget, setEliminarTarget] = useState(null);
   const [eliminando, setEliminando] = useState(false);
   const [permisosModal, setPermisosModal] = useState(null); // tenant actual
+  const [permisosTab, setPermisosTab] = useState("pais");   // "pais" | "usuarios"
   const [permisosSeleccion, setPermisosSeleccion] = useState([]);
   const [guardandoPermisos, setGuardandoPermisos] = useState(false);
   const [usuariosTenant, setUsuariosTenant] = useState([]);
@@ -137,6 +142,7 @@ export default function AdminPanel() {
     const catalogo = catalogoModulos(t.codigo);
     const activos = Array.isArray(t.modulos) ? t.modulos : catalogo.map((m) => m.clave);
     setPermisosSeleccion(activos.filter((m) => catalogo.some((c) => c.clave === m)));
+    setPermisosTab("pais");
     setPermisosModal(t);
     cargarUsuariosTenant(t);
   }
@@ -173,6 +179,13 @@ export default function AdminPanel() {
         : [...actuales, clave];
       return { ...prev, [usuarioId]: nuevo };
     });
+  }
+
+  function toggleTodosUsuario(t, usuarioId, marcarTodos) {
+    setPermisosUsuarios((prev) => ({
+      ...prev,
+      [usuarioId]: marcarTodos ? catalogoModulos(t.codigo).map((m) => m.clave) : [],
+    }));
   }
 
   async function guardarPermisosUsuario(t, usuarioId) {
@@ -599,122 +612,169 @@ export default function AdminPanel() {
       {permisosModal && (
         <div style={{ position: "fixed", inset: 0, zIndex: 9999, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}
           onClick={() => setPermisosModal(null)}>
-          <div style={{ background: "#fff", borderRadius: 14, padding: 28, maxWidth: 620, width: "100%", maxHeight: "88vh", display: "flex", flexDirection: "column", boxShadow: "0 24px 64px rgba(0,0,0,0.25)" }}
+          <div style={{ background: "#fff", borderRadius: 16, width: "100%", maxWidth: 660, maxHeight: "88vh", display: "flex", flexDirection: "column", boxShadow: "0 24px 64px rgba(0,0,0,0.25)", overflow: "hidden" }}
             onClick={(e) => e.stopPropagation()}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
-              <h3 style={{ margin: 0, display: "flex", alignItems: "center", gap: 8 }}>
-                <FlagIcon codigo={permisosModal.codigo} size={16} /> Permisos — {permisosModal.nombre}
-              </h3>
-              <button onClick={() => setPermisosModal(null)} style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer", color: "#94a3b8" }}>✕</button>
-            </div>
-            <p style={{ margin: "4px 0 16px", fontSize: 12, color: "#94a3b8" }}>
-              Módulos habilitados en el sidebar de este país.
-            </p>
 
-            {error && (
-              <div style={{ background: "#fef2f2", color: "#dc2626", padding: "10px 14px", borderRadius: 8, marginBottom: 14, fontSize: 13 }}>
-                {error}
-              </div>
-            )}
-
-            <div style={{ overflowY: "auto", flex: 1 }}>
-              <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                {catalogoModulos(permisosModal.codigo).map((m) => {
-                  const activo = permisosSeleccion.includes(m.clave);
-                  return (
-                    <label key={m.clave} style={{
-                      display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10,
-                      padding: "9px 12px", borderRadius: 8, cursor: "pointer",
-                      background: activo ? "#eff6ff" : "#f8fafc",
-                      border: `1px solid ${activo ? "#bfdbfe" : "#e2e8f0"}`,
-                    }}>
-                      <span style={{ fontSize: 13, fontWeight: 600, color: "#334155" }}>{m.nombre}</span>
-                      <input
-                        type="checkbox"
-                        checked={activo}
-                        onChange={() => toggleModulo(m.clave)}
-                        style={{ width: 16, height: 16, cursor: "pointer" }}
-                      />
-                    </label>
-                  );
-                })}
+            {/* Header */}
+            <div style={{ padding: "22px 28px 0" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                <div>
+                  <h3 style={{ margin: 0, display: "flex", alignItems: "center", gap: 8, fontSize: "1.05rem" }}>
+                    <FlagIcon codigo={permisosModal.codigo} size={17} /> Permisos — {permisosModal.nombre}
+                  </h3>
+                  <p style={{ margin: "4px 0 0", fontSize: 12.5, color: "#94a3b8" }}>
+                    Controla qué módulos ve este país y qué ve cada usuario dentro de él.
+                  </p>
+                </div>
+                <button onClick={() => setPermisosModal(null)} style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer", color: "#94a3b8" }}>✕</button>
               </div>
 
-              <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 16 }}>
-                <button type="button" className="btn btn-primary btn-sm" disabled={guardandoPermisos} onClick={guardarPermisos}>
-                  {guardandoPermisos ? "Guardando…" : "Guardar permisos del país"}
+              {error && (
+                <div style={{ background: "#fef2f2", color: "#dc2626", padding: "10px 14px", borderRadius: 8, marginTop: 14, fontSize: 13 }}>
+                  {error}
+                </div>
+              )}
+
+              {/* Tabs */}
+              <div style={{ display: "flex", gap: 4, background: "#f1f5f9", borderRadius: 10, padding: 4, marginTop: 18 }}>
+                <button
+                  type="button"
+                  onClick={() => setPermisosTab("pais")}
+                  style={{
+                    flex: 1, padding: "9px 14px", borderRadius: 8, border: "none", cursor: "pointer",
+                    fontSize: 13, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                    background: permisosTab === "pais" ? "#fff" : "transparent",
+                    color: permisosTab === "pais" ? "#1d4ed8" : "#64748b",
+                    boxShadow: permisosTab === "pais" ? "0 1px 3px rgba(0,0,0,.1)" : "none",
+                    transition: "all 0.15s",
+                  }}
+                >
+                  <HiOutlineGlobeAmericas size={15} /> Módulos del país
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPermisosTab("usuarios")}
+                  style={{
+                    flex: 1, padding: "9px 14px", borderRadius: 8, border: "none", cursor: "pointer",
+                    fontSize: 13, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                    background: permisosTab === "usuarios" ? "#fff" : "transparent",
+                    color: permisosTab === "usuarios" ? "#1d4ed8" : "#64748b",
+                    boxShadow: permisosTab === "usuarios" ? "0 1px 3px rgba(0,0,0,.1)" : "none",
+                    transition: "all 0.15s",
+                  }}
+                >
+                  <HiOutlineUsers size={15} /> Usuarios {usuariosTenant.length > 0 && `(${usuariosTenant.length})`}
                 </button>
               </div>
-
-              {/* ── Permisos individuales por usuario ─────────────────────── */}
-              <div style={{ borderTop: "1px solid #e2e8f0", margin: "20px 0 14px", paddingTop: 16 }}>
-                <p style={{ margin: "0 0 4px", fontWeight: 700, fontSize: 13, color: "#334155", display: "flex", alignItems: "center", gap: 6 }}>
-                  <HiOutlineUsers size={15} /> Permisos individuales por usuario
-                </p>
-                <p style={{ margin: "0 0 12px", fontSize: 12, color: "#94a3b8" }}>
-                  Un usuario solo ve un módulo si está habilitado para el país Y para el usuario.
-                </p>
-
-                {cargandoUsuariosTenant ? (
-                  <p style={{ color: "#94a3b8", fontSize: 13 }}>Cargando usuarios…</p>
-                ) : usuariosTenant.length === 0 ? (
-                  <p style={{ color: "#94a3b8", fontSize: 13, fontStyle: "italic" }}>Este país aún no tiene usuarios activos.</p>
-                ) : (
-                  <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                    {usuariosTenant.map((u) => {
-                      const modulosUsuario = permisosUsuarios[u.id] ?? [];
-                      const estado = estadosUsuarios[u.id] || "idle";
-                      return (
-                        <div key={u.id} style={{ border: "1px solid #e2e8f0", borderRadius: 10, padding: "12px 14px" }}>
-                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, marginBottom: 10, flexWrap: "wrap" }}>
-                            <div>
-                              <p style={{ margin: 0, fontWeight: 600, fontSize: 13, color: "#334155" }}>{u.nombre_completo}</p>
-                              <p style={{ margin: 0, fontSize: 11, color: "#94a3b8" }}>{u.email}</p>
-                            </div>
-                            <button
-                              type="button"
-                              className={`btn btn-sm ${estado === "guardando" ? "btn-outline" : "btn-primary"}`}
-                              disabled={estado === "guardando"}
-                              onClick={() => guardarPermisosUsuario(permisosModal, u.id)}
-                            >
-                              {estado === "guardando" ? "Guardando…" :
-                               estado === "ok"        ? "✓ Guardado" :
-                               estado === "error"     ? "Error"      : "Guardar"}
-                            </button>
-                          </div>
-                          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(130px, 1fr))", gap: 6 }}>
-                            {catalogoModulos(permisosModal.codigo).map((m) => {
-                              const activo = modulosUsuario.includes(m.clave);
-                              return (
-                                <label key={m.clave} style={{
-                                  display: "flex", alignItems: "center", gap: 6,
-                                  padding: "6px 8px", borderRadius: 6, cursor: "pointer",
-                                  border: `1px solid ${activo ? "#bfdbfe" : "#e2e8f0"}`,
-                                  background: activo ? "#eff6ff" : "#f8fafc",
-                                  fontSize: 12, fontWeight: activo ? 600 : 400,
-                                  color: activo ? "#1d4ed8" : "#64748b",
-                                }}>
-                                  <input
-                                    type="checkbox"
-                                    checked={activo}
-                                    onChange={() => toggleModuloUsuario(u.id, m.clave)}
-                                    style={{ width: 13, height: 13, cursor: "pointer" }}
-                                  />
-                                  {m.nombre}
-                                </label>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
             </div>
 
-            <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 20 }}>
+            {/* Contenido de la pestaña activa */}
+            <div style={{ overflowY: "auto", flex: 1, padding: "18px 28px 4px" }}>
+              {permisosTab === "pais" ? (
+                <>
+                  <p style={{ margin: "0 0 12px", fontSize: 12.5, color: "#94a3b8" }}>
+                    Estos módulos son el techo máximo del país — un usuario nunca puede ver más de lo habilitado aquí, sin importar sus permisos individuales.
+                  </p>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 8 }}>
+                    {catalogoModulos(permisosModal.codigo).map((m) => (
+                      <ModuloToggle
+                        key={m.clave}
+                        nombre={m.nombre}
+                        activo={permisosSeleccion.includes(m.clave)}
+                        onChange={() => toggleModulo(m.clave)}
+                      />
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <>
+                  <p style={{ margin: "0 0 14px", fontSize: 12.5, color: "#94a3b8" }}>
+                    Un usuario solo ve un módulo si está habilitado para el país <strong>y</strong> para él. Cada tarjeta se guarda de forma independiente.
+                  </p>
+
+                  {cargandoUsuariosTenant ? (
+                    <p style={{ color: "#94a3b8", fontSize: 13 }}>Cargando usuarios…</p>
+                  ) : usuariosTenant.length === 0 ? (
+                    <div style={{ padding: "28px 12px", textAlign: "center", color: "#94a3b8", fontSize: 13, fontStyle: "italic", background: "#f8fafc", borderRadius: 10 }}>
+                      Este país aún no tiene usuarios activos.
+                    </div>
+                  ) : (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 14, paddingBottom: 8 }}>
+                      {usuariosTenant.map((u) => {
+                        const modulosUsuario = permisosUsuarios[u.id] ?? [];
+                        const catalogo = catalogoModulos(permisosModal.codigo);
+                        const todos = modulosUsuario.length === catalogo.length;
+                        const estado = estadosUsuarios[u.id] || "idle";
+                        return (
+                          <div key={u.id} style={{ border: "1px solid #e2e8f0", borderRadius: 12, padding: "14px 16px", background: "#fff" }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, marginBottom: 12, flexWrap: "wrap" }}>
+                              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                                <div style={{
+                                  width: 34, height: 34, borderRadius: "50%", flexShrink: 0,
+                                  background: "linear-gradient(135deg, #6366f1, #8b5cf6)",
+                                  display: "flex", alignItems: "center", justifyContent: "center",
+                                  color: "#fff", fontWeight: 700, fontSize: 13,
+                                }}>
+                                  {iniciales(u.nombre_completo)}
+                                </div>
+                                <div>
+                                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                    <p style={{ margin: 0, fontWeight: 600, fontSize: 13.5, color: "#1e293b" }}>{u.nombre_completo}</p>
+                                    <span style={{ fontSize: 10.5, fontWeight: 700, color: "#7c3aed", background: "#f5f3ff", padding: "2px 7px", borderRadius: 999 }}>
+                                      {PERFIL_LABELS[u.perfil_id] || "Usuario"}
+                                    </span>
+                                  </div>
+                                  <p style={{ margin: 0, fontSize: 11.5, color: "#94a3b8" }}>{u.email}</p>
+                                </div>
+                              </div>
+                              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                                <button
+                                  type="button"
+                                  className="btn btn-outline btn-sm"
+                                  onClick={() => toggleTodosUsuario(permisosModal, u.id, !todos)}
+                                >
+                                  {todos ? "Quitar todos" : "Dar todos"}
+                                </button>
+                                <button
+                                  type="button"
+                                  className={`btn btn-sm ${estado === "guardando" ? "btn-outline" : "btn-primary"}`}
+                                  disabled={estado === "guardando"}
+                                  onClick={() => guardarPermisosUsuario(permisosModal, u.id)}
+                                >
+                                  {estado === "guardando" ? "Guardando…" :
+                                   estado === "ok"        ? "✓ Guardado" :
+                                   estado === "error"     ? "Error"      : "Guardar"}
+                                </button>
+                              </div>
+                            </div>
+                            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(170px, 1fr))", gap: 6 }}>
+                              {catalogo.map((m) => (
+                                <ModuloToggle
+                                  key={m.clave}
+                                  nombre={m.nombre}
+                                  activo={modulosUsuario.includes(m.clave)}
+                                  onChange={() => toggleModuloUsuario(u.id, m.clave)}
+                                  dense
+                                />
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", padding: "16px 28px", borderTop: "1px solid #e2e8f0", background: "#f8fafc" }}>
               <button type="button" className="btn btn-outline" onClick={() => setPermisosModal(null)}>Cerrar</button>
+              {permisosTab === "pais" && (
+                <button type="button" className="btn btn-primary" disabled={guardandoPermisos} onClick={guardarPermisos}>
+                  {guardandoPermisos ? "Guardando…" : "Guardar módulos del país"}
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -758,4 +818,46 @@ function StatCard({ icon, label, value, sub, bg }) {
       </div>
     </div>
   );
+}
+
+// Fila de módulo con interruptor tipo switch — usada tanto para permisos de
+// país como de usuario, para que ambas secciones se vean como una sola pieza.
+function ModuloToggle({ nombre, activo, onChange, dense }) {
+  return (
+    <label style={{
+      display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10,
+      padding: dense ? "7px 10px" : "10px 14px", borderRadius: 9, cursor: "pointer",
+      background: activo ? "#eff6ff" : "#f8fafc",
+      border: `1px solid ${activo ? "#bfdbfe" : "#e2e8f0"}`,
+      transition: "background-color 0.15s, border-color 0.15s",
+    }}>
+      <span style={{ fontSize: dense ? 12.5 : 13.5, fontWeight: 600, color: activo ? "#1d4ed8" : "#475569" }}>
+        {nombre}
+      </span>
+      <span
+        onClick={(e) => { e.preventDefault(); onChange(); }}
+        style={{
+          position: "relative", flexShrink: 0, width: dense ? 30 : 34, height: dense ? 17 : 19,
+          borderRadius: 999, background: activo ? "#2563eb" : "#cbd5e1",
+          transition: "background-color 0.18s", cursor: "pointer",
+        }}
+      >
+        <span style={{
+          position: "absolute", top: 2, left: activo ? (dense ? 15 : 17) : 2,
+          width: dense ? 13 : 15, height: dense ? 13 : 15, borderRadius: "50%",
+          background: "#fff", boxShadow: "0 1px 2px rgba(0,0,0,0.35)",
+          transition: "left 0.18s",
+        }} />
+      </span>
+    </label>
+  );
+}
+
+function iniciales(nombre) {
+  return (nombre || "?")
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((p) => p[0]?.toUpperCase())
+    .join("");
 }
