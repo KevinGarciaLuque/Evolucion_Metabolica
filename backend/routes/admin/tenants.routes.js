@@ -9,6 +9,10 @@ import {
   getEstadisticasGlobales,
   impersonarTenant,
 } from "../../controllers/admin/tenants.controller.js";
+import {
+  listarUsuariosTenant,
+  actualizarPermisosUsuarioTenant,
+} from "../../controllers/admin/tenantUsuarios.controller.js";
 
 const router = Router();
 
@@ -29,5 +33,8 @@ router.post("/by-codigo/:codigo/impersonate", impersonarTenant);
 router.post("/",                   createTenant);
 router.put("/:id",                 updateTenant);
 router.delete("/:id",              deleteTenant);
+
+router.get("/:id/usuarios",                       listarUsuariosTenant);
+router.put("/:id/usuarios/:usuarioId/permisos",   actualizarPermisosUsuarioTenant);
 
 export default router;

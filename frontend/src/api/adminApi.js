@@ -9,3 +9,6 @@ export const updateTenant          = (id, data) => api.put(`${BASE}/${id}`, data
 export const deleteTenant          = (id)       => api.delete(`${BASE}/${id}`);
 export const getEstadisticasGlobales = ()       => api.get(`${BASE}/estadisticas-globales`);
 export const impersonarTenant        = (codigo) => api.post(`${BASE}/by-codigo/${codigo}/impersonate`);
+export const getUsuariosTenant       = (id)     => api.get(`${BASE}/${id}/usuarios`);
+export const actualizarPermisosUsuarioTenant = (id, usuarioId, modulos) =>
+  api.put(`${BASE}/${id}/usuarios/${usuarioId}/permisos`, { modulos });

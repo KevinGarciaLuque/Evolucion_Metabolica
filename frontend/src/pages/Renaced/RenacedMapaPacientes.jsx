@@ -126,15 +126,23 @@ export default function RenacedMapaPacientes() {
   const [cargando, setCargando] = useState(true);
   const [filtro, setFiltro] = useState("TODOS");
   const [vista, setVista] = useState("residencia");
+  const [errorAcceso, setErrorAcceso] = useState(null);
 
   useEffect(() => {
     getMapaPacientes()
       .then((r) => setData(r.data))
-      .catch(() => setData({
-        total_pacientes: 0,
-        residencia: { puntos: [], total_georreferenciados: 0, top_estados: [] },
-        atencion: { puntos: [], total_georreferenciados: 0, top_estados: [] },
-      }))
+      .catch((err) => {
+        setErrorAcceso(
+          err.response?.status === 403
+            ? (err.response?.data?.error || "Este módulo no está habilitado para tu país.")
+            : "No se pudo cargar el mapa. Intenta de nuevo más tarde."
+        );
+        setData({
+          total_pacientes: 0,
+          residencia: { puntos: [], total_georreferenciados: 0, top_estados: [] },
+          atencion: { puntos: [], total_georreferenciados: 0, top_estados: [] },
+        });
+      })
       .finally(() => setCargando(false));
   }, []);
 
@@ -196,6 +204,14 @@ export default function RenacedMapaPacientes() {
 
       {cargando ? (
         <div className="card" style={{ padding: 48, textAlign: "center", color: "#94a3b8" }}>Cargando mapa…</div>
+      ) : errorAcceso ? (
+        <div className="card" style={{ padding: 48, textAlign: "center", color: "#94a3b8" }}>
+          <p style={{ fontSize: "2rem", marginBottom: 8 }}>🔒</p>
+          <p style={{ color: "#334155", fontWeight: 600 }}>{errorAcceso}</p>
+          <p style={{ fontSize: "0.82rem", marginTop: 8 }}>
+            Pide a tu Super Admin que habilite el módulo "Mapa" para tu país desde el Panel de Instancias.
+          </p>
+        </div>
       ) : (
         <>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(175px, 1fr))", gap: 12, marginBottom: 16 }}>

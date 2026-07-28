@@ -3,6 +3,7 @@ import Layout from "../../components/Layout";
 import FlagIcon from "../../components/FlagIcon";
 import {
   getTenants, createTenant, updateTenant, deleteTenant, getTenantById, getEstadisticasGlobales,
+  getUsuariosTenant, actualizarPermisosUsuarioTenant,
 } from "../../api/adminApi";
 import {
   HiOutlineGlobeAmericas, HiOutlinePlusCircle, HiOutlinePencilSquare,
@@ -101,6 +102,10 @@ export default function AdminPanel() {
   const [permisosModal, setPermisosModal] = useState(null); // tenant actual
   const [permisosSeleccion, setPermisosSeleccion] = useState([]);
   const [guardandoPermisos, setGuardandoPermisos] = useState(false);
+  const [usuariosTenant, setUsuariosTenant] = useState([]);
+  const [cargandoUsuariosTenant, setCargandoUsuariosTenant] = useState(false);
+  const [permisosUsuarios, setPermisosUsuarios] = useState({}); // { [usuarioId]: string[] }
+  const [estadosUsuarios, setEstadosUsuarios] = useState({});   // { [usuarioId]: "idle"|"guardando"|"ok"|"error" }
 
   useEffect(() => { cargar(); }, []);
 
@@ -133,6 +138,25 @@ export default function AdminPanel() {
     const activos = Array.isArray(t.modulos) ? t.modulos : catalogo.map((m) => m.clave);
     setPermisosSeleccion(activos.filter((m) => catalogo.some((c) => c.clave === m)));
     setPermisosModal(t);
+    cargarUsuariosTenant(t);
+  }
+
+  async function cargarUsuariosTenant(t) {
+    setCargandoUsuariosTenant(true);
+    try {
+      const res = await getUsuariosTenant(t.id);
+      const catalogo = catalogoModulos(t.codigo);
+      setUsuariosTenant(res.data);
+      const inicial = {};
+      res.data.forEach((u) => {
+        inicial[u.id] = u.modulos ?? catalogo.map((m) => m.clave);
+      });
+      setPermisosUsuarios(inicial);
+    } catch (_) {
+      setUsuariosTenant([]);
+    } finally {
+      setCargandoUsuariosTenant(false);
+    }
   }
 
   function toggleModulo(clave) {
@@ -141,13 +165,34 @@ export default function AdminPanel() {
     );
   }
 
+  function toggleModuloUsuario(usuarioId, clave) {
+    setPermisosUsuarios((prev) => {
+      const actuales = prev[usuarioId] ?? [];
+      const nuevo = actuales.includes(clave)
+        ? actuales.filter((m) => m !== clave)
+        : [...actuales, clave];
+      return { ...prev, [usuarioId]: nuevo };
+    });
+  }
+
+  async function guardarPermisosUsuario(t, usuarioId) {
+    setEstadosUsuarios((prev) => ({ ...prev, [usuarioId]: "guardando" }));
+    try {
+      await actualizarPermisosUsuarioTenant(t.id, usuarioId, permisosUsuarios[usuarioId] ?? []);
+      setEstadosUsuarios((prev) => ({ ...prev, [usuarioId]: "ok" }));
+      setTimeout(() => setEstadosUsuarios((prev) => ({ ...prev, [usuarioId]: "idle" })), 2000);
+    } catch (_) {
+      setEstadosUsuarios((prev) => ({ ...prev, [usuarioId]: "error" }));
+      setTimeout(() => setEstadosUsuarios((prev) => ({ ...prev, [usuarioId]: "idle" })), 3000);
+    }
+  }
+
   async function guardarPermisos() {
     if (!permisosModal) return;
     setGuardandoPermisos(true);
     try {
       await updateTenant(permisosModal.id, { modulos: permisosSeleccion });
       await cargar();
-      setPermisosModal(null);
     } catch (err) {
       setError(err.response?.data?.error || "Error al guardar permisos");
     } finally {
@@ -554,7 +599,7 @@ export default function AdminPanel() {
       {permisosModal && (
         <div style={{ position: "fixed", inset: 0, zIndex: 9999, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}
           onClick={() => setPermisosModal(null)}>
-          <div style={{ background: "#fff", borderRadius: 14, padding: 28, maxWidth: 440, width: "100%", maxHeight: "85vh", display: "flex", flexDirection: "column", boxShadow: "0 24px 64px rgba(0,0,0,0.25)" }}
+          <div style={{ background: "#fff", borderRadius: 14, padding: 28, maxWidth: 620, width: "100%", maxHeight: "88vh", display: "flex", flexDirection: "column", boxShadow: "0 24px 64px rgba(0,0,0,0.25)" }}
             onClick={(e) => e.stopPropagation()}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
               <h3 style={{ margin: 0, display: "flex", alignItems: "center", gap: 8 }}>
@@ -572,33 +617,104 @@ export default function AdminPanel() {
               </div>
             )}
 
-            <div style={{ display: "flex", flexDirection: "column", gap: 4, overflowY: "auto", flex: 1 }}>
-              {catalogoModulos(permisosModal.codigo).map((m) => {
-                const activo = permisosSeleccion.includes(m.clave);
-                return (
-                  <label key={m.clave} style={{
-                    display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10,
-                    padding: "9px 12px", borderRadius: 8, cursor: "pointer",
-                    background: activo ? "#eff6ff" : "#f8fafc",
-                    border: `1px solid ${activo ? "#bfdbfe" : "#e2e8f0"}`,
-                  }}>
-                    <span style={{ fontSize: 13, fontWeight: 600, color: "#334155" }}>{m.nombre}</span>
-                    <input
-                      type="checkbox"
-                      checked={activo}
-                      onChange={() => toggleModulo(m.clave)}
-                      style={{ width: 16, height: 16, cursor: "pointer" }}
-                    />
-                  </label>
-                );
-              })}
+            <div style={{ overflowY: "auto", flex: 1 }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                {catalogoModulos(permisosModal.codigo).map((m) => {
+                  const activo = permisosSeleccion.includes(m.clave);
+                  return (
+                    <label key={m.clave} style={{
+                      display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10,
+                      padding: "9px 12px", borderRadius: 8, cursor: "pointer",
+                      background: activo ? "#eff6ff" : "#f8fafc",
+                      border: `1px solid ${activo ? "#bfdbfe" : "#e2e8f0"}`,
+                    }}>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: "#334155" }}>{m.nombre}</span>
+                      <input
+                        type="checkbox"
+                        checked={activo}
+                        onChange={() => toggleModulo(m.clave)}
+                        style={{ width: 16, height: 16, cursor: "pointer" }}
+                      />
+                    </label>
+                  );
+                })}
+              </div>
+
+              <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 16 }}>
+                <button type="button" className="btn btn-primary btn-sm" disabled={guardandoPermisos} onClick={guardarPermisos}>
+                  {guardandoPermisos ? "Guardando…" : "Guardar permisos del país"}
+                </button>
+              </div>
+
+              {/* ── Permisos individuales por usuario ─────────────────────── */}
+              <div style={{ borderTop: "1px solid #e2e8f0", margin: "20px 0 14px", paddingTop: 16 }}>
+                <p style={{ margin: "0 0 4px", fontWeight: 700, fontSize: 13, color: "#334155", display: "flex", alignItems: "center", gap: 6 }}>
+                  <HiOutlineUsers size={15} /> Permisos individuales por usuario
+                </p>
+                <p style={{ margin: "0 0 12px", fontSize: 12, color: "#94a3b8" }}>
+                  Un usuario solo ve un módulo si está habilitado para el país Y para el usuario.
+                </p>
+
+                {cargandoUsuariosTenant ? (
+                  <p style={{ color: "#94a3b8", fontSize: 13 }}>Cargando usuarios…</p>
+                ) : usuariosTenant.length === 0 ? (
+                  <p style={{ color: "#94a3b8", fontSize: 13, fontStyle: "italic" }}>Este país aún no tiene usuarios activos.</p>
+                ) : (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                    {usuariosTenant.map((u) => {
+                      const modulosUsuario = permisosUsuarios[u.id] ?? [];
+                      const estado = estadosUsuarios[u.id] || "idle";
+                      return (
+                        <div key={u.id} style={{ border: "1px solid #e2e8f0", borderRadius: 10, padding: "12px 14px" }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, marginBottom: 10, flexWrap: "wrap" }}>
+                            <div>
+                              <p style={{ margin: 0, fontWeight: 600, fontSize: 13, color: "#334155" }}>{u.nombre_completo}</p>
+                              <p style={{ margin: 0, fontSize: 11, color: "#94a3b8" }}>{u.email}</p>
+                            </div>
+                            <button
+                              type="button"
+                              className={`btn btn-sm ${estado === "guardando" ? "btn-outline" : "btn-primary"}`}
+                              disabled={estado === "guardando"}
+                              onClick={() => guardarPermisosUsuario(permisosModal, u.id)}
+                            >
+                              {estado === "guardando" ? "Guardando…" :
+                               estado === "ok"        ? "✓ Guardado" :
+                               estado === "error"     ? "Error"      : "Guardar"}
+                            </button>
+                          </div>
+                          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(130px, 1fr))", gap: 6 }}>
+                            {catalogoModulos(permisosModal.codigo).map((m) => {
+                              const activo = modulosUsuario.includes(m.clave);
+                              return (
+                                <label key={m.clave} style={{
+                                  display: "flex", alignItems: "center", gap: 6,
+                                  padding: "6px 8px", borderRadius: 6, cursor: "pointer",
+                                  border: `1px solid ${activo ? "#bfdbfe" : "#e2e8f0"}`,
+                                  background: activo ? "#eff6ff" : "#f8fafc",
+                                  fontSize: 12, fontWeight: activo ? 600 : 400,
+                                  color: activo ? "#1d4ed8" : "#64748b",
+                                }}>
+                                  <input
+                                    type="checkbox"
+                                    checked={activo}
+                                    onChange={() => toggleModuloUsuario(u.id, m.clave)}
+                                    style={{ width: 13, height: 13, cursor: "pointer" }}
+                                  />
+                                  {m.nombre}
+                                </label>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             </div>
 
             <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 20 }}>
-              <button type="button" className="btn btn-outline" onClick={() => setPermisosModal(null)}>Cancelar</button>
-              <button type="button" className="btn btn-primary" disabled={guardandoPermisos} onClick={guardarPermisos}>
-                {guardandoPermisos ? "Guardando…" : "Guardar permisos"}
-              </button>
+              <button type="button" className="btn btn-outline" onClick={() => setPermisosModal(null)}>Cerrar</button>
             </div>
           </div>
         </div>
