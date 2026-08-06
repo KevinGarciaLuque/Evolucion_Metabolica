@@ -8,9 +8,9 @@ export const getPacientes = async (req, res) => {
     const params = [];
 
     if (busqueda) {
-      where += ` AND (p.nombre LIKE ? OR p.ap_pat LIKE ? OR p.curp LIKE ? OR p.expediente LIKE ?)`;
+      where += ` AND (p.nombre LIKE ? OR p.ap_pat LIKE ? OR p.curp LIKE ? OR p.expediente LIKE ? OR p.folio_renaced LIKE ?)`;
       const q = `%${busqueda}%`;
-      params.push(q, q, q, q);
+      params.push(q, q, q, q, q);
     }
     // El admin de país puede filtrar por cualquier clínica (drill-down); el resto
     // queda forzado a su propia unidad sin importar lo que envíe el cliente.

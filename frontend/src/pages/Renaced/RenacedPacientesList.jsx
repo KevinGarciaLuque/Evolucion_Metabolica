@@ -112,7 +112,7 @@ export default function RenacedPacientesList() {
             <HiOutlineMagnifyingGlass size={16} style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: "#94a3b8" }} />
             <input
               type="text"
-              placeholder="Buscar por nombre, apellido, CURP o expediente…"
+              placeholder="Buscar por nombre, apellido, CURP, expediente o folio…"
               value={inputBusqueda}
               onChange={(e) => setInputBusqueda(e.target.value)}
               style={{ paddingLeft: 34, width: "100%", boxSizing: "border-box" }}
