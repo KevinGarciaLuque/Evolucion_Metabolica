@@ -172,9 +172,9 @@ export default function RenacedPacientesList() {
                 </tr>
               </thead>
               <tbody>
-                {pacientes.map((p, idx) => (
+                {pacientes.map((p) => (
                   <tr key={p.id}>
-                    <td style={{ color: "#94a3b8", fontSize: 12 }}>{(page - 1) * limit + idx + 1}</td>
+                    <td style={{ color: "#94a3b8", fontSize: 12 }}>{p.folio_renaced ?? "—"}</td>
                     <td style={{ fontFamily: "monospace", fontSize: 12, color: "#6366f1" }}>
                       {p.expediente || <span style={{ color: "#cbd5e1" }}>—</span>}
                     </td>

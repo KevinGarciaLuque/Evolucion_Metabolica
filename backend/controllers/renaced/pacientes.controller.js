@@ -25,7 +25,7 @@ export const getPacientes = async (req, res) => {
     if (municipio_residencia) { where += " AND p.municipio_residencia = ?"; params.push(municipio_residencia); }
 
     const [rows] = await req.db.query(
-      `SELECT p.id, p.expediente, p.iniciales, p.nombre, p.ap_pat, p.ap_mat,
+      `SELECT p.id, p.expediente, p.folio_renaced, p.iniciales, p.nombre, p.ap_pat, p.ap_mat,
               p.sexo, p.fecha_nacimiento, p.curp,
               TIMESTAMPDIFF(YEAR, p.fecha_nacimiento, CURDATE()) AS edad,
               pe.descripcion AS estatus, p.estatus_id, p.fecha_alta, p.unidad_servicio_id,
@@ -136,17 +136,24 @@ export const createPaciente = async (req, res) => {
 
     await conn.beginTransaction();
 
+    // Folio secuencial fijo: se bloquea la fila de mayor folio para serializar
+    // las altas concurrentes y evitar que dos pacientes reciban el mismo número.
+    const [[{ siguienteFolio }]] = await conn.query(
+      "SELECT COALESCE(MAX(folio_renaced), 0) + 1 AS siguienteFolio FROM paciente FOR UPDATE"
+    );
+
     const [result] = await conn.query(
       `INSERT INTO paciente (
-        expediente, iniciales, nombre, ap_pat, ap_mat, sexo, fecha_nacimiento, curp,
+        expediente, folio_renaced, iniciales, nombre, ap_pat, ap_mat, sexo, fecha_nacimiento, curp,
         estado_nacimiento, municipio_nacimiento, pais_nacimiento_id,
         nivel_ingresos_id, nivel_educativo_id, estado_residencia,
         municipio_residencia, colonia, calle_num, codigo_postal,
         telefonos, email, seguro_medico_id, establecimiento_cve,
         unidad_servicio_id, tiene_aviso_privacidad, tiene_consentimiento, estatus_id
-      ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,1)`,
+      ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,1)`,
       [
         expediente || null,
+        siguienteFolio,
         iniciales  || null,
         nombre, ap_pat, ap_mat || null, sexo,
         fecha_nacimiento || null,
