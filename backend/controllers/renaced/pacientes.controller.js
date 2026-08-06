@@ -8,9 +8,18 @@ export const getPacientes = async (req, res) => {
     const params = [];
 
     if (busqueda) {
-      where += ` AND (p.nombre LIKE ? OR p.ap_pat LIKE ? OR p.curp LIKE ? OR p.expediente LIKE ? OR p.folio_renaced LIKE ?)`;
-      const q = `%${busqueda}%`;
-      params.push(q, q, q, q, q);
+      const texto = busqueda.trim();
+      if (/^\d+$/.test(texto)) {
+        // Búsqueda puramente numérica: se interpreta como folio exacto
+        // (ej. "1" o "22" deben regresar solo ese paciente, no todos los que
+        // contengan ese dígito).
+        where += ` AND p.folio_renaced = ?`;
+        params.push(parseInt(texto, 10));
+      } else {
+        where += ` AND (p.nombre LIKE ? OR p.ap_pat LIKE ? OR p.curp LIKE ? OR p.expediente LIKE ?)`;
+        const q = `%${texto}%`;
+        params.push(q, q, q, q);
+      }
     }
     // El admin de país puede filtrar por cualquier clínica (drill-down); el resto
     // queda forzado a su propia unidad sin importar lo que envíe el cliente.
