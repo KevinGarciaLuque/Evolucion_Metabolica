@@ -2,6 +2,7 @@ import poolRenaced from "../../config/db.renaced.js";
 import poolMaster from "../../config/db.master.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import { registrarLoginLog } from "../../utils/loginLog.js";
 
 // Intersecta los módulos habilitados para el país con los permisos
 // individuales del usuario (tabla permisos_modulos de la BD del tenant).
@@ -29,18 +30,28 @@ export async function loginRenaced(req, res) {
   if (!email || !password)
     return res.status(400).json({ error: "Email y contraseña son requeridos" });
 
+  const ip = req.headers["x-forwarded-for"]?.split(",")[0].trim() || req.socket?.remoteAddress || null;
+  const ua = req.headers["user-agent"] || null;
+
   try {
     const [rows] = await poolRenaced.query(
       "SELECT * FROM usuario WHERE (username = ? OR email = ?) AND activo = 1",
       [email, email]
     );
-    if (rows.length === 0)
+    if (rows.length === 0) {
+      registrarLoginLog({ tenantCodigo: "mx", usuarioEmail: email, exito: 0, ip, userAgent: ua });
       return res.status(401).json({ error: "Credenciales incorrectas" });
+    }
 
     const usuario = rows[0];
     const valido = await bcrypt.compare(password, usuario.password_hash);
-    if (!valido)
+    if (!valido) {
+      registrarLoginLog({
+        tenantCodigo: "mx", usuarioId: usuario.id, usuarioNombre: usuario.nombre_completo,
+        usuarioEmail: usuario.email || usuario.username, exito: 0, ip, userAgent: ua,
+      });
       return res.status(401).json({ error: "Credenciales incorrectas" });
+    }
 
     // Actualizar último acceso
     poolRenaced.query("UPDATE usuario SET ultimo_acceso = NOW() WHERE id = ?", [usuario.id]).catch(() => {});
@@ -80,6 +91,12 @@ export async function loginRenaced(req, res) {
     };
 
     const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "8h" });
+
+    registrarLoginLog({
+      tenantCodigo: "mx", usuarioId: usuario.id, usuarioNombre: usuario.nombre_completo,
+      usuarioEmail: usuario.email || usuario.username, usuarioRol: `perfil_${usuario.perfil_id}`,
+      exito: 1, ip, userAgent: ua,
+    });
 
     res.json({ token, usuario: payload });
   } catch (err) {

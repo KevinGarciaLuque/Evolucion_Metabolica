@@ -12,3 +12,5 @@ export const impersonarTenant        = (codigo) => api.post(`${BASE}/by-codigo/$
 export const getUsuariosTenant       = (id)     => api.get(`${BASE}/${id}/usuarios`);
 export const actualizarPermisosUsuarioTenant = (id, usuarioId, modulos) =>
   api.put(`${BASE}/${id}/usuarios/${usuarioId}/permisos`, { modulos });
+export const getBitacoraTenant             = (id, params) => api.get(`${BASE}/${id}/bitacora`, { params });
+export const getBitacoraTenantEstadisticas = (id)         => api.get(`${BASE}/${id}/bitacora/estadisticas`);

@@ -236,6 +236,104 @@ export const deleteTenant = async (req, res) => {
   }
 };
 
+/**
+ * GET /admin/tenants/:id/bitacora
+ * Bitácora de inicios de sesión (éxito y fallidos) de un país específico.
+ *
+ * Query params: page, limit, usuario (nombre/email parcial), exito (0|1), desde, hasta
+ */
+export const listarBitacoraTenant = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const page   = Math.max(1, parseInt(req.query.page  || "1",  10));
+    const limit  = Math.min(200, Math.max(1, parseInt(req.query.limit || "50", 10)));
+    const offset = (page - 1) * limit;
+    const usuario = req.query.usuario?.trim() || "";
+    const exito   = req.query.exito?.trim();
+    const desde   = req.query.desde?.trim() || "";
+    const hasta   = req.query.hasta?.trim() || "";
+
+    const where  = ["tenant_id = ?"];
+    const params = [id];
+
+    if (usuario) {
+      where.push("(usuario_nombre LIKE ? OR usuario_email LIKE ?)");
+      params.push(`%${usuario}%`, `%${usuario}%`);
+    }
+    if (exito === "0" || exito === "1") {
+      where.push("exito = ?");
+      params.push(exito);
+    }
+    if (desde) {
+      where.push("fecha >= ?");
+      params.push(`${desde} 00:00:00`);
+    }
+    if (hasta) {
+      where.push("fecha <= ?");
+      params.push(`${hasta} 23:59:59`);
+    }
+
+    const whereStr = where.join(" AND ");
+
+    const [[{ total }]] = await pool.query(
+      `SELECT COUNT(*) AS total FROM login_logs WHERE ${whereStr}`,
+      params
+    );
+
+    const [rows] = await pool.query(
+      `SELECT id, tenant_id, tenant_codigo, usuario_id, usuario_nombre, usuario_email,
+              usuario_rol, exito, ip, navegador, fecha
+         FROM login_logs
+        WHERE ${whereStr}
+        ORDER BY fecha DESC
+        LIMIT ? OFFSET ?`,
+      [...params, limit, offset]
+    );
+
+    res.json({ total, page, limit, data: rows });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Error al obtener bitácora" });
+  }
+};
+
+/**
+ * GET /admin/tenants/:id/bitacora/estadisticas
+ * Resumen rápido de la bitácora de un país: logins hoy, últimos 7 días,
+ * fallidos hoy y usuarios únicos hoy.
+ */
+export const estadisticasBitacoraTenant = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const [[hoy]] = await pool.query(
+      "SELECT COUNT(*) AS total FROM login_logs WHERE tenant_id = ? AND exito = 1 AND DATE(fecha) = CURDATE()",
+      [id]
+    );
+    const [[semana]] = await pool.query(
+      "SELECT COUNT(*) AS total FROM login_logs WHERE tenant_id = ? AND exito = 1 AND fecha >= DATE_SUB(NOW(), INTERVAL 7 DAY)",
+      [id]
+    );
+    const [[fallidosHoy]] = await pool.query(
+      "SELECT COUNT(*) AS total FROM login_logs WHERE tenant_id = ? AND exito = 0 AND DATE(fecha) = CURDATE()",
+      [id]
+    );
+    const [[unicos]] = await pool.query(
+      "SELECT COUNT(DISTINCT usuario_email) AS total FROM login_logs WHERE tenant_id = ? AND exito = 1 AND DATE(fecha) = CURDATE()",
+      [id]
+    );
+
+    res.json({
+      loginsHoy: hoy.total,
+      loginsSemana: semana.total,
+      fallidosHoy: fallidosHoy.total,
+      usuariosUnicosHoy: unicos.total,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Error al obtener estadísticas de bitácora" });
+  }
+};
+
 export const getEstadisticasGlobales = async (req, res) => {
   try {
     const [tenants] = await pool.query(`SELECT * FROM tenants WHERE activo = 1`);

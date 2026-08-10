@@ -3,6 +3,7 @@ import poolMaster from "../config/db.master.js";
 import mysql from "mysql2/promise";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import { registrarLoginLog } from "../utils/loginLog.js";
 
 const INSTITUCIONES_VALIDAS = ["HMEP", "IHSS", "HEU"];
 
@@ -51,7 +52,7 @@ async function obtenerModulosHonduras() {
 }
 
 // Busca el usuario en todos los tenants RENACED activos
-async function buscarEnRenaced(email, password) {
+async function buscarEnRenaced(email, password, req) {
   const [tenants] = await poolMaster.query(
     "SELECT * FROM tenants WHERE activo = 1"
   );
@@ -90,6 +91,18 @@ async function buscarEnRenaced(email, password) {
         c.end();
       }).catch(() => {});
 
+      registrarLoginLog({
+        tenantId: tenant.id,
+        tenantCodigo: tenant.codigo,
+        usuarioId: u.id,
+        usuarioNombre: u.nombre_completo,
+        usuarioEmail: u.email || u.username,
+        usuarioRol: `perfil_${u.perfil_id}`,
+        exito: 1,
+        ip: req.headers["x-forwarded-for"]?.split(",")[0].trim() || req.socket?.remoteAddress || null,
+        userAgent: req.headers["user-agent"] || null,
+      });
+
       return {
         payload: {
           id: u.id,
@@ -125,6 +138,9 @@ export async function login(req, res) {
       [email]
     );
 
+    const ip = req.headers["x-forwarded-for"]?.split(",")[0].trim() || req.socket?.remoteAddress || null;
+    const ua = req.headers["user-agent"] || null;
+
     if (rows.length > 0) {
       const usuario = rows[0];
       let valido = usuario.password.startsWith("$2")
@@ -136,19 +152,26 @@ export async function login(req, res) {
         const usuarioPayload = construirPayloadUsuario(usuario, modulosHonduras);
         const token = jwt.sign(usuarioPayload, process.env.JWT_SECRET, { expiresIn: "8h" });
 
-        const ip = req.headers["x-forwarded-for"]?.split(",")[0].trim() || req.socket?.remoteAddress || null;
-        const ua = req.headers["user-agent"] || null;
         pool.query(
           "INSERT INTO auditoria_sesiones (usuario_id, usuario_nombre, usuario_email, usuario_rol, accion, descripcion, ip, user_agent) VALUES (?, ?, ?, ?, 'login', ?, ?, ?)",
           [usuario.id, usuario.nombre, usuario.email, usuario.rol, `Acceso desde ${ua?.split(" ").slice(-1)[0] || "navegador"}`, ip, ua]
         ).catch(() => {});
+        registrarLoginLog({
+          tenantCodigo: "hn", usuarioId: usuario.id, usuarioNombre: usuario.nombre,
+          usuarioEmail: usuario.email, usuarioRol: usuario.rol, exito: 1, ip, userAgent: ua,
+        });
 
         return res.json({ token, usuario: usuarioPayload, tipo: "evolucion" });
       }
+
+      registrarLoginLog({
+        tenantCodigo: "hn", usuarioId: usuario.id, usuarioNombre: usuario.nombre,
+        usuarioEmail: usuario.email, usuarioRol: usuario.rol, exito: 0, ip, userAgent: ua,
+      });
     }
 
     // ── 2. Buscar en tenants RENACED ─────────────────────────────────────
-    const renacedResult = await buscarEnRenaced(email, password);
+    const renacedResult = await buscarEnRenaced(email, password, req);
     if (renacedResult) {
       const token = jwt.sign(renacedResult.payload, process.env.JWT_SECRET, { expiresIn: "8h" });
       return res.json({ token, usuario: renacedResult.payload, tipo: "renaced" });

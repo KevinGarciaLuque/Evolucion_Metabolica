@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Layout from "../../components/Layout";
 import FlagIcon from "../../components/FlagIcon";
+import TenantBitacoraModal from "./TenantBitacoraModal";
 import {
   getTenants, createTenant, updateTenant, deleteTenant, getTenantById, getEstadisticasGlobales,
   getUsuariosTenant, actualizarPermisosUsuarioTenant,
@@ -9,7 +10,7 @@ import {
   HiOutlineGlobeAmericas, HiOutlinePlusCircle, HiOutlinePencilSquare,
   HiOutlineCheckCircle, HiOutlineXCircle, HiOutlineUsers, HiOutlineMagnifyingGlass,
   HiOutlineChartBar, HiOutlineTrash, HiOutlinePower, HiOutlineLockOpen,
-  HiOutlineCircleStack, HiOutlineSparkles,
+  HiOutlineCircleStack, HiOutlineSparkles, HiOutlineClipboardDocumentList,
 } from "react-icons/hi2";
 import "./AdminPanel.css";
 
@@ -103,6 +104,7 @@ export default function AdminPanel() {
   const [cargandoStats, setCargandoStats] = useState(false);
   const [eliminarTarget, setEliminarTarget] = useState(null);
   const [eliminando, setEliminando] = useState(false);
+  const [bitacoraModal, setBitacoraModal] = useState(null); // tenant actual
   const [permisosModal, setPermisosModal] = useState(null); // tenant actual
   const [permisosTab, setPermisosTab] = useState("pais");   // "pais" | "usuarios"
   const [permisosSeleccion, setPermisosSeleccion] = useState([]);
@@ -377,6 +379,9 @@ export default function AdminPanel() {
                   <button className="btn btn-outline btn-sm btn-icon" onClick={() => verStats(t)} title="Ver estadísticas">
                     <HiOutlineChartBar size={14} />
                   </button>
+                  <button className="btn btn-outline btn-sm btn-icon" onClick={() => setBitacoraModal(t)} title="Bitácora de accesos">
+                    <HiOutlineClipboardDocumentList size={14} />
+                  </button>
                   <button className="btn btn-outline btn-sm" onClick={() => abrirEditar(t)} title="Editar"
                     style={{ display: "flex", alignItems: "center", gap: 4 }}>
                     <HiOutlinePencilSquare size={14} /> Editar
@@ -606,6 +611,11 @@ export default function AdminPanel() {
             )}
           </div>
         </div>
+      )}
+
+      {/* ── Modal bitácora de accesos por país ──────────────────────────────── */}
+      {bitacoraModal && (
+        <TenantBitacoraModal tenant={bitacoraModal} onClose={() => setBitacoraModal(null)} />
       )}
 
       {/* ── Modal permisos de módulos por país ────────────────────────────── */}

@@ -8,6 +8,8 @@ import {
   deleteTenant,
   getEstadisticasGlobales,
   impersonarTenant,
+  listarBitacoraTenant,
+  estadisticasBitacoraTenant,
 } from "../../controllers/admin/tenants.controller.js";
 import {
   listarUsuariosTenant,
@@ -36,5 +38,8 @@ router.delete("/:id",              deleteTenant);
 
 router.get("/:id/usuarios",                       listarUsuariosTenant);
 router.put("/:id/usuarios/:usuarioId/permisos",   actualizarPermisosUsuarioTenant);
+
+router.get("/:id/bitacora",              listarBitacoraTenant);
+router.get("/:id/bitacora/estadisticas", estadisticasBitacoraTenant);
 
 export default router;

@@ -724,10 +724,245 @@ const doc = new Document({
         parrafo("Recomendación: Para el Hospital Escuela Universitario, el modelo de suscripción mensual (Plan Profesional o Institucional) es la opción más conveniente. Facilita la aprobación presupuestaria como gasto operativo, incluye soporte y actualizaciones, y no requiere infraestructura tecnológica adicional.", { color: C.morado, bold: true }),
 
         // ═══════════════════════════════════════════════════════
-        //  6. PILOTO GRATUITO
+        //  6. ESTIMADO DE COSTOS PARA ESCALAR LA PLATAFORMA
         // ═══════════════════════════════════════════════════════
         new Paragraph({ children: [new PageBreak()] }),
-        titulo1("6. Propuesta de Inicio: Piloto Gratuito"),
+        titulo1("6. Estimado de Costos para Implementación a Mayor Escala"),
+        separador(),
+        parrafo(
+          "Esta sección presenta un estimado de costos para llevar Evolución Metabólica de un piloto en un solo hospital a una implementación a mayor escala, con múltiples centros de salud u hospitales conectados a la misma plataforma. Las cifras son aproximadas y sirven como base para la elaboración de propuestas de financiamiento (cooperación, donación o presupuesto público); el costo final se ajusta según el número exacto de centros, usuarios y requisitos de integración de cada proyecto."
+        ),
+        espacio(),
+
+        // ── 6.1 Costo de implementación ────────────────────────
+        titulo2("6.1  Costo de Implementación", C.morado),
+        parrafo("Inversión única para poner en marcha el sistema en cada fase de crecimiento: configuración de la plataforma, migración de datos, integración y capacitación del personal."),
+        espacio(),
+
+        new Table({
+          width: { size: 100, type: WidthType.PERCENTAGE },
+          rows: [
+            new TableRow({ tableHeader: true, children: [
+              celdaEncabezado("Concepto",                                 C.morado),
+              celdaEncabezado("Costo estimado (USD)",                     C.morado),
+              celdaEncabezado("Detalle",                                  C.morado),
+            ]}),
+            new TableRow({ children: [
+              celda("Configuración inicial de la plataforma",  C.grisClaro, true),
+              celda("$800 – $1,500 (única vez)",               C.blanco, true, C.azul, true),
+              celda("Dominio, entorno productivo, seguridad, parametrización institucional.", C.blanco),
+            ]}),
+            new TableRow({ children: [
+              celda("Migración de datos existentes",           C.grisClaro, true),
+              celda("$300 – $800 por centro",                  C.blanco, true, C.azul, true),
+              celda("Carga de pacientes y expedientes desde hojas de cálculo o registros en papel.", C.blanco),
+            ]}),
+            new TableRow({ children: [
+              celda("Capacitación presencial del personal",    C.grisClaro, true),
+              celda("$200 – $450 por centro",                  C.blanco, true, C.azul, true),
+              celda("Sesión presencial o virtual con médicos, enfermería y personal administrativo.", C.blanco),
+            ]}),
+            new TableRow({ children: [
+              celda("Integración con sistemas existentes (opcional)", C.grisClaro, true),
+              celda("$500 – $2,500",                           C.blanco, true, C.azul, true),
+              celda("Conexión vía API con expedientes clínicos u otros sistemas del hospital/red.", C.blanco),
+            ]}),
+          ],
+        }),
+
+        espacio(2),
+
+        // ── 6.2 Costo de mantenimiento ─────────────────────────
+        titulo2("6.2  Costo de Mantenimiento", C.morado),
+        parrafo("Costo recurrente para mantener el sistema operando de forma estable, segura y actualizada. Incluye alojamiento en la nube, copias de seguridad automáticas, aplicación de parches de seguridad y actualización continua de funcionalidades."),
+        espacio(),
+        bullet("Monitoreo de disponibilidad del sistema (uptime) las 24 horas."),
+        bullet("Copias de seguridad diarias automáticas de la base de datos y los archivos PDF."),
+        bullet("Aplicación de actualizaciones y parches de seguridad sin interrupción del servicio."),
+        bullet("Renovación y gestión de certificados SSL/HTTPS."),
+        espacio(),
+        parrafo("El costo de mantenimiento está incluido dentro de la cuota mensual en la modalidad SaaS (sección 3), y se cotiza por separado (20% anual del valor de la licencia) en la modalidad de compra (sección 4)."),
+
+        espacio(2),
+
+        // ── 6.3 Costo de soporte técnico ───────────────────────
+        titulo2("6.3  Costo de Soporte Técnico", C.morado),
+        parrafo("El nivel de soporte técnico crece junto con el número de centros conectados, ya que aumenta el volumen de usuarios que requieren asistencia."),
+        espacio(),
+
+        new Table({
+          width: { size: 100, type: WidthType.PERCENTAGE },
+          rows: [
+            new TableRow({ tableHeader: true, children: [
+              celdaEncabezado("Escala",                       C.morado),
+              celdaEncabezado("Canal / Tiempo de respuesta",  C.morado),
+              celdaEncabezado("Costo mensual estimado (USD)", C.morado),
+            ]}),
+            new TableRow({ children: [
+              celda("Piloto (1–5 centros)",            C.grisClaro, true),
+              celda("WhatsApp / correo — 24 a 48 h",   C.blanco, false, C.negro, true),
+              celda("Incluido en la cuota mensual",    C.blanco, false, C.verde, true),
+            ]}),
+            new TableRow({ children: [
+              celda("Expansión (6–20 centros)",        C.grisClaro, true),
+              celda("WhatsApp dedicado — 12 a 24 h",   C.blanco, false, C.negro, true),
+              celda("$400 – $900",                     C.blanco, true, C.azul, true),
+            ]}),
+            new TableRow({ children: [
+              celda("Escala nacional (21+ centros)",   C.grisClaro, true),
+              celda("Mesa de ayuda dedicada — 4 a 8 h", C.blanco, false, C.negro, true),
+              celda("$1,200 – $2,500",                 C.blanco, true, "B45309", true),
+            ]}),
+          ],
+        }),
+
+        espacio(2),
+
+        // ── 6.4 Recurso humano necesario ───────────────────────
+        titulo2("6.4  Recurso Humano Necesario", C.morado),
+        parrafo("Equipo mínimo recomendado para operar y dar soporte a la plataforma conforme crece el número de centros y usuarios (dedicación estimada, no necesariamente tiempo completo en las primeras fases)."),
+        espacio(),
+
+        new Table({
+          width: { size: 100, type: WidthType.PERCENTAGE },
+          rows: [
+            new TableRow({ tableHeader: true, children: [
+              celdaEncabezado("Rol",                                    C.morado),
+              celdaEncabezado("Piloto (1–5 centros)",                   "1E40AF"),
+              celdaEncabezado("Expansión (6–20 centros)",               C.verde),
+              celdaEncabezado("Escala nacional (21+ centros)",          "B45309"),
+            ]}),
+            new TableRow({ children: [
+              celda("Desarrollo (full-stack)",       C.grisClaro, true),
+              celda("Tiempo parcial",                C.blanco, false, C.negro, true),
+              celda("1 persona, tiempo completo",    C.blanco, false, C.negro, true),
+              celda("2 personas, tiempo completo",   C.blanco, false, C.negro, true),
+            ]}),
+            new TableRow({ children: [
+              celda("Infraestructura / DevOps",      C.grisClaro, true),
+              celda("Compartido con desarrollo",     C.blanco, false, C.negro, true),
+              celda("Tiempo parcial",                C.blanco, false, C.negro, true),
+              celda("1 persona, tiempo completo",    C.blanco, false, C.negro, true),
+            ]}),
+            new TableRow({ children: [
+              celda("Soporte técnico / mesa de ayuda", C.grisClaro, true),
+              celda("Compartido con desarrollo",     C.blanco, false, C.negro, true),
+              celda("1 persona, tiempo completo",    C.blanco, false, C.negro, true),
+              celda("2–3 personas, tiempo completo", C.blanco, false, C.negro, true),
+            ]}),
+            new TableRow({ children: [
+              celda("Capacitación / implementación clínica", C.grisClaro, true),
+              celda("Tiempo parcial, por centro",    C.blanco, false, C.negro, true),
+              celda("Tiempo parcial, por región",    C.blanco, false, C.negro, true),
+              celda("1 persona, tiempo completo",    C.blanco, false, C.negro, true),
+            ]}),
+            new TableRow({ children: [
+              celda("Coordinación de proyecto",      C.grisClaro, true),
+              celda("Compartido",                    C.blanco, false, C.negro, true),
+              celda("Tiempo parcial",                C.blanco, false, C.negro, true),
+              celda("1 persona, tiempo completo",    C.blanco, false, C.negro, true),
+            ]}),
+          ],
+        }),
+
+        espacio(2),
+
+        // ── 6.5 Costos de infraestructura ──────────────────────
+        titulo2("6.5  Costos de Infraestructura", C.morado),
+        parrafo("El sistema opera sobre infraestructura en la nube (no requiere servidores físicos por parte de las instituciones). El costo de infraestructura crece con el número de usuarios concurrentes, el volumen de PDFs almacenados y el tráfico de datos."),
+        espacio(),
+
+        new Table({
+          width: { size: 100, type: WidthType.PERCENTAGE },
+          rows: [
+            new TableRow({ tableHeader: true, children: [
+              celdaEncabezado("Escala",                              C.morado),
+              celdaEncabezado("Componentes",                          C.morado),
+              celdaEncabezado("Costo mensual estimado (USD)",         C.morado),
+            ]}),
+            new TableRow({ children: [
+              celda("Piloto (1–5 centros, hasta ~1,500 pacientes)",   C.grisClaro, true),
+              celda("Servidor compartido, base de datos, 75 GB de almacenamiento", C.blanco),
+              celda("$40 – $90",                                     C.blanco, true, C.azul, true),
+            ]}),
+            new TableRow({ children: [
+              celda("Expansión (6–20 centros, hasta ~8,000 pacientes)", C.grisClaro, true),
+              celda("Servidor dedicado, base de datos escalada, 300 GB, redundancia básica", C.blanco),
+              celda("$150 – $400",                                   C.blanco, true, C.azul, true),
+            ]}),
+            new TableRow({ children: [
+              celda("Escala nacional (21+ centros, ~8,000+ pacientes)", C.grisClaro, true),
+              celda("Servidores redundantes, alta disponibilidad, backups geo-redundantes, almacenamiento ilimitado", C.blanco),
+              celda("$500 – $1,200",                                 C.blanco, true, "B45309", true),
+            ]}),
+          ],
+        }),
+
+        espacio(2),
+
+        // ── 6.6 Escalabilidad de costos ────────────────────────
+        titulo2("6.6  Cómo Cambian los Costos Según el Número de Centros o Usuarios", C.morado),
+        parrafo("Resumen consolidado del costo operativo mensual aproximado por fase de crecimiento, combinando mantenimiento, soporte técnico, recurso humano e infraestructura. La inversión de implementación se realiza una sola vez por fase (o de forma incremental por cada centro nuevo que se conecta)."),
+        espacio(),
+
+        new Table({
+          width: { size: 100, type: WidthType.PERCENTAGE },
+          rows: [
+            new TableRow({ tableHeader: true, children: [
+              celdaEncabezado("Fase",                                     C.morado),
+              celdaEncabezado("Piloto (1–5 centros)",                     "1E40AF"),
+              celdaEncabezado("Expansión (6–20 centros)",                 C.verde),
+              celdaEncabezado("Escala nacional (21+ centros)",            "B45309"),
+            ]}),
+            new TableRow({ children: [
+              celda("Implementación (única vez)",     C.grisClaro, true),
+              celda("$3,000 – $6,000",                C.azulClaro, true, C.azul, true),
+              celda("$10,000 – $20,000",              C.verdeClaro, true, C.verde, true),
+              celda("$30,000 – $60,000",              "FFFBEB", true, "B45309", true),
+            ]}),
+            new TableRow({ children: [
+              celda("Mantenimiento + soporte (mensual)", C.grisClaro, true),
+              celda("$500 – $900",                    C.blanco, false, C.azul, true),
+              celda("$1,800 – $3,500",                C.blanco, false, C.verde, true),
+              celda("$5,000 – $9,000",                C.blanco, false, "B45309", true),
+            ]}),
+            new TableRow({ children: [
+              celda("Infraestructura (mensual)",      C.grisClaro, true),
+              celda("$40 – $90",                      C.blanco, false, C.azul, true),
+              celda("$150 – $400",                    C.blanco, false, C.verde, true),
+              celda("$500 – $1,200",                  C.blanco, false, "B45309", true),
+            ]}),
+            new TableRow({ children: [
+              celda("Recurso humano (mensual, aprox.)", C.grisClaro, true),
+              celda("$800 – $1,800",                  C.blanco, false, C.azul, true),
+              celda("$3,500 – $6,500",                C.blanco, false, C.verde, true),
+              celda("$8,000 – $14,000",               C.blanco, false, "B45309", true),
+            ]}),
+            new TableRow({ children: [
+              celda("Costo operativo mensual total (aprox.)", C.grisClaro, true),
+              celda("$1,340 – $2,790",                C.azulClaro, true, C.azul, true),
+              celda("$5,450 – $10,400",               C.verdeClaro, true, C.verde, true),
+              celda("$13,500 – $24,200",              "FFFBEB", true, "B45309", true),
+            ]}),
+          ],
+        }),
+
+        espacio(2),
+        parrafo(
+          "Nota sobre economía de escala: el costo por centro y por paciente disminuye conforme crece la red, ya que la infraestructura, el equipo de desarrollo y buena parte del soporte técnico se comparten entre todos los centros conectados. Un centro adicional en la fase de escala nacional cuesta significativamente menos de incorporar que uno en la fase piloto.",
+          { color: C.verde, bold: true }
+        ),
+        espacio(),
+        parrafo(
+          "Las cifras de esta sección son estimados de planificación en dólares estadounidenses (USD), pensados como base para la elaboración de propuestas de financiamiento y solicitudes de cooperación. El presupuesto definitivo se elabora junto con la institución solicitante una vez definidos el número exacto de centros, usuarios y alcance de la integración.",
+          { color: C.gris, italic: true }
+        ),
+
+        // ═══════════════════════════════════════════════════════
+        //  7. PILOTO GRATUITO
+        // ═══════════════════════════════════════════════════════
+        new Paragraph({ children: [new PageBreak()] }),
+        titulo1("7. Propuesta de Inicio: Piloto Gratuito"),
         separador(),
         parrafo("Para facilitar la adopción del sistema en el Hospital Escuela Universitario, se propone un período de prueba gratuito de 30 días con acceso completo al Plan Profesional, sin necesidad de datos de pago ni compromiso de continuidad."),
         espacio(),
@@ -741,10 +976,10 @@ const doc = new Document({
         parrafo("Al finalizar el piloto, el equipo médico tendrá elementos concretos para evaluar el valor del sistema y tomar una decisión informada sobre la suscripción."),
 
         // ═══════════════════════════════════════════════════════
-        //  7. CONTACTO
+        //  8. CONTACTO
         // ═══════════════════════════════════════════════════════
         espacio(2),
-        titulo1("7. Contacto y Siguiente Paso"),
+        titulo1("8. Contacto y Siguiente Paso"),
         separador(),
         parrafo("Para agendar una demostración en vivo del sistema, solicitar el período de piloto gratuito o negociar condiciones específicas para el Hospital Escuela Universitario, por favor comunicarse a:"),
         espacio(),
