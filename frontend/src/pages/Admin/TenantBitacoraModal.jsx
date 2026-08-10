@@ -20,10 +20,12 @@ function formatFecha(iso) {
 
 const LIMIT = 50;
 
-// Fecha local (no UTC) en formato yyyy-mm-dd, para precargar los filtros con el día de hoy.
+// La columna `fecha` se guarda en UTC (el MySQL de Railway corre en UTC, igual
+// que auditoria_sesiones). Los filtros deben calcularse también en UTC —si se
+// usara la fecha local del navegador, después de cierta hora local ya sería
+// "mañana" en UTC y el filtro no encontraría los registros de hoy.
 function hoyISO() {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  return new Date().toISOString().slice(0, 10);
 }
 
 export default function TenantBitacoraModal({ tenant, onClose }) {
