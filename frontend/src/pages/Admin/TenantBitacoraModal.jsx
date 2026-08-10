@@ -20,6 +20,12 @@ function formatFecha(iso) {
 
 const LIMIT = 50;
 
+// Fecha local (no UTC) en formato yyyy-mm-dd, para precargar los filtros con el día de hoy.
+function hoyISO() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
 export default function TenantBitacoraModal({ tenant, onClose }) {
   const [registros, setRegistros] = useState([]);
   const [total, setTotal]         = useState(0);
@@ -29,8 +35,8 @@ export default function TenantBitacoraModal({ tenant, onClose }) {
 
   const [buscar, setBuscar] = useState("");
   const [exito, setExito]   = useState("");
-  const [desde, setDesde]   = useState("");
-  const [hasta, setHasta]   = useState("");
+  const [desde, setDesde]   = useState(hoyISO());
+  const [hasta, setHasta]   = useState(hoyISO());
 
   const cargar = useCallback(async () => {
     setCargando(true);
@@ -122,7 +128,7 @@ export default function TenantBitacoraModal({ tenant, onClose }) {
               <button type="submit" className="btn btn-primary btn-sm">Filtrar</button>
               <button type="button" className="btn btn-outline btn-sm"
                 onClick={() => { setBuscar(""); setExito(""); setDesde(""); setHasta(""); setPage(1); }}>
-                Limpiar
+                Ver todo el historial
               </button>
             </div>
           </form>
