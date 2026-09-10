@@ -7,7 +7,7 @@ import {
   HiOutlineSquares2X2, HiOutlineUsers, HiOutlineDocumentArrowDown,
   HiChevronLeft, HiChevronRight, HiOutlineUserGroup,
   HiOutlineClipboardDocumentList, HiOutlineDocumentArrowUp, HiOutlineMapPin,
-  HiOutlineBuildingOffice2,
+  HiOutlineBuildingOffice2, HiOutlineDocumentMagnifyingGlass,
 } from "react-icons/hi2";
 import FlagIcon from "./FlagIcon";
 import Layout from "./Layout";
@@ -18,6 +18,7 @@ const MENU_BASE = [
   { to: "/renaced/dashboard",  clave: "dashboard", icon: HiOutlineSquares2X2,            label: "Dashboard" },
   { to: "/renaced/pacientes",  clave: "pacientes", icon: HiOutlineUsers,                  label: "Pacientes" },
   { to: "/renaced/consultas",  clave: "consultas", icon: HiOutlineClipboardDocumentList,  label: "Consultas" },
+  { to: "/renaced/escanear-pdf", clave: "escanear", icon: HiOutlineDocumentMagnifyingGlass, label: "Escanear PDF" },
   { to: "/renaced/reportes",   clave: "reportes",  icon: HiOutlineDocumentArrowDown,      label: "Reportes"  },
   { to: "/renaced/mapa",       clave: "mapa",      icon: HiOutlineMapPin,                 label: "Mapa"      },
 ];
@@ -39,7 +40,7 @@ export default function RenacedLayout({ children }) {
   const esSuperAdmin                  = usuarioSuperAdmin?.rol === "SUPER_ADMIN" || !!usuario?.super_admin;
 
   const modulosActivos = Array.isArray(usuario?.modulos) ? usuario.modulos : null;
-  const menuBaseVisible  = MENU_BASE.filter((m) => !modulosActivos || modulosActivos.includes(m.clave));
+  const menuBaseVisible  = MENU_BASE.filter((m) => m.clave === "escanear" || !modulosActivos || modulosActivos.includes(m.clave));
   let menuAdminVisible = MENU_ADMIN.filter((m) => !modulosActivos || modulosActivos.includes(m.clave));
   // Importar base de datos: exclusivo de México, no aplica a otros países RENACED,
   // y respeta el mismo toggle de módulos que el resto del sidebar.

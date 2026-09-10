@@ -48,6 +48,19 @@ export const createMonitoreo   = (pacId, data)        => api.post(`${BASE}/pacie
 export const updateMonitoreo   = (pacId, monId, data) => api.put(`${BASE}/pacientes/${pacId}/monitoreo/${monId}`, data);
 export const deleteMonitoreo   = (pacId, monId)       => api.delete(`${BASE}/pacientes/${pacId}/monitoreo/${monId}`);
 
+// ── Escaneo de PDF (monitoreo continuo de glucosa) ───────────────────────────
+export const subirEscaneoPDF = (pacId, archivo) => {
+  const fd = new FormData();
+  fd.append("pdf", archivo);
+  return api.post(`${BASE}/escaneos/upload/${pacId}`, fd, {
+    headers: { "Content-Type": "multipart/form-data" },
+    timeout: 60000,
+  });
+};
+export const confirmarEscaneo   = (data)  => api.post(`${BASE}/escaneos/confirmar`, data);
+export const getEscaneos        = (pacId) => api.get(`${BASE}/escaneos/paciente/${pacId}`);
+export const deleteEscaneo      = (id)    => api.delete(`${BASE}/escaneos/${id}`);
+
 // ── Educación ─────────────────────────────────────────────────────────────────
 export const getEducacion      = (pacId)       => api.get(`${BASE}/pacientes/${pacId}/educacion`);
 export const createEducacion   = (pacId, data) => api.post(`${BASE}/pacientes/${pacId}/educacion`, data);

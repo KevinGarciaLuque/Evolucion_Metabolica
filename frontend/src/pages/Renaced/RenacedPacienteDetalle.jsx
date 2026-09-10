@@ -987,7 +987,12 @@ export default function RenacedPacienteDetalle() {
         <div className="card">
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
             <h3 style={{ margin: 0, fontSize: "0.9rem", color: "#6366f1" }}>Monitoreo de Glucosa por Periodo</h3>
-            <button className="btn btn-primary btn-sm" onClick={abrirMonNuevo}>+ Nuevo</button>
+            <div style={{ display: "flex", gap: 8 }}>
+              <button className="btn btn-secondary btn-sm" onClick={() => navigate(`/renaced/escanear-pdf?paciente=${id}`)}>
+                📄 Escanear PDF
+              </button>
+              <button className="btn btn-primary btn-sm" onClick={abrirMonNuevo}>+ Nuevo</button>
+            </div>
           </div>
           <div className="table-wrapper">
             <table className="tabla">

@@ -33,6 +33,7 @@ import renacedDashboardRoutes   from "./routes/renaced/dashboard.routes.js";
 import renacedTratamientoRoutes from "./routes/renaced/tratamiento.routes.js";
 import renacedEvaluacionRoutes  from "./routes/renaced/evaluacion.routes.js";
 import renacedMonitoreoRoutes   from "./routes/renaced/monitoreo.routes.js";
+import renacedEscaneosRoutes    from "./routes/renaced/escaneos.routes.js";
 import renacedEducacionRoutes   from "./routes/renaced/educacion.routes.js";
 import renacedCatalogosRoutes   from "./routes/renaced/catalogos.routes.js";
 import renacedReportesRoutes    from "./routes/renaced/reportes.routes.js";
@@ -118,6 +119,7 @@ app.use("/api/renaced/pacientes/:paciente_id/tratamiento", renacedTratamientoRou
 app.use("/api/renaced/pacientes/:paciente_id/evaluacion",  renacedEvaluacionRoutes);
 app.use("/api/renaced/pacientes/:paciente_id/monitoreo",   renacedMonitoreoRoutes);
 app.use("/api/renaced/pacientes/:paciente_id/educacion",   renacedEducacionRoutes);
+app.use("/api/renaced/escaneos",                           renacedEscaneosRoutes);
 app.use("/api/renaced/catalogos",                          renacedCatalogosRoutes);
 app.use("/api/renaced/reportes",                           renacedReportesRoutes);
 app.use("/api/renaced/usuarios",                           renacedUsuariosRoutes);

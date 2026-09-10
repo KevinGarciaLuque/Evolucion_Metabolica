@@ -40,6 +40,7 @@ import RenacedClinicasList    from "./pages/Renaced/RenacedClinicasList";
 import RenacedConsultasHub    from "./pages/Renaced/RenacedConsultasHub";
 import RenacedConsultasClinical from "./pages/Renaced/RenacedConsultasClinical";
 import RenacedImportarBD      from "./pages/Renaced/RenacedImportarBD";
+import RenacedEscanearPDF     from "./pages/Renaced/RenacedEscanearPDF";
 import RenacedMapaPacientes   from "./pages/Renaced/RenacedMapaPacientes";
 
 function App() {
@@ -80,6 +81,7 @@ function App() {
             <Route path="/renaced/pacientes/:id/editar"   element={<RenacedProtectedRoute><RenacedPacienteForm /></RenacedProtectedRoute>} />
             <Route path="/renaced/consultas"              element={<RenacedProtectedRoute><RenacedConsultasHub /></RenacedProtectedRoute>} />
             <Route path="/renaced/consultas/:pacienteId" element={<RenacedProtectedRoute><RenacedConsultasClinical /></RenacedProtectedRoute>} />
+            <Route path="/renaced/escanear-pdf"           element={<RenacedProtectedRoute><RenacedEscanearPDF /></RenacedProtectedRoute>} />
             <Route path="/renaced/reportes"               element={<RenacedProtectedRoute><RenacedReportes /></RenacedProtectedRoute>} />
             <Route path="/renaced/mapa"                   element={<RenacedProtectedRoute><RenacedMapaPacientes /></RenacedProtectedRoute>} />
             <Route path="/renaced/clinicas"               element={<RenacedProtectedRoute adminOnly><RenacedClinicasList /></RenacedProtectedRoute>} />
