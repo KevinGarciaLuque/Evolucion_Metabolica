@@ -37,3 +37,17 @@ export function parseAnticuerpos(str) {
 export function serializarAnticuerpos(estado) {
   return LISTA_ANTICUERPOS.map((a) => `${a.key}: ${estado[a.key]}`).join(", ");
 }
+
+// True solo si el texto ya sigue el formato "Anti-GAD65: X, Anti-IA2: Y, ..." con
+// los 5 marcadores y un estado válido cada uno. Un texto libre antiguo (o vacío)
+// devuelve false para no mostrarlo como si ya estuviera "Pendiente" en todo.
+export function esFormatoEstructurado(str) {
+  if (!str) return false;
+  const partes = str.split(",").map((p) => p.trim());
+  if (partes.length !== LISTA_ANTICUERPOS.length) return false;
+  const valores = ["Positivo", "Negativo", "Pendiente"];
+  return LISTA_ANTICUERPOS.every((a, i) => {
+    const [k, v] = partes[i].split(":").map((s) => s.trim());
+    return k === a.key && valores.includes(v);
+  });
+}

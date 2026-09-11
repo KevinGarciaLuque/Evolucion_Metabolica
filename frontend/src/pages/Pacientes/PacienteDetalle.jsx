@@ -15,7 +15,7 @@ import Layout from "../../components/Layout";
 import SemaforoISPAD from "../../components/SemaforoISPAD";
 import { useAuth } from "../../context/AuthContext";
 import { calcularZScores, calcularEdadMeses } from "../../utils/who_zscore";
-import { LISTA_ANTICUERPOS, ESTADOS_ANTICUERPO, COLOR_ESTADO_ANTICUERPO, parseAnticuerpos, serializarAnticuerpos } from "../../utils/anticuerpos";
+import { LISTA_ANTICUERPOS, ESTADOS_ANTICUERPO, COLOR_ESTADO_ANTICUERPO, parseAnticuerpos, serializarAnticuerpos, esFormatoEstructurado } from "../../utils/anticuerpos";
 
 // ─── Fecha local (evita desfase UTC) ────────────────────────────────────────
 function fechaHoy() { const n = new Date(); return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,"0")}-${String(n.getDate()).padStart(2,"0")}`; }
@@ -3924,28 +3924,41 @@ function AnticuerposEditor({ paciente, soloLectura, onGuardado }) {
     }
   }
 
+  const estructurado = esFormatoEstructurado(paciente.anticuerpos);
+
   if (!editando) {
     return (
       <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-          {LISTA_ANTICUERPOS.map((a) => {
-            const valor = estadoGuardado[a.key];
-            const color = COLOR_ESTADO_ANTICUERPO[valor] || "#94a3b8";
-            return (
-              <span
-                key={a.key}
-                style={{
-                  display: "inline-flex", alignItems: "center", gap: 5,
-                  fontSize: 11, fontWeight: 600, borderRadius: 20,
-                  padding: "3px 10px", border: `1.5px solid ${color}`,
-                  background: color + "22", color,
-                }}
-              >
-                {a.label}: {valor}
-              </span>
-            );
-          })}
-        </div>
+        {estructurado ? (
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+            {LISTA_ANTICUERPOS.map((a) => {
+              const valor = estadoGuardado[a.key];
+              const color = COLOR_ESTADO_ANTICUERPO[valor] || "#94a3b8";
+              return (
+                <span
+                  key={a.key}
+                  style={{
+                    display: "inline-flex", alignItems: "center", gap: 5,
+                    fontSize: 11, fontWeight: 600, borderRadius: 20,
+                    padding: "3px 10px", border: `1.5px solid ${color}`,
+                    background: color + "22", color,
+                  }}
+                >
+                  {a.label}: {valor}
+                </span>
+              );
+            })}
+          </div>
+        ) : paciente.anticuerpos ? (
+          <div style={{ fontSize: 12.5, color: "#374151" }}>
+            {paciente.anticuerpos}
+            <div style={{ fontSize: 10.5, color: "#94a3b8", marginTop: 2 }}>
+              Registro anterior sin estructurar — usa "Editar" para pasarlo a Positivo/Negativo/Pendiente por anticuerpo.
+            </div>
+          </div>
+        ) : (
+          <span style={{ fontSize: 12.5, color: "#94a3b8" }}>Sin registrar</span>
+        )}
         {!soloLectura && (
           <button
             type="button"
