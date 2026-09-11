@@ -232,6 +232,49 @@ export async function eliminar(req, res) {
   }
 }
 
+export async function marcarTraslado(req, res) {
+  const { motivo_traslado, fecha_traslado, destino_traslado, observaciones_traslado } = req.body;
+  if (!motivo_traslado || !fecha_traslado)
+    return res.status(400).json({ error: "Motivo y fecha de traslado son obligatorios" });
+
+  try {
+    await pool.query(
+      `UPDATE pacientes
+       SET trasladado = 1, motivo_traslado = ?, fecha_traslado = ?,
+           destino_traslado = ?, observaciones_traslado = ?,
+           trasladado_por = ?, trasladado_en = NOW()
+       WHERE id = ?`,
+      [
+        motivo_traslado, fecha_traslado, destino_traslado || null,
+        observaciones_traslado || null, req.usuario?.nombre || null, req.params.id,
+      ]
+    );
+    auditarAccion(pool, req, { accion: "trasladar_paciente", entidad: "paciente", entidad_id: Number(req.params.id), descripcion: `Marcó traslado de paciente ID ${req.params.id}: ${motivo_traslado}` });
+    res.json({ mensaje: "Traslado registrado correctamente" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Error al registrar el traslado" });
+  }
+}
+
+export async function quitarTraslado(req, res) {
+  try {
+    await pool.query(
+      `UPDATE pacientes
+       SET trasladado = 0, motivo_traslado = NULL, fecha_traslado = NULL,
+           destino_traslado = NULL, observaciones_traslado = NULL,
+           trasladado_por = NULL, trasladado_en = NULL
+       WHERE id = ?`,
+      [req.params.id]
+    );
+    auditarAccion(pool, req, { accion: "deshacer_traslado_paciente", entidad: "paciente", entidad_id: Number(req.params.id), descripcion: `Deshizo el traslado del paciente ID ${req.params.id}` });
+    res.json({ mensaje: "Traslado eliminado correctamente" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Error al deshacer el traslado" });
+  }
+}
+
 export async function historial(req, res) {
   try {
     const [analisis] = await pool.query(

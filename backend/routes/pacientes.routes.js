@@ -1,6 +1,7 @@
 import { Router } from "express";
 import {
   listar, listarMapa, obtener, crear, actualizar, eliminar, historial, departamentos,
+  marcarTraslado, quitarTraslado,
 } from "../controllers/pacientes.controller.js";
 import { verificarToken, noAsistente } from "../middlewares/auth.js";
 
@@ -16,5 +17,7 @@ router.post("/",                  crear);
 router.put("/:id",                noAsistente, actualizar);
 router.delete("/:id",             noAsistente, eliminar);
 router.get("/:id/historial",      historial);
+router.put("/:id/traslado",       noAsistente, marcarTraslado);
+router.delete("/:id/traslado",    noAsistente, quitarTraslado);
 
 export default router;

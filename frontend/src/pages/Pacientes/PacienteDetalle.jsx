@@ -2,7 +2,7 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import { useParams, Link, useNavigate, useLocation } from "react-router-dom";
-import { FiTrash2, FiEdit2, FiEye, FiArrowLeft, FiUpload, FiEdit3, FiPlus, FiActivity, FiDroplet, FiBookOpen, FiUser, FiBarChart2, FiSun, FiZap, FiClipboard } from "react-icons/fi";
+import { FiTrash2, FiEdit2, FiEye, FiArrowLeft, FiUpload, FiEdit3, FiPlus, FiActivity, FiDroplet, FiBookOpen, FiUser, FiBarChart2, FiSun, FiZap, FiClipboard, FiLogOut, FiAlertTriangle } from "react-icons/fi";
 import { IoLogoWhatsapp } from "react-icons/io";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -15,6 +15,7 @@ import Layout from "../../components/Layout";
 import SemaforoISPAD from "../../components/SemaforoISPAD";
 import { useAuth } from "../../context/AuthContext";
 import { calcularZScores, calcularEdadMeses } from "../../utils/who_zscore";
+import { LISTA_ANTICUERPOS, ESTADOS_ANTICUERPO, COLOR_ESTADO_ANTICUERPO, parseAnticuerpos, serializarAnticuerpos } from "../../utils/anticuerpos";
 
 // ─── Fecha local (evita desfase UTC) ────────────────────────────────────────
 function fechaHoy() { const n = new Date(); return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,"0")}-${String(n.getDate()).padStart(2,"0")}`; }
@@ -116,6 +117,85 @@ export default function PacienteDetalle() {
   const [msgWhatsApp,   setMsgWhatsApp]     = useState("");
   const [enviandoWA,    setEnviandoWA]      = useState(false);
   const [resultadoWA,   setResultadoWA]     = useState(null);
+
+  // ── Traslado / baja de paciente ──────────────────────────────────────────
+  const [modalTraslado, setModalTraslado] = useState(false);
+  const [formTraslado, setFormTraslado] = useState({});
+  const [guardandoTraslado, setGuardandoTraslado] = useState(false);
+  const [errorTraslado, setErrorTraslado] = useState("");
+
+  const MOTIVOS_TRASLADO = [
+    "Traslado a medicina de adultos",
+    "Cambio de institución / médico",
+    "Migró a otro país",
+    "Cambio de domicilio (otro departamento/ciudad)",
+    "Abandono de seguimiento",
+    "Otro",
+  ];
+
+  function abrirModalTraslado() {
+    const motivoGuardado = paciente.motivo_traslado || "";
+    const esPreset = MOTIVOS_TRASLADO.slice(0, -1).includes(motivoGuardado);
+    setFormTraslado({
+      motivo_preset: paciente.trasladado ? (esPreset ? motivoGuardado : "Otro") : "",
+      motivo_otro: paciente.trasladado && !esPreset ? motivoGuardado : "",
+      fecha_traslado: paciente.fecha_traslado?.split("T")[0] || fechaHoy(),
+      destino_traslado: paciente.destino_traslado || "",
+      observaciones_traslado: paciente.observaciones_traslado || "",
+    });
+    setErrorTraslado("");
+    setModalTraslado(true);
+  }
+
+  async function guardarTraslado() {
+    const motivoFinal = formTraslado.motivo_preset === "Otro"
+      ? formTraslado.motivo_otro?.trim()
+      : formTraslado.motivo_preset;
+    if (!motivoFinal || !formTraslado.fecha_traslado) {
+      setErrorTraslado("El motivo y la fecha de traslado son obligatorios.");
+      return;
+    }
+    setGuardandoTraslado(true);
+    setErrorTraslado("");
+    try {
+      await api.put(`/pacientes/${id}/traslado`, {
+        motivo_traslado: motivoFinal,
+        fecha_traslado: formTraslado.fecha_traslado,
+        destino_traslado: formTraslado.destino_traslado || null,
+        observaciones_traslado: formTraslado.observaciones_traslado || null,
+      });
+      setPaciente(p => ({
+        ...p,
+        trasladado: 1,
+        motivo_traslado: motivoFinal,
+        fecha_traslado: formTraslado.fecha_traslado,
+        destino_traslado: formTraslado.destino_traslado || null,
+        observaciones_traslado: formTraslado.observaciones_traslado || null,
+      }));
+      setModalTraslado(false);
+    } catch (err) {
+      setErrorTraslado(err.response?.data?.error || "Error al registrar el traslado");
+    } finally {
+      setGuardandoTraslado(false);
+    }
+  }
+
+  async function deshacerTraslado() {
+    if (!window.confirm("¿Deshacer el traslado de este paciente? Volverá a marcarse como activo.")) return;
+    setGuardandoTraslado(true);
+    try {
+      await api.delete(`/pacientes/${id}/traslado`);
+      setPaciente(p => ({
+        ...p, trasladado: 0, motivo_traslado: null, fecha_traslado: null,
+        destino_traslado: null, observaciones_traslado: null,
+      }));
+      setModalTraslado(false);
+    } catch {
+      setErrorTraslado("Error al deshacer el traslado");
+    } finally {
+      setGuardandoTraslado(false);
+    }
+  }
 
   function generarMensajeWA(clasificacion) {
     const trato    = paciente.sexo === "F" ? "Estimada" : "Estimado";
@@ -572,6 +652,35 @@ export default function PacienteDetalle() {
           </div>
         </div>
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+          {paciente.trasladado ? (
+            <button
+              onClick={abrirModalTraslado}
+              style={{
+                display: "flex", alignItems: "center", gap: 6,
+                background: "#fef3c7", color: "#b45309", border: "1.5px solid #f59e0b",
+                borderRadius: 8, padding: "7px 14px", fontWeight: 700,
+                fontSize: "0.875rem", cursor: "pointer",
+              }}
+              title="Ver información del traslado"
+            >
+              <FiAlertTriangle size={15} /> Paciente Trasladado
+            </button>
+          ) : (
+            !soloLectura && (
+              <button
+                onClick={abrirModalTraslado}
+                style={{
+                  display: "flex", alignItems: "center", gap: 6,
+                  background: "#fff", color: "#64748b", border: "1.5px solid #e2e8f0",
+                  borderRadius: 8, padding: "7px 14px", fontWeight: 600,
+                  fontSize: "0.875rem", cursor: "pointer",
+                }}
+                title="Marcar paciente como trasladado"
+              >
+                <FiLogOut size={15} /> Trasladar
+              </button>
+            )
+          )}
           <button
             onClick={() => { setMsgWhatsApp(generarMensajeWA(ultimoAnalisis?.clasificacion)); setResultadoWA(null); setModalWhatsApp(true); }}
             style={{
@@ -712,9 +821,16 @@ export default function PacienteDetalle() {
                   <SeccionFila>Insulina inicial al ingreso</SeccionFila>
                   <InfoFila label="Insulina acción prolongada" valor={paciente.tipo_insulina  || "—"} />
                   <InfoFila label="Insulina acción corta"      valor={paciente.tipo_insulina_2 || "—"} />
-                  {paciente.anticuerpos && (
-                    <InfoFila label="Anticuerpos" valor={<AnticuerposBadges texto={paciente.anticuerpos} />} />
-                  )}
+                  <InfoFila
+                    label="Anticuerpos"
+                    valor={
+                      <AnticuerposEditor
+                        paciente={paciente}
+                        soloLectura={soloLectura}
+                        onGuardado={(nuevoTexto) => setPaciente((p) => ({ ...p, anticuerpos: nuevoTexto }))}
+                      />
+                    }
+                  />
 
                   <SeccionFila>Datos del Tutor</SeccionFila>
                   <InfoFila label="Nombre tutor"   valor={paciente.nombre_tutor   || "—"} />
@@ -2278,7 +2394,115 @@ export default function PacienteDetalle() {
         </div>
       )}
 
-      {/* ── Modal anticuerpos (crear / editar) ──────────────────────────── */}
+      {/* ── Modal Traslado / baja de paciente ────────────────────────────── */}
+      {modalTraslado && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 9999, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", padding: "16px" }}>
+          <div style={{ background: "#fff", borderRadius: 14, padding: "28px", maxWidth: 480, width: "100%", boxShadow: "0 24px 64px rgba(0,0,0,0.25)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+              <h3 style={{ margin: 0, display: "flex", alignItems: "center", gap: 8, color: "#0f172a" }}>
+                <FiLogOut size={20} color="#b45309" /> {paciente.trasladado ? "Traslado del paciente" : "Marcar como trasladado"}
+              </h3>
+              <button onClick={() => setModalTraslado(false)} style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer", color: "#94a3b8" }}>✕</button>
+            </div>
+
+            {paciente.trasladado && (
+              <div style={{ background: "#fef3c7", border: "1px solid #fde68a", borderRadius: 8, padding: "10px 14px", fontSize: "0.8rem", color: "#92400e", marginBottom: 16 }}>
+                Este paciente ya está marcado como trasladado
+                {paciente.trasladado_por ? ` por ${paciente.trasladado_por}` : ""}
+                {paciente.trasladado_en ? ` el ${new Date(paciente.trasladado_en).toLocaleDateString("es-HN")}` : ""}.
+              </div>
+            )}
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              <div>
+                <label style={{ display: "block", fontSize: "0.82rem", fontWeight: 500, color: "#374151", marginBottom: "0.35rem" }}>Motivo *</label>
+                <select
+                  disabled={soloLectura}
+                  value={formTraslado.motivo_preset || ""}
+                  onChange={e => setFormTraslado(f => ({ ...f, motivo_preset: e.target.value }))}
+                  style={{ width: "100%", boxSizing: "border-box", padding: "0.6rem 0.75rem", border: "1px solid #d1d5db", borderRadius: 8, fontSize: "0.875rem" }}
+                >
+                  <option value="">Selecciona un motivo…</option>
+                  {MOTIVOS_TRASLADO.map(m => <option key={m} value={m}>{m}</option>)}
+                </select>
+              </div>
+
+              {formTraslado.motivo_preset === "Otro" && (
+                <div>
+                  <label style={{ display: "block", fontSize: "0.82rem", fontWeight: 500, color: "#374151", marginBottom: "0.35rem" }}>Especifica el motivo *</label>
+                  <input
+                    disabled={soloLectura}
+                    value={formTraslado.motivo_otro || ""}
+                    onChange={e => setFormTraslado(f => ({ ...f, motivo_otro: e.target.value }))}
+                    placeholder="Ej: Fallecimiento, cambio de seguro médico…"
+                    style={{ width: "100%", boxSizing: "border-box", padding: "0.6rem 0.75rem", border: "1px solid #d1d5db", borderRadius: 8, fontSize: "0.875rem" }}
+                  />
+                </div>
+              )}
+
+              <div>
+                <label style={{ display: "block", fontSize: "0.82rem", fontWeight: 500, color: "#374151", marginBottom: "0.35rem" }}>Fecha de traslado *</label>
+                <input
+                  type="date"
+                  disabled={soloLectura}
+                  value={formTraslado.fecha_traslado || ""}
+                  onChange={e => setFormTraslado(f => ({ ...f, fecha_traslado: e.target.value }))}
+                  style={{ width: "100%", boxSizing: "border-box", padding: "0.6rem 0.75rem", border: "1px solid #d1d5db", borderRadius: 8, fontSize: "0.875rem" }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: "block", fontSize: "0.82rem", fontWeight: 500, color: "#374151", marginBottom: "0.35rem" }}>Destino / institución (opcional)</label>
+                <input
+                  disabled={soloLectura}
+                  value={formTraslado.destino_traslado || ""}
+                  onChange={e => setFormTraslado(f => ({ ...f, destino_traslado: e.target.value }))}
+                  placeholder="Ej: Hospital Escuela — Medicina Interna"
+                  style={{ width: "100%", boxSizing: "border-box", padding: "0.6rem 0.75rem", border: "1px solid #d1d5db", borderRadius: 8, fontSize: "0.875rem" }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: "block", fontSize: "0.82rem", fontWeight: 500, color: "#374151", marginBottom: "0.35rem" }}>Observaciones (opcional)</label>
+                <textarea
+                  rows={3}
+                  disabled={soloLectura}
+                  value={formTraslado.observaciones_traslado || ""}
+                  onChange={e => setFormTraslado(f => ({ ...f, observaciones_traslado: e.target.value }))}
+                  style={{ width: "100%", boxSizing: "border-box", padding: "0.6rem 0.75rem", border: "1px solid #d1d5db", borderRadius: 8, fontSize: "0.875rem", resize: "vertical", fontFamily: "inherit" }}
+                />
+              </div>
+            </div>
+
+            {errorTraslado && (
+              <div style={{ background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 8, padding: "10px 14px", fontSize: "0.85rem", color: "#dc2626", marginTop: 14 }}>
+                {errorTraslado}
+              </div>
+            )}
+
+            <div style={{ display: "flex", gap: 10, justifyContent: "space-between", marginTop: 20 }}>
+              {paciente.trasladado && !soloLectura ? (
+                <button onClick={deshacerTraslado} disabled={guardandoTraslado} className="btn btn-outline" style={{ color: "#dc2626", borderColor: "#dc2626" }}>
+                  Deshacer traslado
+                </button>
+              ) : <span />}
+              <div style={{ display: "flex", gap: 10 }}>
+                <button className="btn btn-outline" onClick={() => setModalTraslado(false)} disabled={guardandoTraslado}>Cerrar</button>
+                {!soloLectura && (
+                  <button
+                    onClick={guardarTraslado}
+                    disabled={guardandoTraslado}
+                    style={{ display: "flex", alignItems: "center", gap: 6, background: guardandoTraslado ? "#fbbf24" : "#d97706", color: "#fff", border: "none", borderRadius: 8, padding: "8px 20px", fontWeight: 600, cursor: guardandoTraslado ? "not-allowed" : "pointer" }}
+                  >
+                    {guardandoTraslado ? "Guardando..." : paciente.trasladado ? "Actualizar" : "Registrar traslado"}
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ── Modal WhatsApp individual ────────────────────────────────────── */}
       {modalWhatsApp && (
         <div style={{ position: "fixed", inset: 0, zIndex: 9999, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", padding: "16px" }}>
@@ -3666,40 +3890,64 @@ function chipStyle(bg, color) {
   };
 }
 
-const COLOR_ESTADO_ANTICUERPO = { Positivo: "#FB0D0A", Negativo: "#76B250", Pendiente: "#94a3b8" };
+function AnticuerposEditor({ paciente, soloLectura, onGuardado }) {
+  const [estado, setEstado] = useState(() => parseAnticuerpos(paciente.anticuerpos));
+  const [guardando, setGuardando] = useState(false);
 
-function AnticuerposBadges({ texto }) {
-  const items = (texto || "").split(",").map((parte) => {
-    const [k, v] = parte.split(":").map((s) => s.trim());
-    return { nombre: k, estado: v };
-  }).filter((it) => it.nombre);
-
-  if (!items.length) return valorTexto(texto);
+  async function marcar(key, valor) {
+    if (soloLectura || guardando) return;
+    const next = { ...estado, [key]: valor };
+    setEstado(next);
+    setGuardando(true);
+    try {
+      const nuevoTexto = serializarAnticuerpos(next);
+      await api.put(`/pacientes/${paciente.id}`, {
+        ...paciente,
+        fecha_nacimiento: paciente.fecha_nacimiento?.split("T")[0] || paciente.fecha_nacimiento,
+        anticuerpos: nuevoTexto,
+      });
+      onGuardado?.(nuevoTexto);
+    } catch {
+      setEstado(estado); // revertir si falla
+      alert("No se pudo actualizar el anticuerpo.");
+    } finally {
+      setGuardando(false);
+    }
+  }
 
   return (
-    <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-      {items.map((it) => {
-        const color = COLOR_ESTADO_ANTICUERPO[it.estado] || "#94a3b8";
-        return (
-          <span
-            key={it.nombre}
-            style={{
-              display: "inline-flex", alignItems: "center", gap: 5,
-              fontSize: 11, fontWeight: 600, borderRadius: 20,
-              padding: "3px 10px", border: `1.5px solid ${color}`,
-              background: color + "22", color,
-            }}
-          >
-            {it.nombre}: {it.estado || "Pendiente"}
-          </span>
-        );
-      })}
+    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+      {LISTA_ANTICUERPOS.map((a) => (
+        <div key={a.key} style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+          <span style={{ fontSize: 12, fontWeight: 600, color: "#0f172a", minWidth: 78 }}>{a.label}</span>
+          <div style={{ display: "flex", gap: 5 }}>
+            {ESTADOS_ANTICUERPO.map((e) => {
+              const activo = estado[a.key] === e.key;
+              return (
+                <button
+                  key={e.key}
+                  type="button"
+                  disabled={soloLectura || guardando}
+                  onClick={() => marcar(a.key, e.key)}
+                  style={{
+                    display: "inline-flex", alignItems: "center", gap: 5,
+                    padding: "2px 10px", borderRadius: 20, fontSize: 11, fontWeight: 600,
+                    cursor: soloLectura ? "default" : "pointer", transition: "all 0.15s",
+                    border: `1.5px solid ${e.color}`,
+                    background: activo ? e.color + "22" : "transparent",
+                    color: activo ? e.color : "#64748b",
+                    opacity: guardando ? 0.6 : 1,
+                  }}
+                >
+                  {e.key}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      ))}
     </div>
   );
-}
-
-function valorTexto(texto) {
-  return <span>{texto}</span>;
 }
 
 function InfoFila({ label, valor }) {

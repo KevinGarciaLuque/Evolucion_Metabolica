@@ -49,6 +49,15 @@ const COLUMNAS = [
 
   // migrate_monitor.cjs
   { sql: "ALTER TABLE pacientes ADD COLUMN con_monitor TINYINT(1) NOT NULL DEFAULT 0" },
+
+  // migrate_traslado.cjs
+  { sql: "ALTER TABLE pacientes ADD COLUMN trasladado TINYINT(1) NOT NULL DEFAULT 0 AFTER con_monitor" },
+  { sql: "ALTER TABLE pacientes ADD COLUMN fecha_traslado DATE NULL AFTER trasladado" },
+  { sql: "ALTER TABLE pacientes ADD COLUMN motivo_traslado VARCHAR(150) NULL AFTER fecha_traslado" },
+  { sql: "ALTER TABLE pacientes ADD COLUMN destino_traslado VARCHAR(200) NULL AFTER motivo_traslado" },
+  { sql: "ALTER TABLE pacientes ADD COLUMN observaciones_traslado TEXT NULL AFTER destino_traslado" },
+  { sql: "ALTER TABLE pacientes ADD COLUMN trasladado_por VARCHAR(150) NULL AFTER observaciones_traslado" },
+  { sql: "ALTER TABLE pacientes ADD COLUMN trasladado_en DATETIME NULL AFTER trasladado_por" },
 ];
 
 async function run() {

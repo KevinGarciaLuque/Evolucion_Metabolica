@@ -3,6 +3,7 @@ import { useNavigate, useParams, Link } from "react-router-dom";
 import { FiArrowLeft } from "react-icons/fi";
 import api from "../../api/axios";
 import Layout from "../../components/Layout";
+import { LISTA_ANTICUERPOS, ESTADOS_ANTICUERPO, parseAnticuerpos, serializarAnticuerpos } from "../../utils/anticuerpos";
 
 const MUNICIPIOS_POR_DEPARTAMENTO = {
   "Atlántida":          ["Arizona", "El Porvenir", "Esparta", "Honduras", "Jutiapa", "La Ceiba", "La Masica", "San Francisco", "Tela"],
@@ -26,36 +27,6 @@ const MUNICIPIOS_POR_DEPARTAMENTO = {
 };
 
 const DEPARTAMENTOS_HN = Object.keys(MUNICIPIOS_POR_DEPARTAMENTO).sort();
-
-const LISTA_ANTICUERPOS = [
-  { key: "Anti-GAD65", label: "Anti-GAD65" },
-  { key: "Anti-IA2",   label: "Anti-IA2" },
-  { key: "ZnT8",       label: "ZnT8" },
-  { key: "ICA",        label: "ICA" },
-  { key: "IAA",        label: "IAA" },
-];
-const ESTADOS_ANTICUERPO = [
-  { key: "Positivo",  color: "#FB0D0A" },
-  { key: "Negativo",  color: "#76B250" },
-  { key: "Pendiente", color: "#94a3b8" },
-];
-
-function parseAnticuerpos(str) {
-  const estado = {};
-  LISTA_ANTICUERPOS.forEach((a) => { estado[a.key] = "Pendiente"; });
-  if (str) {
-    str.split(",").forEach((parte) => {
-      const [k, v] = parte.split(":").map((s) => s.trim());
-      const match = LISTA_ANTICUERPOS.find((a) => a.key === k);
-      if (match && v) estado[match.key] = v;
-    });
-  }
-  return estado;
-}
-
-function serializarAnticuerpos(estado) {
-  return LISTA_ANTICUERPOS.map((a) => `${a.key}: ${estado[a.key]}`).join(", ");
-}
 
 const VACÍO = {
   dni: "", nombre: "", fecha_nacimiento: "", sexo: "F",
