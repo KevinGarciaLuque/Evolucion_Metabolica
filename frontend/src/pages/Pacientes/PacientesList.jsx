@@ -265,12 +265,11 @@ export default function PacientesList() {
           ? (conMonitor.reduce((s, p) => s + parseFloat(p.tir_promedio), 0) / conMonitor.length).toFixed(1)
           : null;
 
-        // HbA1c: distribución por rangos
+        // HbA1c: distribución por clasificación (Óptimo / Moderado / Alto Riesgo)
         const hba1cData = [
-          { nombre: "< 7%",   count: sinMonitor.filter(p => p.hba1c_previo < 7).length,                             color: "#76B250" },
-          { nombre: "7–9%",   count: sinMonitor.filter(p => p.hba1c_previo >= 7 && p.hba1c_previo <= 9).length,     color: "#FEBF01" },
-          { nombre: "9–10%",  count: sinMonitor.filter(p => p.hba1c_previo > 9 && p.hba1c_previo <= 10).length,     color: "#FB6B00" },
-          { nombre: "> 10%",  count: sinMonitor.filter(p => p.hba1c_previo > 10).length,                            color: "#FB0D0A" },
+          { nombre: "Óptimo",      label: "< 7%",   count: sinMonitor.filter(p => p.hba1c_previo < 7).length,                             color: "#76B250" },
+          { nombre: "Moderado",    label: "7–10%",  count: sinMonitor.filter(p => p.hba1c_previo >= 7 && p.hba1c_previo <= 10).length,     color: "#FEBF01" },
+          { nombre: "Alto Riesgo", label: "> 10%",  count: sinMonitor.filter(p => p.hba1c_previo > 10).length,                            color: "#FB0D0A" },
         ];
         const promedioHbA1c = sinMonitor.length
           ? (sinMonitor.reduce((s, p) => s + parseFloat(p.hba1c_previo), 0) / sinMonitor.length).toFixed(1)
@@ -358,9 +357,9 @@ export default function PacientesList() {
               </div>
               <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
                 <StatBox label="Prom. HbA1c" value={promedioHbA1c} unit="%" sub={`total ${sinMonitor.length}`} color="#d97706" />
-                <StatBox label="< 7%" value={hba1cData[0].count} unit=" pac." color="#76B250" />
-                <StatBox label="7–9%" value={hba1cData[1].count} unit=" pac." color="#FEBF01" />
-                <StatBox label="> 10%" value={hba1cData[3].count} unit=" pac." color="#FB0D0A" />
+                <StatBox label="Óptimo <7%" value={hba1cData[0].count} unit=" pac." color="#76B250" />
+                <StatBox label="Moderado" value={hba1cData[1].count} unit=" pac." color="#FEBF01" />
+                <StatBox label="Alto Riesgo" value={hba1cData[2].count} unit=" pac." color="#FB0D0A" />
               </div>
               {sinMonitor.length === 0 ? (
                 <div style={{ textAlign: "center", color: "#94a3b8", padding: "20px 0", fontSize: 13 }}>Sin datos</div>

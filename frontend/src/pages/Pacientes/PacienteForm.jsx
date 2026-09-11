@@ -27,6 +27,36 @@ const MUNICIPIOS_POR_DEPARTAMENTO = {
 
 const DEPARTAMENTOS_HN = Object.keys(MUNICIPIOS_POR_DEPARTAMENTO).sort();
 
+const LISTA_ANTICUERPOS = [
+  { key: "Anti-GAD65", label: "Anti-GAD65" },
+  { key: "Anti-IA2",   label: "Anti-IA2" },
+  { key: "ZnT8",       label: "ZnT8" },
+  { key: "ICA",        label: "ICA" },
+  { key: "IAA",        label: "IAA" },
+];
+const ESTADOS_ANTICUERPO = [
+  { key: "Positivo",  color: "#FB0D0A" },
+  { key: "Negativo",  color: "#76B250" },
+  { key: "Pendiente", color: "#94a3b8" },
+];
+
+function parseAnticuerpos(str) {
+  const estado = {};
+  LISTA_ANTICUERPOS.forEach((a) => { estado[a.key] = "Pendiente"; });
+  if (str) {
+    str.split(",").forEach((parte) => {
+      const [k, v] = parte.split(":").map((s) => s.trim());
+      const match = LISTA_ANTICUERPOS.find((a) => a.key === k);
+      if (match && v) estado[match.key] = v;
+    });
+  }
+  return estado;
+}
+
+function serializarAnticuerpos(estado) {
+  return LISTA_ANTICUERPOS.map((a) => `${a.key}: ${estado[a.key]}`).join(", ");
+}
+
 const VACÍO = {
   dni: "", nombre: "", fecha_nacimiento: "", sexo: "F",
   departamento: "", municipio: "", procedencia_tipo: "", direccion: "",
@@ -70,6 +100,7 @@ export default function PacienteForm() {
   const [form, setForm]     = useState(VACÍO);
   const [error, setError]   = useState("");
   const [guardando, setGuardando] = useState(false);
+  const [estadoAnticuerpos, setEstadoAnticuerpos] = useState(() => parseAnticuerpos(""));
 
   useEffect(() => {
     if (esEdicion) {
@@ -78,10 +109,23 @@ export default function PacienteForm() {
         if (p.fecha_nacimiento) {
           p.fecha_nacimiento = p.fecha_nacimiento.split("T")[0];
         }
-        setForm({ ...VACÍO, ...p });
+        const estado = parseAnticuerpos(p.anticuerpos);
+        setEstadoAnticuerpos(estado);
+        setForm({ ...VACÍO, ...p, anticuerpos: serializarAnticuerpos(estado) });
       });
+    } else {
+      setForm((f) => ({ ...f, anticuerpos: serializarAnticuerpos(estadoAnticuerpos) }));
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, esEdicion]);
+
+  function marcarAnticuerpo(key, estadoNuevo) {
+    setEstadoAnticuerpos((prev) => {
+      const next = { ...prev, [key]: estadoNuevo };
+      setForm((f) => ({ ...f, anticuerpos: serializarAnticuerpos(next) }));
+      return next;
+    });
+  }
 
   function cambiar(e) {
     const { name, value, type, checked } = e.target;
@@ -358,7 +402,42 @@ export default function PacienteForm() {
             </div>
             <div className="form-group" style={{ gridColumn: "1 / -1" }}>
               <label>Anticuerpos para diabetes</label>
-              <input name="anticuerpos" placeholder="Ej: Anti-GAD positivo, IA-2 positivo, ZnT8 negativo" value={form.anticuerpos} onChange={cambiar} />
+              <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 4 }}>
+                {LISTA_ANTICUERPOS.map((a) => (
+                  <div
+                    key={a.key}
+                    style={{
+                      display: "flex", alignItems: "center", justifyContent: "space-between",
+                      flexWrap: "wrap", gap: 8,
+                      padding: "8px 12px", background: "#f8fafc", borderRadius: 10,
+                    }}
+                  >
+                    <span style={{ fontSize: 13, fontWeight: 600, color: "#0f172a" }}>{a.label}</span>
+                    <div style={{ display: "flex", gap: 6 }}>
+                      {ESTADOS_ANTICUERPO.map((e) => {
+                        const activo = estadoAnticuerpos[a.key] === e.key;
+                        return (
+                          <button
+                            key={e.key}
+                            type="button"
+                            onClick={() => marcarAnticuerpo(a.key, e.key)}
+                            style={{
+                              display: "inline-flex", alignItems: "center", gap: 6,
+                              padding: "4px 12px", borderRadius: 20, fontSize: 12, fontWeight: 600,
+                              cursor: "pointer", transition: "all 0.15s",
+                              border: `1.5px solid ${e.color}`,
+                              background: activo ? e.color + "22" : "transparent",
+                              color: activo ? e.color : "#64748b",
+                            }}
+                          >
+                            {e.key}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 

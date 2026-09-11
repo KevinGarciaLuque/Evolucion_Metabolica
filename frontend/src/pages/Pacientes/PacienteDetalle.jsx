@@ -712,7 +712,9 @@ export default function PacienteDetalle() {
                   <SeccionFila>Insulina inicial al ingreso</SeccionFila>
                   <InfoFila label="Insulina acción prolongada" valor={paciente.tipo_insulina  || "—"} />
                   <InfoFila label="Insulina acción corta"      valor={paciente.tipo_insulina_2 || "—"} />
-                  {paciente.anticuerpos && <InfoFila label="Anticuerpos" valor={paciente.anticuerpos} />}
+                  {paciente.anticuerpos && (
+                    <InfoFila label="Anticuerpos" valor={<AnticuerposBadges texto={paciente.anticuerpos} />} />
+                  )}
 
                   <SeccionFila>Datos del Tutor</SeccionFila>
                   <InfoFila label="Nombre tutor"   valor={paciente.nombre_tutor   || "—"} />
@@ -3662,6 +3664,42 @@ function chipStyle(bg, color) {
     padding: "3px 10px", fontSize: "0.78rem", fontWeight: 600,
     display: "inline-flex", alignItems: "center", gap: 4,
   };
+}
+
+const COLOR_ESTADO_ANTICUERPO = { Positivo: "#FB0D0A", Negativo: "#76B250", Pendiente: "#94a3b8" };
+
+function AnticuerposBadges({ texto }) {
+  const items = (texto || "").split(",").map((parte) => {
+    const [k, v] = parte.split(":").map((s) => s.trim());
+    return { nombre: k, estado: v };
+  }).filter((it) => it.nombre);
+
+  if (!items.length) return valorTexto(texto);
+
+  return (
+    <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+      {items.map((it) => {
+        const color = COLOR_ESTADO_ANTICUERPO[it.estado] || "#94a3b8";
+        return (
+          <span
+            key={it.nombre}
+            style={{
+              display: "inline-flex", alignItems: "center", gap: 5,
+              fontSize: 11, fontWeight: 600, borderRadius: 20,
+              padding: "3px 10px", border: `1.5px solid ${color}`,
+              background: color + "22", color,
+            }}
+          >
+            {it.nombre}: {it.estado || "Pendiente"}
+          </span>
+        );
+      })}
+    </div>
+  );
+}
+
+function valorTexto(texto) {
+  return <span>{texto}</span>;
 }
 
 function InfoFila({ label, valor }) {
