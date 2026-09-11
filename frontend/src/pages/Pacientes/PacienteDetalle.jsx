@@ -3891,32 +3891,80 @@ function chipStyle(bg, color) {
 }
 
 function AnticuerposEditor({ paciente, soloLectura, onGuardado }) {
-  const [estado, setEstado] = useState(() => parseAnticuerpos(paciente.anticuerpos));
+  const estadoGuardado = parseAnticuerpos(paciente.anticuerpos);
+  const [editando, setEditando] = useState(false);
+  const [estado, setEstado] = useState(estadoGuardado);
   const [guardando, setGuardando] = useState(false);
 
-  async function marcar(key, valor) {
-    if (soloLectura || guardando) return;
-    const next = { ...estado, [key]: valor };
-    setEstado(next);
+  function empezarEdicion() {
+    setEstado(parseAnticuerpos(paciente.anticuerpos));
+    setEditando(true);
+  }
+
+  function cancelar() {
+    setEstado(estadoGuardado);
+    setEditando(false);
+  }
+
+  async function guardar() {
     setGuardando(true);
     try {
-      const nuevoTexto = serializarAnticuerpos(next);
+      const nuevoTexto = serializarAnticuerpos(estado);
       await api.put(`/pacientes/${paciente.id}`, {
         ...paciente,
         fecha_nacimiento: paciente.fecha_nacimiento?.split("T")[0] || paciente.fecha_nacimiento,
         anticuerpos: nuevoTexto,
       });
       onGuardado?.(nuevoTexto);
+      setEditando(false);
     } catch {
-      setEstado(estado); // revertir si falla
-      alert("No se pudo actualizar el anticuerpo.");
+      alert("No se pudo actualizar los anticuerpos.");
     } finally {
       setGuardando(false);
     }
   }
 
+  if (!editando) {
+    return (
+      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+          {LISTA_ANTICUERPOS.map((a) => {
+            const valor = estadoGuardado[a.key];
+            const color = COLOR_ESTADO_ANTICUERPO[valor] || "#94a3b8";
+            return (
+              <span
+                key={a.key}
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: 5,
+                  fontSize: 11, fontWeight: 600, borderRadius: 20,
+                  padding: "3px 10px", border: `1.5px solid ${color}`,
+                  background: color + "22", color,
+                }}
+              >
+                {a.label}: {valor}
+              </span>
+            );
+          })}
+        </div>
+        {!soloLectura && (
+          <button
+            type="button"
+            onClick={empezarEdicion}
+            style={{
+              display: "inline-flex", alignItems: "center", gap: 5, alignSelf: "flex-start",
+              background: "none", border: "none", cursor: "pointer",
+              color: "#3b82f6", fontSize: 11.5, fontWeight: 600, padding: "2px 0",
+            }}
+          >
+            <FiEdit2 size={12} /> Editar
+          </button>
+        )}
+      </div>
+    );
+  }
+
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
       {LISTA_ANTICUERPOS.map((a) => (
         <div key={a.key} style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
           <span style={{ fontSize: 12, fontWeight: 600, color: "#0f172a", minWidth: 78 }}>{a.label}</span>
@@ -3927,12 +3975,12 @@ function AnticuerposEditor({ paciente, soloLectura, onGuardado }) {
                 <button
                   key={e.key}
                   type="button"
-                  disabled={soloLectura || guardando}
-                  onClick={() => marcar(a.key, e.key)}
+                  disabled={guardando}
+                  onClick={() => setEstado((s) => ({ ...s, [a.key]: e.key }))}
                   style={{
                     display: "inline-flex", alignItems: "center", gap: 5,
                     padding: "2px 10px", borderRadius: 20, fontSize: 11, fontWeight: 600,
-                    cursor: soloLectura ? "default" : "pointer", transition: "all 0.15s",
+                    cursor: "pointer", transition: "all 0.15s",
                     border: `1.5px solid ${e.color}`,
                     background: activo ? e.color + "22" : "transparent",
                     color: activo ? e.color : "#64748b",
@@ -3946,6 +3994,31 @@ function AnticuerposEditor({ paciente, soloLectura, onGuardado }) {
           </div>
         </div>
       ))}
+      <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
+        <button
+          type="button"
+          onClick={guardar}
+          disabled={guardando}
+          style={{
+            background: "#16a34a", color: "#fff", border: "none", borderRadius: 6,
+            padding: "5px 12px", fontSize: 11.5, fontWeight: 600,
+            cursor: guardando ? "not-allowed" : "pointer", opacity: guardando ? 0.7 : 1,
+          }}
+        >
+          {guardando ? "Guardando..." : "Guardar"}
+        </button>
+        <button
+          type="button"
+          onClick={cancelar}
+          disabled={guardando}
+          style={{
+            background: "none", color: "#64748b", border: "1px solid #e2e8f0", borderRadius: 6,
+            padding: "5px 12px", fontSize: 11.5, fontWeight: 600, cursor: "pointer",
+          }}
+        >
+          Cancelar
+        </button>
+      </div>
     </div>
   );
 }
