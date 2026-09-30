@@ -5,6 +5,7 @@
   --mh-cyan: #38bdf8;
   position: relative;
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
   color: #fff;
