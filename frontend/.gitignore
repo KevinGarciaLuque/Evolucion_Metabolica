@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# Archivos crudos/de revisión de generaciones con IA (no van a producción)
+hero_review/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

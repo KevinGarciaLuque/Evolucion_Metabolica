@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import AnimatedNumber from "./AnimatedNumber";
 import FlagIcon from "../FlagIcon";
 import GenomeBackground from "./GenomeBackground";
@@ -15,14 +16,45 @@ export default function MetabolicHero({ paises = [], cargando = false, loginSlot
   const video = variant === "video";
   const total = paises.reduce((acc, p) => acc + (p.total_pacientes || 0), 0);
   const max = Math.max(1, ...paises.map((p) => p.total_pacientes || 0));
+  const bodyRef = useRef(null);
+
+  // Parallax sutil del texto: sigue al mouse con menos intensidad que el fondo,
+  // dando sensación de profundidad. Solo con mouse real y sin reduced-motion.
+  useEffect(() => {
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const tieneMouse = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+    if (reduce || !tieneMouse) return;
+    const el = bodyRef.current;
+    if (!el) return;
+    const MAX_PX = 7;
+    const mouse = { x: 0, y: 0, tx: 0, ty: 0 };
+    let raf = 0;
+
+    function onMove(e) {
+      mouse.tx = (e.clientX / window.innerWidth - 0.5) * 2;
+      mouse.ty = (e.clientY / window.innerHeight - 0.5) * 2;
+    }
+    function step() {
+      raf = requestAnimationFrame(step);
+      mouse.x += (mouse.tx - mouse.x) * 0.06;
+      mouse.y += (mouse.ty - mouse.y) * 0.06;
+      const x = (mouse.x * MAX_PX).toFixed(2);
+      const y = (mouse.y * MAX_PX * 0.6).toFixed(2);
+      el.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+    }
+
+    window.addEventListener("pointermove", onMove, { passive: true });
+    raf = requestAnimationFrame(step);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("pointermove", onMove);
+    };
+  }, []);
 
   return (
     <div className={`mh${video ? " mh--video" : ""}`}>
       {video ? (
-        <>
-          <VideoBackground />
-          <GenomeBackground className="mh__fx" variant="particles" />
-        </>
+        <VideoBackground />
       ) : (
         <GenomeBackground className="mh__bg" />
       )}
@@ -43,7 +75,7 @@ export default function MetabolicHero({ paises = [], cargando = false, loginSlot
         {loginSlot}
       </header>
 
-      <main className="mh__body">
+      <main className="mh__body" ref={bodyRef}>
         <span className="mh__eyebrow"><i /> Investigación clínica · Latinoamérica</span>
         <h1 className="mh__title">
           Registro Nacional de <span>Diabetes</span>

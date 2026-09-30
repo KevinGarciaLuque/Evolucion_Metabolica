@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { getEstadisticasPublicas } from "../api/publicApi";
 import FlagIcon from "../components/FlagIcon";
 import MetabolicHero from "../components/hero/MetabolicHero";
+import SobreNosotros from "../components/hero/SobreNosotros";
 
 // Códigos de país que usan el esquema RENACED (login /renaced/login).
 // "hn" (Honduras) usa el sistema original de Evolución Metabólica (/login).
@@ -88,6 +89,8 @@ export default function Landing({ variant = "video" }) {
       `}</style>
 
       <MetabolicHero variant={variant} paises={paises} cargando={cargando} loginSlot={loginSlot} />
+
+      <SobreNosotros />
 
       <footer style={{ color: "#7f9bbd", fontSize: 12, textAlign: "center", padding: "16px 20px 24px", background: "#0b3a6b" }}>
         © {new Date().getFullYear()} LATAM · Desarrollado por Kevin Garcia · Todos los derechos reservados
