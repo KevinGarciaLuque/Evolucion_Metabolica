@@ -69,7 +69,7 @@ export default function MetabolicHero({ paises = [], cargando = false, loginSlot
           </span>
           <span className="mh__brand-text">
             <span className="mh__brand-name">Evolución Metabólica</span>
-            <span className="mh__brand-sub">Registro Nacional de Diabetes</span>
+            <span className="mh__brand-sub">Registro Latinoamericano de Diabetes</span>
           </span>
         </a>
         {loginSlot}
@@ -78,7 +78,7 @@ export default function MetabolicHero({ paises = [], cargando = false, loginSlot
       <main className="mh__body" ref={bodyRef}>
         <span className="mh__eyebrow"><i /> Investigación clínica · Latinoamérica</span>
         <h1 className="mh__title">
-          Registro Nacional de <span>Diabetes</span>
+          Registro Latinoamericano de <span>Diabetes</span>
         </h1>
         <p className="mh__subtitle">
           Datos agregados de los países participantes en el registro
