@@ -59,16 +59,18 @@ function calcIniciales(nombre, apPat, apMat) {
     .join("");
 }
 
-const Campo = ({ label, name, type = "text", required, children, colSpan, value, onChange }) => (
+const Campo = ({ label, name, type = "text", required, children, colSpan, value, onChange, min, max }) => (
   <div className="form-group" style={colSpan ? { gridColumn: `span ${colSpan}` } : {}}>
     <label className="form-label">
       {label}{required && <span style={{ color: "#ef4444" }}> *</span>}
     </label>
     {children ?? (
-      <input type={type} name={name} value={value} onChange={onChange} required={required} />
+      <input type={type} name={name} value={value} onChange={onChange} required={required} min={min} max={max} />
     )}
   </div>
 );
+
+const HOY = new Date().toISOString().slice(0, 10);
 
 export default function RenacedPacienteForm() {
   const { id }     = useParams();
@@ -121,7 +123,13 @@ export default function RenacedPacienteForm() {
 
   function cambiar(e) {
     const { name, value, type, checked } = e.target;
-    const val = type === "checkbox" ? checked : value;
+    let val = type === "checkbox" ? checked : value;
+    if (type === "date" && val) {
+      // El input nativo no limita el año a 4 dígitos mientras se escribe
+      // (deja teclear "55555"); se trunca aquí para evitar fechas inválidas.
+      const [anio, mes, dia] = val.split("-");
+      if (anio && anio.length > 4) val = `${anio.slice(0, 4)}-${mes}-${dia}`;
+    }
     setForm((f) => {
       const next = { ...f, [name]: val };
       if (inicialesAuto && (name === "nombre" || name === "ap_pat" || name === "ap_mat")) {
@@ -270,7 +278,7 @@ export default function RenacedPacienteForm() {
                 <option value="M">Masculino</option>
               </select>
             </Campo>
-            <Campo label="Fecha de Nacimiento" name="fecha_nacimiento" type="date" value={form.fecha_nacimiento} onChange={cambiar} />
+            <Campo label="Fecha de Nacimiento" name="fecha_nacimiento" type="date" value={form.fecha_nacimiento} onChange={cambiar} min="1900-01-01" max={HOY} />
             <Campo label="Estado de Nacimiento" name="estado_nacimiento">
               <select name="estado_nacimiento" value={form.estado_nacimiento} onChange={cambiar}>
                 <option value="">— Seleccionar —</option>
