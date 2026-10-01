@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import RenacedLayout from "../../components/RenacedLayout";
 import FlagIcon from "../../components/FlagIcon";
+import SuccessModal from "../../components/SuccessModal";
 import { getPaciente, createPaciente, updatePaciente, checkCurpPaciente } from "../../api/renacedApi";
 
 const ESTADOS_MX = [
@@ -84,6 +85,7 @@ export default function RenacedPacienteForm() {
   const [curpDuplicado, setCurpDuplicado] = useState(null); // { id, nombre, ap_pat, ap_mat } | null
   const [confirmaCurpDuplicado, setConfirmaCurpDuplicado] = useState(false);
   const [verificandoCurp, setVerificandoCurp] = useState(false);
+  const [exito, setExito] = useState(false);
 
   useEffect(() => {
     if (!esEdicion) return;
@@ -185,10 +187,11 @@ export default function RenacedPacienteForm() {
     try {
       if (esEdicion) {
         await updatePaciente(id, form);
+        navigate("/renaced/pacientes");
       } else {
         await createPaciente(form);
+        setExito(true);
       }
-      navigate("/renaced/pacientes");
     } catch (err) {
       setError(err.response?.data?.error || "Error al guardar");
     } finally {
@@ -500,6 +503,14 @@ export default function RenacedPacienteForm() {
           </button>
         </div>
       </form>
+
+      {exito && (
+        <SuccessModal
+          titulo="Paciente registrado"
+          mensaje="El paciente se registró correctamente en RENACED."
+          onClose={() => navigate("/renaced/pacientes")}
+        />
+      )}
     </RenacedLayout>
   );
 }
