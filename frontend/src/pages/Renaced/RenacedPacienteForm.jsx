@@ -59,6 +59,17 @@ function calcIniciales(nombre, apPat, apMat) {
     .join("");
 }
 
+const Campo = ({ label, name, type = "text", required, children, colSpan, value, onChange }) => (
+  <div className="form-group" style={colSpan ? { gridColumn: `span ${colSpan}` } : {}}>
+    <label className="form-label">
+      {label}{required && <span style={{ color: "#ef4444" }}> *</span>}
+    </label>
+    {children ?? (
+      <input type={type} name={name} value={value} onChange={onChange} required={required} />
+    )}
+  </div>
+);
+
 export default function RenacedPacienteForm() {
   const { id }     = useParams();
   const navigate   = useNavigate();
@@ -177,17 +188,6 @@ export default function RenacedPacienteForm() {
     }
   }
 
-  const Campo = ({ label, name, type = "text", required, children, colSpan }) => (
-    <div className="form-group" style={colSpan ? { gridColumn: `span ${colSpan}` } : {}}>
-      <label className="form-label">
-        {label}{required && <span style={{ color: "#ef4444" }}> *</span>}
-      </label>
-      {children ?? (
-        <input type={type} name={name} value={form[name]} onChange={cambiar} required={required} />
-      )}
-    </div>
-  );
-
   const tipoDM = TIPOS_DM.find((t) => String(t.id) === String(form.tipo_diabetes_id));
   const dmColor = tipoDM ? DM_COLOR[tipoDM.id] : null;
 
@@ -245,7 +245,7 @@ export default function RenacedPacienteForm() {
             Ficha de Identificación
           </h3>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(190px, 1fr))", gap: 16 }}>
-            <Campo label="Expediente Interno" name="expediente" />
+            <Campo label="Expediente Interno" name="expediente" value={form.expediente} onChange={cambiar} />
             <div className="form-group">
               <label className="form-label">
                 Iniciales <span style={{ fontSize: 11, color: "#94a3b8", fontWeight: 400 }}>(auto)</span>
@@ -260,9 +260,9 @@ export default function RenacedPacienteForm() {
                 placeholder="Auto"
               />
             </div>
-            <Campo label="Apellido Paterno" name="ap_pat" required />
-            <Campo label="Apellido Materno" name="ap_mat" />
-            <Campo label="Nombre(s)" name="nombre" required />
+            <Campo label="Apellido Paterno" name="ap_pat" required value={form.ap_pat} onChange={cambiar} />
+            <Campo label="Apellido Materno" name="ap_mat" value={form.ap_mat} onChange={cambiar} />
+            <Campo label="Nombre(s)" name="nombre" required value={form.nombre} onChange={cambiar} />
             <Campo label="Sexo" name="sexo" required>
               <select name="sexo" value={form.sexo} onChange={cambiar} required>
                 <option value="">— Seleccionar —</option>
@@ -270,7 +270,7 @@ export default function RenacedPacienteForm() {
                 <option value="M">Masculino</option>
               </select>
             </Campo>
-            <Campo label="Fecha de Nacimiento" name="fecha_nacimiento" type="date" />
+            <Campo label="Fecha de Nacimiento" name="fecha_nacimiento" type="date" value={form.fecha_nacimiento} onChange={cambiar} />
             <Campo label="Estado de Nacimiento" name="estado_nacimiento">
               <select name="estado_nacimiento" value={form.estado_nacimiento} onChange={cambiar}>
                 <option value="">— Seleccionar —</option>
@@ -372,8 +372,8 @@ export default function RenacedPacienteForm() {
                 {ESTADOS_MX.map((e) => <option key={e} value={e}>{e}</option>)}
               </select>
             </Campo>
-            <Campo label="Colonia" name="colonia" />
-            <Campo label="Calle y Número" name="calle_num" colSpan={2} />
+            <Campo label="Colonia" name="colonia" value={form.colonia} onChange={cambiar} />
+            <Campo label="Calle y Número" name="calle_num" colSpan={2} value={form.calle_num} onChange={cambiar} />
             <Campo label="Código Postal" name="codigo_postal">
               <input
                 type="text"
@@ -393,8 +393,8 @@ export default function RenacedPacienteForm() {
             Contacto y Unidad Médica
           </h3>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 16 }}>
-            <Campo label="Teléfono(s)" name="telefonos" />
-            <Campo label="Email" name="email" type="email" />
+            <Campo label="Teléfono(s)" name="telefonos" value={form.telefonos} onChange={cambiar} />
+            <Campo label="Email" name="email" type="email" value={form.email} onChange={cambiar} />
             <Campo label="Clave Establecimiento" name="establecimiento_cve">
               <input
                 type="text"
