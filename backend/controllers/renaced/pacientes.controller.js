@@ -137,7 +137,7 @@ export const createPaciente = async (req, res) => {
       tipo_diabetes_id, tipo_diabetes_otra_id,
       expediente, iniciales, nombre, ap_pat, ap_mat, sexo, fecha_nacimiento, curp,
       estado_nacimiento, municipio_nacimiento, pais_nacimiento_id,
-      nivel_ingresos_id, nivel_educativo_id, estado_residencia,
+      nivel_ingresos_id, nivel_educativo_id, anios_estudio, estado_residencia,
       municipio_residencia, colonia, calle_num, codigo_postal,
       telefonos, email, seguro_medico_id, establecimiento_cve,
       unidad_servicio_id, tiene_aviso_privacidad, tiene_consentimiento,
@@ -155,11 +155,11 @@ export const createPaciente = async (req, res) => {
       `INSERT INTO paciente (
         expediente, folio_renaced, iniciales, nombre, ap_pat, ap_mat, sexo, fecha_nacimiento, curp,
         estado_nacimiento, municipio_nacimiento, pais_nacimiento_id,
-        nivel_ingresos_id, nivel_educativo_id, estado_residencia,
+        nivel_ingresos_id, nivel_educativo_id, anios_estudio, estado_residencia,
         municipio_residencia, colonia, calle_num, codigo_postal,
         telefonos, email, seguro_medico_id, establecimiento_cve,
         unidad_servicio_id, tiene_aviso_privacidad, tiene_consentimiento, estatus_id
-      ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,1)`,
+      ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,1)`,
       [
         expediente || null,
         siguienteFolio,
@@ -170,6 +170,7 @@ export const createPaciente = async (req, res) => {
         estado_nacimiento    || null, municipio_nacimiento || null,
         pais_nacimiento_id   || null,
         nivel_ingresos_id    || null, nivel_educativo_id || null,
+        anios_estudio === "" || anios_estudio == null ? null : Number(anios_estudio),
         estado_residencia    || null, municipio_residencia || null,
         colonia              || null, calle_num  || null, codigo_postal || null,
         telefonos            || null, email      || null,
@@ -223,7 +224,7 @@ export const updatePaciente = async (req, res) => {
     const permitidos = [
       "expediente","iniciales","nombre","ap_pat","ap_mat","sexo",
       "fecha_nacimiento","curp","estado_nacimiento","municipio_nacimiento",
-      "pais_nacimiento_id","nivel_ingresos_id","nivel_educativo_id",
+      "pais_nacimiento_id","nivel_ingresos_id","nivel_educativo_id","anios_estudio",
       "estado_residencia","municipio_residencia","colonia","calle_num",
       "codigo_postal","telefonos","email","seguro_medico_id",
       "establecimiento_cve",

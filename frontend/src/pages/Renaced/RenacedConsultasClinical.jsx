@@ -522,7 +522,7 @@ export default function RenacedConsultasClinical() {
               </span>
             )}
             <span style={{ background: p.sexo === "F" ? "#fce7f3" : "#dbeafe", color: p.sexo === "F" ? "#be185d" : "#1d4ed8", borderRadius: 20, padding: "2px 10px", fontSize: 12, fontWeight: 600 }}>
-              {p.sexo === "F" ? "Mujer" : "Hombre"}
+              {({ F: "Mujer", M: "Hombre", I: "Intersexual", N: "No reportado" })[p.sexo] || "—"}
             </span>
             {p.edad != null && (
               <span style={{ background: "#f1f5f9", color: "#64748b", borderRadius: 20, padding: "2px 10px", fontSize: 12 }}>

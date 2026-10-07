@@ -73,6 +73,7 @@ export const getMapaPacientes = () => api.get(`${BASE}/mapa`);
 
 // ── Catálogos ─────────────────────────────────────────────────────────────────
 export const getCatalogosEvaluacion = () => api.get(`${BASE}/catalogos/evaluacion`);
+export const buscarColoniasCatalogo = (estado, q) => api.get(`${BASE}/catalogos/colonias`, { params: { estado, q } });
 
 // ── Usuarios (solo Admin) ─────────────────────────────────────────────────────
 export const getUsuariosRenaced    = ()          => api.get(`${BASE}/usuarios`);

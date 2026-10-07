@@ -462,7 +462,7 @@ export default function RenacedPacienteDetalle() {
               {p.diagnostico?.tipo_diabetes || "Sin diagnóstico"}
             </span>
             <span style={{ background: p.sexo === "F" ? "#fce7f3" : "#dbeafe", color: p.sexo === "F" ? "#be185d" : "#1d4ed8", borderRadius: 20, padding: "2px 10px", fontSize: 12, fontWeight: 600 }}>
-              {p.sexo === "F" ? "Mujer" : "Hombre"}
+              {({ F: "Mujer", M: "Hombre", I: "Intersexual", N: "No reportado" })[p.sexo] || "—"}
             </span>
             {p.edad != null && <span style={{ background: "#f1f5f9", color: "#64748b", borderRadius: 20, padding: "2px 10px", fontSize: 12 }}>{p.edad} años</span>}
             {p.curp && <span style={{ background: "#f8fafc", color: "#64748b", borderRadius: 20, padding: "2px 10px", fontSize: 11, fontFamily: "monospace" }}>{p.curp}</span>}

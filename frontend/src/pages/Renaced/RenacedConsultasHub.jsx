@@ -40,7 +40,7 @@ export default function RenacedConsultasHub() {
       background: sexo === "F" ? "#fce7f3" : "#dbeafe",
       color: sexo === "F" ? "#be185d" : "#1d4ed8",
     }}>
-      {sexo === "F" ? "Mujer" : "Hombre"}
+      {({ F: "Mujer", M: "Hombre", I: "Intersexual", N: "No reportado" })[sexo] || "—"}
     </span>
   );
 

@@ -3,12 +3,18 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import RenacedLayout from "../../components/RenacedLayout";
 import FlagIcon from "../../components/FlagIcon";
 import SuccessModal from "../../components/SuccessModal";
-import { getPaciente, createPaciente, updatePaciente, checkCurpPaciente } from "../../api/renacedApi";
+import { getPaciente, createPaciente, updatePaciente, checkCurpPaciente, buscarColoniasCatalogo } from "../../api/renacedApi";
 
 const ESTADOS_MX = [
-  "AGS","BC","BCS","CAMP","COAH","COL","CHIS","CHIH","CDMX","DGO",
-  "GTO","GRO","HGO","JAL","MEX","MICH","MOR","NAY","NL","OAX",
-  "PUE","QRO","QROO","SLP","SIN","SON","TAB","TAMPS","TLAX","VER","YUC","ZAC","NE",
+  ["AS","Aguascalientes"],["BC","Baja California"],["BS","Baja California Sur"],
+  ["CC","Campeche"],["CS","Chiapas"],["CH","Chihuahua"],["DF","Ciudad de México"],
+  ["CL","Coahuila"],["CM","Colima"],["DG","Durango"],["GT","Guanajuato"],
+  ["GR","Guerrero"],["HG","Hidalgo"],["JC","Jalisco"],["MC","Estado de México"],
+  ["MN","Michoacán"],["MS","Morelos"],["NT","Nayarit"],["NL","Nuevo León"],
+  ["OC","Oaxaca"],["PL","Puebla"],["QT","Querétaro"],["QR","Quintana Roo"],
+  ["SP","San Luis Potosí"],["SL","Sinaloa"],["SR","Sonora"],["TC","Tabasco"],
+  ["TS","Tamaulipas"],["TL","Tlaxcala"],["VZ","Veracruz"],["YN","Yucatán"],
+  ["ZS","Zacatecas"],
 ];
 
 const TIPOS_DM = [
@@ -45,7 +51,7 @@ const INIT = {
   nombre: "", ap_pat: "", ap_mat: "",
   sexo: "", fecha_nacimiento: "", curp: "",
   estado_nacimiento: "", pais_nacimiento_id: "",
-  nivel_ingresos_id: "", nivel_educativo_id: "",
+  nivel_ingresos_id: "", nivel_educativo_id: "", anios_estudio: "",
   estado_residencia: "", colonia: "", calle_num: "",
   codigo_postal: "", telefonos: "", email: "",
   seguro_medico_id: "", establecimiento_cve: "", unidad_servicio_id: "",
@@ -72,6 +78,83 @@ const Campo = ({ label, name, type = "text", required, children, colSpan, value,
 );
 
 const HOY = new Date().toISOString().slice(0, 10);
+
+const CURP_RE = /^[A-Z]{4}\d{6}[HMX][A-Z]{2}[B-DF-HJ-NP-TV-Z]{3}[A-Z0-9]\d$/;
+
+function errorFecha(v) {
+  if (!v) return null;
+  const anio = Number(v.slice(0, 4));
+  if (v > HOY) return "La fecha de nacimiento no puede ser futura";
+  if (anio < 1900) return "El año debe ser 1900 o posterior";
+  if (anio < Number(HOY.slice(0, 4)) - 120) return "La edad no puede ser mayor a 120 años";
+  return null;
+}
+
+function errorCurp(curp, fecha) {
+  if (!curp) return null;
+  if (!CURP_RE.test(curp)) return "El CURP no tiene un formato válido (18 caracteres)";
+  if (fecha) {
+    const [a, m, d] = fecha.split("-");
+    if (curp.slice(4, 10) !== `${a.slice(2)}${m}${d}`) {
+      return "La fecha dentro del CURP no coincide con la fecha de nacimiento";
+    }
+  }
+  return null;
+}
+
+function ColoniaCombo({ estado, value, onChange, onElegir }) {
+  const [opciones, setOpciones] = useState([]);
+  const [abierto, setAbierto] = useState(false);
+
+  useEffect(() => {
+    if (!estado || !abierto) return undefined;
+    let cancelado = false;
+    const t = setTimeout(() => {
+      buscarColoniasCatalogo(estado, value)
+        .then((r) => { if (!cancelado) setOpciones(r.data); })
+        .catch(() => { if (!cancelado) setOpciones([]); });
+    }, 250);
+    return () => { cancelado = true; clearTimeout(t); };
+  }, [estado, value, abierto]);
+
+  return (
+    <div style={{ position: "relative" }}>
+      <input
+        type="text"
+        name="colonia"
+        value={value}
+        onChange={onChange}
+        onFocus={() => setAbierto(true)}
+        onBlur={() => setTimeout(() => setAbierto(false), 150)}
+        disabled={!estado}
+        autoComplete="off"
+        placeholder={estado ? "Escribe para buscar…" : "Selecciona primero el estado"}
+      />
+      {abierto && estado && opciones.length > 0 && (
+        <ul style={{
+          position: "absolute", zIndex: 20, left: 0, right: 0, top: "100%", margin: 0, padding: 4,
+          listStyle: "none", maxHeight: 240, overflowY: "auto", background: "#fff",
+          border: "1px solid #cbd5e1", borderRadius: 8, boxShadow: "0 8px 24px rgba(0,0,0,.15)",
+        }}>
+          {opciones.map((o, i) => (
+            <li
+              key={`${o.cp}-${o.colonia}-${i}`}
+              onMouseDown={(e) => { e.preventDefault(); onElegir(o); setAbierto(false); }}
+              style={{ padding: "6px 10px", cursor: "pointer", fontSize: 13, color: "#0f172a", borderRadius: 6 }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = "#eef2ff"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+            >
+              <strong>{o.colonia}</strong>
+              <span style={{ color: "#64748b" }}> · {o.municipio} · CP {o.cp}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+const msgError = { fontSize: 12, color: "#dc2626", marginTop: 4 };
 
 export default function RenacedPacienteForm() {
   const { id }     = useParams();
@@ -106,6 +189,7 @@ export default function RenacedPacienteForm() {
         pais_nacimiento_id:    p.pais_nacimiento_id    || "",
         nivel_ingresos_id:     p.nivel_ingresos_id     || "",
         nivel_educativo_id:    p.nivel_educativo_id    || "",
+        anios_estudio:         p.anios_estudio ?? "",
         estado_residencia:     p.estado_residencia     || "",
         colonia:               p.colonia               || "",
         calle_num:             p.calle_num             || "",
@@ -132,6 +216,10 @@ export default function RenacedPacienteForm() {
       const [anio, mes, dia] = val.split("-");
       if (anio && anio.length > 4) val = `${anio.slice(0, 4)}-${mes}-${dia}`;
     }
+    if (name === "curp") val = val.toUpperCase().replace(/[^A-Z0-9]/g, "");
+    if (name === "anios_estudio" && val !== "") {
+      val = String(Math.min(40, Math.max(0, parseInt(val, 10) || 0)));
+    }
     setForm((f) => {
       const next = { ...f, [name]: val };
       if (inicialesAuto && (name === "nombre" || name === "ap_pat" || name === "ap_mat")) {
@@ -139,6 +227,10 @@ export default function RenacedPacienteForm() {
         const pp = name === "ap_pat"  ? val : f.ap_pat;
         const pm = name === "ap_mat"  ? val : f.ap_mat;
         next.iniciales = calcIniciales(n, pp, pm);
+      }
+      if (name === "estado_residencia" && value !== f.estado_residencia) {
+        next.colonia = "";
+        next.codigo_postal = "";
       }
       if (name === "tipo_diabetes_id" && value !== "4") {
         next.tipo_diabetes_otra_id = "";
@@ -178,6 +270,10 @@ export default function RenacedPacienteForm() {
       setError("Selecciona el subtipo de diabetes");
       return;
     }
+    const errF = errorFecha(form.fecha_nacimiento);
+    if (errF) { setError(errF); return; }
+    const errC = errorCurp(form.curp, form.fecha_nacimiento);
+    if (errC) { setError(errC); return; }
     if (curpDuplicado && !confirmaCurpDuplicado) {
       setError("Ya existe un paciente con este CURP. Confirma que quieres registrarlo de todas formas, o revisa el expediente existente.");
       return;
@@ -277,15 +373,28 @@ export default function RenacedPacienteForm() {
             <Campo label="Sexo" name="sexo" required>
               <select name="sexo" value={form.sexo} onChange={cambiar} required>
                 <option value="">— Seleccionar —</option>
-                <option value="F">Femenino</option>
-                <option value="M">Masculino</option>
+                <option value="M">Hombre</option>
+                <option value="F">Mujer</option>
+                <option value="I">Intersexual</option>
+                <option value="N">No reportado</option>
               </select>
             </Campo>
-            <Campo label="Fecha de Nacimiento" name="fecha_nacimiento" type="date" value={form.fecha_nacimiento} onChange={cambiar} min="1900-01-01" max={HOY} />
+            <Campo label="Fecha de Nacimiento" name="fecha_nacimiento">
+              <input
+                type="date"
+                name="fecha_nacimiento"
+                value={form.fecha_nacimiento}
+                onChange={cambiar}
+                min="1900-01-01"
+                max={HOY}
+              />
+              {errorFecha(form.fecha_nacimiento) && <span style={msgError}>{errorFecha(form.fecha_nacimiento)}</span>}
+            </Campo>
             <Campo label="Estado de Nacimiento" name="estado_nacimiento">
               <select name="estado_nacimiento" value={form.estado_nacimiento} onChange={cambiar}>
                 <option value="">— Seleccionar —</option>
-                {ESTADOS_MX.map((e) => <option key={e} value={e}>{e}</option>)}
+                {ESTADOS_MX.map(([v, n]) => <option key={v} value={v}>{n}</option>)}
+                <option value="NE">Nacido en el extranjero</option>
               </select>
             </Campo>
             <Campo label="CURP" name="curp" colSpan={2}>
@@ -299,6 +408,9 @@ export default function RenacedPacienteForm() {
                 style={{ textTransform: "uppercase", fontFamily: "monospace", letterSpacing: "0.05em" }}
                 placeholder="XXXX000000XXXXXXXX"
               />
+              {form.curp.length === 18 && errorCurp(form.curp, form.fecha_nacimiento) && (
+                <span style={msgError}>{errorCurp(form.curp, form.fecha_nacimiento)}</span>
+              )}
               {verificandoCurp && (
                 <span style={{ fontSize: 12, color: "#94a3b8" }}>Verificando…</span>
               )}
@@ -346,6 +458,19 @@ export default function RenacedPacienteForm() {
                 ].map(([v,l]) => <option key={v} value={v}>{l}</option>)}
               </select>
             </Campo>
+            <Campo label="Años de estudio" name="anios_estudio">
+              <input
+                type="number"
+                name="anios_estudio"
+                value={form.anios_estudio}
+                onChange={cambiar}
+                min={0}
+                max={40}
+                step={1}
+                inputMode="numeric"
+                placeholder="Ej. 12"
+              />
+            </Campo>
             <Campo label="Nivel de Ingresos" name="nivel_ingresos_id">
               <select name="nivel_ingresos_id" value={form.nivel_ingresos_id} onChange={cambiar}>
                 <option value="">— Seleccionar —</option>
@@ -380,10 +505,17 @@ export default function RenacedPacienteForm() {
             <Campo label="Estado de Residencia" name="estado_residencia">
               <select name="estado_residencia" value={form.estado_residencia} onChange={cambiar}>
                 <option value="">— Seleccionar —</option>
-                {ESTADOS_MX.map((e) => <option key={e} value={e}>{e}</option>)}
+                {ESTADOS_MX.map(([v, n]) => <option key={v} value={v}>{n}</option>)}
               </select>
             </Campo>
-            <Campo label="Colonia" name="colonia" value={form.colonia} onChange={cambiar} />
+            <Campo label="Colonia" name="colonia">
+              <ColoniaCombo
+                estado={form.estado_residencia}
+                value={form.colonia}
+                onChange={cambiar}
+                onElegir={(o) => setForm((f) => ({ ...f, colonia: o.colonia, codigo_postal: o.cp }))}
+              />
+            </Campo>
             <Campo label="Calle y Número" name="calle_num" colSpan={2} value={form.calle_num} onChange={cambiar} />
             <Campo label="Código Postal" name="codigo_postal">
               <input
