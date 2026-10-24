@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { useRenacedAuth } from "../../modules/mexico/context/RenacedAuthContext";
+import { useRenacedAuth } from "../../modules/mexico/renaced/context/RenacedAuthContext";
 import { FiInfo, FiArrowLeft } from "react-icons/fi";
 import FlagIcon from "../components/FlagIcon";
 import "./Login.css";

@@ -3,8 +3,8 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
-import { UPLOADS_PATH } from "../../../shared/paths.js";
-import { verificarToken } from "../../../shared/middlewares/auth.js";
+import { UPLOADS_PATH } from "../../../../shared/paths.js";
+import { verificarToken } from "../../../../shared/middlewares/auth.js";
 import { resolverTenantDB } from "../middlewares/tenantDb.js";
 import {
   subirYParsear, confirmarEscaneo, getEscaneosByPaciente, deleteEscaneo,

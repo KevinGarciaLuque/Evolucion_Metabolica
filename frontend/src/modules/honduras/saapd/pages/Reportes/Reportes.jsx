@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import Layout from "../../../../shared/components/Layout";
-import api from "../../../../shared/api/axios";
+import Layout from "../../../../../shared/components/Layout";
+import api from "../../../../../shared/api/axios";
 
 function descargarBlob(blob, filename) {
   const url = window.URL.createObjectURL(blob);

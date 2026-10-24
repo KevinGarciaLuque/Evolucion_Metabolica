@@ -1,7 +1,7 @@
 import path from "path";
 import { fileURLToPath } from "url";
 import { parsearPDFSyai } from "../services/pdfParser.js";
-import { clasificarISPAD } from "../../../shared/utils/helpers.js";
+import { clasificarISPAD } from "../../../../shared/utils/helpers.js";
 import pool from "../config/db.js";
 
 const __filename = fileURLToPath(import.meta.url);

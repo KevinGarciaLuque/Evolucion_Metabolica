@@ -3,7 +3,7 @@ import {
   listar, listarMapa, obtener, crear, actualizar, eliminar, historial, departamentos,
   marcarTraslado, quitarTraslado,
 } from "../controllers/pacientes.controller.js";
-import { verificarToken, noAsistente } from "../../../shared/middlewares/auth.js";
+import { verificarToken, noAsistente } from "../../../../shared/middlewares/auth.js";
 
 const router = Router();
 

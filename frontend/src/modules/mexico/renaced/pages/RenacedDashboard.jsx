@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import RenacedLayout from "../components/RenacedLayout";
-import FlagIcon from "../../../shared/components/FlagIcon";
+import FlagIcon from "../../../../shared/components/FlagIcon";
 import { useRenacedAuth } from "../context/RenacedAuthContext";
 import { getDashboardResumen } from "../api/renacedApi";
 import {

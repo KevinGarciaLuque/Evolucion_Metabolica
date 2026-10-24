@@ -1,8 +1,8 @@
 import { useEffect, useState, useCallback } from "react";
-import api from "../../../../shared/api/axios";
-import Layout from "../../../../shared/components/Layout";
+import api from "../../../../../shared/api/axios";
+import Layout from "../../../../../shared/components/Layout";
 import { HiOutlineChatBubbleLeftEllipsis, HiOutlinePaperAirplane, HiOutlineCheckCircle, HiOutlineXCircle, HiArrowPath, HiOutlineTrash } from "react-icons/hi2";
-import { useAuth } from "../../../../shared/context/AuthContext";
+import { useAuth } from "../../../../../shared/context/AuthContext";
 import InstSelector from "../../components/InstSelector";
 import "./MensajesPanel.css";
 

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import jsPDF from "jspdf";
-import Layout from "../../../../shared/components/Layout";
-import api from "../../../../shared/api/axios";
+import Layout from "../../../../../shared/components/Layout";
+import api from "../../../../../shared/api/axios";
 
 export default function ImportacionHEU() {
   const [archivo, setArchivo] = useState(null);

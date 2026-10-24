@@ -2,8 +2,8 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import { getTenantPool } from "../config/db.js";
-import { UPLOADS_PATH } from "../../../shared/paths.js";
-import { dumpDatabase, importSqlDump } from "../../../shared/utils/sqlDump.js";
+import { UPLOADS_PATH } from "../../../../shared/paths.js";
+import { dumpDatabase, importSqlDump } from "../../../../shared/utils/sqlDump.js";
 import { iniciarMigracionLegacy, obtenerTrabajo, hayTrabajoActivo } from "../utils/migracionLegacy.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));

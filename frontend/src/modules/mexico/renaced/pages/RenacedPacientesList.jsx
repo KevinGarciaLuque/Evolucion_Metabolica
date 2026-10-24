@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import RenacedLayout from "../components/RenacedLayout";
-import FlagIcon from "../../../shared/components/FlagIcon";
+import FlagIcon from "../../../../shared/components/FlagIcon";
 import { useRenacedAuth } from "../context/RenacedAuthContext";
 import { getPacientes } from "../api/renacedApi";
 import { HiOutlineMagnifyingGlass, HiOutlineFunnel, HiOutlineUserPlus } from "react-icons/hi2";

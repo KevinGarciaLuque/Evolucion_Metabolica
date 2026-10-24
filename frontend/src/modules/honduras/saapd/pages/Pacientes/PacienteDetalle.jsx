@@ -9,11 +9,11 @@ import {
   ResponsiveContainer, Legend, BarChart, Bar, Cell, ReferenceLine,
 } from "recharts";
 import ConsultaPrintModal from "../Consultas/ConsultaPrintModal";
-import ConfirmModal from "../../../../shared/components/ConfirmModal";
-import api from "../../../../shared/api/axios";
-import Layout from "../../../../shared/components/Layout";
+import ConfirmModal from "../../../../../shared/components/ConfirmModal";
+import api from "../../../../../shared/api/axios";
+import Layout from "../../../../../shared/components/Layout";
 import SemaforoISPAD from "../../components/SemaforoISPAD";
-import { useAuth } from "../../../../shared/context/AuthContext";
+import { useAuth } from "../../../../../shared/context/AuthContext";
 import { calcularZScores, calcularEdadMeses } from "../../utils/who_zscore";
 import { LISTA_ANTICUERPOS, ESTADOS_ANTICUERPO, COLOR_ESTADO_ANTICUERPO, parseAnticuerpos, serializarAnticuerpos, esFormatoEstructurado } from "../../utils/anticuerpos";
 

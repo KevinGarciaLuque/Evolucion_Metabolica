@@ -1,47 +1,47 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./shared/context/AuthContext";
-import { RenacedAuthProvider } from "./modules/mexico/context/RenacedAuthContext";
+import { RenacedAuthProvider } from "./modules/mexico/renaced/context/RenacedAuthContext";
 import ProtectedRoute from "./shared/components/ProtectedRoute";
-import RenacedProtectedRoute from "./modules/mexico/components/RenacedProtectedRoute";
+import RenacedProtectedRoute from "./modules/mexico/renaced/components/RenacedProtectedRoute";
 
 import Landing          from "./shared/pages/Landing";
 import Login           from "./shared/pages/Login";
-import Dashboard       from "./modules/honduras/pages/Dashboard";
-import PacientesList   from "./modules/honduras/pages/Pacientes/PacientesList";
-import PacienteForm    from "./modules/honduras/pages/Pacientes/PacienteForm";
-import PacienteDetalle from "./modules/honduras/pages/Pacientes/PacienteDetalle";
-import SubirPDF        from "./modules/honduras/pages/Analisis/SubirPDF";
-import Consolidado     from "./modules/honduras/pages/Consolidado";
-import UsuariosList    from "./modules/honduras/pages/Usuarios/UsuariosList";
-import UsuarioForm     from "./modules/honduras/pages/Usuarios/UsuarioForm";
-import ConsultasList   from "./modules/honduras/pages/Consultas/ConsultasList";
-import ConsultasForm   from "./modules/honduras/pages/Consultas/ConsultasForm";
-import Auditoria       from "./modules/honduras/pages/Auditoria/Auditoria";
-import MensajesPanel   from "./modules/honduras/pages/Mensajes/MensajesPanel";
-import MapaPacientes   from "./modules/honduras/pages/Mapa/MapaPacientes";
-import PermisosList    from "./modules/honduras/pages/Permisos/PermisosList";
-import BackupPacientes from "./modules/honduras/pages/Reportes/Reportes";
-import ReportesVisuales from "./modules/honduras/pages/ReportesVisuales/ReportesVisuales";
-import ImportacionHEU from "./modules/honduras/pages/Importaciones/ImportacionHEU";
+import Dashboard       from "./modules/honduras/saapd/pages/Dashboard";
+import PacientesList   from "./modules/honduras/saapd/pages/Pacientes/PacientesList";
+import PacienteForm    from "./modules/honduras/saapd/pages/Pacientes/PacienteForm";
+import PacienteDetalle from "./modules/honduras/saapd/pages/Pacientes/PacienteDetalle";
+import SubirPDF        from "./modules/honduras/saapd/pages/Analisis/SubirPDF";
+import Consolidado     from "./modules/honduras/saapd/pages/Consolidado";
+import UsuariosList    from "./modules/honduras/saapd/pages/Usuarios/UsuariosList";
+import UsuarioForm     from "./modules/honduras/saapd/pages/Usuarios/UsuarioForm";
+import ConsultasList   from "./modules/honduras/saapd/pages/Consultas/ConsultasList";
+import ConsultasForm   from "./modules/honduras/saapd/pages/Consultas/ConsultasForm";
+import Auditoria       from "./modules/honduras/saapd/pages/Auditoria/Auditoria";
+import MensajesPanel   from "./modules/honduras/saapd/pages/Mensajes/MensajesPanel";
+import MapaPacientes   from "./modules/honduras/saapd/pages/Mapa/MapaPacientes";
+import PermisosList    from "./modules/honduras/saapd/pages/Permisos/PermisosList";
+import BackupPacientes from "./modules/honduras/saapd/pages/Reportes/Reportes";
+import ReportesVisuales from "./modules/honduras/saapd/pages/ReportesVisuales/ReportesVisuales";
+import ImportacionHEU from "./modules/honduras/saapd/pages/Importaciones/ImportacionHEU";
 
 // ── Super Admin ───────────────────────────────────────────────────────────────
 import AdminPanel from "./modules/admin/pages/AdminPanel";
 
 // ── Módulo RENACED ────────────────────────────────────────────────────────────
-import RenacedLogin           from "./modules/mexico/pages/RenacedLogin";
-import RenacedDashboard       from "./modules/mexico/pages/RenacedDashboard";
-import RenacedPacientesList   from "./modules/mexico/pages/RenacedPacientesList";
-import RenacedPacienteForm    from "./modules/mexico/pages/RenacedPacienteForm";
-import RenacedPacienteDetalle from "./modules/mexico/pages/RenacedPacienteDetalle";
-import RenacedReportes        from "./modules/mexico/pages/RenacedReportes";
-import RenacedUsuariosList    from "./modules/mexico/pages/RenacedUsuariosList";
-import RenacedUsuarioForm     from "./modules/mexico/pages/RenacedUsuarioForm";
-import RenacedClinicasList    from "./modules/mexico/pages/RenacedClinicasList";
-import RenacedConsultasHub    from "./modules/mexico/pages/RenacedConsultasHub";
-import RenacedConsultasClinical from "./modules/mexico/pages/RenacedConsultasClinical";
-import RenacedImportarBD      from "./modules/mexico/pages/RenacedImportarBD";
-import RenacedEscanearPDF     from "./modules/mexico/pages/RenacedEscanearPDF";
-import RenacedMapaPacientes   from "./modules/mexico/pages/RenacedMapaPacientes";
+import RenacedLogin           from "./modules/mexico/renaced/pages/RenacedLogin";
+import RenacedDashboard       from "./modules/mexico/renaced/pages/RenacedDashboard";
+import RenacedPacientesList   from "./modules/mexico/renaced/pages/RenacedPacientesList";
+import RenacedPacienteForm    from "./modules/mexico/renaced/pages/RenacedPacienteForm";
+import RenacedPacienteDetalle from "./modules/mexico/renaced/pages/RenacedPacienteDetalle";
+import RenacedReportes        from "./modules/mexico/renaced/pages/RenacedReportes";
+import RenacedUsuariosList    from "./modules/mexico/renaced/pages/RenacedUsuariosList";
+import RenacedUsuarioForm     from "./modules/mexico/renaced/pages/RenacedUsuarioForm";
+import RenacedClinicasList    from "./modules/mexico/renaced/pages/RenacedClinicasList";
+import RenacedConsultasHub    from "./modules/mexico/renaced/pages/RenacedConsultasHub";
+import RenacedConsultasClinical from "./modules/mexico/renaced/pages/RenacedConsultasClinical";
+import RenacedImportarBD      from "./modules/mexico/renaced/pages/RenacedImportarBD";
+import RenacedEscanearPDF     from "./modules/mexico/renaced/pages/RenacedEscanearPDF";
+import RenacedMapaPacientes   from "./modules/mexico/renaced/pages/RenacedMapaPacientes";
 
 function App() {
   return (

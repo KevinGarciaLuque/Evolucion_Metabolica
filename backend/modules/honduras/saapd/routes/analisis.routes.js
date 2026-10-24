@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { listar, obtener, crear, actualizar, eliminar } from "../controllers/analisis.controller.js";
-import { verificarToken, noAsistente } from "../../../shared/middlewares/auth.js";
+import { verificarToken, noAsistente } from "../../../../shared/middlewares/auth.js";
 
 const router = Router();
 

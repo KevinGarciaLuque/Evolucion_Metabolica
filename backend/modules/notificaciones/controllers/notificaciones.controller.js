@@ -1,5 +1,5 @@
-import pool from "../../honduras/config/db.js";
-import { getTenantPool } from "../../mexico/config/db.js";
+import pool from "../../honduras/saapd/config/db.js";
+import { getTenantPool } from "../../mexico/renaced/config/db.js";
 
 // Sirve a los dos mundos (Evolución Metabólica y RENACED): el token decide de
 // dónde salen los datos. Las tablas `avisos` y `novedades` viven en la base

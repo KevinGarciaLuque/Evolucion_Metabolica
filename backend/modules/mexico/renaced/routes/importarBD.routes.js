@@ -1,6 +1,6 @@
 import { Router } from "express";
 import multer from "multer";
-import { verificarToken } from "../../../shared/middlewares/auth.js";
+import { verificarToken } from "../../../../shared/middlewares/auth.js";
 import { resolverTenantDB } from "../middlewares/tenantDb.js";
 import { verificarModulo } from "../middlewares/verificarModulo.js";
 import { importarBaseDatosMexico, iniciarMigracionPHP, estadoMigracionPHP } from "../controllers/importarBD.controller.js";

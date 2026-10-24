@@ -1,8 +1,8 @@
 import poolRenaced from "../config/db.js";
-import poolMaster from "../../../shared/config/db.master.js";
+import poolMaster from "../../../../shared/config/db.master.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { registrarLoginLog } from "../../../shared/utils/loginLog.js";
+import { registrarLoginLog } from "../../../../shared/utils/loginLog.js";
 
 // Intersecta los módulos habilitados para el país con los permisos
 // individuales del usuario (tabla permisos_modulos de la BD del tenant).

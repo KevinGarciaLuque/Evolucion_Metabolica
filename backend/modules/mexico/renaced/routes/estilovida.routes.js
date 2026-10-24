@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { verificarToken } from "../../../shared/middlewares/auth.js";
+import { verificarToken } from "../../../../shared/middlewares/auth.js";
 import { resolverTenantDB } from "../middlewares/tenantDb.js";
 import { getEstiloVida, createEstiloVida, deleteEstiloVida } from "../controllers/estilovida.controller.js";
 

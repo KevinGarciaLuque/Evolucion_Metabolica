@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { loginRenaced, meRenaced } from "../controllers/auth.controller.js";
-import { verificarToken } from "../../../shared/middlewares/auth.js";
+import { verificarToken } from "../../../../shared/middlewares/auth.js";
 import { resolverTenantDB } from "../middlewares/tenantDb.js";
 
 const router = Router();

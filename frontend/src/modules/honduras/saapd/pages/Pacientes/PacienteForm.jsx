@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import { FiArrowLeft } from "react-icons/fi";
-import api from "../../../../shared/api/axios";
-import Layout from "../../../../shared/components/Layout";
+import api from "../../../../../shared/api/axios";
+import Layout from "../../../../../shared/components/Layout";
 import { LISTA_ANTICUERPOS, ESTADOS_ANTICUERPO, parseAnticuerpos, serializarAnticuerpos } from "../../utils/anticuerpos";
 
 const MUNICIPIOS_POR_DEPARTAMENTO = {

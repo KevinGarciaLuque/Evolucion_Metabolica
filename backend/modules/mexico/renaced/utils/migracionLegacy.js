@@ -4,8 +4,8 @@ import crypto from "crypto";
 import { spawn } from "child_process";
 import { fileURLToPath } from "url";
 import mysql from "mysql2/promise";
-import { BACKEND_DIR, UPLOADS_PATH, SCRIPTS_DIR } from "../../../shared/paths.js";
-import { dumpDatabase, importSqlDump } from "../../../shared/utils/sqlDump.js";
+import { BACKEND_DIR, UPLOADS_PATH, SCRIPTS_DIR } from "../../../../shared/paths.js";
+import { dumpDatabase, importSqlDump } from "../../../../shared/utils/sqlDump.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const backendDir = BACKEND_DIR;
@@ -49,7 +49,7 @@ function log(t, msg) {
 
 function correrScript(t, archivo, envExtra) {
   return new Promise((resolve) => {
-    const hijo = spawn(process.execPath, [path.join(SCRIPTS_DIR, "mexico", archivo)], {
+    const hijo = spawn(process.execPath, [path.join(SCRIPTS_DIR, "mexico", "renaced", archivo)], {
       cwd: backendDir,
       env: { ...process.env, ...envExtra },
     });

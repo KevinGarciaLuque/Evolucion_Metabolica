@@ -1,6 +1,6 @@
 ﻿import pool from "../config/db.js";
 import bcrypt from "bcryptjs";
-import { auditarAccion } from "../../../shared/utils/helpers.js";
+import { auditarAccion } from "../../../../shared/utils/helpers.js";
 
 const INSTITUCIONES_VALIDAS = ["HMEP", "IHSS", "HEU"];
 

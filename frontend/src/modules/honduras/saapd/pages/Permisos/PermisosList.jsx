@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import api from "../../../../shared/api/axios";
-import Layout from "../../../../shared/components/Layout";
+import api from "../../../../../shared/api/axios";
+import Layout from "../../../../../shared/components/Layout";
 
 const MODULOS = [
   { key: "dashboard",   label: "Dashboard" },

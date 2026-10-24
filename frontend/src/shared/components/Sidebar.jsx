@@ -2,7 +2,7 @@ import { VERSION } from "../data/novedades";
 import { useState, useEffect } from "react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { useRenacedAuth } from "../../modules/mexico/context/RenacedAuthContext";
+import { useRenacedAuth } from "../../modules/mexico/renaced/context/RenacedAuthContext";
 import { impersonarTenant, getTenants } from "../../modules/admin/api/adminApi";
 import FlagIcon from "./FlagIcon";
 import {

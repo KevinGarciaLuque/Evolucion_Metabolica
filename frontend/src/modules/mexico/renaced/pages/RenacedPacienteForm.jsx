@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import RenacedLayout from "../components/RenacedLayout";
-import FlagIcon from "../../../shared/components/FlagIcon";
-import SuccessModal from "../../../shared/components/SuccessModal";
+import FlagIcon from "../../../../shared/components/FlagIcon";
+import SuccessModal from "../../../../shared/components/SuccessModal";
 import { getPaciente, createPaciente, updatePaciente, checkCurpPaciente, buscarColoniasCatalogo } from "../api/renacedApi";
 
 const ESTADOS_MX = [

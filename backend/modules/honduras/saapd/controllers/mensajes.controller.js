@@ -1,6 +1,6 @@
 import pool from "../config/db.js";
 import { enviarWhatsApp } from "../services/twilio.js";
-import { auditarAccion } from "../../../shared/utils/helpers.js";
+import { auditarAccion } from "../../../../shared/utils/helpers.js";
 
 /**
  * GET /api/mensajes

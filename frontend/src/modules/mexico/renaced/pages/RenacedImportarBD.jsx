@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import RenacedLayout from "../components/RenacedLayout";
-import { useAuth } from "../../../shared/context/AuthContext";
+import { useAuth } from "../../../../shared/context/AuthContext";
 import { useRenacedAuth } from "../context/RenacedAuthContext";
 import { importarBaseDatosMexico, iniciarMigracionPHP, getEstadoMigracionPHP } from "../api/renacedApi";
 import { HiOutlineDocumentArrowUp, HiOutlineExclamationTriangle } from "react-icons/hi2";

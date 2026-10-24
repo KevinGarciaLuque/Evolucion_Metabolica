@@ -1,8 +1,8 @@
 import { useEffect, useState, useCallback } from "react";
-import api from "../../../../shared/api/axios";
-import Layout from "../../../../shared/components/Layout";
+import api from "../../../../../shared/api/axios";
+import Layout from "../../../../../shared/components/Layout";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../../../../shared/context/AuthContext";
+import { useAuth } from "../../../../../shared/context/AuthContext";
 import {
   HiOutlineShieldCheck,
   HiOutlineArrowLeftOnRectangle,

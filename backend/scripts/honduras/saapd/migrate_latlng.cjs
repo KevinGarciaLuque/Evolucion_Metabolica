@@ -4,7 +4,7 @@
  */
 const mysql  = require("mysql2/promise");
 const dotenv = require("dotenv");
-dotenv.config({ path: require("path").join(__dirname, "..", "..", ".env") });
+dotenv.config({ path: require("path").join(__dirname, "..", "..", "..", ".env") });
 
 async function addColumnIfMissing(conn, table, column, definition) {
   const [cols] = await conn.query(

@@ -6,7 +6,7 @@
 // Ejecutar: node cleanup_tratamiento_duplicados.cjs
 
 const mysql = require("mysql2/promise");
-require("dotenv").config({ path: require("path").join(__dirname, "..", "..", ".env") });
+require("dotenv").config({ path: require("path").join(__dirname, "..", "..", "..", ".env") });
 
 const CFG = {
   host: process.env.DB_HOST, port: process.env.DB_PORT,

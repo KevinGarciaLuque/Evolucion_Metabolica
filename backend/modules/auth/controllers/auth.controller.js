@@ -1,4 +1,4 @@
-import pool from "../../honduras/config/db.js";
+import pool from "../../honduras/saapd/config/db.js";
 import poolMaster from "../../../shared/config/db.master.js";
 import mysql from "mysql2/promise";
 import bcrypt from "bcryptjs";

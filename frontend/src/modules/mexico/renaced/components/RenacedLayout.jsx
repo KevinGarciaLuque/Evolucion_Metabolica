@@ -1,8 +1,8 @@
-import { VERSION } from "../../../shared/data/novedades";
+import { VERSION } from "../../../../shared/data/novedades";
 import { useState, useRef, useEffect } from "react";
 import { useNavigate, NavLink } from "react-router-dom";
 import { useRenacedAuth } from "../context/RenacedAuthContext";
-import { useAuth } from "../../../shared/context/AuthContext";
+import { useAuth } from "../../../../shared/context/AuthContext";
 import {
   HiOutlineArrowRightOnRectangle, HiChevronDown,
   HiOutlineSquares2X2, HiOutlineUsers, HiOutlineDocumentArrowDown,
@@ -10,12 +10,12 @@ import {
   HiOutlineClipboardDocumentList, HiOutlineDocumentArrowUp, HiOutlineMapPin,
   HiOutlineBuildingOffice2, HiOutlineDocumentMagnifyingGlass,
 } from "react-icons/hi2";
-import FlagIcon from "../../../shared/components/FlagIcon";
-import TopbarAvisos from "../../../shared/components/TopbarAvisos";
+import FlagIcon from "../../../../shared/components/FlagIcon";
+import TopbarAvisos from "../../../../shared/components/TopbarAvisos";
 import apiRenaced from "../api/axiosRenaced";
-import Layout from "../../../shared/components/Layout";
-import "../../../shared/components/Layout.css";
-import "../../../shared/components/Sidebar.css";
+import Layout from "../../../../shared/components/Layout";
+import "../../../../shared/components/Layout.css";
+import "../../../../shared/components/Sidebar.css";
 
 const MENU_BASE = [
   { to: "/renaced/dashboard",  clave: "dashboard", icon: HiOutlineSquares2X2,            label: "Dashboard" },

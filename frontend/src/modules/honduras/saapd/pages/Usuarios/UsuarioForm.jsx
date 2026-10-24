@@ -1,7 +1,7 @@
 ﻿import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import api from "../../../../shared/api/axios";
-import Layout from "../../../../shared/components/Layout";
+import api from "../../../../../shared/api/axios";
+import Layout from "../../../../../shared/components/Layout";
 
 const INSTITUCIONES = ["HMEP", "IHSS", "HEU"];
 

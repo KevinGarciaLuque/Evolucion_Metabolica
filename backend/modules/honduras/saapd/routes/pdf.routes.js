@@ -3,8 +3,8 @@ import multer from "multer";
 import path from "path";
 import { fileURLToPath } from "url";
 import { subirYParsear, confirmarAnalisis } from "../controllers/pdf.controller.js";
-import { UPLOADS_PATH } from "../../../shared/paths.js";
-import { verificarToken } from "../../../shared/middlewares/auth.js";
+import { UPLOADS_PATH } from "../../../../shared/paths.js";
+import { verificarToken } from "../../../../shared/middlewares/auth.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname  = path.dirname(__filename);

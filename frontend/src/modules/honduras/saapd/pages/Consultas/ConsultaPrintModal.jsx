@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { FiX, FiPrinter, FiLoader } from "react-icons/fi";
-import api from "../../../../shared/api/axios";
-import { useAuth } from "../../../../shared/context/AuthContext";
+import api from "../../../../../shared/api/axios";
+import { useAuth } from "../../../../../shared/context/AuthContext";
 
 const TANNER_LABEL = {
   "1": "I — Prepuberal",

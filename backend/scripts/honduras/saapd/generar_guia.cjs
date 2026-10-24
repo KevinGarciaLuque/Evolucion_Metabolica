@@ -590,7 +590,7 @@ const doc = new Document({
 });
 
 // ─── Guardar archivo ─────────────────────────────────────────────────────────
-const salida = path.join(__dirname, "..", "..", "..", "Guia_Evolucion_Metabolica.docx");
+const salida = path.join(__dirname, "..", "..", "..", "..", "Guia_Evolucion_Metabolica.docx");
 
 Packer.toBuffer(doc).then((buffer) => {
   fs.writeFileSync(salida, buffer);

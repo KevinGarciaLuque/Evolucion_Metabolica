@@ -2,7 +2,7 @@ import { Router } from "express";
 import {
   statsGlobales, porDepartamento, porGenero, porEdad, tendencias, recientes, distribucionGlucosa,
 } from "../controllers/dashboard.controller.js";
-import { verificarToken } from "../../../shared/middlewares/auth.js";
+import { verificarToken } from "../../../../shared/middlewares/auth.js";
 
 const router = Router();
 

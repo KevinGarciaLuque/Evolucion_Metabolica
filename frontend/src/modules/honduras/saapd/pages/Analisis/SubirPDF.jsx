@@ -2,8 +2,8 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { FiArrowLeft } from "react-icons/fi";
 import { AnimatePresence, motion } from "framer-motion";
-import api from "../../../../shared/api/axios";
-import Layout from "../../../../shared/components/Layout";
+import api from "../../../../../shared/api/axios";
+import Layout from "../../../../../shared/components/Layout";
 import SemaforoISPAD from "../../components/SemaforoISPAD";
 import { clasificarISPAD } from "../../utils/ispad";
 

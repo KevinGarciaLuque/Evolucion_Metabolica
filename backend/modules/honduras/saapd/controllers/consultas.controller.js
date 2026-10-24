@@ -1,5 +1,5 @@
 import pool from "../config/db.js";
-import { auditarAccion } from "../../../shared/utils/helpers.js";
+import { auditarAccion } from "../../../../shared/utils/helpers.js";
 
 const INSTITUCIONES_VALIDAS = ["HMEP", "IHSS", "HEU"];
 

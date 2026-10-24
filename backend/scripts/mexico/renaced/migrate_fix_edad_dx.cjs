@@ -3,7 +3,7 @@
 // Ejecutar desde backend/: node migrate_fix_edad_dx.cjs
 
 const mysql = require("mysql2/promise");
-require("dotenv").config({ path: require("path").join(__dirname, "..", "..", ".env") });
+require("dotenv").config({ path: require("path").join(__dirname, "..", "..", "..", ".env") });
 
 const CFG_DESTINO = {
   host: process.env.DB_HOST, port: process.env.DB_PORT,

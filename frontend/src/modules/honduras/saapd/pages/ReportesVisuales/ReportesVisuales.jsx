@@ -4,9 +4,9 @@ import {
   LineChart, Line, Legend,
 } from "recharts";
 import { motion } from "framer-motion";
-import Layout from "../../../../shared/components/Layout";
-import api from "../../../../shared/api/axios";
-import { useAuth } from "../../../../shared/context/AuthContext";
+import Layout from "../../../../../shared/components/Layout";
+import api from "../../../../../shared/api/axios";
+import { useAuth } from "../../../../../shared/context/AuthContext";
 import InstSelector from "../../components/InstSelector";
 
 const hoverCard = {
