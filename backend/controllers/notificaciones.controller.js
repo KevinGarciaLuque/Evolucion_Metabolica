@@ -1,5 +1,4 @@
 import pool from "../config/db.js";
-import poolMaster from "../config/db.master.js";
 import { getTenantPool } from "../config/db.renaced.js";
 
 // Sirve a los dos mundos (Evolución Metabólica y RENACED): el token decide de
@@ -18,15 +17,6 @@ function asegurarTablas() {
           creado_por  VARCHAR(150) DEFAULT NULL,
           fecha       DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
           vence_en    DATE         DEFAULT NULL
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`);
-      await pool.query(`
-        CREATE TABLE IF NOT EXISTS novedades (
-          id          INT AUTO_INCREMENT PRIMARY KEY,
-          titulo      VARCHAR(150) NOT NULL,
-          contenido   TEXT         NOT NULL,
-          version     VARCHAR(30)  DEFAULT NULL,
-          creado_por  VARCHAR(150) DEFAULT NULL,
-          fecha       DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`);
     })().catch((e) => { tablasListas = null; throw e; });
   }
@@ -136,15 +126,8 @@ export async function obtenerNotificaciones(req, res) {
 
   // 4) Actividad del sistema (últimos 7 días)
   await intentar(async () => {
-    if (esRenaced) {
-      const [rows] = await poolMaster.query(
-        `SELECT id, usuario_nombre, fecha FROM login_logs
-          WHERE exito = 1 AND tenant_codigo = ? AND fecha >= DATE_SUB(NOW(), INTERVAL 7 DAY)
-          ORDER BY fecha DESC LIMIT 5`, [u.tenant || "mx"]);
-      for (const r of rows) {
-        items.push({ clave: `login-${r.id}`, tipo: "actividad", titulo: `${r.usuario_nombre || "Un usuario"} inició sesión`, detalle: null, fecha: aTxt(r.fecha) });
-      }
-    } else {
+    // En RENACED los inicios de sesión viven en la bitácora, no en la campana.
+    if (!esRenaced) {
       const [rows] = await pool.query(
         `SELECT id, usuario_nombre, accion, entidad, descripcion, fecha FROM auditoria_sesiones
           WHERE accion NOT IN ('login','logout') AND fecha >= DATE_SUB(NOW(), INTERVAL 7 DAY)
@@ -189,64 +172,5 @@ export async function eliminarAviso(req, res) {
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: "Error al eliminar el aviso" });
-  }
-}
-
-// ── Novedades (registro de cambios) ───────────────────────────────────────────
-export async function listarNovedades(req, res) {
-  try {
-    await asegurarTablas();
-    const [rows] = await pool.query(
-      "SELECT id, titulo, contenido, version, creado_por, fecha FROM novedades ORDER BY fecha DESC, id DESC LIMIT 100");
-    res.json(rows);
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ error: "Error al obtener las novedades" });
-  }
-}
-
-export async function crearNovedad(req, res) {
-  if (!soloSuperAdmin(req, res)) return;
-  const titulo = String(req.body?.titulo || "").trim();
-  const contenido = String(req.body?.contenido || "").trim();
-  if (!titulo || !contenido) return res.status(400).json({ error: "Título y contenido son obligatorios" });
-  try {
-    await asegurarTablas();
-    const [r] = await pool.query(
-      "INSERT INTO novedades (titulo, contenido, version, creado_por) VALUES (?, ?, ?, ?)",
-      [titulo.slice(0, 150), contenido, req.body?.version?.trim()?.slice(0, 30) || null, req.usuario.nombre || req.usuario.email || null]);
-    res.status(201).json({ id: r.insertId });
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ error: "Error al crear la novedad" });
-  }
-}
-
-export async function actualizarNovedad(req, res) {
-  if (!soloSuperAdmin(req, res)) return;
-  const titulo = String(req.body?.titulo || "").trim();
-  const contenido = String(req.body?.contenido || "").trim();
-  if (!titulo || !contenido) return res.status(400).json({ error: "Título y contenido son obligatorios" });
-  try {
-    await asegurarTablas();
-    await pool.query(
-      "UPDATE novedades SET titulo = ?, contenido = ?, version = ? WHERE id = ?",
-      [titulo.slice(0, 150), contenido, req.body?.version?.trim()?.slice(0, 30) || null, req.params.id]);
-    res.json({ updated: 1 });
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ error: "Error al actualizar la novedad" });
-  }
-}
-
-export async function eliminarNovedad(req, res) {
-  if (!soloSuperAdmin(req, res)) return;
-  try {
-    await asegurarTablas();
-    await pool.query("DELETE FROM novedades WHERE id = ?", [req.params.id]);
-    res.json({ deleted: 1 });
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ error: "Error al eliminar la novedad" });
   }
 }

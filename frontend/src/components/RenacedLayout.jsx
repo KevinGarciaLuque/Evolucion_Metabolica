@@ -1,3 +1,4 @@
+import { VERSION } from "../data/novedades";
 import { useState, useRef, useEffect } from "react";
 import { useNavigate, NavLink } from "react-router-dom";
 import { useRenacedAuth } from "../context/RenacedAuthContext";
@@ -170,7 +171,7 @@ export default function RenacedLayout({ children }) {
           </nav>
 
           <div className="sidebar-version">
-            <span className="sidebar-version-label">v1.0.0</span>
+            <span className="sidebar-version-label">v{VERSION}</span>
             <span className="sidebar-version-name">RENACED México</span>
             <span className="sidebar-version-copy">© {new Date().getFullYear()} Kevin Garcia</span>
           </div>

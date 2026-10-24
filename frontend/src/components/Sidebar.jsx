@@ -1,3 +1,4 @@
+import { VERSION } from "../data/novedades";
 import { useState, useEffect } from "react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
@@ -239,7 +240,7 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
         </nav>
 
         <div className="sidebar-version">
-          <span className="sidebar-version-label">v1.0.0</span>
+          <span className="sidebar-version-label">v{VERSION}</span>
           <span className="sidebar-version-name">Evol. Metabólica</span>
           <span className="sidebar-version-copy">
             © {new Date().getFullYear()} Kevin Garcia

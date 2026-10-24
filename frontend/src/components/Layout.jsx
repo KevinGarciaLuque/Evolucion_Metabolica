@@ -1,3 +1,4 @@
+import { VERSION } from "../data/novedades";
 import { useState, useRef, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import Sidebar from "./Sidebar";
@@ -175,7 +176,7 @@ export default function Layout({ children }) {
               </div>
 
               <div className="info-footer">
-                <span>v1.0.0 · © {new Date().getFullYear()} Kevin Garcia · Todos los derechos reservados</span>
+                <span>v{VERSION} · © {new Date().getFullYear()} Kevin Garcia · Todos los derechos reservados</span>
               </div>
             </div>
           </div>
