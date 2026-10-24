@@ -10,6 +10,8 @@ import {
   HiOutlineBuildingOffice2, HiOutlineDocumentMagnifyingGlass,
 } from "react-icons/hi2";
 import FlagIcon from "./FlagIcon";
+import TopbarAvisos from "./TopbarAvisos";
+import apiRenaced from "../api/axiosRenaced";
 import Layout from "./Layout";
 import "./Layout.css";
 import "./Sidebar.css";
@@ -87,6 +89,8 @@ export default function RenacedLayout({ children }) {
           <FlagIcon codigo={usuario?.tenant} size={14} /> RENACED
         </span>
         <div style={{ flex: 1 }} />
+
+        <TopbarAvisos api={apiRenaced} esSuperAdmin={false} basePacientes="/renaced/pacientes" storageKey="renaced" />
 
         <div className="topbar-user" ref={menuRef}>
           <button className={`topbar-user-btn${menuOpen ? " open" : ""}`} onClick={() => setMenuOpen((o) => !o)}>

@@ -1,6 +1,9 @@
 import { useState, useRef, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import Sidebar from "./Sidebar";
+import TopbarAvisos from "./TopbarAvisos";
+import api from "../api/axios";
+import apiRenaced from "../api/axiosRenaced";
 import { useAuth } from "../context/AuthContext";
 import { HiOutlineArrowRightOnRectangle, HiChevronDown, HiOutlineInformationCircle, HiOutlineXMark } from "react-icons/hi2";
 import "./Layout.css";
@@ -58,6 +61,13 @@ export default function Layout({ children }) {
         <span className="topbar-mobile-brand">Evolución Metabólica</span>
 
         <div style={{ flex: 1 }} />
+
+        <TopbarAvisos
+          api={enRenaced ? apiRenaced : api}
+          esSuperAdmin={usuario?.rol === "SUPER_ADMIN"}
+          basePacientes={enRenaced ? "/renaced/pacientes" : "/pacientes"}
+          storageKey={enRenaced ? "renaced" : "em"}
+        />
 
         {/* Perfil de usuario */}
         <div className="topbar-user" ref={menuRef}>
