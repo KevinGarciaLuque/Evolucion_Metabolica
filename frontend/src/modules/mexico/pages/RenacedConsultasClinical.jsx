@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import RenacedLayout from "../../components/RenacedLayout";
+import RenacedLayout from "../components/RenacedLayout";
 import {
   getPaciente,
   getDiagnosticoClinico, saveDiagnosticoClinico,
@@ -18,7 +18,7 @@ import {
   getToxicomanias, createToxicomanias, deleteToxicomanias,
   getReclasificaciones, createReclasificacion, deleteReclasificacion,
   getEmbarazos, createEmbarazo, deleteEmbarazo,
-} from "../../api/renacedApi";
+} from "../api/renacedApi";
 
 // ── Constantes compartidas ────────────────────────────────────────────────────
 const SINON    = ["", "SI", "NO", "SE DESCONOCE"];

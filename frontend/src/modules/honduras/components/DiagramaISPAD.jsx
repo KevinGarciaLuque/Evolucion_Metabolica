@@ -1,4 +1,4 @@
-﻿import ispadImg from "../assets/objetivosGlucosa.jpg";
+﻿import ispadImg from "../../../assets/objetivosGlucosa.jpg";
 
 export default function DiagramaISPAD() {
   return (

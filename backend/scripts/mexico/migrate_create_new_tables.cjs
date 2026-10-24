@@ -3,7 +3,7 @@
 // Ejecutar: node migrate_create_new_tables.cjs
 
 const mysql = require("mysql2/promise");
-require("dotenv").config({ path: require("path").join(__dirname, ".env") });
+require("dotenv").config({ path: require("path").join(__dirname, "..", "..", ".env") });
 
 const CFG = {
   host:     process.env.DB_HOST,

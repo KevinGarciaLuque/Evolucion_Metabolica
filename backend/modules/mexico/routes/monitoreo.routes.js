@@ -1,9 +1,9 @@
 import { Router } from "express";
-import { verificarToken } from "../../middlewares/auth.js";
-import { resolverTenantDB } from "../../middlewares/tenantDb.js";
+import { verificarToken } from "../../../shared/middlewares/auth.js";
+import { resolverTenantDB } from "../middlewares/tenantDb.js";
 import {
   getMonitoreoByPaciente, createMonitoreo, updateMonitoreo, deleteMonitoreo,
-} from "../../controllers/renaced/monitoreo.controller.js";
+} from "../controllers/monitoreo.controller.js";
 
 const router = Router({ mergeParams: true });
 router.use(verificarToken, resolverTenantDB);

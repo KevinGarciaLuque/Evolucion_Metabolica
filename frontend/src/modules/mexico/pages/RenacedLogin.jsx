@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useRenacedAuth } from "../../context/RenacedAuthContext";
+import { useRenacedAuth } from "../context/RenacedAuthContext";
 import { FiArrowLeft } from "react-icons/fi";
-import FlagIcon from "../../components/FlagIcon";
-import "../Login.css";
+import FlagIcon from "../../../shared/components/FlagIcon";
+import "../../../shared/pages/Login.css";
 
 export default function RenacedLogin() {
   const [email, setEmail]       = useState("");

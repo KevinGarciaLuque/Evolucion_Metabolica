@@ -5,7 +5,7 @@ import {
   listarAnticuerpos, crearAnticuerpos, actualizarAnticuerpos, eliminarAnticuerpos,
   relacionIC,
 } from "../controllers/clinico.controller.js";
-import { verificarToken, noAsistente } from "../middlewares/auth.js";
+import { verificarToken, noAsistente } from "../../../shared/middlewares/auth.js";
 
 const router = Router();
 router.use(verificarToken);

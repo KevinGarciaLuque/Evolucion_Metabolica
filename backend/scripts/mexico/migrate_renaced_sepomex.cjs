@@ -5,7 +5,7 @@
 
 const mysql = require("mysql2/promise");
 const fs = require("fs");
-require("dotenv").config({ path: require("path").join(__dirname, ".env") });
+require("dotenv").config({ path: require("path").join(__dirname, "..", "..", ".env") });
 
 const URL_SEPOMEX = "https://www.correosdemexico.gob.mx/datosabiertos/cp/cpdescarga.txt";
 

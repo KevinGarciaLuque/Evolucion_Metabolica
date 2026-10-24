@@ -3,7 +3,7 @@
 // Ejecutar: node backend/migrate_add_diagnostico_clinico.cjs
 
 const mysql = require("mysql2/promise");
-require("dotenv").config({ path: require("path").join(__dirname, ".env") });
+require("dotenv").config({ path: require("path").join(__dirname, "..", "..", ".env") });
 
 async function migrate() {
   const conn = await mysql.createConnection({

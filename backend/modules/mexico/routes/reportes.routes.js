@@ -1,9 +1,9 @@
 import { Router } from "express";
-import { verificarToken } from "../../middlewares/auth.js";
-import { resolverTenantDB } from "../../middlewares/tenantDb.js";
-import { resolverAlcanceClinica } from "../../middlewares/scopeClinica.js";
-import { verificarModulo } from "../../middlewares/verificarModulo.js";
-import { exportarExcel, exportarCSV, exportarPDF, exportarReporteClinica } from "../../controllers/renaced/reportes.controller.js";
+import { verificarToken } from "../../../shared/middlewares/auth.js";
+import { resolverTenantDB } from "../middlewares/tenantDb.js";
+import { resolverAlcanceClinica } from "../middlewares/scopeClinica.js";
+import { verificarModulo } from "../middlewares/verificarModulo.js";
+import { exportarExcel, exportarCSV, exportarPDF, exportarReporteClinica } from "../controllers/reportes.controller.js";
 
 const router = Router();
 router.use(verificarToken, resolverTenantDB, resolverAlcanceClinica, verificarModulo("reportes"));

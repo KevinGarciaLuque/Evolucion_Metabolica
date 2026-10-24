@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import frameInicial from "../../assets/ADN.png";
-import frameFinal from "../../assets/ADN2.png";
+import frameInicial from "../../../assets/ADN.png";
+import frameFinal from "../../../assets/ADN2.png";
 
 // Ruta del loop ping-pong (7 s forward + 7 s reversed) colocado en /public/hero/.
 // Mientras el archivo no exista se usa un crossfade ADN ⇄ ADN2 con el mismo ritmo (14 s).

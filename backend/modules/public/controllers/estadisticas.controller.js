@@ -1,6 +1,6 @@
-import pool from "../../config/db.master.js";
+import pool from "../../../shared/config/db.master.js";
 import mysql from "mysql2/promise";
-import { consultarStatsTenant } from "../admin/tenants.controller.js";
+import { consultarStatsTenant } from "../../admin/controllers/tenants.controller.js";
 
 // Endpoint público (sin login) para la landing de ALAD: solo expone agregados
 // nacionales (nombre del país, bandera, total de pacientes) — nunca datos de

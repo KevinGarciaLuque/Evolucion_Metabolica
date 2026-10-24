@@ -5,10 +5,11 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import pool from "../config/db.js";
+import { UPLOADS_PATH } from "../../../shared/paths.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const uploadsPath = process.env.UPLOADS_PATH || path.join(__dirname, "../uploads");
+const uploadsPath = UPLOADS_PATH;
 
 function formatDate(value) {
   if (!value) return "";

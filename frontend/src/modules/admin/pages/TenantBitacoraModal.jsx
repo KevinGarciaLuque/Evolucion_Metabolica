@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
-import FlagIcon from "../../components/FlagIcon";
-import { getBitacoraTenant, getBitacoraTenantEstadisticas } from "../../api/adminApi";
+import FlagIcon from "../../../shared/components/FlagIcon";
+import { getBitacoraTenant, getBitacoraTenantEstadisticas } from "../api/adminApi";
 import {
   HiOutlineClipboardDocumentList, HiOutlineShieldCheck, HiOutlineArrowRightOnRectangle,
   HiOutlineXCircle, HiOutlineUsers,

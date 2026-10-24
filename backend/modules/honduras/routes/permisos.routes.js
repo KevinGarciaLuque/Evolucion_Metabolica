@@ -6,7 +6,7 @@ import {
   actualizarPermisos,
   actualizarInstituciones,
 } from "../controllers/permisos.controller.js";
-import { verificarToken, soloAdmin } from "../middlewares/auth.js";
+import { verificarToken, soloAdmin } from "../../../shared/middlewares/auth.js";
 
 const router = Router();
 

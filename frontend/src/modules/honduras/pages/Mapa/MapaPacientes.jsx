@@ -3,9 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { MapContainer, TileLayer, Marker, Popup, Tooltip, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import api from "../../api/axios";
-import Layout from "../../components/Layout";
-import { useAuth } from "../../context/AuthContext";
+import api from "../../../../shared/api/axios";
+import Layout from "../../../../shared/components/Layout";
+import { useAuth } from "../../../../shared/context/AuthContext";
 import "./MapaPacientes.css";
 
 // ─── Fix iconos Leaflet con Vite ─────────────────────────────────────────────

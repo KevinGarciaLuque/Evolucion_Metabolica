@@ -1,6 +1,6 @@
 import { useEffect, useState, Fragment } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import RenacedLayout from "../../components/RenacedLayout";
+import RenacedLayout from "../components/RenacedLayout";
 import {
   getPaciente,
   getDiagnosticoClinico,
@@ -23,7 +23,7 @@ import {
   getToxicomanias,
   getReclasificaciones,
   getEmbarazos,
-} from "../../api/renacedApi";
+} from "../api/renacedApi";
 
 const TABS = ["Resumen", "Diagnóstico", "Consultas", "Laboratorio", "Tratamiento", "Evaluación", "Monitoreo", "Educación",
   "Comorbilidades", "Patologías", "Ant. G.O.", "Eventos", "Estilo Vida", "Toxicomanías", "Reclasificación", "Embarazo"];

@@ -2,10 +2,10 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { FiArrowLeft } from "react-icons/fi";
-import RenacedLayout from "../../components/RenacedLayout";
+import RenacedLayout from "../components/RenacedLayout";
 import {
   getPacientes, getPaciente, subirEscaneoPDF, confirmarEscaneo,
-} from "../../api/renacedApi";
+} from "../api/renacedApi";
 
 const C = { violet: "#6366f1", green: "#22c55e", amber: "#f59e0b", red: "#ef4444", slate: "#64748b" };
 

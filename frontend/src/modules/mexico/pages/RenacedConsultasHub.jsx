@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import RenacedLayout from "../../components/RenacedLayout";
-import { getPacientes } from "../../api/renacedApi";
+import RenacedLayout from "../components/RenacedLayout";
+import { getPacientes } from "../api/renacedApi";
 import { HiOutlineMagnifyingGlass, HiOutlineFunnel } from "react-icons/hi2";
 
 export default function RenacedConsultasHub() {

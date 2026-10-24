@@ -1,9 +1,9 @@
-import pool from "../config/db.js";
-import poolMaster from "../config/db.master.js";
+import pool from "../../honduras/config/db.js";
+import poolMaster from "../../../shared/config/db.master.js";
 import mysql from "mysql2/promise";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { registrarLoginLog } from "../utils/loginLog.js";
+import { registrarLoginLog } from "../../../shared/utils/loginLog.js";
 
 const INSTITUCIONES_VALIDAS = ["HMEP", "IHSS", "HEU"];
 

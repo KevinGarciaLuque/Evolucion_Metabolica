@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getEstadisticasPublicas } from "../../controllers/public/estadisticas.controller.js";
+import { getEstadisticasPublicas } from "../controllers/estadisticas.controller.js";
 
 // Sin verificarToken a propósito: esta ruta alimenta la landing pública (ALAD).
 const router = Router();

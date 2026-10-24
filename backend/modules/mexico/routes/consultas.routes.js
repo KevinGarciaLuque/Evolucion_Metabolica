@@ -1,10 +1,10 @@
 import { Router } from "express";
-import { verificarToken } from "../../middlewares/auth.js";
-import { resolverTenantDB } from "../../middlewares/tenantDb.js";
+import { verificarToken } from "../../../shared/middlewares/auth.js";
+import { resolverTenantDB } from "../middlewares/tenantDb.js";
 import {
   getConsultasByPaciente,
   createConsulta,
-} from "../../controllers/renaced/consultas.controller.js";
+} from "../controllers/consultas.controller.js";
 
 const router = Router({ mergeParams: true });
 

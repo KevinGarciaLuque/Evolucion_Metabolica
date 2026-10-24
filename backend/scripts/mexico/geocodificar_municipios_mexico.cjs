@@ -5,7 +5,7 @@
 // Ejecutar desde backend/: node geocodificar_municipios_mexico.cjs
 
 const mysql = require("mysql2/promise");
-require("dotenv").config({ path: require("path").join(__dirname, ".env") });
+require("dotenv").config({ path: require("path").join(__dirname, "..", "..", ".env") });
 
 const NOMBRES_ESTADO = {
   AS: "Aguascalientes", BC: "Baja California", BS: "Baja California Sur",

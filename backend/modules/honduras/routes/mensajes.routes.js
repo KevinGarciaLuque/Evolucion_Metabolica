@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { listar, enviarAltoRiesgo, enviarIndividual, eliminar } from "../controllers/mensajes.controller.js";
-import { verificarToken } from "../middlewares/auth.js";
+import { verificarToken } from "../../../shared/middlewares/auth.js";
 
 const router = Router();
 

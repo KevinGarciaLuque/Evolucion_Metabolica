@@ -3,13 +3,14 @@ import multer from "multer";
 import path from "path";
 import { fileURLToPath } from "url";
 import { subirYParsear, confirmarAnalisis } from "../controllers/pdf.controller.js";
-import { verificarToken } from "../middlewares/auth.js";
+import { UPLOADS_PATH } from "../../../shared/paths.js";
+import { verificarToken } from "../../../shared/middlewares/auth.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname  = path.dirname(__filename);
 
 // UPLOADS_PATH debe coincidir con el punto de montaje del volumen en Railway
-const uploadsPath = process.env.UPLOADS_PATH || path.join(__dirname, "../uploads");
+const uploadsPath = UPLOADS_PATH;
 
 const storage = multer.diskStorage({
   destination: path.join(uploadsPath, "pdfs"),

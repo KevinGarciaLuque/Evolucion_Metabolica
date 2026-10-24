@@ -1,5 +1,5 @@
 import pool from "../config/db.js";
-import { clasificarISPAD } from "../utils/helpers.js";
+import { clasificarISPAD } from "../../../shared/utils/helpers.js";
 
 const INSTITUCIONES_VALIDAS = ["HMEP", "IHSS", "HEU"];
 

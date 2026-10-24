@@ -3,16 +3,17 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
-import { verificarToken } from "../../middlewares/auth.js";
-import { resolverTenantDB } from "../../middlewares/tenantDb.js";
+import { UPLOADS_PATH } from "../../../shared/paths.js";
+import { verificarToken } from "../../../shared/middlewares/auth.js";
+import { resolverTenantDB } from "../middlewares/tenantDb.js";
 import {
   subirYParsear, confirmarEscaneo, getEscaneosByPaciente, deleteEscaneo,
-} from "../../controllers/renaced/escaneos.controller.js";
+} from "../controllers/escaneos.controller.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const uploadsPath = process.env.UPLOADS_PATH || path.join(__dirname, "../../uploads");
+const uploadsPath = UPLOADS_PATH;
 const destino = path.join(uploadsPath, "renaced_pdfs");
 fs.mkdirSync(destino, { recursive: true });
 

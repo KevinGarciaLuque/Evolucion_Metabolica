@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
-import Layout from "../../components/Layout";
-import FlagIcon from "../../components/FlagIcon";
+import Layout from "../../../shared/components/Layout";
+import FlagIcon from "../../../shared/components/FlagIcon";
 import TenantBitacoraModal from "./TenantBitacoraModal";
 import {
   getTenants, createTenant, updateTenant, deleteTenant, getTenantById, getEstadisticasGlobales,
   getUsuariosTenant, actualizarPermisosUsuarioTenant,
-} from "../../api/adminApi";
+} from "../api/adminApi";
 import {
   HiOutlineGlobeAmericas, HiOutlinePlusCircle, HiOutlinePencilSquare,
   HiOutlineCheckCircle, HiOutlineXCircle, HiOutlineUsers, HiOutlineMagnifyingGlass,

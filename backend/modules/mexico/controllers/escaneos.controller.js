@@ -1,5 +1,5 @@
-import { parsearPDFRenaced } from "../../services/pdfParserRenaced.js";
-import { clasificarISPAD } from "../../utils/helpers.js";
+import { parsearPDFRenaced } from "../services/pdfParserRenaced.js";
+import { clasificarISPAD } from "../../../shared/utils/helpers.js";
 
 // Columnas persistidas en escaneo_mcg (además de id, paciente_id, numero_registro,
 // clasificacion y creado_en que se calculan aparte).

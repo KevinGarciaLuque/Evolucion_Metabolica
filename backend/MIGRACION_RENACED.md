@@ -20,20 +20,20 @@ Pasos:
 
 2. Correr los scripts ETL **en este orden exacto** desde `backend/`:
    ```
-   node migrate_renaced_mexico.cjs          # solo la primera vez (crea el esquema, CREATE TABLE IF NOT EXISTS)
-   node migrate_renaced_datos.cjs
-   node migrate_renaced_datos2.cjs
-   node migrate_renaced_datos3.cjs
-   node migrate_renaced_datos4.cjs
-   node migrate_renaced_datos5.cjs
-   node migrate_renaced_diagnostico_full.cjs
-   node migrate_renaced_laboratorio_full.cjs
-   node migrate_renaced_evento_completo.cjs
-   node migrate_renaced_evaluacion_complementaria.cjs
-   node migrate_renaced_monitoreo_periodo.cjs
-   node migrate_renaced_tratamiento_otx.cjs
-   node migrate_renaced_ajuste_dosis.cjs
-   node migrate_fix_terapia.cjs
+   node scripts/mexico/migrate_renaced_mexico.cjs          # solo la primera vez (crea el esquema, CREATE TABLE IF NOT EXISTS)
+   node scripts/mexico/migrate_renaced_datos.cjs
+   node scripts/mexico/migrate_renaced_datos2.cjs
+   node scripts/mexico/migrate_renaced_datos3.cjs
+   node scripts/mexico/migrate_renaced_datos4.cjs
+   node scripts/mexico/migrate_renaced_datos5.cjs
+   node scripts/mexico/migrate_renaced_diagnostico_full.cjs
+   node scripts/mexico/migrate_renaced_laboratorio_full.cjs
+   node scripts/mexico/migrate_renaced_evento_completo.cjs
+   node scripts/mexico/migrate_renaced_evaluacion_complementaria.cjs
+   node scripts/mexico/migrate_renaced_monitoreo_periodo.cjs
+   node scripts/mexico/migrate_renaced_tratamiento_otx.cjs
+   node scripts/mexico/migrate_renaced_ajuste_dosis.cjs
+   node scripts/mexico/migrate_fix_terapia.cjs
    ```
    Todos escriben directo a **Railway (producción)** — el destino sale de `DB_HOST`/`RENACED_MX_DB_NAME` en `.env`, no de una base local.
 
@@ -56,8 +56,8 @@ Pasos:
 En **Importar BD** (`/renaced/importar-bd`), el Super Admin ve la tarjeta "Migrar base del sistema anterior (PHP)".
 Ahí sí se sube `renaced1.sql` directo: el servidor hace backup, lo carga en una base temporal
 (`renaced1_import_tmp`), corre los mismos scripts del paso 2 en el mismo orden y borra la base temporal.
-Los scripts leen el origen de [migrate_origen.cjs](migrate_origen.cjs) (variables `ORIGEN_DB_*`; por defecto el MySQL local de siempre).
-Código: [utils/migracionLegacy.js](utils/migracionLegacy.js), endpoints `POST/GET /api/renaced/importar-bd/php`.
+Los scripts leen el origen de [migrate_origen.cjs](scripts/mexico/migrate_origen.cjs) (variables `ORIGEN_DB_*`; por defecto el MySQL local de siempre).
+Código: [utils/migracionLegacy.js](modules/mexico/utils/migracionLegacy.js), endpoints `POST/GET /api/renaced/importar-bd/php`.
 
 ## 2. Restaurar/reemplazar un backup del sistema actual (esquema moderno)
 
@@ -72,7 +72,7 @@ para un usuario con perfil Administrador del tenant México).
   tablas puntuales; las que no toque el dump quedan intactas.
 - Restringido solo al tenant México — no aplica a otros países RENACED.
 
-Código relevante: [controllers/renaced/importarBD.controller.js](controllers/renaced/importarBD.controller.js),
-[routes/renaced/importarBD.routes.js](routes/renaced/importarBD.routes.js),
-[utils/sqlDump.js](utils/sqlDump.js),
+Código relevante: [controllers/renaced/importarBD.controller.js](modules/mexico/controllers/importarBD.controller.js),
+[routes/renaced/importarBD.routes.js](modules/mexico/routes/importarBD.routes.js),
+[utils/sqlDump.js](shared/utils/sqlDump.js),
 frontend: [RenacedImportarBD.jsx](../frontend/src/pages/Renaced/RenacedImportarBD.jsx).

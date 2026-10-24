@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
-import RenacedLayout from "../../components/RenacedLayout";
+import RenacedLayout from "../components/RenacedLayout";
 import {
   getClinicasRenaced, getEstablecimientosRenaced, createClinicaRenaced,
   updateClinicaRenaced, toggleClinicaRenaced,
-} from "../../api/renacedApi";
+} from "../api/renacedApi";
 import { HiOutlinePlusCircle, HiOutlinePencilSquare, HiOutlineCheckCircle, HiOutlineXCircle } from "react-icons/hi2";
 
 const FORM_INICIAL = {

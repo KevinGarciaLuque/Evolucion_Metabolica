@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import RenacedLayout from "../../components/RenacedLayout";
-import { useRenacedAuth } from "../../context/RenacedAuthContext";
+import RenacedLayout from "../components/RenacedLayout";
+import { useRenacedAuth } from "../context/RenacedAuthContext";
 import {
   getUsuarioRenaced, createUsuarioRenaced, updateUsuarioRenaced, getClinicasRenaced,
-} from "../../api/renacedApi";
+} from "../api/renacedApi";
 
 const PERFILES_BASE = [
   { id: 5, label: "Investigador de Clínica" },

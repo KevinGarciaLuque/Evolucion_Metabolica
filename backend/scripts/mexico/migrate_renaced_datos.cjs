@@ -3,7 +3,7 @@
 // Ejecutar desde la carpeta backend: node migrate_renaced_datos.cjs
 
 const mysql = require("mysql2/promise");
-require("dotenv").config({ path: require("path").join(__dirname, ".env") });
+require("dotenv").config({ path: require("path").join(__dirname, "..", "..", ".env") });
 
 // ── Origen: MySQL LOCAL con el dump original ──────────────────────────────────
 const CFG_ORIGEN = { ...require("./migrate_origen.cjs") };

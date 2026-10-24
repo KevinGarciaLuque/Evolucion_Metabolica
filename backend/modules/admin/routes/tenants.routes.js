@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { verificarToken } from "../../middlewares/auth.js";
+import { verificarToken } from "../../../shared/middlewares/auth.js";
 import {
   getTenants,
   getTenantById,
@@ -10,11 +10,11 @@ import {
   impersonarTenant,
   listarBitacoraTenant,
   estadisticasBitacoraTenant,
-} from "../../controllers/admin/tenants.controller.js";
+} from "../controllers/tenants.controller.js";
 import {
   listarUsuariosTenant,
   actualizarPermisosUsuarioTenant,
-} from "../../controllers/admin/tenantUsuarios.controller.js";
+} from "../controllers/tenantUsuarios.controller.js";
 
 const router = Router();
 

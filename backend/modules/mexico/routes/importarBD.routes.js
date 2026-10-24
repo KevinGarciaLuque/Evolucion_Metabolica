@@ -1,9 +1,9 @@
 import { Router } from "express";
 import multer from "multer";
-import { verificarToken } from "../../middlewares/auth.js";
-import { resolverTenantDB } from "../../middlewares/tenantDb.js";
-import { verificarModulo } from "../../middlewares/verificarModulo.js";
-import { importarBaseDatosMexico, iniciarMigracionPHP, estadoMigracionPHP } from "../../controllers/renaced/importarBD.controller.js";
+import { verificarToken } from "../../../shared/middlewares/auth.js";
+import { resolverTenantDB } from "../middlewares/tenantDb.js";
+import { verificarModulo } from "../middlewares/verificarModulo.js";
+import { importarBaseDatosMexico, iniciarMigracionPHP, estadoMigracionPHP } from "../controllers/importarBD.controller.js";
 
 const router = Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 200 * 1024 * 1024 } });

@@ -155,7 +155,7 @@ const IHSS_COLS = {
 // ─── Main ────────────────────────────────────────────────────────────────────
 
 async function importarExcel() {
-  const wb = XLSX.readFile(path.join(__dirname, 'Niños con MCG con GRAFICOS abril 2.xlsx'), { cellDates: true });
+  const wb = XLSX.readFile(path.join(__dirname, "..", "..", "Niños con MCG con GRAFICOS abril 2.xlsx"), { cellDates: true });
 
   const conn = await mysql.createConnection({
     host:     process.env.DB_HOST     || 'localhost',

@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import api from "../../api/axios";
-import Layout from "../../components/Layout";
-import { useAuth } from "../../context/AuthContext";
+import api from "../../../../shared/api/axios";
+import Layout from "../../../../shared/components/Layout";
+import { useAuth } from "../../../../shared/context/AuthContext";
 import { FiTrash2 } from "react-icons/fi";
-import ConfirmModal from "../../components/ConfirmModal";
+import ConfirmModal from "../../../../shared/components/ConfirmModal";
 
 const ROL_BADGE = {
   admin:     "badge-purple",

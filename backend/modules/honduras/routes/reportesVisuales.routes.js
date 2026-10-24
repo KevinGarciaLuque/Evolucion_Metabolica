@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { verificarToken } from "../middlewares/auth.js";
+import { verificarToken } from "../../../shared/middlewares/auth.js";
 import { listar, exportarExcel } from "../controllers/reportesVisuales.controller.js";
 
 const router = Router();

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import RenacedLayout from "../../components/RenacedLayout";
-import { descargarExcel, descargarCSV, descargarPDF, descargarReporteClinica, getClinicasRenaced } from "../../api/renacedApi";
-import { useRenacedAuth } from "../../context/RenacedAuthContext";
+import RenacedLayout from "../components/RenacedLayout";
+import { descargarExcel, descargarCSV, descargarPDF, descargarReporteClinica, getClinicasRenaced } from "../api/renacedApi";
+import { useRenacedAuth } from "../context/RenacedAuthContext";
 import { HiOutlineTableCells, HiOutlineDocumentText, HiOutlineArrowDownTray, HiOutlineBuildingOffice2 } from "react-icons/hi2";
 
 function descargarBlob(blob, filename) {

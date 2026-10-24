@@ -1,10 +1,10 @@
 import { Router } from "express";
-import { verificarToken } from "../../middlewares/auth.js";
-import { resolverTenantDB } from "../../middlewares/tenantDb.js";
-import { verificarModulo } from "../../middlewares/verificarModulo.js";
+import { verificarToken } from "../../../shared/middlewares/auth.js";
+import { resolverTenantDB } from "../middlewares/tenantDb.js";
+import { verificarModulo } from "../middlewares/verificarModulo.js";
 import {
   getClinicas, getEstablecimientosDisponibles, createClinica, updateClinica, toggleClinica,
-} from "../../controllers/renaced/clinicas.controller.js";
+} from "../controllers/clinicas.controller.js";
 
 const router = Router();
 

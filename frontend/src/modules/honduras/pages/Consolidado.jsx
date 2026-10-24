@@ -25,9 +25,9 @@ function CountUp({ end, duration = 1.2, decimals = 0, suffix = "" }) {
   }, [end, duration]);
   return <>{Number(value).toFixed(decimals)}{suffix}</>;
 }
-import api from "../api/axios";
-import Layout from "../components/Layout";
-import { useAuth } from "../context/AuthContext";
+import api from "../../../shared/api/axios";
+import Layout from "../../../shared/components/Layout";
+import { useAuth } from "../../../shared/context/AuthContext";
 import InstSelector from "../components/InstSelector";
 
 const COLORS = ["#3b82f6", "#ec4899"];

@@ -1,8 +1,8 @@
 import { useEffect, useState, useRef } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { FiArrowLeft } from "react-icons/fi";
-import api from "../../api/axios";
-import Layout from "../../components/Layout";
+import api from "../../../../shared/api/axios";
+import Layout from "../../../../shared/components/Layout";
 import { calcularZScores, calcularEdadMeses } from "../../utils/who_zscore";
 
 const hoy = () => { const n = new Date(); return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,"0")}-${String(n.getDate()).padStart(2,"0")}`; };

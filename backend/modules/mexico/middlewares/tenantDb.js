@@ -1,4 +1,4 @@
-import { getTenantPool } from "../config/db.renaced.js";
+import { getTenantPool } from "../config/db.js";
 
 // Resuelve la base de datos del país (tenant) del usuario autenticado
 // y la expone en req.db. Debe usarse después de verificarToken en

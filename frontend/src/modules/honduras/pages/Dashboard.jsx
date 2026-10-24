@@ -7,9 +7,9 @@ import {
 import ReactApexChart from "react-apexcharts";
 import { motion } from "framer-motion";
 import _LottieLib from "lottie-react";
-import solData from "../assets/lottie/sol.json";
-import tardeData from "../assets/lottie/tarde.json";
-import lunaData from "../assets/lottie/luna.json";
+import solData from "../../../assets/lottie/sol.json";
+import tardeData from "../../../assets/lottie/tarde.json";
+import lunaData from "../../../assets/lottie/luna.json";
 
 
 /* ── CountUp propio (compatible con React 19 + Vite) ──────────────────── */
@@ -31,11 +31,11 @@ function CountUp({ end, duration = 1.4, decimals = 0, suffix = "" }) {
   }, [end, duration]);
   return <>{Number(value).toFixed(decimals)}{suffix}</>;
 }
-import api from "../api/axios";
-import Layout from "../components/Layout";
+import api from "../../../shared/api/axios";
+import Layout from "../../../shared/components/Layout";
 import SemaforoISPAD from "../components/SemaforoISPAD";
 import DiagramaISPAD from "../components/DiagramaISPAD";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../../../shared/context/AuthContext";
 import InstSelector from "../components/InstSelector";
 
 // Fix interop Vite: lottie-react bundle exporta el módulo como default en vez del componente

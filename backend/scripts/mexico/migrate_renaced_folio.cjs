@@ -5,7 +5,7 @@
 // Ejecutar: node migrate_renaced_folio.cjs
 
 const mysql = require("mysql2/promise");
-require("dotenv").config({ path: require("path").join(__dirname, ".env") });
+require("dotenv").config({ path: require("path").join(__dirname, "..", "..", ".env") });
 
 const CFG = {
   host: process.env.DB_HOST, port: process.env.DB_PORT,

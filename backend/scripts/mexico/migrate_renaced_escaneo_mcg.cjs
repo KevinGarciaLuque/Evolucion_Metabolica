@@ -9,7 +9,7 @@
 // definir  RENACED_DB_NAMES="renaced_mexico,renaced_honduras"  en el .env
 
 const mysql = require("mysql2/promise");
-require("dotenv").config({ path: require("path").join(__dirname, ".env") });
+require("dotenv").config({ path: require("path").join(__dirname, "..", "..", ".env") });
 
 const BASES = (process.env.RENACED_DB_NAMES ||
   process.env.RENACED_MX_DB_NAME ||

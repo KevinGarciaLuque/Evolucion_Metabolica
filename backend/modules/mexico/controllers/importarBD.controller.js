@@ -1,12 +1,13 @@
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
-import { getTenantPool } from "../../config/db.renaced.js";
-import { dumpDatabase, importSqlDump } from "../../utils/sqlDump.js";
-import { iniciarMigracionLegacy, obtenerTrabajo, hayTrabajoActivo } from "../../utils/migracionLegacy.js";
+import { getTenantPool } from "../config/db.js";
+import { UPLOADS_PATH } from "../../../shared/paths.js";
+import { dumpDatabase, importSqlDump } from "../../../shared/utils/sqlDump.js";
+import { iniciarMigracionLegacy, obtenerTrabajo, hayTrabajoActivo } from "../utils/migracionLegacy.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const backupsDir = path.join(__dirname, "..", "..", "uploads", "renaced_backups");
+const backupsDir = path.join(UPLOADS_PATH, "renaced_backups");
 
 // Restaura un dump .sql completo sobre renaced_mexico. Antes de aplicarlo,
 // genera un backup local de la base actual por si hay que revertir.

@@ -26,8 +26,8 @@ async function seed() {
 
   try {
     // ── 1. Copiar PDF a uploads/pdfs ────────────────────────────────────────────
-    const origen  = path.join(__dirname, "Helen Zhen .pdf");
-    const destDir = path.join(__dirname, "uploads", "pdfs");
+    const origen  = path.join(__dirname, "..", "..", "Helen Zhen .pdf");
+    const destDir = path.join(__dirname, "..", "..", "uploads", "pdfs");
     const destNombre = `helen_zhen_${Date.now()}.pdf`;
     const destino = path.join(destDir, destNombre);
 

@@ -8,7 +8,7 @@
  */
 const mysql  = require("mysql2/promise");
 const dotenv = require("dotenv");
-dotenv.config();
+dotenv.config({ path: require("path").join(__dirname, "..", "..", ".env") });
 
 async function geocodificar(municipio, departamento) {
   const query = [municipio, departamento, "Honduras"].filter(Boolean).join(", ");

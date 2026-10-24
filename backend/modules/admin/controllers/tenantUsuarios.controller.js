@@ -1,5 +1,5 @@
-import pool from "../../config/db.master.js";
-import { getTenantPool } from "../../config/db.renaced.js";
+import pool from "../../../shared/config/db.master.js";
+import { getTenantPool } from "../../mexico/config/db.js";
 
 // Catálogo de módulos válidos para tenants RENACED — debe reflejar
 // MODULOS_RENACED / MODULOS_HONDURAS en frontend/src/pages/Admin/AdminPanel.jsx.

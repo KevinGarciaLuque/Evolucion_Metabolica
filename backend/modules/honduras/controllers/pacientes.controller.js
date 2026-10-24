@@ -1,5 +1,5 @@
 ﻿import pool from "../config/db.js";
-import { calcularEdad, auditarAccion } from "../utils/helpers.js";
+import { calcularEdad, auditarAccion } from "../../../shared/utils/helpers.js";
 import { geocodificar } from "../services/geocoding.js";
 
 const INSTITUCIONES_VALIDAS = ["HMEP", "IHSS", "HEU"];

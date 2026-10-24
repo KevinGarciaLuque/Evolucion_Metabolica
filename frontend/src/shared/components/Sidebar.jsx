@@ -2,8 +2,8 @@ import { VERSION } from "../data/novedades";
 import { useState, useEffect } from "react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { useRenacedAuth } from "../context/RenacedAuthContext";
-import { impersonarTenant, getTenants } from "../api/adminApi";
+import { useRenacedAuth } from "../../modules/mexico/context/RenacedAuthContext";
+import { impersonarTenant, getTenants } from "../../modules/admin/api/adminApi";
 import FlagIcon from "./FlagIcon";
 import {
   HiOutlineSquares2X2,

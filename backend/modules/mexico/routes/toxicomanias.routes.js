@@ -1,7 +1,7 @@
 import { Router } from "express";
-import { verificarToken } from "../../middlewares/auth.js";
-import { resolverTenantDB } from "../../middlewares/tenantDb.js";
-import { getToxicomanias, createToxicomanias, deleteToxicomanias } from "../../controllers/renaced/toxicomanias.controller.js";
+import { verificarToken } from "../../../shared/middlewares/auth.js";
+import { resolverTenantDB } from "../middlewares/tenantDb.js";
+import { getToxicomanias, createToxicomanias, deleteToxicomanias } from "../controllers/toxicomanias.controller.js";
 
 const router = Router({ mergeParams: true });
 router.use(verificarToken, resolverTenantDB);

@@ -1,11 +1,11 @@
 import { Router } from "express";
-import { verificarToken } from "../../middlewares/auth.js";
-import { resolverTenantDB } from "../../middlewares/tenantDb.js";
+import { verificarToken } from "../../../shared/middlewares/auth.js";
+import { resolverTenantDB } from "../middlewares/tenantDb.js";
 import {
   getEvaluacionesByPaciente, createEvaluacion,
   getEvaluacionesComplementarias, createEvaluacionComplementaria,
   updateEvaluacionComplementaria, deleteEvaluacionComplementaria,
-} from "../../controllers/renaced/evaluacion.controller.js";
+} from "../controllers/evaluacion.controller.js";
 
 const router = Router({ mergeParams: true });
 router.use(verificarToken, resolverTenantDB);

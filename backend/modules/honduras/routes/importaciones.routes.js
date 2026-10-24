@@ -1,6 +1,6 @@
 import { Router } from "express";
 import multer from "multer";
-import { verificarToken, noAsistente } from "../middlewares/auth.js";
+import { verificarToken, noAsistente } from "../../../shared/middlewares/auth.js";
 import { confirmarHEU, detalleBatchHEU, detalleConsultaHEU, listarPacientesHEU, previewHEU, sincronizarKoboHEU } from "../controllers/importaciones.controller.js";
 
 const router = Router();

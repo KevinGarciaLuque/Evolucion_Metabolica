@@ -1,4 +1,4 @@
-import api from "./axios";
+import api from "../../../shared/api/axios";
 
 const BASE = "/admin/tenants";
 

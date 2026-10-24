@@ -4,7 +4,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import TopbarAvisos from "./TopbarAvisos";
 import api from "../api/axios";
-import apiRenaced from "../api/axiosRenaced";
+import apiRenaced from "../../modules/mexico/api/axiosRenaced";
 import { useAuth } from "../context/AuthContext";
 import { HiOutlineArrowRightOnRectangle, HiChevronDown, HiOutlineInformationCircle, HiOutlineXMark } from "react-icons/hi2";
 import "./Layout.css";

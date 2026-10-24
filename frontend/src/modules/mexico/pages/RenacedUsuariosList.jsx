@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import RenacedLayout from "../../components/RenacedLayout";
-import { getUsuariosRenaced, toggleUsuarioRenaced } from "../../api/renacedApi";
-import { useRenacedAuth } from "../../context/RenacedAuthContext";
+import RenacedLayout from "../components/RenacedLayout";
+import { getUsuariosRenaced, toggleUsuarioRenaced } from "../api/renacedApi";
+import { useRenacedAuth } from "../context/RenacedAuthContext";
 import { HiOutlineUserPlus, HiOutlinePencilSquare, HiOutlineCheckCircle, HiOutlineXCircle } from "react-icons/hi2";
 
 const PERFIL_LABEL = { 1: "Administrador", 2: "Médico", 3: "Asistente", 4: "Enfermera", 5: "Investigador de Clínica" };

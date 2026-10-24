@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import api from "../../api/axios";
-import Layout from "../../components/Layout";
+import api from "../../../../shared/api/axios";
+import Layout from "../../../../shared/components/Layout";
 import { IoLogoWhatsapp } from "react-icons/io";
 import { FiTrash2 } from "react-icons/fi";
-import ConfirmModal from "../../components/ConfirmModal";
-import { useAuth } from "../../context/AuthContext";
+import ConfirmModal from "../../../../shared/components/ConfirmModal";
+import { useAuth } from "../../../../shared/context/AuthContext";
 import InstSelector from "../../components/InstSelector";
 import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid,

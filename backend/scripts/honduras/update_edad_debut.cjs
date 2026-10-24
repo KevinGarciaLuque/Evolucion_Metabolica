@@ -19,7 +19,7 @@ const mysql = require('mysql2/promise');
 const path  = require('path');
 require('dotenv').config();
 
-const EXCEL_FILE = path.join(__dirname, 'Niños con MCG con GRAFICOS abril 2.xlsx');
+const EXCEL_FILE = path.join(__dirname, "..", "..", "Niños con MCG con GRAFICOS abril 2.xlsx");
 
 /** Extrae número entero de edad ("10 AÑOS" → 10, "2 años" → 2, 5 → 5) */
 function normEdad(v) {

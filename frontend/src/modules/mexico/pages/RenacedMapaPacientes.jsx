@@ -8,8 +8,8 @@ import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RTooltip,
   PieChart, Pie, Cell, Legend,
 } from "recharts";
-import RenacedLayout from "../../components/RenacedLayout";
-import { getMapaPacientes } from "../../api/renacedApi";
+import RenacedLayout from "../components/RenacedLayout";
+import { getMapaPacientes } from "../api/renacedApi";
 import "./RenacedMapaPacientes.css";
 
 const C = {

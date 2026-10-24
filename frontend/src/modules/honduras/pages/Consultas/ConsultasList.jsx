@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { FiEye, FiTrash2 } from "react-icons/fi";
-import api from "../../api/axios";
-import Layout from "../../components/Layout";
+import api from "../../../../shared/api/axios";
+import Layout from "../../../../shared/components/Layout";
 import ConsultaPrintModal from "./ConsultaPrintModal";
-import ConfirmModal from "../../components/ConfirmModal";
-import { useAuth } from "../../context/AuthContext";
+import ConfirmModal from "../../../../shared/components/ConfirmModal";
+import { useAuth } from "../../../../shared/context/AuthContext";
 import InstSelector from "../../components/InstSelector";
 
 const TIPO_BADGE = {

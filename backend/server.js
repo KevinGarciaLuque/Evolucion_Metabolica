@@ -4,59 +4,59 @@ import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
 
-import { verificarToken } from "./middlewares/auth.js";
-import { resolverTenantDB } from "./middlewares/tenantDb.js";
-import { resolverAlcanceClinica, verificarAccesoPaciente } from "./middlewares/scopeClinica.js";
+import { verificarToken } from "./shared/middlewares/auth.js";
+import { resolverTenantDB } from "./modules/mexico/middlewares/tenantDb.js";
+import { resolverAlcanceClinica, verificarAccesoPaciente } from "./modules/mexico/middlewares/scopeClinica.js";
 
-import authRoutes from "./routes/auth.routes.js";
-import pacientesRoutes from "./routes/pacientes.routes.js";
-import analisisRoutes from "./routes/analisis.routes.js";
-import pdfRoutes from "./routes/pdf.routes.js";
-import dashboardRoutes from "./routes/dashboard.routes.js";
-import usuariosRoutes from "./routes/usuarios.routes.js";
-import consultasRoutes from "./routes/consultas.routes.js";
-import clinicoRoutes from "./routes/clinico.routes.js";
-import auditoriaRoutes  from "./routes/auditoria.routes.js";
-import mensajesRoutes   from "./routes/mensajes.routes.js";
-import notificacionesRoutes from "./routes/notificaciones.routes.js";
-import permisosRoutes   from "./routes/permisos.routes.js";
-import crecimientoRoutes from "./routes/crecimiento.routes.js";
-import reportesRoutes from "./routes/reportes.routes.js";
-import reportesVisualesRoutes from "./routes/reportesVisuales.routes.js";
-import importacionesRoutes from "./routes/importaciones.routes.js";
+import authRoutes from "./modules/auth/routes/auth.routes.js";
+import pacientesRoutes from "./modules/honduras/routes/pacientes.routes.js";
+import analisisRoutes from "./modules/honduras/routes/analisis.routes.js";
+import pdfRoutes from "./modules/honduras/routes/pdf.routes.js";
+import dashboardRoutes from "./modules/honduras/routes/dashboard.routes.js";
+import usuariosRoutes from "./modules/honduras/routes/usuarios.routes.js";
+import consultasRoutes from "./modules/honduras/routes/consultas.routes.js";
+import clinicoRoutes from "./modules/honduras/routes/clinico.routes.js";
+import auditoriaRoutes  from "./modules/honduras/routes/auditoria.routes.js";
+import mensajesRoutes   from "./modules/honduras/routes/mensajes.routes.js";
+import notificacionesRoutes from "./modules/notificaciones/routes/notificaciones.routes.js";
+import permisosRoutes   from "./modules/honduras/routes/permisos.routes.js";
+import crecimientoRoutes from "./modules/honduras/routes/crecimiento.routes.js";
+import reportesRoutes from "./modules/honduras/routes/reportes.routes.js";
+import reportesVisualesRoutes from "./modules/honduras/routes/reportesVisuales.routes.js";
+import importacionesRoutes from "./modules/honduras/routes/importaciones.routes.js";
 
 // ── Módulo RENACED (base de datos renaced_mexico — aislada) ──────────────────
-import renacedAuthRoutes        from "./routes/renaced/auth.routes.js";
-import renacedPacientesRoutes   from "./routes/renaced/pacientes.routes.js";
-import renacedConsultasRoutes   from "./routes/renaced/consultas.routes.js";
-import renacedLaboratorioRoutes from "./routes/renaced/laboratorio.routes.js";
-import renacedDashboardRoutes   from "./routes/renaced/dashboard.routes.js";
-import renacedTratamientoRoutes from "./routes/renaced/tratamiento.routes.js";
-import renacedEvaluacionRoutes  from "./routes/renaced/evaluacion.routes.js";
-import renacedMonitoreoRoutes   from "./routes/renaced/monitoreo.routes.js";
-import renacedEscaneosRoutes    from "./routes/renaced/escaneos.routes.js";
-import renacedEducacionRoutes   from "./routes/renaced/educacion.routes.js";
-import renacedCatalogosRoutes   from "./routes/renaced/catalogos.routes.js";
-import renacedReportesRoutes    from "./routes/renaced/reportes.routes.js";
-import renacedUsuariosRoutes      from "./routes/renaced/usuarios.routes.js";
-import renacedClinicasRoutes      from "./routes/renaced/clinicas.routes.js";
-import renacedDiagnosticoRoutes    from "./routes/renaced/diagnostico.routes.js";
-import renacedComorbilidadRoutes   from "./routes/renaced/comorbilidad.routes.js";
-import renacedPatologiaRoutes      from "./routes/renaced/patologia.routes.js";
-import renacedAntecedentesGORoutes from "./routes/renaced/antecedentesgo.routes.js";
-import renacedEventoRoutes         from "./routes/renaced/evento.routes.js";
-import renacedEstiloVidaRoutes     from "./routes/renaced/estilovida.routes.js";
-import renacedToxicomaniasRoutes   from "./routes/renaced/toxicomanias.routes.js";
-import renacedReclasificacionRoutes from "./routes/renaced/reclasificacion.routes.js";
-import renacedEmbarazoRoutes       from "./routes/renaced/embarazo.routes.js";
-import renacedImportarBDRoutes     from "./routes/renaced/importarBD.routes.js";
-import renacedMapaRoutes           from "./routes/renaced/mapa.routes.js";
+import renacedAuthRoutes        from "./modules/mexico/routes/auth.routes.js";
+import renacedPacientesRoutes   from "./modules/mexico/routes/pacientes.routes.js";
+import renacedConsultasRoutes   from "./modules/mexico/routes/consultas.routes.js";
+import renacedLaboratorioRoutes from "./modules/mexico/routes/laboratorio.routes.js";
+import renacedDashboardRoutes   from "./modules/mexico/routes/dashboard.routes.js";
+import renacedTratamientoRoutes from "./modules/mexico/routes/tratamiento.routes.js";
+import renacedEvaluacionRoutes  from "./modules/mexico/routes/evaluacion.routes.js";
+import renacedMonitoreoRoutes   from "./modules/mexico/routes/monitoreo.routes.js";
+import renacedEscaneosRoutes    from "./modules/mexico/routes/escaneos.routes.js";
+import renacedEducacionRoutes   from "./modules/mexico/routes/educacion.routes.js";
+import renacedCatalogosRoutes   from "./modules/mexico/routes/catalogos.routes.js";
+import renacedReportesRoutes    from "./modules/mexico/routes/reportes.routes.js";
+import renacedUsuariosRoutes      from "./modules/mexico/routes/usuarios.routes.js";
+import renacedClinicasRoutes      from "./modules/mexico/routes/clinicas.routes.js";
+import renacedDiagnosticoRoutes    from "./modules/mexico/routes/diagnostico.routes.js";
+import renacedComorbilidadRoutes   from "./modules/mexico/routes/comorbilidad.routes.js";
+import renacedPatologiaRoutes      from "./modules/mexico/routes/patologia.routes.js";
+import renacedAntecedentesGORoutes from "./modules/mexico/routes/antecedentesgo.routes.js";
+import renacedEventoRoutes         from "./modules/mexico/routes/evento.routes.js";
+import renacedEstiloVidaRoutes     from "./modules/mexico/routes/estilovida.routes.js";
+import renacedToxicomaniasRoutes   from "./modules/mexico/routes/toxicomanias.routes.js";
+import renacedReclasificacionRoutes from "./modules/mexico/routes/reclasificacion.routes.js";
+import renacedEmbarazoRoutes       from "./modules/mexico/routes/embarazo.routes.js";
+import renacedImportarBDRoutes     from "./modules/mexico/routes/importarBD.routes.js";
+import renacedMapaRoutes           from "./modules/mexico/routes/mapa.routes.js";
 
 // ── Super Admin ALAD (base de datos alad_master) ─────────────────────────────
-import adminTenantsRoutes from "./routes/admin/tenants.routes.js";
+import adminTenantsRoutes from "./modules/admin/routes/tenants.routes.js";
 
 // ── Público (landing ALAD, sin autenticación) ────────────────────────────────
-import publicEstadisticasRoutes from "./routes/public/estadisticas.routes.js";
+import publicEstadisticasRoutes from "./modules/public/routes/estadisticas.routes.js";
 
 dotenv.config();
 
