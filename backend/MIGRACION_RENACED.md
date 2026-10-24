@@ -52,6 +52,13 @@ Pasos:
 - Conexiones a Railway sin `keepAlive` podían colgarse en silencio en corridas largas → se agregó
   `enableKeepAlive` + `connectTimeout` a `migrate_renaced_datos.cjs`.
 
+### Alternativa desde la app (solo Super Admin)
+En **Importar BD** (`/renaced/importar-bd`), el Super Admin ve la tarjeta "Migrar base del sistema anterior (PHP)".
+Ahí sí se sube `renaced1.sql` directo: el servidor hace backup, lo carga en una base temporal
+(`renaced1_import_tmp`), corre los mismos scripts del paso 2 en el mismo orden y borra la base temporal.
+Los scripts leen el origen de [migrate_origen.cjs](migrate_origen.cjs) (variables `ORIGEN_DB_*`; por defecto el MySQL local de siempre).
+Código: [utils/migracionLegacy.js](utils/migracionLegacy.js), endpoints `POST/GET /api/renaced/importar-bd/php`.
+
 ## 2. Restaurar/reemplazar un backup del sistema actual (esquema moderno)
 
 Para esto es el módulo **"Importar BD"** dentro de la app (`/renaced/importar-bd`, solo visible

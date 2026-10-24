@@ -137,6 +137,17 @@ export const importarBaseDatosMexico = (archivo) => {
   });
 };
 
+// Migración del dump del sistema PHP anterior (renaced1.sql) — solo Super Admin
+export const iniciarMigracionPHP = (archivo) => {
+  const formData = new FormData();
+  formData.append("archivo", archivo);
+  return api.post(`${BASE}/importar-bd/php`, formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+    timeout: 5 * 60 * 1000,
+  });
+};
+export const getEstadoMigracionPHP = (id) => api.get(`${BASE}/importar-bd/php/${id}`);
+
 // ── Reportes / Exportación ────────────────────────────────────────────────────
 export const descargarExcel = () => api.get(`${BASE}/reportes/excel`, { responseType: "blob" });
 export const descargarCSV   = () => api.get(`${BASE}/reportes/csv`,   { responseType: "blob" });
