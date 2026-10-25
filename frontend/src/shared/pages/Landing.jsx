@@ -63,7 +63,7 @@ export default function Landing({ variant = "video" }) {
               key={p.codigo}
               role="menuitem"
               className="landing-pais-btn"
-              onClick={() => navigate(loginDePais(p.codigo))}
+              onClick={() => window.location.assign(loginDePais(p.codigo))} /* recarga completa: así el navegador toma el manifest (app instalable) del país elegido */
               style={{
                 display: "flex", alignItems: "center", gap: 10, width: "100%",
                 padding: "10px 16px", background: "none", border: "none",

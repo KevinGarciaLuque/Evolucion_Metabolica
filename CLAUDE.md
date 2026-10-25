@@ -25,6 +25,11 @@ Un país nuevo = una carpeta nueva con el nombre del país.
 - Backend: crea `backend/modules/<pais>/<sistema>/index.js` que exporte `montar(app)` con sus `app.use(...)`. `server.js` lo descubre solo; no se edita.
 - Frontend: crea `frontend/src/modules/<pais>/<sistema>/routes.jsx` que exporte por defecto un arreglo de `<Route key=...>` con las pantallas en `lazy(() => import(...))`. `App.jsx` lo descubre con `import.meta.glob`.
 
+## App instalable (PWA) y aviso de actualización
+- `frontend/public/sw.js` (service worker) y `manifest*.webmanifest`. `vite.config.js` escribe un id de build en `dist/sw.js` en cada `vite build`: así cada despliegue se detecta como versión nueva y la app muestra "Hay una nueva versión" (`shared/components/ActualizacionApp.jsx`, lógica en `shared/pwa/pwa.js`). Solo corre en producción.
+- Botón "Instalar como app" (`shared/components/InstalarApp.jsx`) en el login de cada país. Un país nuevo: crea su `public/manifest-<pais>.webmanifest` (id/scope/start_url propios), añade su ruta en el script de `index.html` que elige el manifest y pon `<InstalarApp nombre="..." />` en su login. La Landing navega con recarga completa para que el navegador tome el manifest del país.
+- El service worker no guarda `/api/` ni `/uploads/`. En iPhone no se puede instalar con un botón: el componente muestra los pasos de Safari.
+
 ## Rendimiento (preparado para muchos registros)
 - Exportaciones RENACED (`modules/mexico/renaced/services/exportacion.js`): CSV en streaming y Excel como trabajo en segundo plano (`POST /reportes/excel/iniciar` → `estado` → `descargar`). Nunca cargar un país completo en memoria.
 - Dashboard RENACED: `services/resumenCache.js` guarda el resumen en la tabla `resumen_dashboard` (se sirve el guardado y se recalcula en segundo plano pasados `DASHBOARD_TTL_SEG`, 300 por defecto).

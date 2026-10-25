@@ -11,6 +11,18 @@
 // Cada país ve en el panel las entradas "global" + las suyas. La versión (VERSION) es una sola para todos.
 export const NOVEDADES = [
   {
+    version: "1.4.0",
+    alcance: "global",
+    fecha: "2026-10-24",
+    titulo: "Instala la app y actualízala con un clic",
+    cambios: [
+      "Ahora se puede instalar como app desde el login de cada país (botón \"Instalar como app\") y queda anclada en el inicio del celular o del escritorio",
+      "En iPhone el botón muestra los pasos para agregarla a la pantalla de inicio desde Safari",
+      "Cuando hay una versión nueva aparece el aviso \"Hay una nueva versión\"; con un clic en \"Actualizar ahora\" se instala y se ven los cambios al momento",
+      "La app abre aunque falle la conexión (con la última versión guardada)",
+    ],
+  },
+  {
     version: "1.3.0",
     alcance: "mexico",
     fecha: "2026-10-24",

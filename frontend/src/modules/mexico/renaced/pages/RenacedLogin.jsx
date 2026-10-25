@@ -1,4 +1,5 @@
 import { useState } from "react";
+import InstalarApp from "../../../../shared/components/InstalarApp";
 import { useNavigate } from "react-router-dom";
 import { useRenacedAuth } from "../context/RenacedAuthContext";
 import { FiArrowLeft } from "react-icons/fi";
@@ -96,6 +97,8 @@ export default function RenacedLogin() {
             {cargando ? "Ingresando…" : "Ingresar al sistema"}
           </button>
         </form>
+
+        <InstalarApp nombre="RENACED" />
 
         <p style={{ textAlign: "center", marginTop: 24, fontSize: 12, color: "#94a3b8" }}>
           RENACED · Registro Nacional de Diabetes · México

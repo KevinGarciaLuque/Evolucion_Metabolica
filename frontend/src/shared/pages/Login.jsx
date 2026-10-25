@@ -4,6 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import { useRenacedAuth } from "../../modules/mexico/renaced/context/RenacedAuthContext";
 import { FiInfo, FiArrowLeft } from "react-icons/fi";
 import FlagIcon from "../components/FlagIcon";
+import InstalarApp from "../components/InstalarApp";
 import "./Login.css";
 
 function ModalAcercaDe({ onClose, origin }) {
@@ -190,6 +191,8 @@ export default function Login() {
             {cargando ? "Ingresando..." : "Ingresar al sistema"}
           </button>
         </form>
+
+        <InstalarApp nombre="Evolución Metabólica" />
 
         <button
             ref={btnRef}

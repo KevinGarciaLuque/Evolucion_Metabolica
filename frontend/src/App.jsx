@@ -5,6 +5,7 @@ import { RenacedAuthProvider } from "./modules/mexico/renaced/context/RenacedAut
 
 import Landing from "./shared/pages/Landing";
 import Login   from "./shared/pages/Login";
+import ActualizacionApp from "./shared/components/ActualizacionApp";
 
 // Registro automático de módulos: cada modules/<area>/routes.jsx o
 // modules/<pais>/<sistema>/routes.jsx exporta su arreglo de <Route>.
@@ -31,6 +32,7 @@ function App() {
               <Route path="*" element={<Navigate to="/dashboard" replace />} />
             </Routes>
           </Suspense>
+          <ActualizacionApp />
         </BrowserRouter>
       </RenacedAuthProvider>
     </AuthProvider>
