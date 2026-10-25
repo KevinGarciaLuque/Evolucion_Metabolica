@@ -16,6 +16,14 @@ const EVAL_COLS = [
   "pie_diabetico_id", "enf_cardiovascular_id", "enf_vascular_id", "observaciones",
 ];
 
+const ESTILO_COLS = ["actividad_fisica", "tipo_actividad", "minutos_semana", "dieta_especial", "tipo_dieta"];
+const TOX_COLS = ["tabaco", "alcohol", "drogas", "observaciones"];
+// Misma convención que la importación del sistema anterior
+const GRAVEDAD_POR_TIPO = {
+  HIPOGLUCEMIA_LEVE: "LEVE", HIPOGLUCEMIA_NIVEL1: "NIVEL 1",
+  HIPOGLUCEMIA_NIVEL2: "NIVEL 2", HIPOGLUCEMIA_INADVERTIDA: "INADVERTIDA",
+};
+
 const vacio = (v) => v === undefined || v === null || String(v).trim() === "";
 const valor = (v) => (vacio(v) ? null : v);
 const hayDatos = (obj, cols) => !!obj && cols.some((c) => !vacio(obj[c]));
@@ -32,7 +40,7 @@ function errorValidacion(mensaje) {
  * @param {{pacienteId:string|number, usuarioId?:number|null, medicoCurp?:string, datos:object}} p
  */
 export async function guardarHojaConsulta(conn, { pacienteId, usuarioId = null, medicoCurp = "", datos }) {
-  const { fecha_consulta, visita = {}, laboratorio, tratamiento, evaluacion, educacion } = datos || {};
+  const { fecha_consulta, visita = {}, laboratorio, tratamiento, evaluacion, educacion, estilo_vida, toxicomanias, eventos } = datos || {};
   if (!fecha_consulta || !FECHA_RE.test(fecha_consulta)) {
     throw errorValidacion("La fecha de la consulta es obligatoria");
   }
@@ -132,6 +140,42 @@ export async function guardarHojaConsulta(conn, { pacienteId, usuarioId = null, 
     );
     guardado.push("educacion");
   }
+
+  // ── Estilo de vida ────────────────────────────────────────────────────────
+  if (hayDatos(estilo_vida, ESTILO_COLS)) {
+    const cols = ["paciente_id", "consulta_id", ...ESTILO_COLS, "usuario_id"];
+    await conn.query(
+      `INSERT INTO estilovida (${cols.join(",")}) VALUES (${cols.map(() => "?").join(",")})`,
+      [pacienteId, consultaId, ...ESTILO_COLS.map((c) => valor(estilo_vida[c])), usuarioId]
+    );
+    guardado.push("estilo_vida");
+  }
+
+  // ── Toxicomanías ──────────────────────────────────────────────────────────
+  // La tabla tiene UNIQUE (paciente_id): es un solo registro por paciente (como lo importado),
+  // así que cada consulta lo ACTUALIZA y lo liga a la consulta más reciente.
+  if (hayDatos(toxicomanias, TOX_COLS)) {
+    const cols = ["paciente_id", "consulta_id", ...TOX_COLS, "usuario_id"];
+    const upd = ["consulta_id", ...TOX_COLS, "usuario_id"].map((c) => `${c}=VALUES(${c})`).join(",");
+    await conn.query(
+      `INSERT INTO toxicomanias (${cols.join(",")}) VALUES (${cols.map(() => "?").join(",")})
+       ON DUPLICATE KEY UPDATE ${upd}`,
+      [pacienteId, consultaId, ...TOX_COLS.map((c) => valor(toxicomanias[c])), usuarioId]
+    );
+    guardado.push("toxicomanias");
+  }
+
+  // ── Eventos (cada uno con la fecha en que ocurrió; por omisión la de la consulta) ──
+  const evs = (eventos || []).filter((e) => !vacio(e.tipo));
+  for (const e of evs) {
+    await conn.query(
+      `INSERT INTO evento (paciente_id, consulta_id, tipo, fecha, descripcion, gravedad, requirio_hospitalizacion, usuario_id)
+       VALUES (?,?,?,?,?,?,?,?)`,
+      [pacienteId, consultaId, e.tipo, e.fecha || fecha_consulta, valor(e.descripcion),
+        GRAVEDAD_POR_TIPO[e.tipo] || null, e.requirio_hospitalizacion ? 1 : 0, usuarioId]
+    );
+  }
+  if (evs.length) guardado.push("eventos");
 
   return { consulta_id: consultaId, guardado };
 }

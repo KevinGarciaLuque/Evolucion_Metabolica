@@ -11,6 +11,20 @@
 // Cada país ve en el panel las entradas "global" + las suyas. La versión (VERSION) es una sola para todos.
 export const NOVEDADES = [
   {
+    version: "1.3.0",
+    alcance: "mexico",
+    fecha: "2026-10-24",
+    titulo: "Consulta en una sola hoja, sin pestañas",
+    cambios: [
+      "Toda la consulta se captura en una sola pantalla con apartados que se abren al hacer clic, ordenados en tres grupos: Consulta de hoy, Ficha del paciente y Casos especiales",
+      "Consulta de hoy: Visita, Laboratorio, Tratamiento, Complicaciones, Educación, Estilo de vida, Toxicomanías y Eventos agudos se guardan con la fecha de la consulta, con un solo botón",
+      "Ficha del paciente: Diagnóstico, Comorbilidades, Patologías y Antecedentes ginecobstétricos (solo mujeres) conservan sus propias fechas",
+      "Casos especiales: Embarazo (solo mujeres) y Reclasificación del tipo de diabetes",
+      "El historial ahora también muestra Estilo de vida, Toxicomanías y Eventos agudos",
+      "Corregido: Patologías, Eventos, Embarazo y Reclasificación ya guardan correctamente en la base de datos",
+    ],
+  },
+  {
     version: "1.2.1",
     alcance: "global",
     fecha: "2026-10-24",

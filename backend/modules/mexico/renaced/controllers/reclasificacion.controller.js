@@ -1,8 +1,13 @@
+// Reclasificación del tipo de diabetes. Tabla: tipo_diabetes_anterior_id, tipo_diabetes_nuevo_id, motivo, fecha.
 
 export const getReclasificaciones = async (req, res) => {
   try {
     const [rows] = await req.db.query(
-      "SELECT * FROM reclasificacion WHERE paciente_id = ? ORDER BY fecha_captura DESC",
+      `SELECT r.*, ca.descripcion AS tipo_anterior, cn.descripcion AS tipo_nuevo
+       FROM reclasificacion r
+       LEFT JOIN cat_tipo_diabetes ca ON ca.id = r.tipo_diabetes_anterior_id
+       LEFT JOIN cat_tipo_diabetes cn ON cn.id = r.tipo_diabetes_nuevo_id
+       WHERE r.paciente_id = ? ORDER BY r.fecha DESC, r.id DESC`,
       [req.params.paciente_id]
     );
     res.json(rows);
@@ -16,40 +21,23 @@ export const createReclasificacion = async (req, res) => {
   try {
     const { paciente_id } = req.params;
     const f = req.body;
+    if (!f.tipo_diabetes_nuevo_id) return res.status(400).json({ error: "Indica el nuevo tipo de diabetes" });
     const [result] = await req.db.query(
-      `INSERT INTO reclasificacion (
-        paciente_id,
-        glucosa_ayuno, fecha_glucosa,
-        insulina_ayuno, fecha_insulina,
-        hba1c, fecha_hba1c,
-        ctog_ayuno, ctog_30min, ctog_60min, ctog_90min, ctog_120min,
-        ctog_ayuno_insul, ctog_30min_insul, ctog_60min_insul, ctog_90min_insul, ctog_120min_insul,
-        fecha_ctog, resultado, usuario_id
-      ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
-      [
-        paciente_id,
-        f.glucosa_ayuno||null, f.fecha_glucosa||null,
-        f.insulina_ayuno||null, f.fecha_insulina||null,
-        f.hba1c||null, f.fecha_hba1c||null,
-        f.ctog_ayuno||null, f.ctog_30min||null, f.ctog_60min||null, f.ctog_90min||null, f.ctog_120min||null,
-        f.ctog_ayuno_insul||null, f.ctog_30min_insul||null, f.ctog_60min_insul||null, f.ctog_90min_insul||null, f.ctog_120min_insul||null,
-        f.fecha_ctog||null, f.resultado||"SI",
-        req.usuario?.id||null,
-      ]
+      `INSERT INTO reclasificacion (paciente_id, tipo_diabetes_anterior_id, tipo_diabetes_nuevo_id, motivo, fecha, usuario_id)
+       VALUES (?,?,?,?,?,?)`,
+      [paciente_id, f.tipo_diabetes_anterior_id || null, f.tipo_diabetes_nuevo_id, f.motivo || null,
+        f.fecha || new Date().toISOString().slice(0, 10), req.usuario?.id || null]
     );
     res.status(201).json({ id: result.insertId });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "Error al crear reclasificación" });
+    res.status(500).json({ error: "Error al guardar la reclasificación" });
   }
 };
 
 export const deleteReclasificacion = async (req, res) => {
   try {
-    await req.db.query(
-      "DELETE FROM reclasificacion WHERE id = ? AND paciente_id = ?",
-      [req.params.id, req.params.paciente_id]
-    );
+    await req.db.query("DELETE FROM reclasificacion WHERE id = ? AND paciente_id = ?", [req.params.id, req.params.paciente_id]);
     res.json({ ok: true });
   } catch (err) {
     console.error(err);

@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import {
-  FiActivity, FiDroplet, FiHeart, FiShield, FiBookOpen, FiChevronDown, FiCalendar, FiCheck, FiPlus, FiX,
+  FiActivity, FiDroplet, FiHeart, FiShield, FiBookOpen, FiCalendar, FiCheck, FiPlus, FiX, FiSun, FiWind, FiAlertTriangle,
 } from "react-icons/fi";
-import { createHojaConsulta, getConsultas, getTratamiento } from "../api/renacedApi";
+import SeccionAcordeon from "./SeccionAcordeon";
+import { createHojaConsulta, getConsultas, getTratamiento, getToxicomanias } from "../api/renacedApi";
 
 const C = { violet: "#6366f1", green: "#22c55e", slate: "#64748b" };
 
@@ -34,7 +35,18 @@ const INIT = {
   trat: { fecha_inicio: "", terapia_id: "", esquema_insulina_id: "", dispositivo_id: "", insulinas: [{ insulina_id: "", dosis_unidades: "", frecuencia: "" }], orales: [{ antidiabetico_id: "", dosis_mg: "", frecuencia: "" }] },
   evalu: { retinopatia_id: "", nefropatia_id: "", neuropatia_id: "", pie_diabetico_id: "", enf_cardiovascular_id: "", observaciones: "" },
   edu: { tema: "", modalidad: "", duracion_min: "", educador: "", observaciones: "" },
+  estilo: { actividad_fisica: "", tipo_actividad: "", minutos_semana: "", dieta_especial: "", tipo_dieta: "" },
+  tox: { tabaco: "", alcohol: "", drogas: "", observaciones: "" },
+  eventos: [],
 };
+
+const TIPOS_EVENTO = [
+  ["HIPOGLUCEMIA_LEVE", "Hipoglucemia leve"], ["HIPOGLUCEMIA_NIVEL1", "Hipoglucemia nivel 1 (54-70)"],
+  ["HIPOGLUCEMIA_NIVEL2", "Hipoglucemia nivel 2 (<54)"], ["HIPOGLUCEMIA_SEVERA", "Hipoglucemia severa"],
+  ["HIPOGLUCEMIA_INADVERTIDA", "Hipoglucemia inadvertida"], ["CETOACIDOSIS", "Cetoacidosis"],
+  ["HOSPITALIZACION", "Hospitalización"], ["USO_GLUCAGON", "Uso de glucagón"],
+];
+const SINOSD = [["", "—"], ["SI", "Sí"], ["NO", "No"], ["SD", "Se desconoce"]];
 
 function Campo({ label, children, ancho }) {
   return (
@@ -47,48 +59,7 @@ function Campo({ label, children, ancho }) {
 
 const grid = (min = 170) => ({ display: "grid", gridTemplateColumns: `repeat(auto-fill, minmax(${min}px, 1fr))`, gap: 14 });
 
-function Seccion({ icono: Icono, color, titulo, descripcion, abierta, onToggle, estado, children }) {
-  return (
-    <div style={{
-      background: "#fff", border: `1px solid ${abierta ? color : "#e2e8f0"}`, borderRadius: 14, marginBottom: 12,
-      boxShadow: abierta ? `0 6px 22px ${color}22` : "0 1px 3px rgba(0,0,0,.05)", transition: "box-shadow .2s, border-color .2s", overflow: "hidden",
-    }}>
-      <button
-        type="button" onClick={onToggle}
-        style={{ width: "100%", display: "flex", alignItems: "center", gap: 14, padding: "14px 18px", background: "none", border: "none", cursor: "pointer", textAlign: "left" }}
-      >
-        <div style={{ width: 38, height: 38, borderRadius: 10, background: `${color}1a`, color, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-          <Icono size={19} />
-        </div>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontWeight: 700, fontSize: 15, color: "#0f172a" }}>{titulo}</div>
-          <div style={{ fontSize: 12, color: C.slate, marginTop: 1 }}>{descripcion}</div>
-        </div>
-        <span style={{
-          fontSize: 11.5, fontWeight: 700, borderRadius: 20, padding: "3px 11px", whiteSpace: "nowrap",
-          background: estado ? "#dcfce7" : "#f1f5f9", color: estado ? "#15803d" : "#94a3b8",
-        }}>
-          {estado ? "✓ Con datos" : "Sin datos"}
-        </span>
-        <motion.span animate={{ rotate: abierta ? 180 : 0 }} style={{ color: "#94a3b8", display: "flex" }}><FiChevronDown size={18} /></motion.span>
-      </button>
-      <AnimatePresence initial={false}>
-        {abierta && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.22 }} style={{ overflow: "hidden" }}
-          >
-            <div style={{ padding: "4px 18px 20px", borderTop: "1px solid #f1f5f9" }}>
-              <div style={{ paddingTop: 16 }}>{children}</div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-}
-
-export default function HojaConsulta({ paciente, pacienteId, cats }) {
+export default function HojaConsulta({ paciente, pacienteId, cats, children }) {
   const [fecha, setFecha] = useState(hoy());
   const [abiertas, setAbiertas] = useState({});
   const [f, setF] = useState(INIT);
@@ -98,9 +69,11 @@ export default function HojaConsulta({ paciente, pacienteId, cats }) {
   const [resultado, setResultado] = useState(null);
   const [ultima, setUltima] = useState(null);
   const [vigente, setVigente] = useState(null);
+  const [toxOriginal, setToxOriginal] = useState(INIT.tox);
 
   useEffect(() => {
     getConsultas(pacienteId).then((r) => setUltima(r.data?.[0] || null)).catch(() => {});
+    cargarTox();
     getTratamiento(pacienteId).then((r) => {
       const t = r.data?.tratamientos?.[0];
       if (!t) return setVigente(null);
@@ -109,6 +82,15 @@ export default function HojaConsulta({ paciente, pacienteId, cats }) {
       setVigente({ t, ins, ora });
     }).catch(() => {});
   }, [pacienteId]);
+
+  function cargarTox() {
+    getToxicomanias(pacienteId).then((r) => {
+      const t = r.data?.[0];
+      const base = t ? { tabaco: t.tabaco || "", alcohol: t.alcohol || "", drogas: t.drogas || "", observaciones: t.observaciones || "" } : INIT.tox;
+      setToxOriginal(base);
+      setF((p) => ({ ...p, tox: base }));
+    }).catch(() => {});
+  }
 
   const set = (sec, campo, valor) => setF((p) => ({ ...p, [sec]: { ...p[sec], [campo]: valor } }));
   const alternar = (k) => setAbiertas((a) => ({ ...a, [k]: !a[k] }));
@@ -140,7 +122,10 @@ export default function HojaConsulta({ paciente, pacienteId, cats }) {
     tr.insulinas.some((i) => lleno(i.insulina_id)) || tr.orales.some((o) => lleno(o.antidiabetico_id));
   const llenoEval = ["retinopatia_id", "nefropatia_id", "neuropatia_id", "pie_diabetico_id", "enf_cardiovascular_id", "observaciones"].some((k) => lleno(f.evalu[k]));
   const llenoEdu = lleno(f.edu.tema);
-  const totalConDatos = [llenoVisita, llenoLab, llenoTrat, llenoEval, llenoEdu].filter(Boolean).length;
+  const llenoEstilo = Object.values(f.estilo).some(lleno);
+  const llenoTox = JSON.stringify(f.tox) !== JSON.stringify(toxOriginal);
+  const llenoEventos = f.eventos.some((e) => lleno(e.tipo));
+  const totalConDatos = [llenoVisita, llenoLab, llenoTrat, llenoEval, llenoEdu, llenoEstilo, llenoTox, llenoEventos].filter(Boolean).length;
 
   async function guardar() {
     setError("");
@@ -156,6 +141,9 @@ export default function HojaConsulta({ paciente, pacienteId, cats }) {
         tratamiento: llenoTrat ? f.trat : null,
         evaluacion: llenoEval ? f.evalu : null,
         educacion: llenoEdu ? f.edu : null,
+        estilo_vida: llenoEstilo ? f.estilo : null,
+        toxicomanias: llenoTox ? f.tox : null,
+        eventos: f.eventos.filter((e) => lleno(e.tipo)),
       };
       const { data } = await createHojaConsulta(pacienteId, payload);
       setResultado(data);
@@ -167,11 +155,12 @@ export default function HojaConsulta({ paciente, pacienteId, cats }) {
   }
 
   function nuevaConsulta() {
-    setF(INIT); setAbiertas({}); setOtraFechaLab(false); setResultado(null); setFecha(hoy()); setError("");
+    setF({ ...INIT, tox: toxOriginal }); setAbiertas({}); setOtraFechaLab(false); setResultado(null); setFecha(hoy()); setError("");
+    cargarTox();
     getConsultas(pacienteId).then((r) => setUltima(r.data?.[0] || null)).catch(() => {});
   }
 
-  const NOMBRES = { visita: "Visita", laboratorio: "Laboratorio", tratamiento: "Tratamiento", evaluacion: "Complicaciones", educacion: "Educación" };
+  const NOMBRES = { visita: "Visita", laboratorio: "Laboratorio", tratamiento: "Tratamiento", evaluacion: "Complicaciones", educacion: "Educación", estilo_vida: "Estilo de vida", toxicomanias: "Toxicomanías", eventos: "Eventos" };
 
   if (resultado) {
     return (
@@ -227,8 +216,10 @@ export default function HojaConsulta({ paciente, pacienteId, cats }) {
         <div className="card" style={{ borderLeft: "4px solid #ef4444", color: "#b91c1c", padding: "10px 14px", marginBottom: 12, fontSize: 14 }}>{error}</div>
       )}
 
+      <div style={grupoTitulo}>Consulta de hoy <span style={grupoSub}>· se guarda con la fecha de la consulta</span></div>
+
       {/* 1 · Visita */}
-      <Seccion icono={FiActivity} color="#6366f1" titulo="Visita" descripcion="Medidas corporales y presión arterial" abierta={!!abiertas.visita} onToggle={() => alternar("visita")} estado={llenoVisita}>
+      <SeccionAcordeon icono={FiActivity} color="#6366f1" titulo="Visita" descripcion="Medidas corporales y presión arterial" abierta={!!abiertas.visita} onToggle={() => alternar("visita")} estado={llenoVisita}>
         <div style={subt}>Medidas</div>
         <div style={grid(160)}>
           <Campo label="Peso (kg)"><input type="number" step="0.01" value={v.peso} onChange={(e) => cambiarVisita("peso", e.target.value)} /></Campo>
@@ -253,10 +244,10 @@ export default function HojaConsulta({ paciente, pacienteId, cats }) {
           <Campo label="PA sistólica (mmHg)"><input type="number" value={v.pa_sistolica} onChange={(e) => cambiarVisita("pa_sistolica", e.target.value)} /></Campo>
           <Campo label="PA diastólica (mmHg)"><input type="number" value={v.pa_diastolica} onChange={(e) => cambiarVisita("pa_diastolica", e.target.value)} /></Campo>
         </div>
-      </Seccion>
+      </SeccionAcordeon>
 
       {/* 2 · Laboratorio */}
-      <Seccion icono={FiDroplet} color="#0ea5e9" titulo="Laboratorio" descripcion="HbA1c, glucosa, lípidos, función renal y otros" abierta={!!abiertas.lab} onToggle={() => alternar("lab")} estado={llenoLab}>
+      <SeccionAcordeon icono={FiDroplet} color="#0ea5e9" titulo="Laboratorio" descripcion="HbA1c, glucosa, lípidos, función renal y otros" abierta={!!abiertas.lab} onToggle={() => alternar("lab")} estado={llenoLab}>
         <div style={grid(180)}>
           {LAB_CAMPOS.map(([label, name, step]) => (
             <Campo key={name} label={label}><input type="number" step={step} value={f.lab[name]} onChange={(e) => set("lab", name, e.target.value)} /></Campo>
@@ -279,10 +270,10 @@ export default function HojaConsulta({ paciente, pacienteId, cats }) {
         <div style={{ marginTop: 14 }}>
           <Campo label="Observaciones"><textarea rows={2} value={f.lab.observaciones} onChange={(e) => set("lab", "observaciones", e.target.value)} style={{ resize: "vertical" }} /></Campo>
         </div>
-      </Seccion>
+      </SeccionAcordeon>
 
       {/* 3 · Tratamiento */}
-      <Seccion icono={FiHeart} color="#ec4899" titulo="Tratamiento" descripcion="Solo si inicia o cambia el tratamiento" abierta={!!abiertas.trat} onToggle={() => alternar("trat")} estado={llenoTrat}>
+      <SeccionAcordeon icono={FiHeart} color="#ec4899" titulo="Tratamiento" descripcion="Solo si inicia o cambia el tratamiento" abierta={!!abiertas.trat} onToggle={() => alternar("trat")} estado={llenoTrat}>
         {vigente && (
           <div style={{ background: "#fdf2f8", border: "1px solid #fbcfe8", borderRadius: 10, padding: "9px 14px", fontSize: 12.5, color: "#9d174d", marginBottom: 14 }}>
             <strong>Registrado actualmente:</strong>{" "}
@@ -345,10 +336,10 @@ export default function HojaConsulta({ paciente, pacienteId, cats }) {
           </div>
         ))}
         <button type="button" className="btn btn-secondary btn-sm" onClick={() => set("trat", "orales", [...tr.orales, { antidiabetico_id: "", dosis_mg: "", frecuencia: "" }])}><FiPlus /> Otro medicamento</button>
-      </Seccion>
+      </SeccionAcordeon>
 
       {/* 4 · Complicaciones */}
-      <Seccion icono={FiShield} color="#f59e0b" titulo="Complicaciones" descripcion="Retinopatía, nefropatía, neuropatía, pie diabético y cardiovascular" abierta={!!abiertas.evalu} onToggle={() => alternar("evalu")} estado={llenoEval}>
+      <SeccionAcordeon icono={FiShield} color="#f59e0b" titulo="Complicaciones" descripcion="Retinopatía, nefropatía, neuropatía, pie diabético y cardiovascular" abierta={!!abiertas.evalu} onToggle={() => alternar("evalu")} estado={llenoEval}>
         <div style={grid(200)}>
           {[["Retinopatía", "retinopatia_id", cats.retinopatia], ["Nefropatía", "nefropatia_id", cats.nefropatia], ["Neuropatía", "neuropatia_id", cats.neuropatia], ["Pie diabético", "pie_diabetico_id", cats.pie_diabetico], ["Enf. cardiovascular", "enf_cardiovascular_id", cats.cardiovascular]].map(([label, campo, opciones]) => (
             <Campo key={campo} label={label}>
@@ -360,10 +351,10 @@ export default function HojaConsulta({ paciente, pacienteId, cats }) {
           ))}
           <Campo label="Observaciones" ancho={2}><textarea rows={2} value={f.evalu.observaciones} onChange={(e) => set("evalu", "observaciones", e.target.value)} style={{ resize: "vertical" }} /></Campo>
         </div>
-      </Seccion>
+      </SeccionAcordeon>
 
       {/* 5 · Educación */}
-      <Seccion icono={FiBookOpen} color="#10b981" titulo="Educación" descripcion="Sesión educativa en diabetes" abierta={!!abiertas.edu} onToggle={() => alternar("edu")} estado={llenoEdu}>
+      <SeccionAcordeon icono={FiBookOpen} color="#10b981" titulo="Educación" descripcion="Sesión educativa en diabetes" abierta={!!abiertas.edu} onToggle={() => alternar("edu")} estado={llenoEdu}>
         <div style={grid(200)}>
           <Campo label="Tema" ancho={2}><input type="text" value={f.edu.tema} onChange={(e) => set("edu", "tema", e.target.value)} placeholder="ej. Conteo de carbohidratos, ajuste de dosis…" /></Campo>
           <Campo label="Modalidad">
@@ -375,11 +366,68 @@ export default function HojaConsulta({ paciente, pacienteId, cats }) {
           <Campo label="Educador"><input type="text" value={f.edu.educador} onChange={(e) => set("edu", "educador", e.target.value)} /></Campo>
           <Campo label="Observaciones" ancho={2}><textarea rows={2} value={f.edu.observaciones} onChange={(e) => set("edu", "observaciones", e.target.value)} style={{ resize: "vertical" }} /></Campo>
         </div>
-      </Seccion>
+      </SeccionAcordeon>
+
+      {/* 6 · Estilo de vida */}
+      <SeccionAcordeon icono={FiSun} color="#f97316" titulo="Estilo de vida" descripcion="Actividad física y dieta" abierta={!!abiertas.estilo} onToggle={() => alternar("estilo")} estado={llenoEstilo}>
+        <div style={grid(200)}>
+          <Campo label="¿Realiza actividad física?">
+            <select value={f.estilo.actividad_fisica} onChange={(e) => set("estilo", "actividad_fisica", e.target.value)}>
+              {SINOSD.map(([id, l]) => <option key={id} value={id}>{l}</option>)}
+            </select>
+          </Campo>
+          <Campo label="Tipo de actividad"><input type="text" value={f.estilo.tipo_actividad} onChange={(e) => set("estilo", "tipo_actividad", e.target.value)} placeholder="ej. caminata, natación" /></Campo>
+          <Campo label="Minutos por semana"><input type="number" value={f.estilo.minutos_semana} onChange={(e) => set("estilo", "minutos_semana", e.target.value)} /></Campo>
+          <Campo label="¿Sigue dieta especial?">
+            <select value={f.estilo.dieta_especial} onChange={(e) => set("estilo", "dieta_especial", e.target.value)}>
+              {SINOSD.map(([id, l]) => <option key={id} value={id}>{l}</option>)}
+            </select>
+          </Campo>
+          <Campo label="Tipo de dieta"><input type="text" value={f.estilo.tipo_dieta} onChange={(e) => set("estilo", "tipo_dieta", e.target.value)} placeholder="ej. conteo de carbohidratos" /></Campo>
+        </div>
+      </SeccionAcordeon>
+
+      {/* 7 · Toxicomanías */}
+      <SeccionAcordeon icono={FiWind} color="#64748b" titulo="Toxicomanías" descripcion="Tabaco, alcohol y drogas (se actualiza el registro del paciente)" abierta={!!abiertas.tox} onToggle={() => alternar("tox")} estado={llenoTox} etiqueta={llenoTox ? "✓ Modificado" : toxOriginal.tabaco || toxOriginal.alcohol || toxOriginal.drogas ? "Registrado" : "Sin datos"}>
+        <div style={grid(180)}>
+          {[["Tabaco", "tabaco"], ["Alcohol", "alcohol"], ["Drogas", "drogas"]].map(([label, campo]) => (
+            <Campo key={campo} label={label}>
+              <select value={f.tox[campo]} onChange={(e) => set("tox", campo, e.target.value)}>
+                {SINOSD.map(([id, l]) => <option key={id} value={id}>{l}</option>)}
+              </select>
+            </Campo>
+          ))}
+          <Campo label="Observaciones" ancho={2}><input type="text" value={f.tox.observaciones} onChange={(e) => set("tox", "observaciones", e.target.value)} /></Campo>
+        </div>
+      </SeccionAcordeon>
+
+      {/* 8 · Eventos */}
+      <SeccionAcordeon icono={FiAlertTriangle} color="#ef4444" titulo="Eventos agudos" descripcion="Hipoglucemias, cetoacidosis, hospitalizaciones, uso de glucagón" abierta={!!abiertas.eventos} onToggle={() => alternar("eventos")} estado={llenoEventos} etiqueta={llenoEventos ? `✓ ${f.eventos.filter((e) => lleno(e.tipo)).length} por guardar` : "Sin datos"}>
+        {f.eventos.map((ev, idx) => (
+          <div key={idx} style={{ ...grid(170), alignItems: "end", marginBottom: 10, paddingBottom: 10, borderBottom: "1px dashed #eef2f7" }}>
+            <Campo label="Tipo de evento">
+              <select value={ev.tipo} onChange={(e) => setF((p) => ({ ...p, eventos: p.eventos.map((x, k) => (k === idx ? { ...x, tipo: e.target.value } : x)) }))}>
+                <option value="">— Seleccionar —</option>{TIPOS_EVENTO.map(([id, l]) => <option key={id} value={id}>{l}</option>)}
+              </select>
+            </Campo>
+            <Campo label="Fecha del evento"><input type="date" value={ev.fecha || fecha} onChange={(e) => setF((p) => ({ ...p, eventos: p.eventos.map((x, k) => (k === idx ? { ...x, fecha: e.target.value } : x)) }))} /></Campo>
+            <Campo label="Descripción / causa"><input type="text" value={ev.descripcion} onChange={(e) => setF((p) => ({ ...p, eventos: p.eventos.map((x, k) => (k === idx ? { ...x, descripcion: e.target.value } : x)) }))} /></Campo>
+            <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, paddingBottom: 9 }}>
+              <input type="checkbox" checked={!!ev.requirio_hospitalizacion} onChange={(e) => setF((p) => ({ ...p, eventos: p.eventos.map((x, k) => (k === idx ? { ...x, requirio_hospitalizacion: e.target.checked } : x)) }))} /> Requirió hospitalización
+            </label>
+            <button type="button" className="btn btn-secondary btn-sm" onClick={() => setF((p) => ({ ...p, eventos: p.eventos.filter((_, k) => k !== idx) }))} title="Quitar"><FiX /></button>
+          </div>
+        ))}
+        <button type="button" className="btn btn-secondary btn-sm" onClick={() => setF((p) => ({ ...p, eventos: [...p.eventos, { tipo: "", fecha: "", descripcion: "", requirio_hospitalizacion: false }] }))}><FiPlus /> Agregar evento</button>
+      </SeccionAcordeon>
+
+      {children}
     </div>
   );
 }
 
+const grupoTitulo = { fontSize: 13, fontWeight: 800, color: "#334155", textTransform: "uppercase", letterSpacing: "0.07em", margin: "18px 2px 10px" };
+const grupoSub = { fontWeight: 500, textTransform: "none", letterSpacing: 0, color: "#94a3b8", fontSize: 12 };
 const auto = { fontSize: 11, color: "#94a3b8", fontWeight: 400 };
 const soloLectura = { background: "#f8fafc", color: "#64748b" };
 const subt = { fontSize: 12, fontWeight: 800, color: "#334155", textTransform: "uppercase", letterSpacing: "0.05em", margin: "0 0 8px", paddingBottom: 6, borderBottom: "1px solid #f1f5f9" };

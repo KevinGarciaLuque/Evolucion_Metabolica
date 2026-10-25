@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { FiActivity, FiDroplet, FiHeart, FiShield, FiBookOpen, FiChevronDown } from "react-icons/fi";
+import { FiActivity, FiDroplet, FiHeart, FiShield, FiBookOpen, FiChevronDown, FiSun, FiWind, FiAlertTriangle } from "react-icons/fi";
 import { getHistorialConsultas } from "../api/renacedApi";
 
 const C = { violet: "#6366f1", slate: "#64748b" };
@@ -12,6 +12,13 @@ const LAB_ETIQUETAS = {
   creatinina: ["Creatinina", "mg/dl"], tasa_filtracion: ["TFG", "ml/min"], microalbuminuria: ["Microalbuminuria", ""],
   tsh: ["TSH", "µUI/ml"], c_peptido: ["Péptido C", "ng/ml"], anti_gad: ["Anti-GAD", "nmol/L"], anti_ia2: ["Anti-IA2", "nmol/L"], insulinemia: ["Insulinemia", ""],
 };
+
+const NOMBRE_EVENTO = {
+  HIPOGLUCEMIA_LEVE: "Hipoglucemia leve", HIPOGLUCEMIA_NIVEL1: "Hipoglucemia nivel 1", HIPOGLUCEMIA_NIVEL2: "Hipoglucemia nivel 2",
+  HIPOGLUCEMIA_SEVERA: "Hipoglucemia severa", HIPOGLUCEMIA_INADVERTIDA: "Hipoglucemia inadvertida",
+  CETOACIDOSIS: "Cetoacidosis", HOSPITALIZACION: "Hospitalización", USO_GLUCAGON: "Uso de glucagón",
+};
+const SINO = { SI: "Sí", NO: "No", SD: "Se desconoce", NA: "No aplica" };
 
 const tiene = (v) => v !== null && v !== undefined && String(v).trim() !== "";
 const num = (v) => (tiene(v) ? String(parseFloat(v)) : null); // quita ceros sobrantes: 62.00 → 62
@@ -109,6 +116,37 @@ function Detalle({ v }) {
         </Bloque>
       ))}
 
+      {v.estilo_vida.map((e) => (
+        <Bloque key={`s${e.id}`} icono={FiSun} color="#f97316" titulo="Estilo de vida">
+          <Dato etiqueta="Actividad física" valor={SINO[e.actividad_fisica] || e.actividad_fisica} />
+          <Dato etiqueta="Tipo de actividad" valor={e.tipo_actividad} />
+          <Dato etiqueta="Minutos por semana" valor={e.minutos_semana} />
+          <Dato etiqueta="Dieta especial" valor={SINO[e.dieta_especial] || e.dieta_especial} />
+          <Dato etiqueta="Tipo de dieta" valor={e.tipo_dieta} />
+        </Bloque>
+      ))}
+
+      {v.toxicomanias.map((t) => (
+        <Bloque key={`x${t.id}`} icono={FiWind} color="#64748b" titulo="Toxicomanías">
+          <Dato etiqueta="Tabaco" valor={SINO[t.tabaco] || t.tabaco} />
+          <Dato etiqueta="Alcohol" valor={SINO[t.alcohol] || t.alcohol} />
+          <Dato etiqueta="Drogas" valor={SINO[t.drogas] || t.drogas} />
+          <Dato etiqueta="Observaciones" valor={t.observaciones} />
+        </Bloque>
+      ))}
+
+      {v.eventos.length > 0 && (
+        <Bloque icono={FiAlertTriangle} color="#ef4444" titulo="Eventos agudos">
+          {v.eventos.map((e) => (
+            <div key={e.id} style={{ fontSize: 13, padding: "4px 0", borderBottom: "1px dashed #eef2f7" }}>
+              <strong>{NOMBRE_EVENTO[e.tipo] || e.tipo}</strong>
+              <span style={{ color: C.slate }}> · {String(e.fecha).slice(0, 10)}{e.requirio_hospitalizacion ? " · requirió hospitalización" : ""}</span>
+              {e.descripcion && <div style={{ color: C.slate, paddingLeft: 10 }}>{e.descripcion}</div>}
+            </div>
+          ))}
+        </Bloque>
+      )}
+
       {v.educacion.map((d) => (
         <Bloque key={`d${d.id}`} icono={FiBookOpen} color="#10b981" titulo="Educación">
           <Dato etiqueta="Tema" valor={d.tema} />
@@ -200,6 +238,9 @@ export default function HistorialConsultas({ pacienteId }) {
                       {v.tratamiento.length > 0 && <Chip color="#ec4899">Tratamiento</Chip>}
                       {v.evaluacion.length > 0 && <Chip color="#f59e0b">Complicaciones</Chip>}
                       {v.educacion.length > 0 && <Chip color="#10b981">Educación</Chip>}
+                      {v.estilo_vida.length > 0 && <Chip color="#f97316">Estilo de vida</Chip>}
+                      {v.toxicomanias.length > 0 && <Chip color="#64748b">Toxicomanías</Chip>}
+                      {v.eventos.length > 0 && <Chip color="#ef4444">Eventos{v.eventos.length > 1 ? ` ×${v.eventos.length}` : ""}</Chip>}
                     </div>
                     {resumen && <div style={{ fontSize: 12.5, color: C.slate, whiteSpace: "pre" }}>{resumen}</div>}
                   </div>

@@ -8,6 +8,8 @@ const COLUMNAS = [
   ["tratamiento",      "consulta_id", "BIGINT UNSIGNED DEFAULT NULL"],
   ["tratamiento_oral", "consulta_id", "BIGINT UNSIGNED DEFAULT NULL"],
   ["educacion",        "consulta_id", "BIGINT UNSIGNED DEFAULT NULL"],
+  ["toxicomanias",     "consulta_id", "BIGINT UNSIGNED DEFAULT NULL"],
+  ["evento",           "consulta_id", "BIGINT UNSIGNED DEFAULT NULL"],
   ["escaneo_mcg",      "extras",      "TEXT DEFAULT NULL"],
   // Medidas corporales ampliadas de la consulta
   ["consulta", "ica",                "DECIMAL(5,3) DEFAULT NULL"],
@@ -23,6 +25,9 @@ const INDICES = [
   ["tratamiento", "idx_consulta", "consulta_id"],
   ["tratamiento_oral", "idx_consulta", "consulta_id"],
   ["educacion", "idx_consulta", "consulta_id"],
+  ["toxicomanias", "idx_consulta", "consulta_id"],
+  ["evento", "idx_consulta", "consulta_id"],
+  ["estilovida", "idx_consulta", "consulta_id"],
   ["laboratorio", "idx_consulta", "consulta_id"],
   ["evaluacion", "idx_consulta", "consulta_id"],
 ];

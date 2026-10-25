@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import RenacedLayout from "../components/RenacedLayout";
 import HojaConsulta from "../components/HojaConsulta";
+import SeccionAcordeon from "../components/SeccionAcordeon";
+import { FiClipboard, FiActivity, FiLayers, FiUsers, FiHeart, FiRepeat, FiPlus, FiX } from "react-icons/fi";
 import HistorialConsultas from "../components/HistorialConsultas";
 import {
   getPaciente,
@@ -10,9 +12,6 @@ import {
   getComorbilidad, saveComorbilidad,
   getPatologia, savePatologia,
   getAntecedentesGO, saveAntecedentesGO,
-  getEventos, createEvento, deleteEvento,
-  getEstiloVida, createEstiloVida, deleteEstiloVida,
-  getToxicomanias, createToxicomanias, deleteToxicomanias,
   getReclasificaciones, createReclasificacion, deleteReclasificacion,
   getEmbarazos, createEmbarazo, deleteEmbarazo,
 } from "../api/renacedApi";
@@ -48,16 +47,6 @@ const DM_COLOR = {
   "Otros":       { bg: "#f3e8ff", color: "#6b21a8" },
 };
 
-const TABS_CLINICOS = ["Consulta", "Historial", "Diagnóstico",
-  "Comorbilidades", "Patologías", "Ant. G.O.", "Eventos", "Estilo Vida", "Toxicomanías", "Reclasificación", "Embarazo"];
-
-const TAB_GRUPOS_CLIN = [
-  { label: "Consulta clínica", tabs: ["Consulta","Historial","Diagnóstico"] },
-  { label: "Antecedentes",     tabs: ["Comorbilidades","Patologías","Ant. G.O.","Eventos","Estilo Vida","Toxicomanías","Reclasificación","Embarazo"] },
-];
-
-const SINON_EV = ["", "SI", "NO", "SD"];
-
 const COMORB_TIPOS = {
   retinopatia:    ["No proliferativa","Proliferativa","Macular"],
   nefropatia:     ["Microalbuminuria","Macroalbuminuria","Insuficiencia renal"],
@@ -67,18 +56,24 @@ const COMORB_TIPOS = {
   pie_diabetico:  ["Grado 0","Grado 1","Grado 2","Grado 3"],
 };
 
-const SUSTANCIAS_LIST = [
-  ["Tabaco","tabaco","cigarros/día"],
-  ["Alcohol","alcohol","copas/semana"],
-  ["Marihuana","marihuana","veces/semana"],
-  ["Cocaína","cocaina","veces/semana"],
-  ["Crack","crack","veces/semana"],
-  ["Éxtasis","extasis","veces/semana"],
-  ["Metanfetamina","meta","veces/semana"],
-  ["Inhalantes","inhala","veces/semana"],
-  ["Heroína","heroina","veces/semana"],
-  ["Alucinógenos","alucin","veces/semana"],
-];
+// Patologías frecuentes (se puede escribir cualquier otra)
+const PAT_SUGERIDAS = ["HIPOTIROIDISMO", "ENFERMEDAD CELÍACA", "ENFERMEDAD DE ADDISON", "VITILIGO", "ENFERMEDAD DE GRAVES", "HIPERTENSIÓN ARTERIAL", "DISLIPIDEMIA", "OBESIDAD", "SÍNDROME DE OVARIO POLIQUÍSTICO"];
+const TIPOS_DM = [["1", "Tipo 1"], ["2", "Tipo 2"], ["3", "Gestacional"], ["4", "Otros"]];
+const TERAPIAS_GEST = [["1", "Dieta y ejercicio"], ["2", "Metformina"], ["3", "Insulina"], ["4", "Glibenclamida"]];
+const RESULTADOS_EMB = [["EMBARAZADA", "Embarazada (en curso)"], ["NACIMIENTO", "Nacimiento"], ["ABORTO", "Aborto"]];
+const hoy = () => {
+  const n = new Date();
+  return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, "0")}-${String(n.getDate()).padStart(2, "0")}`;
+};
+const sumarDias = (fecha, dias) => {
+  const d = new Date(`${fecha}T12:00:00`);
+  d.setDate(d.getDate() + dias);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+};
+const EMB_INIT = { num_gesta: "", fecha_ultima_mens: "", fecha_probable_parto: "", semanas_gestacion: "", terapia_gest_id: "", resultado: "EMBARAZADA", fecha_parto: "", observaciones: "" };
+
+const grupoTitulo = { fontSize: 13, fontWeight: 800, color: "#334155", textTransform: "uppercase", letterSpacing: "0.07em", margin: "22px 2px 10px" };
+const grupoSub = { fontWeight: 500, textTransform: "none", letterSpacing: 0, color: "#94a3b8", fontSize: 12 };
 
 // ── Componente Campo reutilizable ─────────────────────────────────────────────
 function Campo({ label, children, colSpan, required }) {
@@ -104,7 +99,9 @@ export default function RenacedConsultasClinical() {
   const { pacienteId } = useParams();
   const [paciente, setPaciente] = useState(null);
   const [cargando, setCargando] = useState(true);
-  const [tab, setTab]   = useState("Consulta");
+  const [vista, setVista] = useState("consulta"); // consulta | historial
+  const [ab, setAb] = useState({});                  // secciones de la ficha abiertas
+  const alternarAb = (k) => setAb((a) => ({ ...a, [k]: !a[k] }));
   const [cats, setCats] = useState({ retinopatia: [], nefropatia: [], neuropatia: [], pie_diabetico: [], cardiovascular: [] });
 
   // ── Estado por sección ────────────────────────────────────────────────────
@@ -120,13 +117,6 @@ export default function RenacedConsultasClinical() {
   const [comorbErr, setComorbErr] = useState("");
   const [comorbLoad, setComorbLoad] = useState(false);
 
-  // ── Patologías ────────────────────────────────────────────────────────────
-  const PAT_INIT = { hipotiroidismo:"",hipotiroidismo_anio:"",e_celiaca:"",e_celiaca_anio:"",e_addison:"",e_addison_anio:"",vitiligo:"",vitiligo_anio:"",e_graves:"",e_graves_anio:"",hipertension:"",hipertension_anio:"",dislipidemia:"",dislipidemia_anio:"",hiperuricemia:"",hiperuricemia_anio:"",gota:"",gota_anio:"",otras:"" };
-  const [pat, setPat]             = useState(PAT_INIT);
-  const [patOk, setPatOk]         = useState("");
-  const [patErr, setPatErr]       = useState("");
-  const [patLoad, setPatLoad]     = useState(false);
-
   // ── Antecedentes G.O. ─────────────────────────────────────────────────────
   const AGO_INIT = { menarca:"",fum:"",visa:"",mac:"",peso_4000:"",menopausia:"",menopausia_fecha:"",tipo_menopausia:"",trh:"" };
   const [ago, setAgo]             = useState(AGO_INIT);
@@ -134,45 +124,25 @@ export default function RenacedConsultasClinical() {
   const [agoErr, setAgoErr]       = useState("");
   const [agoLoad, setAgoLoad]     = useState(false);
 
-  // ── Eventos ───────────────────────────────────────────────────────────────
-  const EV_INIT = { hipo_leve:"",hipo_leve_num:"",hipo_severa:"",hipo_severa_fecha:"",hipo_severa_causa:"",convulsiones:"",coma:"",perd_conocimiento:"",glucagon_disp:"",glucagon_uso:"",cetoacidosis:"",cetoacidosis_fecha:"",cetoacidosis_causa:"",hospitalizacion:"",hospitalizacion_fecha:"",hospitalizacion_dias:"",hospitalizacion_causa:"" };
-  const [ev, setEv]               = useState(EV_INIT);
-  const [eventos, setEventos]     = useState([]);
-  const [evOk, setEvOk]           = useState("");
-  const [evErr, setEvErr]         = useState("");
-  const [evLoad, setEvLoad]       = useState(false);
-
-  // ── Estilo de vida ────────────────────────────────────────────────────────
-  const EVI_INIT = { fecha_registro:"",plan_alimentacion:"",plan_calorias:"",ejercicio:"",min_ejer_semana:"",conteo_chos:"" };
-  const [evi, setEvi]             = useState(EVI_INIT);
-  const [eviList, setEviList]     = useState([]);
-  const [eviOk, setEviOk]         = useState("");
-  const [eviErr, setEviErr]       = useState("");
-  const [eviLoad, setEviLoad]     = useState(false);
-
-  // ── Toxicomanías ──────────────────────────────────────────────────────────
-  const TOX_INIT = { fecha_registro:"",tabaco:"NO",tabaco_num:"",tabaco_periodo:"",alcohol:"NO",alcohol_num:"",alcohol_periodo:"",marihuana:"NO",marihuana_num:"",marihuana_periodo:"",cocaina:"NO",cocaina_num:"",cocaina_periodo:"",crack:"NO",crack_num:"",crack_periodo:"",extasis:"NO",extasis_num:"",extasis_periodo:"",meta:"NO",meta_num:"",meta_periodo:"",inhala:"NO",inhala_num:"",inhala_periodo:"",heroina:"NO",heroina_num:"",heroina_periodo:"",alucin:"NO",alucin_num:"",alucin_periodo:"" };
-  const [tox, setTox]             = useState(TOX_INIT);
-  const [toxList, setToxList]     = useState([]);
-  const [toxOk, setToxOk]         = useState("");
-  const [toxErr, setToxErr]       = useState("");
-  const [toxLoad, setToxLoad]     = useState(false);
-
-  // ── Reclasificación ───────────────────────────────────────────────────────
-  const RECL_INIT = { glucosa_ayuno:"",fecha_glucosa:"",insulina_ayuno:"",fecha_insulina:"",hba1c:"",fecha_hba1c:"",ctog_ayuno:"",ctog_30min:"",ctog_60min:"",ctog_90min:"",ctog_120min:"",ctog_ayuno_insul:"",ctog_30min_insul:"",ctog_60min_insul:"",ctog_90min_insul:"",ctog_120min_insul:"",fecha_ctog:"",resultado:"SI" };
-  const [recl, setRecl]           = useState(RECL_INIT);
-  const [reclList, setReclList]   = useState([]);
-  const [reclOk, setReclOk]       = useState("");
-  const [reclErr, setReclErr]     = useState("");
-  const [reclLoad, setReclLoad]   = useState(false);
+  // ── Patologías (lista editable: nombre, fecha de diagnóstico, activa, observaciones) ──
+  const [patList, setPatList] = useState([]);
+  const [patOk, setPatOk]     = useState("");
+  const [patErr, setPatErr]   = useState("");
+  const [patLoad, setPatLoad] = useState(false);
 
   // ── Embarazo ──────────────────────────────────────────────────────────────
-  const EMB_INIT = { fecha_um:"",fecha_pp:"",tipo_embarazo:"",logro_embarazo:"",estatus_embarazo:"",hba1c_dx:"",fecha_hba1c_dx:"",glucosa_ayunas:"",glucosa_50gr:"",ctog75_ayuno:"",ctog75_1hr:"",ctog75_2hr:"",fecha_ctog75:"",ctog100_ayuno:"",ctog100_1hr:"",ctog100_2hr:"",ctog100_3hr:"",fecha_ctog100:"",hipertension:"",preeclampsia:"",eclampsia:"",hellp:"",oligohidramnios:"",polihidramnios:"",desprendimiento_placenta:"",insuficiencia_placentaria:"",placenta_previa:"",placenta_acreta:"",semanas_gestacion:"",via_parto:"",peso_rn:"",macrosomia:"",hipoglucemia_rn:"",sdr:"",ictericia:"",malformacion:"",malformacion_desc:"",obito:"" };
-  const [emb, setEmb]             = useState(EMB_INIT);
-  const [embList, setEmbList]     = useState([]);
-  const [embOk, setEmbOk]         = useState("");
-  const [embErr, setEmbErr]       = useState("");
-  const [embLoad, setEmbLoad]     = useState(false);
+  const [emb, setEmb]           = useState(EMB_INIT);
+  const [embList, setEmbList]   = useState([]);
+  const [embOk, setEmbOk]       = useState("");
+  const [embErr, setEmbErr]     = useState("");
+  const [embLoad, setEmbLoad]   = useState(false);
+
+  // ── Reclasificación ───────────────────────────────────────────────────────
+  const [recl, setRecl]         = useState({ tipo_diabetes_anterior_id: "", tipo_diabetes_nuevo_id: "", motivo: "", fecha: hoy() });
+  const [reclList, setReclList] = useState([]);
+  const [reclOk, setReclOk]     = useState("");
+  const [reclErr, setReclErr]   = useState("");
+  const [reclLoad, setReclLoad] = useState(false);
 
   // ── Carga inicial ─────────────────────────────────────────────────────────
   useEffect(() => {
@@ -185,7 +155,6 @@ export default function RenacedConsultasClinical() {
 
   // Cargar datos de diagnóstico al entrar al tab
   useEffect(() => {
-    if (tab !== "Diagnóstico") return;
     getDiagnosticoClinico(pacienteId).then((r) => {
       if (!r.data) return;
       const d = r.data;
@@ -240,7 +209,7 @@ export default function RenacedConsultasClinical() {
         lada_fecha_approx:       d.lada_fecha_approx || 0,
       });
     }).catch(() => {});
-  }, [tab, pacienteId]);
+  }, [pacienteId]);
 
   // ── Handlers cambio de campo ──────────────────────────────────────────────
   function cambiarDx(e) {
@@ -258,26 +227,20 @@ export default function RenacedConsultasClinical() {
     });
   }
 
-  // ── Carga de datos al cambiar de tab ─────────────────────────────────────
+  // ── Carga de las fichas al entrar (así cada acordeón ya muestra si tiene datos) ──
+  function cargarPat() {
+    getPatologia(pacienteId).then((r) => setPatList((r.data || []).map((x) => ({
+      nombre: x.nombre || "", fecha_dx: x.fecha_dx ? String(x.fecha_dx).slice(0, 10) : "", activa: x.activa ?? 1, observaciones: x.observaciones || "",
+    })))).catch(() => {});
+  }
+  const cargarEmb = () => getEmbarazos(pacienteId).then((r) => setEmbList(r.data || [])).catch(() => {});
+  const cargarRecl = () => getReclasificaciones(pacienteId).then((r) => setReclList(r.data || [])).catch(() => {});
+
   useEffect(() => {
-    if (tab === "Comorbilidades") {
-      getComorbilidad(pacienteId).then(r => { if (r.data) setComorb({ ...COMORB_INIT, ...r.data }); }).catch(()=>{});
-    } else if (tab === "Patologías") {
-      getPatologia(pacienteId).then(r => { if (r.data) setPat({ ...PAT_INIT, ...r.data }); }).catch(()=>{});
-    } else if (tab === "Ant. G.O.") {
-      getAntecedentesGO(pacienteId).then(r => { if (r.data) setAgo({ ...AGO_INIT, ...r.data }); }).catch(()=>{});
-    } else if (tab === "Eventos") {
-      getEventos(pacienteId).then(r => setEventos(r.data)).catch(()=>{});
-    } else if (tab === "Estilo Vida") {
-      getEstiloVida(pacienteId).then(r => setEviList(r.data)).catch(()=>{});
-    } else if (tab === "Toxicomanías") {
-      getToxicomanias(pacienteId).then(r => setToxList(r.data)).catch(()=>{});
-    } else if (tab === "Reclasificación") {
-      getReclasificaciones(pacienteId).then(r => setReclList(r.data)).catch(()=>{});
-    } else if (tab === "Embarazo") {
-      getEmbarazos(pacienteId).then(r => setEmbList(r.data)).catch(()=>{});
-    }
-  }, [tab, pacienteId]);
+    getComorbilidad(pacienteId).then((r) => { if (r.data) setComorb({ ...COMORB_INIT, ...r.data }); }).catch(() => {});
+    getAntecedentesGO(pacienteId).then((r) => { if (r.data) setAgo({ ...AGO_INIT, ...r.data }); }).catch(() => {});
+    cargarPat(); cargarEmb(); cargarRecl();
+  }, [pacienteId]);
 
   // ── Guardar diagnóstico ────────────────────────────────────────────────────
   async function guardarDx(e) {
@@ -300,14 +263,6 @@ export default function RenacedConsultasClinical() {
     finally { setComorbLoad(false); }
   }
 
-  // ── Guardar patologías ─────────────────────────────────────────────────────
-  async function guardarPat(e) {
-    e.preventDefault(); setPatLoad(true); setPatOk(""); setPatErr("");
-    try { await savePatologia(pacienteId, pat); setPatOk("Patologías guardadas"); setTimeout(()=>setPatOk(""),3000); }
-    catch (err) { setPatErr(err.response?.data?.error||"Error al guardar"); }
-    finally { setPatLoad(false); }
-  }
-
   // ── Guardar antecedentes G.O. ──────────────────────────────────────────────
   async function guardarAgo(e) {
     e.preventDefault(); setAgoLoad(true); setAgoOk(""); setAgoErr("");
@@ -316,64 +271,52 @@ export default function RenacedConsultasClinical() {
     finally { setAgoLoad(false); }
   }
 
-  // ── Crear evento ───────────────────────────────────────────────────────────
-  async function guardarEv(e) {
-    e.preventDefault(); setEvLoad(true); setEvOk(""); setEvErr("");
+  // ── Patologías ────────────────────────────────────────────────────────────
+  async function guardarPat(e) {
+    e.preventDefault(); setPatLoad(true); setPatOk(""); setPatErr("");
     try {
-      await createEvento(pacienteId, ev);
-      setEvOk("Evento registrado"); setEv(EV_INIT);
-      getEventos(pacienteId).then(r=>setEventos(r.data)).catch(()=>{});
-      setTimeout(()=>setEvOk(""),3000);
-    } catch (err) { setEvErr(err.response?.data?.error||"Error al guardar"); }
-    finally { setEvLoad(false); }
+      await savePatologia(pacienteId, { enfermedades: patList.filter((p) => p.nombre.trim()) });
+      setPatOk("Patologías guardadas"); setTimeout(() => setPatOk(""), 3000); cargarPat();
+    } catch (err) { setPatErr(err.response?.data?.error || "Error al guardar"); }
+    finally { setPatLoad(false); }
   }
+  const cambiarPat = (i, campo, valor) => setPatList((l) => l.map((p, k) => (k === i ? { ...p, [campo]: valor } : p)));
 
-  // ── Crear estilo de vida ───────────────────────────────────────────────────
-  async function guardarEvi(e) {
-    e.preventDefault(); setEviLoad(true); setEviOk(""); setEviErr("");
-    try {
-      await createEstiloVida(pacienteId, evi);
-      setEviOk("Registro guardado"); setEvi(EVI_INIT);
-      getEstiloVida(pacienteId).then(r=>setEviList(r.data)).catch(()=>{});
-      setTimeout(()=>setEviOk(""),3000);
-    } catch (err) { setEviErr(err.response?.data?.error||"Error al guardar"); }
-    finally { setEviLoad(false); }
+  // ── Embarazo ──────────────────────────────────────────────────────────────
+  function cambiarEmb(campo, valor) {
+    setEmb((f) => {
+      const n = { ...f, [campo]: valor };
+      // Fecha probable de parto = FUM + 280 días (si no se capturó otra)
+      if (campo === "fecha_ultima_mens" && valor) n.fecha_probable_parto = sumarDias(valor, 280);
+      return n;
+    });
   }
-
-  // ── Crear toxicomanías ─────────────────────────────────────────────────────
-  async function guardarTox(e) {
-    e.preventDefault(); setToxLoad(true); setToxOk(""); setToxErr("");
-    try {
-      await createToxicomanias(pacienteId, tox);
-      setToxOk("Registro guardado"); setTox(TOX_INIT);
-      getToxicomanias(pacienteId).then(r=>setToxList(r.data)).catch(()=>{});
-      setTimeout(()=>setToxOk(""),3000);
-    } catch (err) { setToxErr(err.response?.data?.error||"Error al guardar"); }
-    finally { setToxLoad(false); }
-  }
-
-  // ── Crear reclasificación ──────────────────────────────────────────────────
-  async function guardarRecl(e) {
-    e.preventDefault(); setReclLoad(true); setReclOk(""); setReclErr("");
-    try {
-      await createReclasificacion(pacienteId, recl);
-      setReclOk("Reclasificación guardada"); setRecl(RECL_INIT);
-      getReclasificaciones(pacienteId).then(r=>setReclList(r.data)).catch(()=>{});
-      setTimeout(()=>setReclOk(""),3000);
-    } catch (err) { setReclErr(err.response?.data?.error||"Error al guardar"); }
-    finally { setReclLoad(false); }
-  }
-
-  // ── Crear embarazo ─────────────────────────────────────────────────────────
   async function guardarEmb(e) {
     e.preventDefault(); setEmbLoad(true); setEmbOk(""); setEmbErr("");
     try {
       await createEmbarazo(pacienteId, emb);
-      setEmbOk("Embarazo registrado"); setEmb(EMB_INIT);
-      getEmbarazos(pacienteId).then(r=>setEmbList(r.data)).catch(()=>{});
-      setTimeout(()=>setEmbOk(""),3000);
-    } catch (err) { setEmbErr(err.response?.data?.error||"Error al guardar"); }
+      setEmbOk("Embarazo registrado"); setEmb(EMB_INIT); setTimeout(() => setEmbOk(""), 3000); cargarEmb();
+    } catch (err) { setEmbErr(err.response?.data?.error || "Error al guardar"); }
     finally { setEmbLoad(false); }
+  }
+  async function quitarEmb(id) {
+    if (!window.confirm("¿Eliminar este embarazo?")) return;
+    await deleteEmbarazo(pacienteId, id); cargarEmb();
+  }
+
+  // ── Reclasificación ───────────────────────────────────────────────────────
+  async function guardarRecl(e) {
+    e.preventDefault(); setReclLoad(true); setReclOk(""); setReclErr("");
+    try {
+      await createReclasificacion(pacienteId, { ...recl, tipo_diabetes_anterior_id: recl.tipo_diabetes_anterior_id || paciente?.diagnostico?.tipo_diabetes_id || "" });
+      setReclOk("Reclasificación registrada"); setRecl({ tipo_diabetes_anterior_id: "", tipo_diabetes_nuevo_id: "", motivo: "", fecha: hoy() });
+      setTimeout(() => setReclOk(""), 3000); cargarRecl();
+    } catch (err) { setReclErr(err.response?.data?.error || "Error al guardar"); }
+    finally { setReclLoad(false); }
+  }
+  async function quitarRecl(id) {
+    if (!window.confirm("¿Eliminar esta reclasificación?")) return;
+    await deleteReclasificacion(pacienteId, id); cargarRecl();
   }
 
   if (cargando) return <RenacedLayout><div className="loading">Cargando paciente…</div></RenacedLayout>;
@@ -415,57 +358,28 @@ export default function RenacedConsultasClinical() {
         </div>
       </div>
 
-      {/* ── Tabs responsivos ─────────────────────────────────────────────────── */}
-      {/* Móvil: select agrupado */}
-      <div className="tab-select-mobile">
-        <select
-          value={tab}
-          onChange={e => setTab(e.target.value)}
-          style={{ width: "100%", padding: "10px 12px", borderRadius: 8, border: "1px solid #e2e8f0", fontSize: 14, background: "#fff", color: "#0f172a", marginBottom: 16 }}
-        >
-          {TAB_GRUPOS_CLIN.map(g => (
-            <optgroup key={g.label} label={g.label}>
-              {g.tabs.map(t => <option key={t} value={t}>{t}</option>)}
-            </optgroup>
-          ))}
-        </select>
-      </div>
-      {/* Desktop: dos filas de tabs con flex-wrap */}
-      <div className="tab-grupos-desktop" style={{ marginBottom: 20 }}>
-        {TAB_GRUPOS_CLIN.map((grupo) => (
-          <div key={grupo.label} style={{ marginBottom: 2 }}>
-            <span style={{ fontSize: 10, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.08em", paddingLeft: 4 }}>
-              {grupo.label}
-            </span>
-            <div style={{ display: "flex", flexWrap: "wrap", borderBottom: "2px solid #e2e8f0" }}>
-              {grupo.tabs.map((t) => (
-                <button
-                  key={t}
-                  onClick={() => setTab(t)}
-                  style={{
-                    padding: "7px 14px", border: "none", background: "none",
-                    borderBottom: tab === t ? "2px solid #6366f1" : "2px solid transparent",
-                    marginBottom: "-2px",
-                    color: tab === t ? "#6366f1" : "#64748b",
-                    fontWeight: tab === t ? 700 : 500,
-                    fontSize: 13, cursor: "pointer",
-                    transition: "color 0.15s, border-color 0.15s",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  {t}
-                </button>
-              ))}
-            </div>
-          </div>
+      {/* ── Vista: consulta (hoja única) o historial ─────────────────────────── */}
+      <div style={{ display: "flex", gap: 8, margin: "4px 0 18px", borderBottom: "2px solid #e2e8f0" }}>
+        {[["consulta", "Consulta"], ["historial", "Historial"]].map(([id, label]) => (
+          <button key={id} type="button" onClick={() => setVista(id)} style={{
+            padding: "8px 18px", border: "none", background: "none", cursor: "pointer", fontSize: 14,
+            fontWeight: vista === id ? 700 : 500, color: vista === id ? "#6366f1" : "#64748b",
+            borderBottom: vista === id ? "2px solid #6366f1" : "2px solid transparent", marginBottom: -2,
+          }}>{label}</button>
         ))}
       </div>
 
-      {/* ══════════════════════════════════════════════════════════════════════ */}
-      {/* TAB: DIAGNÓSTICO                                                      */}
-      {/* ══════════════════════════════════════════════════════════════════════ */}
-      {tab === "Diagnóstico" && (
-        <form onSubmit={guardarDx}>
+      {vista === "historial" && <HistorialConsultas pacienteId={pacienteId} />}
+
+      {vista === "consulta" && (
+        <HojaConsulta paciente={paciente} pacienteId={pacienteId} cats={cats}>
+
+          {/* ═══════ GRUPO 2 · Ficha del paciente ═══════ */}
+          <div style={grupoTitulo}>Ficha del paciente <span style={grupoSub}>· se actualiza; cada apartado se guarda con su botón</span></div>
+
+          <SeccionAcordeon icono={FiClipboard} color="#6366f1" titulo="Diagnóstico" descripcion="Tipo de diabetes, fecha de diagnóstico y estudios iniciales" abierta={!!ab.dx} onToggle={() => alternarAb("dx")} estado={!!dx.fecha_diagnostico}>
+            <div className="seccion-plana">
+              <form onSubmit={guardarDx}>
           {/* Fecha */}
           <div className="card" style={{ marginBottom: 16 }}>
             <h3 style={{ margin: "0 0 14px", fontSize: "0.9rem", color: "#6366f1" }}>Fecha de Diagnóstico</h3>
@@ -709,20 +623,12 @@ export default function RenacedConsultasClinical() {
             </button>
           </div>
         </form>
-      )}
+            </div>
+          </SeccionAcordeon>
 
-      {/* ══════════ CONSULTA: hoja única (visita, laboratorio, tratamiento, complicaciones, educación) ══════════ */}
-      {tab === "Consulta" && (
-        <HojaConsulta paciente={paciente} pacienteId={pacienteId} cats={cats} />
-      )}
-
-      {tab === "Historial" && <HistorialConsultas pacienteId={pacienteId} />}
-
-      {/* ══════════════════════════════════════════════════════════════════════ */}
-      {/* TAB: COMORBILIDADES CRÓNICAS                                          */}
-      {/* ══════════════════════════════════════════════════════════════════════ */}
-      {tab === "Comorbilidades" && (
-        <form onSubmit={guardarComorb}>
+          <SeccionAcordeon icono={FiActivity} color="#f59e0b" titulo="Comorbilidades" descripcion="Retinopatía, nefropatía, neuropatía y otras complicaciones crónicas" abierta={!!ab.comorb} onToggle={() => alternarAb("comorb")} estado={Object.entries(comorb).some(([k, v]) => v === "SI" && !k.includes("_"))}>
+            <div className="seccion-plana">
+              <form onSubmit={guardarComorb}>
           <div className="card" style={{ marginBottom: 16 }}>
             <h3 style={{ margin:"0 0 14px", fontSize:"0.9rem", color:"#6366f1" }}>Comorbilidades Crónicas</h3>
             <p style={{ fontSize:12, color:"#94a3b8", margin:"0 0 16px" }}>Marca SI si el paciente tiene la complicación, luego ingresa fecha y tipo.</p>
@@ -764,57 +670,34 @@ export default function RenacedConsultasClinical() {
             </button>
           </div>
         </form>
-      )}
+            </div>
+          </SeccionAcordeon>
 
-      {/* ══════════════════════════════════════════════════════════════════════ */}
-      {/* TAB: PATOLOGÍAS ASOCIADAS                                             */}
-      {/* ══════════════════════════════════════════════════════════════════════ */}
-      {tab === "Patologías" && (
-        <form onSubmit={guardarPat}>
-          <div className="card" style={{ marginBottom: 16 }}>
-            <h3 style={{ margin:"0 0 14px", fontSize:"0.9rem", color:"#6366f1" }}>Patologías Asociadas</h3>
-            <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(280px,1fr))", gap:12 }}>
-              {[
-                ["Hipotiroidismo","hipotiroidismo","hipotiroidismo_anio"],
-                ["Enfermedad celíaca","e_celiaca","e_celiaca_anio"],
-                ["Enfermedad de Addison","e_addison","e_addison_anio"],
-                ["Vitiligo","vitiligo","vitiligo_anio"],
-                ["Enfermedad de Graves","e_graves","e_graves_anio"],
-                ["Hipertensión","hipertension","hipertension_anio"],
-                ["Dislipidemia","dislipidemia","dislipidemia_anio"],
-                ["Hiperuricemia","hiperuricemia","hiperuricemia_anio"],
-                ["Gota","gota","gota_anio"],
-              ].map(([label,campo,campoAnio])=>(
-                <div key={campo} style={{ display:"flex", gap:8, alignItems:"center", padding:"8px 0", borderBottom:"1px solid #f8fafc" }}>
-                  <span style={{ flex:1, fontSize:13, fontWeight:500 }}>{label}</span>
-                  <select value={pat[campo]||""} onChange={e=>setPat(f=>({...f,[campo]:e.target.value}))} style={{ width:80 }}>
-                    <option value="">—</option><option value="SI">SI</option><option value="NO">NO</option>
-                  </select>
-                  {pat[campo]==="SI" && (
-                    <input type="number" placeholder="Año" value={pat[campoAnio]||""} onChange={e=>setPat(f=>({...f,[campoAnio]:e.target.value}))} style={{ width:80 }} min="1900" max={new Date().getFullYear()} />
-                  )}
+          <SeccionAcordeon icono={FiLayers} color="#0ea5e9" titulo="Patologías asociadas" descripcion="Hipotiroidismo, hipertensión, celiaquía y otras" abierta={!!ab.pat} onToggle={() => alternarAb("pat")} estado={patList.length > 0} etiqueta={patList.length ? `${patList.length} registrada${patList.length > 1 ? "s" : ""}` : "Sin datos"}>
+            <form onSubmit={guardarPat}>
+              <datalist id="pat-sugeridas">{PAT_SUGERIDAS.map((n) => <option key={n} value={n} />)}</datalist>
+              {patList.map((pt, i) => (
+                <div key={i} style={{ display: "grid", gridTemplateColumns: "2fr 1fr 90px 2fr auto", gap: 10, alignItems: "end", marginBottom: 10 }}>
+                  <Campo label={i === 0 ? "Patología" : ""}><input list="pat-sugeridas" value={pt.nombre} onChange={(e) => cambiarPat(i, "nombre", e.target.value.toUpperCase())} placeholder="Escribe o elige" /></Campo>
+                  <Campo label={i === 0 ? "Fecha de diagnóstico" : ""}><input type="date" value={pt.fecha_dx} onChange={(e) => cambiarPat(i, "fecha_dx", e.target.value)} /></Campo>
+                  <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, paddingBottom: 9 }}><input type="checkbox" checked={!!pt.activa} onChange={(e) => cambiarPat(i, "activa", e.target.checked ? 1 : 0)} /> Activa</label>
+                  <Campo label={i === 0 ? "Observaciones" : ""}><input value={pt.observaciones} onChange={(e) => cambiarPat(i, "observaciones", e.target.value)} /></Campo>
+                  <button type="button" className="btn btn-secondary btn-sm" onClick={() => setPatList((l) => l.filter((_, k) => k !== i))} title="Quitar"><FiX /></button>
                 </div>
               ))}
-            </div>
-            <div className="form-group" style={{ marginTop:12 }}>
-              <label className="form-label">Otras patologías</label>
-              <textarea rows={2} value={pat.otras||""} onChange={e=>setPat(f=>({...f,otras:e.target.value}))} style={{ resize:"vertical" }} />
-            </div>
-          </div>
-          <Feedback ok={patOk} error={patErr} />
-          <div style={{ display:"flex", justifyContent:"flex-end" }}>
-            <button type="submit" className="btn btn-primary" disabled={patLoad}>
-              {patLoad ? "Guardando…" : "Guardar Patologías"}
-            </button>
-          </div>
-        </form>
-      )}
+              {patList.length === 0 && <p style={{ color: "#94a3b8", fontSize: 13, margin: "0 0 10px" }}>Sin patologías registradas.</p>}
+              <Feedback ok={patOk} error={patErr} />
+              <div style={{ display: "flex", justifyContent: "space-between", gap: 8, flexWrap: "wrap" }}>
+                <button type="button" className="btn btn-secondary btn-sm" onClick={() => setPatList((l) => [...l, { nombre: "", fecha_dx: "", activa: 1, observaciones: "" }])}><FiPlus /> Agregar patología</button>
+                <button type="submit" className="btn btn-primary btn-sm" disabled={patLoad}>{patLoad ? "Guardando…" : "Guardar patologías"}</button>
+              </div>
+            </form>
+          </SeccionAcordeon>
 
-      {/* ══════════════════════════════════════════════════════════════════════ */}
-      {/* TAB: ANTECEDENTES GINECO-OBSTÉTRICOS                                  */}
-      {/* ══════════════════════════════════════════════════════════════════════ */}
-      {tab === "Ant. G.O." && (
-        <form onSubmit={guardarAgo}>
+          {p.sexo === "F" && (
+            <SeccionAcordeon icono={FiUsers} color="#ec4899" titulo="Antecedentes ginecobstétricos" descripcion="Menarca, ciclo, menopausia y anticoncepción" abierta={!!ab.ago} onToggle={() => alternarAb("ago")} estado={Object.values(ago).some((v) => v !== "" && v !== null && v !== undefined)}>
+              <div className="seccion-plana">
+                <form onSubmit={guardarAgo}>
           {paciente.sexo !== "F" && (
             <div className="card" style={{ background:"#fef9c3", border:"1px solid #fde68a", color:"#92400e", marginBottom:16 }}>
               Este módulo aplica solo para pacientes femeninas.
@@ -895,353 +778,84 @@ export default function RenacedConsultasClinical() {
             </button>
           </div>
         </form>
-      )}
-
-      {/* ══════════════════════════════════════════════════════════════════════ */}
-      {/* TAB: EVENTOS                                                          */}
-      {/* ══════════════════════════════════════════════════════════════════════ */}
-      {tab === "Eventos" && (
-        <div>
-          <form onSubmit={guardarEv}>
-            <div className="card" style={{ marginBottom:16 }}>
-              <h3 style={{ margin:"0 0 14px", fontSize:"0.9rem", color:"#6366f1" }}>Nuevo Evento</h3>
-              <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))", gap:14 }}>
-                <Campo label="Hipoglucemia leve">
-                  <select value={ev.hipo_leve||""} onChange={e=>setEv(f=>({...f,hipo_leve:e.target.value}))}>
-                    {SINON_EV.map(v=><option key={v} value={v}>{v||"—"}</option>)}
-                  </select>
-                </Campo>
-                {ev.hipo_leve==="SI" && <Campo label="Número episodios"><input type="number" value={ev.hipo_leve_num||""} onChange={e=>setEv(f=>({...f,hipo_leve_num:e.target.value}))} min="1" /></Campo>}
-                <Campo label="Hipoglucemia severa">
-                  <select value={ev.hipo_severa||""} onChange={e=>setEv(f=>({...f,hipo_severa:e.target.value}))}>
-                    {SINON_EV.map(v=><option key={v} value={v}>{v||"—"}</option>)}
-                  </select>
-                </Campo>
-                {ev.hipo_severa==="SI" && <>
-                  <Campo label="Fecha"><input type="date" value={ev.hipo_severa_fecha||""} onChange={e=>setEv(f=>({...f,hipo_severa_fecha:e.target.value}))} /></Campo>
-                  <Campo label="Convulsiones"><select value={ev.convulsiones||""} onChange={e=>setEv(f=>({...f,convulsiones:e.target.value}))}>{SINON_EV.map(v=><option key={v} value={v}>{v||"—"}</option>)}</select></Campo>
-                  <Campo label="Coma"><select value={ev.coma||""} onChange={e=>setEv(f=>({...f,coma:e.target.value}))}>{SINON_EV.map(v=><option key={v} value={v}>{v||"—"}</option>)}</select></Campo>
-                  <Campo label="Glucagón disponible"><select value={ev.glucagon_disp||""} onChange={e=>setEv(f=>({...f,glucagon_disp:e.target.value}))}>{SINON_EV.map(v=><option key={v} value={v}>{v||"—"}</option>)}</select></Campo>
-                  <Campo label="Causa" colSpan={2}><input type="text" value={ev.hipo_severa_causa||""} onChange={e=>setEv(f=>({...f,hipo_severa_causa:e.target.value}))} /></Campo>
-                </>}
-                <Campo label="Cetoacidosis">
-                  <select value={ev.cetoacidosis||""} onChange={e=>setEv(f=>({...f,cetoacidosis:e.target.value}))}>
-                    {SINON_EV.map(v=><option key={v} value={v}>{v||"—"}</option>)}
-                  </select>
-                </Campo>
-                {ev.cetoacidosis==="SI" && <>
-                  <Campo label="Fecha cetoacidosis"><input type="date" value={ev.cetoacidosis_fecha||""} onChange={e=>setEv(f=>({...f,cetoacidosis_fecha:e.target.value}))} /></Campo>
-                  <Campo label="Causa" colSpan={2}><input type="text" value={ev.cetoacidosis_causa||""} onChange={e=>setEv(f=>({...f,cetoacidosis_causa:e.target.value}))} /></Campo>
-                </>}
-                <Campo label="Hospitalización">
-                  <select value={ev.hospitalizacion||""} onChange={e=>setEv(f=>({...f,hospitalizacion:e.target.value}))}>
-                    {SINON_EV.map(v=><option key={v} value={v}>{v||"—"}</option>)}
-                  </select>
-                </Campo>
-                {ev.hospitalizacion==="SI" && <>
-                  <Campo label="Fecha"><input type="date" value={ev.hospitalizacion_fecha||""} onChange={e=>setEv(f=>({...f,hospitalizacion_fecha:e.target.value}))} /></Campo>
-                  <Campo label="Días"><input type="number" value={ev.hospitalizacion_dias||""} onChange={e=>setEv(f=>({...f,hospitalizacion_dias:e.target.value}))} min="1" /></Campo>
-                  <Campo label="Causa" colSpan={2}><input type="text" value={ev.hospitalizacion_causa||""} onChange={e=>setEv(f=>({...f,hospitalizacion_causa:e.target.value}))} /></Campo>
-                </>}
               </div>
-              <Feedback ok={evOk} error={evErr} />
-              <div style={{ display:"flex", justifyContent:"flex-end", marginTop:12 }}>
-                <button type="submit" className="btn btn-primary" disabled={evLoad}>{evLoad?"Guardando…":"Registrar Evento"}</button>
-              </div>
-            </div>
-          </form>
-          {eventos.length > 0 && (
-            <div className="card">
-              <h3 style={{ margin:"0 0 12px", fontSize:"0.9rem", color:"#6366f1" }}>Eventos Registrados</h3>
-              <table className="tabla"><thead><tr><th>Fecha</th><th>Hipo Leve</th><th>Hipo Severa</th><th>Cetoacidosis</th><th>Hospitalización</th><th></th></tr></thead>
-                <tbody>{eventos.map(e=>(
-                  <tr key={e.id}>
-                    <td style={{ fontSize:12 }}>{e.fecha_captura?.slice(0,10)}</td>
-                    <td>{e.hipo_leve} {e.hipo_leve==="SI"?`(${e.hipo_leve_num||"?"} ep.)`:""}</td>
-                    <td>{e.hipo_severa} {e.hipo_severa_fecha?`(${e.hipo_severa_fecha.slice(0,10)})`:""}</td>
-                    <td>{e.cetoacidosis}</td>
-                    <td>{e.hospitalizacion} {e.hospitalizacion_dias?`(${e.hospitalizacion_dias}d)`:""}</td>
-                    <td><button className="btn btn-sm btn-outline" style={{ color:"#dc2626", borderColor:"#fecaca" }} onClick={async()=>{ await deleteEvento(pacienteId,e.id); getEventos(pacienteId).then(r=>setEventos(r.data)).catch(()=>{}); }}>✕</button></td>
-                  </tr>
-                ))}</tbody>
-              </table>
-            </div>
+            </SeccionAcordeon>
           )}
-        </div>
-      )}
 
-      {/* ══════════════════════════════════════════════════════════════════════ */}
-      {/* TAB: ESTILO DE VIDA                                                   */}
-      {/* ══════════════════════════════════════════════════════════════════════ */}
-      {tab === "Estilo Vida" && (
-        <div>
-          <form onSubmit={guardarEvi}>
-            <div className="card" style={{ marginBottom:16 }}>
-              <h3 style={{ margin:"0 0 14px", fontSize:"0.9rem", color:"#6366f1" }}>Nuevo Registro Estilo de Vida</h3>
-              <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))", gap:14 }}>
-                <Campo label="Fecha de registro" required><input type="date" value={evi.fecha_registro||""} onChange={e=>setEvi(f=>({...f,fecha_registro:e.target.value}))} required /></Campo>
-                <Campo label="Plan de alimentación">
-                  <select value={evi.plan_alimentacion||""} onChange={e=>setEvi(f=>({...f,plan_alimentacion:e.target.value}))}>
-                    <option value="">—</option><option>SI</option><option>NO</option><option>SD</option>
-                  </select>
-                </Campo>
-                {evi.plan_alimentacion==="SI" && <Campo label="Calorías/día"><input type="number" value={evi.plan_calorias||""} onChange={e=>setEvi(f=>({...f,plan_calorias:e.target.value}))} min="500" max="5000" /></Campo>}
-                <Campo label="Ejercicio">
-                  <select value={evi.ejercicio||""} onChange={e=>setEvi(f=>({...f,ejercicio:e.target.value}))}>
-                    <option value="">—</option><option>SI</option><option>NO</option><option>SD</option>
-                  </select>
-                </Campo>
-                {evi.ejercicio==="SI" && <Campo label="Minutos/semana"><input type="number" value={evi.min_ejer_semana||""} onChange={e=>setEvi(f=>({...f,min_ejer_semana:e.target.value}))} min="0" /></Campo>}
-                <Campo label="Conteo de CHOs">
-                  <select value={evi.conteo_chos||""} onChange={e=>setEvi(f=>({...f,conteo_chos:e.target.value}))}>
-                    <option value="">—</option><option>SI</option><option>NO</option><option>SD</option>
-                  </select>
-                </Campo>
-              </div>
-              <Feedback ok={eviOk} error={eviErr} />
-              <div style={{ display:"flex", justifyContent:"flex-end", marginTop:12 }}>
-                <button type="submit" className="btn btn-primary" disabled={eviLoad}>{eviLoad?"Guardando…":"Registrar"}</button>
-              </div>
-            </div>
-          </form>
-          {eviList.length > 0 && (
-            <div className="card">
-              <h3 style={{ margin:"0 0 12px", fontSize:"0.9rem", color:"#6366f1" }}>Registros</h3>
-              <table className="tabla"><thead><tr><th>Fecha</th><th>Alimentación</th><th>Calorías</th><th>Ejercicio</th><th>Min/sem</th><th>Conteo CHOs</th><th></th></tr></thead>
-                <tbody>{eviList.map(r=>(
-                  <tr key={r.id}>
-                    <td>{r.fecha_registro?.slice(0,10)}</td>
-                    <td>{r.plan_alimentacion}</td>
-                    <td>{r.plan_calorias||"—"}</td>
-                    <td>{r.ejercicio}</td>
-                    <td>{r.min_ejer_semana||"—"}</td>
-                    <td>{r.conteo_chos}</td>
-                    <td><button className="btn btn-sm btn-outline" style={{ color:"#dc2626", borderColor:"#fecaca" }} onClick={async()=>{ await deleteEstiloVida(pacienteId,r.id); getEstiloVida(pacienteId).then(x=>setEviList(x.data)).catch(()=>{}); }}>✕</button></td>
-                  </tr>
-                ))}</tbody>
-              </table>
-            </div>
+          {/* ═══════ GRUPO 3 · Casos especiales ═══════ */}
+          <div style={grupoTitulo}>Casos especiales <span style={grupoSub}>· solo cuando aplican</span></div>
+
+          {p.sexo === "F" && (
+            <SeccionAcordeon icono={FiHeart} color="#d946ef" titulo="Embarazo" descripcion="Embarazos registrados y nuevo registro" abierta={!!ab.emb} onToggle={() => alternarAb("emb")} estado={embList.length > 0} etiqueta={embList.length ? `${embList.length} registrado${embList.length > 1 ? "s" : ""}` : "Sin datos"}>
+              {embList.length > 0 && (
+                <div className="table-wrapper" style={{ marginBottom: 16 }}>
+                  <table className="tabla">
+                    <thead><tr><th>FUM</th><th>Fecha prob. parto</th><th>Semanas</th><th>Resultado</th><th>Fecha de parto</th><th>Tratamiento</th><th></th></tr></thead>
+                    <tbody>
+                      {embList.map((m) => (
+                        <tr key={m.id}>
+                          <td>{m.fecha_ultima_mens ? String(m.fecha_ultima_mens).slice(0, 10) : "—"}</td>
+                          <td>{m.fecha_probable_parto ? String(m.fecha_probable_parto).slice(0, 10) : "—"}</td>
+                          <td>{m.semanas_gestacion ?? "—"}</td>
+                          <td>{m.resultado || "—"}</td>
+                          <td>{m.fecha_parto ? String(m.fecha_parto).slice(0, 10) : "—"}</td>
+                          <td>{m.terapia_gest || "—"}</td>
+                          <td><button type="button" className="btn btn-secondary btn-sm" onClick={() => quitarEmb(m.id)} title="Eliminar"><FiX /></button></td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+              <form onSubmit={guardarEmb}>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(190px, 1fr))", gap: 14 }}>
+                  <Campo label="N.º de gesta"><input type="number" min="1" value={emb.num_gesta} onChange={(e) => cambiarEmb("num_gesta", e.target.value)} /></Campo>
+                  <Campo label="Fecha de última menstruación (FUM)"><input type="date" value={emb.fecha_ultima_mens} onChange={(e) => cambiarEmb("fecha_ultima_mens", e.target.value)} /></Campo>
+                  <Campo label={<>Fecha probable de parto <span style={{ fontSize: 11, color: "#94a3b8" }}>(FUM + 280 días)</span></>}><input type="date" value={emb.fecha_probable_parto} onChange={(e) => cambiarEmb("fecha_probable_parto", e.target.value)} /></Campo>
+                  <Campo label="Semanas de gestación"><input type="number" min="0" max="45" value={emb.semanas_gestacion} onChange={(e) => cambiarEmb("semanas_gestacion", e.target.value)} /></Campo>
+                  <Campo label="Tratamiento en el embarazo"><select value={emb.terapia_gest_id} onChange={(e) => cambiarEmb("terapia_gest_id", e.target.value)}><option value="">— Seleccionar —</option>{TERAPIAS_GEST.map(([id, l]) => <option key={id} value={id}>{l}</option>)}</select></Campo>
+                  <Campo label="Resultado"><select value={emb.resultado} onChange={(e) => cambiarEmb("resultado", e.target.value)}>{RESULTADOS_EMB.map(([id, l]) => <option key={id} value={id}>{l}</option>)}</select></Campo>
+                  {emb.resultado !== "EMBARAZADA" && <Campo label="Fecha de parto / aborto"><input type="date" value={emb.fecha_parto} onChange={(e) => cambiarEmb("fecha_parto", e.target.value)} /></Campo>}
+                  <Campo label="Observaciones" colSpan={2}><input value={emb.observaciones} onChange={(e) => cambiarEmb("observaciones", e.target.value)} /></Campo>
+                </div>
+                <Feedback ok={embOk} error={embErr} />
+                <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 14 }}><button type="submit" className="btn btn-primary btn-sm" disabled={embLoad}>{embLoad ? "Guardando…" : "Registrar embarazo"}</button></div>
+              </form>
+            </SeccionAcordeon>
           )}
-        </div>
-      )}
 
-      {/* ══════════════════════════════════════════════════════════════════════ */}
-      {/* TAB: TOXICOMANÍAS                                                     */}
-      {/* ══════════════════════════════════════════════════════════════════════ */}
-      {tab === "Toxicomanías" && (
-        <div>
-          <form onSubmit={guardarTox}>
-            <div className="card" style={{ marginBottom:16 }}>
-              <h3 style={{ margin:"0 0 14px", fontSize:"0.9rem", color:"#6366f1" }}>Nuevo Registro Toxicomanías</h3>
-              <Campo label="Fecha de registro" required><input type="date" value={tox.fecha_registro||""} onChange={e=>setTox(f=>({...f,fecha_registro:e.target.value}))} required /></Campo>
-              <div style={{ marginTop:14 }}>
-                {SUSTANCIAS_LIST.map(([label,campo,unidad])=>(
-                  <div key={campo} style={{ display:"grid", gridTemplateColumns:"180px 90px 120px 120px", gap:10, alignItems:"center", marginBottom:8, padding:"8px 0", borderBottom:"1px solid #f1f5f9" }}>
-                    <span style={{ fontWeight:500, fontSize:13 }}>{label}</span>
-                    <select value={tox[campo]||"NO"} onChange={e=>setTox(f=>({...f,[campo]:e.target.value}))}>
-                      <option value="NO">NO</option><option value="SI">SI</option><option value="EX">Ex-usuario</option>
-                    </select>
-                    {tox[campo]!=="NO" && <>
-                      <input type="number" placeholder={`Cantidad (${unidad})`} value={tox[`${campo}_num`]||""} onChange={e=>setTox(f=>({...f,[`${campo}_num`]:e.target.value}))} min="0" />
-                      <select value={tox[`${campo}_periodo`]||""} onChange={e=>setTox(f=>({...f,[`${campo}_periodo`]:e.target.value}))}>
-                        <option value="">— Periodo —</option>
-                        <option value="1">Diario</option><option value="2">Semanal</option><option value="3">Mensual</option><option value="4">Ocasional</option>
-                      </select>
-                    </>}
-                  </div>
-                ))}
+          <SeccionAcordeon icono={FiRepeat} color="#14b8a6" titulo="Reclasificación" descripcion="Cambio del tipo de diabetes" abierta={!!ab.recl} onToggle={() => alternarAb("recl")} estado={reclList.length > 0} etiqueta={reclList.length ? `${reclList.length} registrada${reclList.length > 1 ? "s" : ""}` : "Sin datos"}>
+            {reclList.length > 0 && (
+              <div className="table-wrapper" style={{ marginBottom: 16 }}>
+                <table className="tabla">
+                  <thead><tr><th>Fecha</th><th>Tipo anterior</th><th>Tipo nuevo</th><th>Motivo</th><th></th></tr></thead>
+                  <tbody>
+                    {reclList.map((r) => (
+                      <tr key={r.id}>
+                        <td>{r.fecha ? String(r.fecha).slice(0, 10) : "—"}</td>
+                        <td>{r.tipo_anterior || "—"}</td>
+                        <td>{r.tipo_nuevo || "—"}</td>
+                        <td>{r.motivo || "—"}</td>
+                        <td><button type="button" className="btn btn-secondary btn-sm" onClick={() => quitarRecl(r.id)} title="Eliminar"><FiX /></button></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
-              <Feedback ok={toxOk} error={toxErr} />
-              <div style={{ display:"flex", justifyContent:"flex-end", marginTop:12 }}>
-                <button type="submit" className="btn btn-primary" disabled={toxLoad}>{toxLoad?"Guardando…":"Registrar"}</button>
-              </div>
-            </div>
-          </form>
-          {toxList.length > 0 && (
-            <div className="card">
-              <h3 style={{ margin:"0 0 12px", fontSize:"0.9rem", color:"#6366f1" }}>Registros</h3>
-              <table className="tabla"><thead><tr><th>Fecha</th><th>Tabaco</th><th>Alcohol</th><th>Marihuana</th><th>Otras</th><th></th></tr></thead>
-                <tbody>{toxList.map(r=>(
-                  <tr key={r.id}>
-                    <td>{r.fecha_registro?.slice(0,10)}</td>
-                    <td>{r.tabaco}</td><td>{r.alcohol}</td><td>{r.marihuana}</td>
-                    <td style={{ fontSize:11, color:"#64748b" }}>{[r.cocaina!=="NO"?"Coc":"",r.crack!=="NO"?"Crack":"",r.meta!=="NO"?"Meta":""].filter(Boolean).join(", ")||"—"}</td>
-                    <td><button className="btn btn-sm btn-outline" style={{ color:"#dc2626", borderColor:"#fecaca" }} onClick={async()=>{ await deleteToxicomanias(pacienteId,r.id); getToxicomanias(pacienteId).then(x=>setToxList(x.data)).catch(()=>{}); }}>✕</button></td>
-                  </tr>
-                ))}</tbody>
-              </table>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* ══════════════════════════════════════════════════════════════════════ */}
-      {/* TAB: RECLASIFICACIÓN                                                  */}
-      {/* ══════════════════════════════════════════════════════════════════════ */}
-      {tab === "Reclasificación" && (
-        <div>
-          <form onSubmit={guardarRecl}>
-            <div className="card" style={{ marginBottom:16 }}>
-              <h3 style={{ margin:"0 0 14px", fontSize:"0.9rem", color:"#6366f1" }}>Nueva Reclasificación</h3>
-              <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(180px,1fr))", gap:14 }}>
-                <Campo label="Glucosa ayuno (mg/dl)"><input type="number" value={recl.glucosa_ayuno||""} onChange={e=>setRecl(f=>({...f,glucosa_ayuno:e.target.value}))} /></Campo>
-                <Campo label="Fecha glucosa"><input type="date" value={recl.fecha_glucosa||""} onChange={e=>setRecl(f=>({...f,fecha_glucosa:e.target.value}))} /></Campo>
-                <Campo label="Insulina ayuno (µU/ml)"><input type="number" value={recl.insulina_ayuno||""} onChange={e=>setRecl(f=>({...f,insulina_ayuno:e.target.value}))} /></Campo>
-                <Campo label="Fecha insulina"><input type="date" value={recl.fecha_insulina||""} onChange={e=>setRecl(f=>({...f,fecha_insulina:e.target.value}))} /></Campo>
-                <Campo label="HbA1c (%)"><input type="number" step="0.01" value={recl.hba1c||""} onChange={e=>setRecl(f=>({...f,hba1c:e.target.value}))} /></Campo>
-                <Campo label="Fecha HbA1c"><input type="date" value={recl.fecha_hba1c||""} onChange={e=>setRecl(f=>({...f,fecha_hba1c:e.target.value}))} /></Campo>
-              </div>
-              <h4 style={{ margin:"14px 0 10px", fontSize:"0.85rem", color:"#64748b" }}>CTOG 75g (mg/dl)</h4>
-              <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(150px,1fr))", gap:12 }}>
-                {[["Ayuno","ctog_ayuno"],["30 min","ctog_30min"],["60 min","ctog_60min"],["90 min","ctog_90min"],["120 min","ctog_120min"],["Fecha","ctog_fecha","date"]].map(([label,campo,tipo])=>(
-                  <Campo key={campo} label={label}><input type={tipo||"number"} value={recl[campo]||""} onChange={e=>setRecl(f=>({...f,[campo]:e.target.value}))} /></Campo>
-                ))}
-              </div>
-              <h4 style={{ margin:"14px 0 10px", fontSize:"0.85rem", color:"#64748b" }}>Insulina en CTOG (µU/ml)</h4>
-              <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(150px,1fr))", gap:12 }}>
-                {[["Ayuno","ctog_ayuno_insul"],["30 min","ctog_30min_insul"],["60 min","ctog_60min_insul"],["90 min","ctog_90min_insul"],["120 min","ctog_120min_insul"]].map(([label,campo])=>(
-                  <Campo key={campo} label={label}><input type="number" value={recl[campo]||""} onChange={e=>setRecl(f=>({...f,[campo]:e.target.value}))} /></Campo>
-                ))}
-              </div>
-              <div style={{ display:"grid", gridTemplateColumns:"200px 1fr", gap:14, marginTop:14 }}>
-                <Campo label="Resultado reclasificación" required>
-                  <select value={recl.resultado||"SI"} onChange={e=>setRecl(f=>({...f,resultado:e.target.value}))}>
-                    <option value="SI">SI (reclasificado)</option>
-                    <option value="NO">NO</option>
-                    <option value="SD">Se desconoce</option>
-                  </select>
-                </Campo>
+            )}
+            <form onSubmit={guardarRecl}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(190px, 1fr))", gap: 14 }}>
+                <Campo label="Fecha"><input type="date" value={recl.fecha} onChange={(e) => setRecl((f) => ({ ...f, fecha: e.target.value }))} /></Campo>
+                <Campo label="Tipo anterior"><select value={recl.tipo_diabetes_anterior_id || String(paciente?.diagnostico?.tipo_diabetes_id || "")} onChange={(e) => setRecl((f) => ({ ...f, tipo_diabetes_anterior_id: e.target.value }))}><option value="">— Seleccionar —</option>{TIPOS_DM.map(([id, l]) => <option key={id} value={id}>{l}</option>)}</select></Campo>
+                <Campo label="Tipo nuevo" required><select value={recl.tipo_diabetes_nuevo_id} onChange={(e) => setRecl((f) => ({ ...f, tipo_diabetes_nuevo_id: e.target.value }))} required><option value="">— Seleccionar —</option>{TIPOS_DM.map(([id, l]) => <option key={id} value={id}>{l}</option>)}</select></Campo>
+                <Campo label="Motivo" colSpan={2}><input value={recl.motivo} onChange={(e) => setRecl((f) => ({ ...f, motivo: e.target.value }))} placeholder="ej. anticuerpos positivos, evolución clínica" /></Campo>
               </div>
               <Feedback ok={reclOk} error={reclErr} />
-              <div style={{ display:"flex", justifyContent:"flex-end", marginTop:12 }}>
-                <button type="submit" className="btn btn-primary" disabled={reclLoad}>{reclLoad?"Guardando…":"Guardar Reclasificación"}</button>
-              </div>
-            </div>
-          </form>
-          {reclList.length > 0 && (
-            <div className="card">
-              <h3 style={{ margin:"0 0 12px", fontSize:"0.9rem", color:"#6366f1" }}>Reclasificaciones</h3>
-              <table className="tabla"><thead><tr><th>Fecha</th><th>Glucosa</th><th>HbA1c</th><th>CTOG 75g ayuno</th><th>Resultado</th><th></th></tr></thead>
-                <tbody>{reclList.map(r=>(
-                  <tr key={r.id}>
-                    <td>{r.fecha_captura?.slice(0,10)}</td>
-                    <td>{r.glucosa_ayuno||"—"} mg/dl</td>
-                    <td>{r.hba1c||"—"}%</td>
-                    <td>{r.ctog_ayuno||"—"} mg/dl</td>
-                    <td><span style={{ background:r.resultado==="SI"?"#dcfce7":"#fef2f2", color:r.resultado==="SI"?"#166534":"#dc2626", borderRadius:20, padding:"2px 8px", fontSize:11, fontWeight:600 }}>{r.resultado}</span></td>
-                    <td><button className="btn btn-sm btn-outline" style={{ color:"#dc2626", borderColor:"#fecaca" }} onClick={async()=>{ await deleteReclasificacion(pacienteId,r.id); getReclasificaciones(pacienteId).then(x=>setReclList(x.data)).catch(()=>{}); }}>✕</button></td>
-                  </tr>
-                ))}</tbody>
-              </table>
-            </div>
-          )}
-        </div>
+              <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 14 }}><button type="submit" className="btn btn-primary btn-sm" disabled={reclLoad}>{reclLoad ? "Guardando…" : "Registrar reclasificación"}</button></div>
+            </form>
+          </SeccionAcordeon>
+        </HojaConsulta>
       )}
-
-      {/* ══════════════════════════════════════════════════════════════════════ */}
-      {/* TAB: EMBARAZO                                                         */}
-      {/* ══════════════════════════════════════════════════════════════════════ */}
-      {tab === "Embarazo" && (
-        <div>
-          <form onSubmit={guardarEmb}>
-            <div className="card" style={{ marginBottom:16 }}>
-              <h3 style={{ margin:"0 0 14px", fontSize:"0.9rem", color:"#6366f1" }}>Nuevo Embarazo</h3>
-              {/* Datos generales */}
-              <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(180px,1fr))", gap:14, marginBottom:16 }}>
-                <Campo label="FUM"><input type="date" value={emb.fecha_um||""} onChange={e=>setEmb(f=>({...f,fecha_um:e.target.value}))} /></Campo>
-                <Campo label="Fecha probable de parto"><input type="date" value={emb.fecha_pp||""} onChange={e=>setEmb(f=>({...f,fecha_pp:e.target.value}))} /></Campo>
-                <Campo label="Tipo de embarazo">
-                  <select value={emb.tipo_embarazo||""} onChange={e=>setEmb(f=>({...f,tipo_embarazo:e.target.value}))}>
-                    <option value="">—</option><option value="UNICO">Único</option><option value="MULTIPLE">Múltiple</option>
-                  </select>
-                </Campo>
-                <Campo label="Logro del embarazo">
-                  <select value={emb.logro_embarazo||""} onChange={e=>setEmb(f=>({...f,logro_embarazo:e.target.value}))}>
-                    <option value="">—</option><option value="ESPONTANEO">Espontáneo</option><option value="ASISTIDO">Asistido (FIV/ICSI)</option>
-                  </select>
-                </Campo>
-                <Campo label="Estatus">
-                  <select value={emb.estatus_embarazo||""} onChange={e=>setEmb(f=>({...f,estatus_embarazo:e.target.value}))}>
-                    <option value="">—</option><option value="EN_CURSO">En curso</option><option value="TERMINADO">Terminado</option>
-                  </select>
-                </Campo>
-              </div>
-              {/* Diagnóstico glucémico */}
-              <h4 style={{ margin:"0 0 10px", fontSize:"0.85rem", color:"#64748b" }}>Diagnóstico Glucémico</h4>
-              <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(170px,1fr))", gap:12, marginBottom:16 }}>
-                <Campo label="HbA1c (%)"><input type="number" step="0.01" value={emb.hba1c_dx||""} onChange={e=>setEmb(f=>({...f,hba1c_dx:e.target.value}))} /></Campo>
-                <Campo label="Fecha HbA1c"><input type="date" value={emb.fecha_hba1c_dx||""} onChange={e=>setEmb(f=>({...f,fecha_hba1c_dx:e.target.value}))} /></Campo>
-                <Campo label="Glucosa ayunas (mg/dl)"><input type="number" value={emb.glucosa_ayunas||""} onChange={e=>setEmb(f=>({...f,glucosa_ayunas:e.target.value}))} /></Campo>
-                <Campo label="Glucosa 50g (mg/dl)"><input type="number" value={emb.glucosa_50gr||""} onChange={e=>setEmb(f=>({...f,glucosa_50gr:e.target.value}))} /></Campo>
-                {["75g","100g"].map(tipo=>{
-                  const prefix = tipo==="75g"?"ctog75":"ctog100";
-                  const timepoints = tipo==="75g"?[["Ayuno","ayuno"],["1 hr","1hr"],["2 hr","2hr"]]:[["Ayuno","ayuno"],["1 hr","1hr"],["2 hr","2hr"],["3 hr","3hr"]];
-                  return timepoints.map(([tLabel,suffix])=>(
-                    <Campo key={`${prefix}_${suffix}`} label={`CTOG ${tipo} ${tLabel}`}><input type="number" value={emb[`${prefix}_${suffix}`]||""} onChange={e=>setEmb(f=>({...f,[`${prefix}_${suffix}`]:e.target.value}))} /></Campo>
-                  ));
-                })}
-              </div>
-              {/* Complicaciones */}
-              <h4 style={{ margin:"0 0 10px", fontSize:"0.85rem", color:"#64748b" }}>Complicaciones Obstétricas</h4>
-              <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))", gap:10, marginBottom:16 }}>
-                {[["Hipertensión","hipertension"],["Preeclampsia","preeclampsia"],["Eclampsia","eclampsia"],["HELLP","hellp"],["Oligohidramnios","oligohidramnios"],["Polihidramnios","polihidramnios"],["Desprendimiento placenta","desprendimiento_placenta"],["Insuficiencia placentaria","insuficiencia_placentaria"],["Placenta previa","placenta_previa"],["Placenta acreta","placenta_acreta"]].map(([label,campo])=>(
-                  <div key={campo} style={{ display:"flex", gap:8, alignItems:"center" }}>
-                    <span style={{ flex:1, fontSize:13 }}>{label}</span>
-                    <select value={emb[campo]||""} onChange={e=>setEmb(f=>({...f,[campo]:e.target.value}))} style={{ width:70 }}>
-                      <option value="">—</option><option value="SI">SI</option><option value="NO">NO</option>
-                    </select>
-                  </div>
-                ))}
-              </div>
-              {/* Desenlace */}
-              {emb.estatus_embarazo==="TERMINADO" && <>
-                <h4 style={{ margin:"0 0 10px", fontSize:"0.85rem", color:"#64748b" }}>Desenlace</h4>
-                <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(170px,1fr))", gap:12 }}>
-                  <Campo label="Semanas gestación"><input type="number" value={emb.semanas_gestacion||""} onChange={e=>setEmb(f=>({...f,semanas_gestacion:e.target.value}))} min="20" max="45" /></Campo>
-                  <Campo label="Vía de parto">
-                    <select value={emb.via_parto||""} onChange={e=>setEmb(f=>({...f,via_parto:e.target.value}))}>
-                      <option value="">—</option><option value="VAGINAL">Vaginal</option><option value="CESAREA">Cesárea</option>
-                    </select>
-                  </Campo>
-                  <Campo label="Peso RN (kg)"><input type="number" step="0.01" value={emb.peso_rn||""} onChange={e=>setEmb(f=>({...f,peso_rn:e.target.value}))} /></Campo>
-                  {[["Macrosomía","macrosomia"],["Hipoglucemia RN","hipoglucemia_rn"],["SDR","sdr"],["Ictericia","ictericia"],["Malformación","malformacion"],["Óbito","obito"]].map(([label,campo])=>(
-                    <div key={campo} style={{ display:"flex", gap:8, alignItems:"center" }}>
-                      <span style={{ flex:1, fontSize:13 }}>{label}</span>
-                      <select value={emb[campo]||""} onChange={e=>setEmb(f=>({...f,[campo]:e.target.value}))} style={{ width:70 }}>
-                        <option value="">—</option><option value="SI">SI</option><option value="NO">NO</option>
-                      </select>
-                    </div>
-                  ))}
-                  {emb.malformacion==="SI" && <Campo label="Descripción malformación" colSpan={2}><input type="text" value={emb.malformacion_desc||""} onChange={e=>setEmb(f=>({...f,malformacion_desc:e.target.value}))} /></Campo>}
-                </div>
-              </>}
-              <Feedback ok={embOk} error={embErr} />
-              <div style={{ display:"flex", justifyContent:"flex-end", marginTop:16 }}>
-                <button type="submit" className="btn btn-primary" disabled={embLoad}>{embLoad?"Guardando…":"Registrar Embarazo"}</button>
-              </div>
-            </div>
-          </form>
-          {embList.length > 0 && (
-            <div className="card">
-              <h3 style={{ margin:"0 0 12px", fontSize:"0.9rem", color:"#6366f1" }}>Embarazos Registrados</h3>
-              <table className="tabla"><thead><tr><th>FUM</th><th>Tipo</th><th>Estatus</th><th>Semanas</th><th>Vía parto</th><th>HbA1c dx</th><th></th></tr></thead>
-                <tbody>{embList.map(r=>(
-                  <tr key={r.id}>
-                    <td>{r.fecha_um?.slice(0,10)||"—"}</td>
-                    <td>{r.tipo_embarazo||"—"}</td>
-                    <td><span style={{ background:r.estatus_embarazo==="EN_CURSO"?"#dbeafe":"#f1f5f9", color:r.estatus_embarazo==="EN_CURSO"?"#1d4ed8":"#475569", borderRadius:20, padding:"2px 8px", fontSize:11, fontWeight:600 }}>{r.estatus_embarazo||"—"}</span></td>
-                    <td>{r.semanas_gestacion||"—"}</td>
-                    <td>{r.via_parto||"—"}</td>
-                    <td>{r.hba1c_dx||"—"}%</td>
-                    <td><button className="btn btn-sm btn-outline" style={{ color:"#dc2626", borderColor:"#fecaca" }} onClick={async()=>{ await deleteEmbarazo(pacienteId,r.id); getEmbarazos(pacienteId).then(x=>setEmbList(x.data)).catch(()=>{}); }}>✕</button></td>
-                  </tr>
-                ))}</tbody>
-              </table>
-            </div>
-          )}
-        </div>
-      )}
-
     </RenacedLayout>
   );
 }

@@ -55,6 +55,9 @@ export async function armarHistorial(db, pacienteId) {
      WHERE tor.paciente_id = ?`, [pacienteId]
   );
   const [edu] = await db.query("SELECT * FROM educacion WHERE paciente_id = ?", [pacienteId]);
+  const [estilos] = await db.query("SELECT * FROM estilovida WHERE paciente_id = ?", [pacienteId]);
+  const [toxs] = await db.query("SELECT * FROM toxicomanias WHERE paciente_id = ?", [pacienteId]);
+  const [eventos] = await db.query("SELECT * FROM evento WHERE paciente_id = ?", [pacienteId]);
 
   const fechaDeConsulta = new Map(consultas.map((c) => [String(c.id), dia(c.fecha_consulta)]));
   const visitas = new Map();
@@ -63,6 +66,7 @@ export async function armarHistorial(db, pacienteId) {
       visitas.set(fecha, {
         fecha, consulta_id: null, visita: null,
         laboratorio: [], tratamiento: [], evaluacion: [], educacion: [],
+        estilo_vida: [], toxicomanias: [], eventos: [],
       });
     }
     return visitas.get(fecha);
@@ -80,6 +84,17 @@ export async function armarHistorial(db, pacienteId) {
   for (const l of labs) { visita(fechaDe(l, l.fecha_muestra)).laboratorio.push(l); }
   for (const e of evals) { visita(fechaDe(e, e.fecha_evaluacion)).evaluacion.push(e); }
   for (const d of edu) { visita(fechaDe(d, d.fecha)).educacion.push(d); }
+  // Estilo de vida y toxicomanías no tienen fecha propia: solo se ubican si están ligados a una consulta.
+  // (En lo importado, fecha_captura es la fecha de la migración, no de la visita.)
+  const soloLigadas = (filas, destino) => {
+    for (const fila of filas) {
+      const f = fila.consulta_id != null ? fechaDeConsulta.get(String(fila.consulta_id)) : null;
+      if (f) visita(f)[destino].push(fila);
+    }
+  };
+  soloLigadas(estilos, "estilo_vida");
+  soloLigadas(toxs, "toxicomanias");
+  for (const e of eventos) visita(fechaDe(e, e.fecha)).eventos.push(e);
   for (const t of trats) {
     visita(fechaDe(t, t.fecha_inicio)).tratamiento.push({ ...t, tipo: "principal", insulinas: insPorTrat[t.id] || [] });
   }

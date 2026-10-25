@@ -1275,3 +1275,7 @@ input[type="reset"] {
   .detalle-3col { grid-template-columns: 1fr; }
 }
 
+
+/* Formularios existentes dentro de un acordeón: sin tarjeta propia (la sección ya es la tarjeta) */
+.seccion-plana .card { box-shadow: none; border: none; padding: 0; margin: 0; background: transparent; }
+.seccion-plana .card > h3:first-child { display: none; }
