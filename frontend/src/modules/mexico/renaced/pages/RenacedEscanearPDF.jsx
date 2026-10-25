@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { FiArrowLeft } from "react-icons/fi";
 import RenacedLayout from "../components/RenacedLayout";
 import {
-  getPacientes, getPaciente, subirEscaneoPDF, confirmarEscaneo,
+  getPacientes, getPaciente, subirEscaneoPDF, confirmarEscaneo, getMonitoresEscaneo,
 } from "../api/renacedApi";
 
 const C = { violet: "#6366f1", green: "#22c55e", amber: "#f59e0b", red: "#ef4444", slate: "#64748b" };
@@ -55,6 +55,8 @@ export default function RenacedEscanearPDF() {
   const [dropdown, setDropdown] = useState(false);
   const [paciente, setPaciente] = useState(null);
 
+  const [monitores, setMonitores] = useState([]);
+  const [tipo, setTipo] = useState(""); // "" = detectar automático
   const [archivo, setArchivo] = useState(null);
   const [arrastrado, setArrastrado] = useState(false);
   const [etapa, setEtapa] = useState("subir"); // subir | revisar | guardado
@@ -72,6 +74,10 @@ export default function RenacedEscanearPDF() {
       .then((r) => setPaciente(r.data))
       .catch(() => {});
   }, [preId]);
+
+  useEffect(() => {
+    getMonitoresEscaneo().then((r) => setMonitores(r.data)).catch(() => {});
+  }, []);
 
   // Buscar pacientes
   useEffect(() => {
@@ -98,7 +104,7 @@ export default function RenacedEscanearPDF() {
     setError("");
     setSubiendo(true);
     try {
-      const { data } = await subirEscaneoPDF(paciente.id, archivo);
+      const { data } = await subirEscaneoPDF(paciente.id, archivo, tipo);
       setDatos(data);
       const d = data.datos;
       setForm({
@@ -108,6 +114,7 @@ export default function RenacedEscanearPDF() {
         periodo_tipo: d.periodo_tipo ?? "",
         archivo_pdf: data.archivo,
         texto_extraido: d.textoExtraido ?? "",
+        extras: d.extras ?? [],
         comentarios: "",
         ...Object.fromEntries(CAMPOS.map(([k]) => [k, d[k] ?? ""])),
       });
@@ -186,7 +193,7 @@ export default function RenacedEscanearPDF() {
             Escanear reporte PDF
           </h1>
           <p style={{ margin: "2px 0 0", fontSize: 13, color: "#94a3b8" }}>
-            Extracción automática de métricas de monitoreo continuo de glucosa · FreeStyle Libre (AGP)
+            Extracción automática de métricas de monitoreo continuo de glucosa · FreeStyle Libre, Dexcom, Medtronic, Tandem y Tidepool
           </p>
         </div>
       </div>
@@ -284,9 +291,20 @@ export default function RenacedEscanearPDF() {
             ) : (
               <div style={{ color: C.slate }}>
                 <div style={{ fontSize: 15, fontWeight: 600, color: "#334155" }}>Arrastra el PDF aquí o haz clic</div>
-                <div style={{ fontSize: 12, marginTop: 4 }}>Reporte AGP de FreeStyle Libre · máx. 20 MB</div>
+                <div style={{ fontSize: 12, marginTop: 4 }}>Reporte de FreeStyle Libre, Dexcom, CareLink, Tandem o Tidepool · máx. 20 MB</div>
               </div>
             )}
+          </div>
+
+          <div style={{ marginTop: 14 }}>
+            <label style={lbl}>Tipo de reporte</label>
+            <select value={tipo} onChange={(e) => setTipo(e.target.value)} style={inp}>
+              <option value="">Detectar automáticamente</option>
+              {monitores.map((m) => <option key={m.clave} value={m.clave}>{m.nombre}</option>)}
+            </select>
+            <div style={{ fontSize: 11.5, color: C.slate, marginTop: 4 }}>
+              Déjalo en automático; elige uno solo si el sistema no reconoce el PDF.
+            </div>
           </div>
 
           <button
@@ -340,6 +358,17 @@ export default function RenacedEscanearPDF() {
               );
             })}
           </div>
+
+          {form.extras?.length > 0 && (
+            <div style={{ marginTop: 16, background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 10, padding: "12px 14px" }}>
+              <div style={{ ...lbl, marginBottom: 8 }}>Datos propios de {form.monitor}</div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: "6px 16px", fontSize: 13 }}>
+                {form.extras.map((e) => (
+                  <div key={e.label}><span style={{ color: C.slate }}>{e.label}: </span><strong>{e.valor}</strong></div>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div style={{ marginTop: 12 }}>
             <label style={lbl}>Comentarios</label>

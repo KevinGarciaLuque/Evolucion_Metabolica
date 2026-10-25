@@ -49,14 +49,16 @@ export const updateMonitoreo   = (pacId, monId, data) => api.put(`${BASE}/pacien
 export const deleteMonitoreo   = (pacId, monId)       => api.delete(`${BASE}/pacientes/${pacId}/monitoreo/${monId}`);
 
 // ── Escaneo de PDF (monitoreo continuo de glucosa) ───────────────────────────
-export const subirEscaneoPDF = (pacId, archivo) => {
+export const subirEscaneoPDF = (pacId, archivo, tipo) => {
   const fd = new FormData();
   fd.append("pdf", archivo);
   return api.post(`${BASE}/escaneos/upload/${pacId}`, fd, {
+    params: tipo ? { tipo } : undefined,
     headers: { "Content-Type": "multipart/form-data" },
     timeout: 60000,
   });
 };
+export const getMonitoresEscaneo = ()     => api.get(`${BASE}/escaneos/monitores`);
 export const confirmarEscaneo   = (data)  => api.post(`${BASE}/escaneos/confirmar`, data);
 export const getEscaneos        = (pacId) => api.get(`${BASE}/escaneos/paciente/${pacId}`);
 export const deleteEscaneo      = (id)    => api.delete(`${BASE}/escaneos/${id}`);

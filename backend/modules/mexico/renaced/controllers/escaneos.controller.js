@@ -1,4 +1,4 @@
-import { parsearPDFRenaced } from "../services/pdfParserRenaced.js";
+import { parsearPDFRenaced, MONITORES } from "../services/pdfParserRenaced.js";
 import { clasificarISPAD } from "../../../../shared/utils/helpers.js";
 
 // Columnas persistidas en escaneo_mcg (además de id, paciente_id, numero_registro,
@@ -10,6 +10,7 @@ const COLS = [
   "gri", "eventos_hipoglucemia", "duracion_hipoglucemia",
   "archivo_pdf", "texto_extraido", "comentarios",
 ];
+// "extras" (datos propios de cada monitor: insulina, etc.) se guarda como JSON aparte.
 
 const limpiar = (v) => (v === "" || v === undefined ? null : v);
 
@@ -26,7 +27,7 @@ export async function subirYParsear(req, res) {
     const [pac] = await req.db.query("SELECT id FROM paciente WHERE id = ?", [pacienteId]);
     if (pac.length === 0) return res.status(404).json({ error: "Paciente no encontrado" });
 
-    const datos = await parsearPDFRenaced(req.file.path);
+    const datos = await parsearPDFRenaced(req.file.path, req.query.tipo || undefined);
 
     const clasificacion = clasificarISPAD(
       datos.tir || 0,
@@ -82,6 +83,9 @@ export async function confirmarEscaneo(req, res) {
     for (const c of COLS) {
       if (c in b) { cols.push(c); ph.push("?"); vals.push(limpiar(b[c])); }
     }
+    if (Array.isArray(b.extras) && b.extras.length) {
+      cols.push("extras"); ph.push("?"); vals.push(JSON.stringify(b.extras));
+    }
 
     await conn.query(
       `INSERT INTO escaneo_mcg (${cols.join(",")}) VALUES (${ph.join(",")})`,
@@ -107,16 +111,25 @@ export async function getEscaneosByPaciente(req, res) {
               fecha_inicio, fecha_fin, glucosa_promedio, gmi, cv, tiempo_activo, escaneos_dia,
               tir, tar, tar_muy_alto, tar_alto, tbr, tbr_bajo, tbr_muy_bajo, gri,
               eventos_hipoglucemia, duracion_hipoglucemia, clasificacion, archivo_pdf,
-              comentarios, creado_en
+              desv_std, comentarios, extras, creado_en
        FROM escaneo_mcg WHERE paciente_id = ?
        ORDER BY fecha DESC, id DESC`,
       [req.params.pacienteId]
     );
-    res.json(rows);
+    res.json(rows.map((r) => {
+      let extras = [];
+      try { extras = r.extras ? JSON.parse(r.extras) : []; } catch { /* extras ilegibles: se ignoran */ }
+      return { ...r, extras };
+    }));
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Error al obtener escaneos" });
   }
+}
+
+/** Monitores reconocidos, para el select de tipo manual. */
+export function listarMonitores(_req, res) {
+  res.json(MONITORES.map(({ clave, nombre }) => ({ clave, nombre })));
 }
 
 /** Elimina un escaneo. */

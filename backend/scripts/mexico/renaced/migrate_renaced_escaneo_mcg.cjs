@@ -57,6 +57,7 @@ CREATE TABLE IF NOT EXISTS escaneo_mcg (
   archivo_pdf           VARCHAR(255)    DEFAULT NULL,
   texto_extraido        TEXT            DEFAULT NULL,
   comentarios           TEXT            DEFAULT NULL,
+  extras                TEXT            DEFAULT NULL,
   creado_en             DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
   KEY idx_escaneo_mcg_paciente (paciente_id)
@@ -74,6 +75,15 @@ async function run() {
       continue;
     }
     await conn.query(DDL);
+    // Tablas creadas antes de soportar varios monitores: añadir `extras` (JSON con datos propios del monitor)
+    const [[{ tieneExtras }]] = await conn.query(
+      "SELECT COUNT(*) tieneExtras FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=? AND TABLE_NAME='escaneo_mcg' AND COLUMN_NAME='extras'",
+      [database]
+    );
+    if (!tieneExtras) {
+      await conn.query("ALTER TABLE escaneo_mcg ADD COLUMN extras TEXT DEFAULT NULL AFTER comentarios");
+      console.log("   ➕ columna extras añadida");
+    }
     const [[{ n }]] = await conn.query(
       "SELECT COUNT(*) n FROM information_schema.TABLES WHERE TABLE_SCHEMA=? AND TABLE_NAME='escaneo_mcg'",
       [database]

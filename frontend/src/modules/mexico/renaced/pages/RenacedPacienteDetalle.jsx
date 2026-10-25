@@ -13,6 +13,7 @@ import {
   getEvaluacionesComplementarias,
   createEvaluacionComplementaria, updateEvaluacionComplementaria, deleteEvaluacionComplementaria,
   getMonitoreo, createMonitoreo, updateMonitoreo, deleteMonitoreo,
+  getEscaneos, deleteEscaneo,
   getEducacion, createEducacion,
   getCatalogosEvaluacion,
   getComorbilidad,
@@ -25,11 +26,11 @@ import {
   getEmbarazos,
 } from "../api/renacedApi";
 
-const TABS = ["Resumen", "Diagnóstico", "Consultas", "Laboratorio", "Tratamiento", "Evaluación", "Monitoreo", "Educación",
+const TABS = ["Resumen", "Diagnóstico", "Consultas", "Laboratorio", "Tratamiento", "Evaluación", "Monitoreo", "Escaneos MCG", "Educación",
   "Comorbilidades", "Patologías", "Ant. G.O.", "Eventos", "Estilo Vida", "Toxicomanías", "Reclasificación", "Embarazo"];
 
 const TAB_GRUPOS = [
-  { label: "Expediente", tabs: ["Resumen","Diagnóstico","Consultas","Laboratorio","Tratamiento","Evaluación","Monitoreo","Educación"] },
+  { label: "Expediente", tabs: ["Resumen","Diagnóstico","Consultas","Laboratorio","Tratamiento","Evaluación","Monitoreo","Escaneos MCG","Educación"] },
   { label: "Antecedentes", tabs: ["Comorbilidades","Patologías","Ant. G.O.","Eventos","Estilo Vida","Toxicomanías","Reclasificación","Embarazo"] },
 ];
 
@@ -105,6 +106,13 @@ const MON_METRICAS = [
 ];
 
 const btnEditar   = { background: "none", border: "none", color: "#6366f1", cursor: "pointer", fontSize: 12, fontWeight: 600, padding: "2px 6px" };
+const CLASIF_ESC = {
+  OPTIMO:      { label: "Óptimo",      color: "#22c55e" },
+  MODERADO:    { label: "Moderado",    color: "#f59e0b" },
+  ALTO_RIESGO: { label: "Alto riesgo", color: "#ef4444" },
+};
+const API_ARCHIVOS = import.meta.env.VITE_API_URL?.replace("/api", "") || "http://localhost:3001";
+const fmtFecha = (f) => (f ? String(f).substring(0, 10) : "—");
 const btnEliminar = { background: "none", border: "none", color: "#dc2626", cursor: "pointer", fontSize: 12, fontWeight: 600, padding: "2px 6px" };
 
 export default function RenacedPacienteDetalle() {
@@ -126,6 +134,8 @@ export default function RenacedPacienteDetalle() {
   const [complementarias, setComplementarias] = useState([]);
   const [monitoreo, setMonitoreo]         = useState([]);
   const [educacion, setEducacion]         = useState([]);
+  const [escaneos, setEscaneos]           = useState([]);
+  const [escAbierto, setEscAbierto]       = useState(null);
 
   // nuevos módulos (solo lectura)
   const [comorb, setComorb]         = useState(null);
@@ -196,6 +206,7 @@ export default function RenacedPacienteDetalle() {
       getEvaluacionesComplementarias(id).then((r) => setComplementarias(r.data)).catch(() => setComplementarias([]));
     }
     if (tab === "Monitoreo")   getMonitoreo(id).then((r)      => setMonitoreo(r.data)).catch(() => setMonitoreo([]));
+    if (tab === "Escaneos MCG") getEscaneos(id).then((r)      => setEscaneos(r.data)).catch(() => setEscaneos([]));
     if (tab === "Educación")   getEducacion(id).then((r)     => setEducacion(r.data));
     // nuevos módulos
     const nuevos = { "Comorbilidades": ()=>getComorbilidad(id).then(r=>setComorb(r.data||null)).catch(()=>{}),
@@ -421,6 +432,12 @@ export default function RenacedPacienteDetalle() {
       setModalMon(false);
     } finally { setGuardando(false); }
   }
+  async function eliminarEscaneo(e) {
+    if (!window.confirm("¿Eliminar este escaneo? El PDF original se conserva en el servidor.")) return;
+    await deleteEscaneo(e.id);
+    setEscaneos((prev) => prev.filter((x) => x.id !== e.id));
+  }
+
   async function eliminarMon(m) {
     if (!window.confirm("¿Eliminar este registro de monitoreo?")) return;
     await deleteMonitoreo(id, m.id);
@@ -1030,6 +1047,109 @@ export default function RenacedPacienteDetalle() {
                 ))}
                 {monitoreo.length === 0 && (
                   <tr><td colSpan={10} className="empty-cell">Sin registros de monitoreo</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* ── Escaneos MCG (reportes PDF de monitores) ─────────────────────────── */}
+      {tab === "Escaneos MCG" && (
+        <div className="card">
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+            <h3 style={{ margin: 0, fontSize: "0.9rem", color: "#6366f1" }}>Reportes escaneados de monitoreo continuo</h3>
+            <button className="btn btn-primary btn-sm" onClick={() => navigate(`/renaced/escanear-pdf?paciente=${id}`)}>
+              📄 Escanear PDF
+            </button>
+          </div>
+          <div className="table-wrapper">
+            <table className="tabla">
+              <thead>
+                <tr>
+                  <th>Fecha</th>
+                  <th>Monitor</th>
+                  <th>Período</th>
+                  <th>Glucosa prom.</th>
+                  <th>GMI</th>
+                  <th>CV (%)</th>
+                  <th>TIR (%)</th>
+                  <th>TAR (%)</th>
+                  <th>TBR (%)</th>
+                  <th>Clasificación</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {escaneos.map((e) => {
+                  const cl = CLASIF_ESC[e.clasificacion];
+                  const abierto = escAbierto === e.id;
+                  return (
+                    <Fragment key={`esc-${e.id}`}>
+                      <tr onClick={() => setEscAbierto(abierto ? null : e.id)} style={{ cursor: "pointer" }}>
+                        <td>{fmtFecha(e.fecha)}</td>
+                        <td>{e.monitor || "—"}</td>
+                        <td>
+                          {e.fecha_inicio ? `${fmtFecha(e.fecha_inicio)} → ${fmtFecha(e.fecha_fin)}` : "—"}
+                          {e.periodo_dias ? <span style={{ color: "#94a3b8" }}> ({e.periodo_dias} d)</span> : null}
+                        </td>
+                        <td>{e.glucosa_promedio ?? "—"}</td>
+                        <td>{e.gmi ?? "—"}</td>
+                        <td>{e.cv ?? "—"}</td>
+                        <td>{e.tir ?? "—"}</td>
+                        <td>{e.tar ?? "—"}</td>
+                        <td>{e.tbr ?? "—"}</td>
+                        <td>
+                          {cl ? (
+                            <span style={{ background: `${cl.color}1a`, color: cl.color, borderRadius: 20, padding: "2px 10px", fontWeight: 700, fontSize: 12 }}>
+                              {cl.label}
+                            </span>
+                          ) : "—"}
+                        </td>
+                        <td style={{ whiteSpace: "nowrap" }} onClick={(ev) => ev.stopPropagation()}>
+                          {e.archivo_pdf && (
+                            <a href={`${API_ARCHIVOS}/uploads/renaced_pdfs/${e.archivo_pdf}`} target="_blank" rel="noopener noreferrer" style={btnEditar}>
+                              Ver PDF
+                            </a>
+                          )}
+                          <button className="btn-link" onClick={() => eliminarEscaneo(e)} style={btnEliminar}>Eliminar</button>
+                        </td>
+                      </tr>
+                      {abierto && (
+                        <tr>
+                          <td colSpan={11} style={{ background: "#f8fafc" }}>
+                            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(210px, 1fr))", gap: "6px 18px", fontSize: 13, padding: "6px 4px" }}>
+                              {[
+                                ["Tiempo sensor activo", e.tiempo_activo, " %"],
+                                ["Desviación estándar", e.desv_std, " mg/dL"],
+                                ["Muy alto (>250)", e.tar_muy_alto, " %"],
+                                ["Alto (181–250)", e.tar_alto, " %"],
+                                ["Bajo (54–69)", e.tbr_bajo, " %"],
+                                ["Muy bajo (<54)", e.tbr_muy_bajo, " %"],
+                                ["GRI", e.gri, ""],
+                                ["Escaneos / día", e.escaneos_dia, ""],
+                                ["Eventos de hipoglucemia", e.eventos_hipoglucemia, ""],
+                                ["Duración prom. hipoglucemia", e.duracion_hipoglucemia, " min"],
+                              ].filter(([, v]) => v != null).map(([l, v, suf]) => (
+                                <div key={l}><span style={{ color: "#64748b" }}>{l}: </span><strong>{v}{suf}</strong></div>
+                              ))}
+                              {e.extras.map((x) => (
+                                <div key={x.label}><span style={{ color: "#64748b" }}>{x.label}: </span><strong>{x.valor}</strong></div>
+                              ))}
+                            </div>
+                            {e.comentarios && (
+                              <div style={{ fontSize: 13, padding: "4px 4px 8px", color: "#334155" }}>
+                                <span style={{ color: "#64748b" }}>Comentarios: </span>{e.comentarios}
+                              </div>
+                            )}
+                          </td>
+                        </tr>
+                      )}
+                    </Fragment>
+                  );
+                })}
+                {escaneos.length === 0 && (
+                  <tr><td colSpan={11} className="empty-cell">Sin reportes escaneados</td></tr>
                 )}
               </tbody>
             </table>

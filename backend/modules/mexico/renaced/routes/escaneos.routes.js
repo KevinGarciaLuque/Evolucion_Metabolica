@@ -7,7 +7,7 @@ import { UPLOADS_PATH } from "../../../../shared/paths.js";
 import { verificarToken } from "../../../../shared/middlewares/auth.js";
 import { resolverTenantDB } from "../middlewares/tenantDb.js";
 import {
-  subirYParsear, confirmarEscaneo, getEscaneosByPaciente, deleteEscaneo,
+  subirYParsear, confirmarEscaneo, getEscaneosByPaciente, deleteEscaneo, listarMonitores,
 } from "../controllers/escaneos.controller.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -37,7 +37,9 @@ const router = Router();
 
 router.use(verificarToken, resolverTenantDB);
 
-// POST /api/renaced/escaneos/upload/:pacienteId  → sube y parsea el PDF
+// GET  /api/renaced/escaneos/monitores           → tipos de reporte admitidos
+router.get("/monitores", listarMonitores);
+// POST /api/renaced/escaneos/upload/:pacienteId?tipo=  → sube y parsea el PDF (tipo opcional)
 router.post("/upload/:pacienteId", upload.single("pdf"), subirYParsear);
 // POST /api/renaced/escaneos/confirmar           → guarda el escaneo revisado
 router.post("/confirmar", confirmarEscaneo);
