@@ -11,6 +11,17 @@
 // Cada país ve en el panel las entradas "global" + las suyas. La versión (VERSION) es una sola para todos.
 export const NOVEDADES = [
   {
+    version: "1.7.1",
+    alcance: "global",
+    fecha: "2026-10-24",
+    titulo: "Avisos más visibles",
+    cambios: [
+      "Cuando hay una novedad nueva, el botón ✨ de la barra superior late con aros pulsantes ámbar",
+      "Cuando hay notificaciones sin leer, la campana 🔔 suena con aros pulsantes rojos y el contador late",
+      "Las animaciones se calman al abrir el panel y respetan la opción de \"reducir movimiento\" del dispositivo",
+    ],
+  },
+  {
     version: "1.7.0",
     alcance: "global",
     fecha: "2026-10-24",

@@ -97,13 +97,13 @@ export default function TopbarAvisos({ api, esSuperAdmin, basePacientes, storage
   }
   return (
     <div className="tba">
-      <button className="tba-btn" onClick={abrirNovedades} title="Novedades" aria-label="Novedades">
+      <button className={`tba-btn${hayNovedades ? " tba-btn--nov" : ""}`} onClick={abrirNovedades} title={hayNovedades ? "Hay novedades nuevas" : "Novedades"} aria-label={hayNovedades ? "Novedades (hay una nueva)" : "Novedades"}>
         <HiOutlineSparkles size={19} />
         {hayNovedades && <span className="tba-dot" />}
       </button>
 
       <div className="tba-wrap" ref={campanaRef}>
-        <button className={`tba-btn${panel ? " open" : ""}`} onClick={abrirCampana} title="Notificaciones" aria-label="Notificaciones">
+        <button className={`tba-btn${panel ? " open" : ""}${sinLeer > 0 ? " tba-btn--noti" : ""}`} onClick={abrirCampana} title={sinLeer > 0 ? `${sinLeer} notificación(es) sin leer` : "Notificaciones"} aria-label={sinLeer > 0 ? `Notificaciones (${sinLeer} sin leer)` : "Notificaciones"}>
           <HiOutlineBell size={19} />
           {sinLeer > 0 && <span className="tba-badge">{sinLeer > 9 ? "9+" : sinLeer}</span>}
         </button>

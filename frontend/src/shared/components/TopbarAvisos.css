@@ -105,3 +105,48 @@
 .tba-drawer .tba-nov ul { margin: 10px 0 0; padding-left: 18px; font-size: 13.5px; color: #cbd5e1; display: flex; flex-direction: column; gap: 5px; }
 .tba-drawer .tba-ver { background: rgba(124,58,237,.25); color: #c4b5fd; }
 .tba-nuevo { background: linear-gradient(135deg,#22c55e,#16a34a); color: #fff; font-size: 10px; font-weight: 800; letter-spacing: .5px; text-transform: uppercase; padding: 2px 8px; border-radius: 20px; }
+
+/* ── Aviso de algo nuevo: aros pulsantes alrededor del botón ─────────────── */
+.tba-btn--nov, .tba-btn--noti { --aro: #f59e0b; }
+.tba-btn--noti { --aro: #ef4444; }
+
+.tba-btn--nov::before, .tba-btn--nov::after,
+.tba-btn--noti::before, .tba-btn--noti::after {
+  content: ""; position: absolute; inset: -1px; border-radius: 50%; pointer-events: none;
+  border: 2px solid var(--aro); opacity: 0;
+  animation: tba-aro 2.2s ease-out infinite;
+}
+.tba-btn--nov::after, .tba-btn--noti::after { animation-delay: 1.1s; }
+.tba-btn--nov, .tba-btn--noti { border-color: var(--aro); box-shadow: 0 0 12px color-mix(in srgb, var(--aro) 55%, transparent); }
+
+@keyframes tba-aro {
+  0%   { transform: scale(1);   opacity: 0.75; }
+  100% { transform: scale(1.8); opacity: 0; }
+}
+
+/* El ícono también se mueve: la campana suena y las chispas brillan */
+.tba-btn--noti > svg { animation: tba-campana 2.4s ease-in-out infinite; transform-origin: 50% 12%; }
+.tba-btn--nov > svg  { animation: tba-brillo 2.2s ease-in-out infinite; }
+@keyframes tba-campana {
+  0%, 55%, 100% { transform: rotate(0); }
+  60% { transform: rotate(16deg); }  68% { transform: rotate(-14deg); }
+  76% { transform: rotate(10deg); }  84% { transform: rotate(-7deg); }  92% { transform: rotate(3deg); }
+}
+@keyframes tba-brillo {
+  0%, 100% { transform: scale(1) rotate(0); filter: none; }
+  50% { transform: scale(1.18) rotate(12deg); filter: drop-shadow(0 0 5px #fbbf24); }
+}
+
+/* El punto y el contador también laten */
+.tba-dot { animation: tba-latido 1.4s ease-in-out infinite; }
+.tba-badge { animation: tba-latido 1.4s ease-in-out infinite; }
+@keyframes tba-latido { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.22); } }
+
+/* Con el panel abierto ya se vio: se calma */
+.tba-btn.open::before, .tba-btn.open::after, .tba-btn.open > svg { animation: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .tba-btn--nov::before, .tba-btn--nov::after, .tba-btn--noti::before, .tba-btn--noti::after,
+  .tba-btn--noti > svg, .tba-btn--nov > svg, .tba-dot, .tba-badge { animation: none; }
+  .tba-btn--nov::before, .tba-btn--noti::before { opacity: 0.5; transform: scale(1.35); } /* un solo aro fijo */
+}
