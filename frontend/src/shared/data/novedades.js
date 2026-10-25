@@ -11,6 +11,17 @@
 // Cada país ve en el panel las entradas "global" + las suyas. La versión (VERSION) es una sola para todos.
 export const NOVEDADES = [
   {
+    version: "1.5.2",
+    alcance: "global",
+    fecha: "2026-10-24",
+    titulo: "Mejoras de pantalla en el celular",
+    cambios: [
+      "Corregido: en el celular la barra superior ya cabe completa y la pantalla no se corre ni se corta hacia un lado",
+      "Las gráficas del dashboard de RENACED se acomodan en una sola columna en pantallas pequeñas",
+      "La barra fija de la consulta se mantiene arriba al desplazarse en el celular",
+    ],
+  },
+  {
     version: "1.5.1",
     alcance: "global",
     fecha: "2026-10-24",

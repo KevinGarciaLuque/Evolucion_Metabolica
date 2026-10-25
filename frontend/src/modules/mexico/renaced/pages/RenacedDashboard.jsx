@@ -72,6 +72,7 @@ function ChartCard({ title, badge, children, style }) {
     <div style={{
       background: "#fff",
       borderRadius: 14,
+      minWidth: 0,
       padding: "20px 20px 16px",
       boxShadow: "0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04)",
       ...style,
@@ -211,7 +212,7 @@ export default function RenacedDashboard() {
 
       {/* ── Gráficas fila 1 ──────────────────────────────────────────────── */}
       <SLabel>Distribución y Control</SLabel>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 320px), 1fr))", gap: 16 }}>
 
         {/* Tipo de DM */}
         <ChartCard title="Tipo de Diabetes">
@@ -248,7 +249,7 @@ export default function RenacedDashboard() {
       </div>
 
       {/* ── Gráficas fila 2 ──────────────────────────────────────────────── */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginTop: 16 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 320px), 1fr))", gap: 16, marginTop: 16 }}>
 
         {/* Tendencia nuevos pacientes */}
         <ChartCard title="Nuevos Pacientes" badge="Últimos 12 meses">
@@ -300,7 +301,7 @@ export default function RenacedDashboard() {
       </div>
 
       {/* ── Gráficas fila 3 ──────────────────────────────────────────────── */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginTop: 16, marginBottom: 24 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 320px), 1fr))", gap: 16, marginTop: 16, marginBottom: 24 }}>
 
         {/* Top unidades */}
         <ChartCard title="Pacientes por Unidad Médica">

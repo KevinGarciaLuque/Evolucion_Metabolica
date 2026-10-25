@@ -688,7 +688,7 @@ export default function RenacedConsultasClinical() {
             <form onSubmit={guardarPat}>
               <datalist id="pat-sugeridas">{PAT_SUGERIDAS.map((n) => <option key={n} value={n} />)}</datalist>
               {patList.map((pt, i) => (
-                <div key={i} style={{ display: "grid", gridTemplateColumns: "2fr 1fr 90px 2fr auto", gap: 10, alignItems: "end", marginBottom: 10 }}>
+                <div key={i} style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 10, alignItems: "end", marginBottom: 10 }}>
                   <Campo label={i === 0 ? "Patología" : ""}><input list="pat-sugeridas" value={pt.nombre} onChange={(e) => cambiarPat(i, "nombre", e.target.value.toUpperCase())} placeholder="Escribe o elige" /></Campo>
                   <Campo label={i === 0 ? "Fecha de diagnóstico" : ""}><input type="date" value={pt.fecha_dx} onChange={(e) => cambiarPat(i, "fecha_dx", e.target.value)} /></Campo>
                   <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, paddingBottom: 9 }}><input type="checkbox" checked={!!pt.activa} onChange={(e) => cambiarPat(i, "activa", e.target.checked ? 1 : 0)} /> Activa</label>
