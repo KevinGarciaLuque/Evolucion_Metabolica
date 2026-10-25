@@ -11,6 +11,16 @@
 // Cada país ve en el panel las entradas "global" + las suyas. La versión (VERSION) es una sola para todos.
 export const NOVEDADES = [
   {
+    version: "1.7.0",
+    alcance: "global",
+    fecha: "2026-10-24",
+    titulo: "Tarjetas de país en la página principal",
+    cambios: [
+      "Las tarjetas de cada país en la página principal ahora son botones: un clic lleva directo al inicio de sesión de ese país",
+      "Cada tarjeta muestra \"Iniciar sesión →\" para que se vea que se puede tocar",
+    ],
+  },
+  {
     version: "1.6.0",
     alcance: "global",
     fecha: "2026-10-24",

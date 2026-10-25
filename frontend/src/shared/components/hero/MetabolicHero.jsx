@@ -106,9 +106,10 @@ export default function MetabolicHero({ paises = [], cargando = false, loginSlot
               return (
                 <Tag
                   key={p.codigo}
-                  className="mh__country"
+                  className={`mh__country${onPaisClick ? " mh__country--link" : ""}`}
                   style={{ animationDelay: `${i * 90}ms`, cursor: onPaisClick ? "pointer" : undefined }}
                   onClick={onPaisClick ? () => onPaisClick(p) : undefined}
+                  {...(onPaisClick ? { type: "button", "aria-label": `Iniciar sesión en ${p.pais}` } : {})}
                 >
                   <div className="mh__country-top">
                     <FlagIcon codigo={p.codigo} size={26} style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.35)" }} />
@@ -119,6 +120,7 @@ export default function MetabolicHero({ paises = [], cargando = false, loginSlot
                   <div className="mh__country-bar" aria-hidden="true">
                     <b style={{ width: `${((p.total_pacientes || 0) / max) * 100}%` }} />
                   </div>
+                  {onPaisClick && <span className="mh__country-go" aria-hidden="true">Iniciar sesión →</span>}
                 </Tag>
               );
             })}

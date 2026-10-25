@@ -88,7 +88,10 @@ export default function Landing({ variant = "video" }) {
         .landing-pais-flag { transition: transform 0.18s ease; }
       `}</style>
 
-      <MetabolicHero variant={variant} paises={paises} cargando={cargando} loginSlot={loginSlot} />
+      <MetabolicHero
+        variant={variant} paises={paises} cargando={cargando} loginSlot={loginSlot}
+        onPaisClick={(p) => window.location.assign(loginDePais(p.codigo))} /* recarga completa: el navegador toma el manifest (app instalable) del país elegido */
+      />
 
       <SobreNosotros />
 
