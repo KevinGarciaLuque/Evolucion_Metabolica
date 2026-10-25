@@ -1,14 +1,10 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import RenacedLayout from "../components/RenacedLayout";
+import HojaConsulta from "../components/HojaConsulta";
 import {
   getPaciente,
   getDiagnosticoClinico, saveDiagnosticoClinico,
-  getConsultas, createConsulta,
-  getLaboratorios, createLaboratorio,
-  getTratamiento, createTratamiento,
-  getEvaluaciones, createEvaluacion,
-  getEducacion, createEducacion,
   getCatalogosEvaluacion,
   getComorbilidad, saveComorbilidad,
   getPatologia, savePatologia,
@@ -51,11 +47,11 @@ const DM_COLOR = {
   "Otros":       { bg: "#f3e8ff", color: "#6b21a8" },
 };
 
-const TABS_CLINICOS = ["Diagnóstico", "Visita", "Laboratorio", "Tratamiento", "Evaluación", "Educación",
+const TABS_CLINICOS = ["Consulta", "Diagnóstico",
   "Comorbilidades", "Patologías", "Ant. G.O.", "Eventos", "Estilo Vida", "Toxicomanías", "Reclasificación", "Embarazo"];
 
 const TAB_GRUPOS_CLIN = [
-  { label: "Consulta clínica", tabs: ["Diagnóstico","Visita","Laboratorio","Tratamiento","Evaluación","Educación"] },
+  { label: "Consulta clínica", tabs: ["Consulta","Diagnóstico"] },
   { label: "Antecedentes",     tabs: ["Comorbilidades","Patologías","Ant. G.O.","Eventos","Estilo Vida","Toxicomanías","Reclasificación","Embarazo"] },
 ];
 
@@ -107,7 +103,7 @@ export default function RenacedConsultasClinical() {
   const { pacienteId } = useParams();
   const [paciente, setPaciente] = useState(null);
   const [cargando, setCargando] = useState(true);
-  const [tab, setTab]   = useState("Diagnóstico");
+  const [tab, setTab]   = useState("Consulta");
   const [cats, setCats] = useState({ retinopatia: [], nefropatia: [], neuropatia: [], pie_diabetico: [], cardiovascular: [] });
 
   // ── Estado por sección ────────────────────────────────────────────────────
@@ -115,31 +111,6 @@ export default function RenacedConsultasClinical() {
   const [dxOk, setDxOk]   = useState("");
   const [dxErr, setDxErr] = useState("");
   const [dxLoading, setDxLoading] = useState(false);
-
-  const [visita, setVisita]     = useState({ fecha_consulta: "", peso: "", estatura: "", pa_sistolica: "", pa_diastolica: "", cintura: "", cadera: "", percentil: "" });
-  const [visitaOk, setVisitaOk] = useState("");
-  const [visitaErr, setVisitaErr] = useState("");
-  const [visitaLoading, setVisitaLoading] = useState(false);
-
-  const [lab, setLab]     = useState({ fecha_muestra: "", hba1c: "", glucosa_ayuno: "", glucosa_postprandial: "", colesterol_total: "", hdl: "", ldl: "", trigliceridos: "", creatinina: "", tasa_filtracion: "", microalbuminuria: "", tsh: "", c_peptido: "", anti_gad: "", anti_ia2: "" });
-  const [labOk, setLabOk] = useState("");
-  const [labErr, setLabErr] = useState("");
-  const [labLoading, setLabLoading] = useState(false);
-
-  const [trat, setTrat]     = useState({ fecha_inicio: "", terapia_id: "", esquema_insulina_id: "", dispositivo_id: "", insulina_id: "", dosis_unidades: "", antidiabetico_id: "", dosis_mg: "", frecuencia: "" });
-  const [tratOk, setTratOk] = useState("");
-  const [tratErr, setTratErr] = useState("");
-  const [tratLoading, setTratLoading] = useState(false);
-
-  const [eval_, setEval]   = useState({ fecha_evaluacion: "", retinopatia_id: "", nefropatia_id: "", neuropatia_id: "", pie_diabetico_id: "", enf_cardiovascular_id: "", observaciones: "" });
-  const [evalOk, setEvalOk] = useState("");
-  const [evalErr, setEvalErr] = useState("");
-  const [evalLoading, setEvalLoading] = useState(false);
-
-  const [edu, setEdu]     = useState({ fecha: "", tema: "", modalidad: "", duracion_min: "", educador: "", observaciones: "" });
-  const [eduOk, setEduOk] = useState("");
-  const [eduErr, setEduErr] = useState("");
-  const [eduLoading, setEduLoading] = useState(false);
 
   // ── Comorbilidades ────────────────────────────────────────────────────────
   const COMORB_INIT = { retinopatia:"NO",retinopatia_fecha:"",retinopatia_tipo:"",retinopatia_laser:"",nefropatia:"NO",nefropatia_fecha:"",nefropatia_tipo:"",neuropatia:"NO",neuropatia_fecha:"",neuropatia_tipo:"",neuropatia_auto_tipo:"",vascular_perif:"NO",vascular_perif_fecha:"",vascular_perif_tipo:"",cardiovascular:"NO",cardiovascular_fecha:"",cardiovascular_tipo:"",pie_diabetico:"NO",pie_diabetico_fecha:"",pie_diabetico_tipo:"" };
@@ -286,24 +257,6 @@ export default function RenacedConsultasClinical() {
     });
   }
 
-  function cambiarVisita(e) {
-    const { name, value } = e.target;
-    setVisita((f) => {
-      const next = { ...f, [name]: value };
-      if (name === "peso" || name === "estatura") {
-        const p = parseFloat(name === "peso" ? value : f.peso);
-        const h = parseFloat(name === "estatura" ? value : f.estatura);
-        if (p > 0 && h > 0) next.imc = (p / (h * h)).toFixed(2);
-      }
-      if ((name === "cintura" || name === "cadera") && f.cintura && f.cadera) {
-        const cin = parseFloat(name === "cintura" ? value : f.cintura);
-        const cad = parseFloat(name === "cadera"  ? value : f.cadera);
-        if (cin > 0 && cad > 0) next.indice_cc = (cin / cad).toFixed(2);
-      }
-      return next;
-    });
-  }
-
   // ── Carga de datos al cambiar de tab ─────────────────────────────────────
   useEffect(() => {
     if (tab === "Comorbilidades") {
@@ -336,78 +289,6 @@ export default function RenacedConsultasClinical() {
     } catch (err) {
       setDxErr(err.response?.data?.error || "Error al guardar");
     } finally { setDxLoading(false); }
-  }
-
-  // ── Guardar visita ─────────────────────────────────────────────────────────
-  async function guardarVisita(e) {
-    e.preventDefault();
-    setVisitaLoading(true); setVisitaOk(""); setVisitaErr("");
-    try {
-      await createConsulta(pacienteId, visita);
-      setVisitaOk("Visita registrada");
-      setVisita({ fecha_consulta: "", peso: "", estatura: "", pa_sistolica: "", pa_diastolica: "", cintura: "", cadera: "", percentil: "" });
-      setTimeout(() => setVisitaOk(""), 3000);
-    } catch (err) {
-      setVisitaErr(err.response?.data?.error || "Error al guardar");
-    } finally { setVisitaLoading(false); }
-  }
-
-  // ── Guardar laboratorio ────────────────────────────────────────────────────
-  async function guardarLab(e) {
-    e.preventDefault();
-    setLabLoading(true); setLabOk(""); setLabErr("");
-    try {
-      await createLaboratorio(pacienteId, lab);
-      setLabOk("Laboratorio registrado");
-      setLab({ fecha_muestra: "", hba1c: "", glucosa_ayuno: "", glucosa_postprandial: "", colesterol_total: "", hdl: "", ldl: "", trigliceridos: "", creatinina: "", tasa_filtracion: "", microalbuminuria: "", tsh: "", c_peptido: "", anti_gad: "", anti_ia2: "" });
-      setTimeout(() => setLabOk(""), 3000);
-    } catch (err) {
-      setLabErr(err.response?.data?.error || "Error al guardar");
-    } finally { setLabLoading(false); }
-  }
-
-  // ── Guardar tratamiento ────────────────────────────────────────────────────
-  async function guardarTrat(e) {
-    e.preventDefault();
-    setTratLoading(true); setTratOk(""); setTratErr("");
-    try {
-      const insulinas = trat.insulina_id ? [{ insulina_id: trat.insulina_id, dosis_unidades: trat.dosis_unidades }] : [];
-      const orales    = trat.antidiabetico_id ? [{ antidiabetico_id: trat.antidiabetico_id, dosis_mg: trat.dosis_mg, frecuencia: trat.frecuencia }] : [];
-      await createTratamiento(pacienteId, { terapia_id: trat.terapia_id || null, esquema_insulina_id: trat.esquema_insulina_id || null, dispositivo_id: trat.dispositivo_id || null, fecha_inicio: trat.fecha_inicio || null, insulinas, orales });
-      setTratOk("Tratamiento registrado");
-      setTrat({ fecha_inicio: "", terapia_id: "", esquema_insulina_id: "", dispositivo_id: "", insulina_id: "", dosis_unidades: "", antidiabetico_id: "", dosis_mg: "", frecuencia: "" });
-      setTimeout(() => setTratOk(""), 3000);
-    } catch (err) {
-      setTratErr(err.response?.data?.error || "Error al guardar");
-    } finally { setTratLoading(false); }
-  }
-
-  // ── Guardar evaluación ─────────────────────────────────────────────────────
-  async function guardarEval(e) {
-    e.preventDefault();
-    setEvalLoading(true); setEvalOk(""); setEvalErr("");
-    try {
-      await createEvaluacion(pacienteId, eval_);
-      setEvalOk("Evaluación registrada");
-      setEval({ fecha_evaluacion: "", retinopatia_id: "", nefropatia_id: "", neuropatia_id: "", pie_diabetico_id: "", enf_cardiovascular_id: "", observaciones: "" });
-      setTimeout(() => setEvalOk(""), 3000);
-    } catch (err) {
-      setEvalErr(err.response?.data?.error || "Error al guardar");
-    } finally { setEvalLoading(false); }
-  }
-
-  // ── Guardar educación ──────────────────────────────────────────────────────
-  async function guardarEdu(e) {
-    e.preventDefault();
-    setEduLoading(true); setEduOk(""); setEduErr("");
-    try {
-      await createEducacion(pacienteId, edu);
-      setEduOk("Sesión educativa registrada");
-      setEdu({ fecha: "", tema: "", modalidad: "", duracion_min: "", educador: "", observaciones: "" });
-      setTimeout(() => setEduOk(""), 3000);
-    } catch (err) {
-      setEduErr(err.response?.data?.error || "Error al guardar");
-    } finally { setEduLoading(false); }
   }
 
   // ── Guardar comorbilidades ─────────────────────────────────────────────────
@@ -829,231 +710,9 @@ export default function RenacedConsultasClinical() {
         </form>
       )}
 
-      {/* ══════════════════════════════════════════════════════════════════════ */}
-      {/* TAB: VISITA                                                           */}
-      {/* ══════════════════════════════════════════════════════════════════════ */}
-      {tab === "Visita" && (
-        <form onSubmit={guardarVisita}>
-          <div className="card">
-            <h3 style={{ margin: "0 0 16px", fontSize: "0.9rem", color: "#6366f1" }}>Datos de la Visita / Consulta</h3>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 14 }}>
-              <Campo label="Fecha de consulta" required>
-                <input type="date" name="fecha_consulta" value={visita.fecha_consulta} onChange={cambiarVisita} required />
-              </Campo>
-              <Campo label="Peso (kg)" required>
-                <input type="number" step="0.01" name="peso" value={visita.peso} onChange={cambiarVisita} required />
-              </Campo>
-              <Campo label="Estatura (m)" required>
-                <input type="number" step="0.001" name="estatura" value={visita.estatura} onChange={cambiarVisita} required />
-              </Campo>
-              <Campo label={<>IMC <span style={{ fontSize: 11, color: "#94a3b8" }}>(auto)</span></>}>
-                <input type="number" step="0.01" name="imc" value={visita.imc || ""} readOnly style={{ background: "#f8fafc", color: "#64748b" }} />
-              </Campo>
-              {paciente?.edad != null && paciente.edad < 20 && (
-                <Campo label="Percentil">
-                  <input type="text" name="percentil" value={visita.percentil} onChange={cambiarVisita} placeholder="ej. p50" />
-                </Campo>
-              )}
-              <Campo label="Cintura (cm)">
-                <input type="number" step="0.1" name="cintura" value={visita.cintura} onChange={cambiarVisita} />
-              </Campo>
-              <Campo label="Cadera (cm)">
-                <input type="number" step="0.1" name="cadera" value={visita.cadera} onChange={cambiarVisita} />
-              </Campo>
-              <Campo label={<>Índice C/C <span style={{ fontSize: 11, color: "#94a3b8" }}>(auto)</span></>}>
-                <input type="number" step="0.001" name="indice_cc" value={visita.indice_cc || ""} readOnly style={{ background: "#f8fafc", color: "#64748b" }} />
-              </Campo>
-              <Campo label="PA Sistólica (mmHg)">
-                <input type="number" name="pa_sistolica" value={visita.pa_sistolica} onChange={cambiarVisita} />
-              </Campo>
-              <Campo label="PA Diastólica (mmHg)">
-                <input type="number" name="pa_diastolica" value={visita.pa_diastolica} onChange={cambiarVisita} />
-              </Campo>
-            </div>
-            <Feedback ok={visitaOk} error={visitaErr} />
-            <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 16 }}>
-              <button type="submit" className="btn btn-primary" disabled={visitaLoading}>
-                {visitaLoading ? "Guardando…" : "Guardar Visita"}
-              </button>
-            </div>
-          </div>
-        </form>
-      )}
-
-      {/* ══════════════════════════════════════════════════════════════════════ */}
-      {/* TAB: LABORATORIO                                                      */}
-      {/* ══════════════════════════════════════════════════════════════════════ */}
-      {tab === "Laboratorio" && (
-        <form onSubmit={guardarLab}>
-          <div className="card">
-            <h3 style={{ margin: "0 0 16px", fontSize: "0.9rem", color: "#6366f1" }}>Resultados de Laboratorio</h3>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: 14 }}>
-              <Campo label="Fecha de muestra" required>
-                <input type="date" name="fecha_muestra" value={lab.fecha_muestra} onChange={(e) => setLab(f => ({ ...f, fecha_muestra: e.target.value }))} required />
-              </Campo>
-              {[
-                ["HbA1c (%)",           "hba1c",              "0.01"],
-                ["Glucosa en ayuno",    "glucosa_ayuno",      "0.1" ],
-                ["Glucosa postprandial","glucosa_postprandial","0.1" ],
-                ["Colesterol total",    "colesterol_total",   "0.1" ],
-                ["HDL (mg/dl)",         "hdl",                "0.1" ],
-                ["LDL (mg/dl)",         "ldl",                "0.1" ],
-                ["Triglicéridos",       "trigliceridos",      "0.1" ],
-                ["Creatinina (mg/dl)",  "creatinina",         "0.001"],
-                ["TFG (ml/min)",        "tasa_filtracion",    "0.1" ],
-                ["Microalbuminuria",    "microalbuminuria",   "0.1" ],
-                ["TSH (µUI/ml)",        "tsh",                "0.001"],
-                ["Péptido C (ng/ml)",   "c_peptido",          "0.001"],
-                ["Anti-GAD (nmol/L)",   "anti_gad",           "0.01" ],
-                ["Anti-IA2 (nmol/L)",   "anti_ia2",           "0.01" ],
-              ].map(([label, name, step]) => (
-                <Campo key={name} label={label}>
-                  <input type="number" step={step} name={name} value={lab[name]} onChange={(e) => setLab(f => ({ ...f, [name]: e.target.value }))} />
-                </Campo>
-              ))}
-            </div>
-            <Feedback ok={labOk} error={labErr} />
-            <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 16 }}>
-              <button type="submit" className="btn btn-primary" disabled={labLoading}>
-                {labLoading ? "Guardando…" : "Guardar Laboratorio"}
-              </button>
-            </div>
-          </div>
-        </form>
-      )}
-
-      {/* ══════════════════════════════════════════════════════════════════════ */}
-      {/* TAB: TRATAMIENTO                                                      */}
-      {/* ══════════════════════════════════════════════════════════════════════ */}
-      {tab === "Tratamiento" && (
-        <form onSubmit={guardarTrat}>
-          <div className="card">
-            <h3 style={{ margin: "0 0 16px", fontSize: "0.9rem", color: "#6366f1" }}>Tratamiento</h3>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 14 }}>
-              <Campo label="Fecha inicio" required>
-                <input type="date" name="fecha_inicio" value={trat.fecha_inicio} onChange={(e) => setTrat(f => ({ ...f, fecha_inicio: e.target.value }))} required />
-              </Campo>
-              <Campo label="Terapia">
-                <select value={trat.terapia_id} onChange={(e) => setTrat(f => ({ ...f, terapia_id: e.target.value }))}>
-                  <option value="">— Seleccionar —</option>
-                  {[["1","Dieta y ejercicio"],["2","Oral"],["3","Insulina"],["4","Insulina+Oral"],["5","Otra"]].map(([v,l]) => <option key={v} value={v}>{l}</option>)}
-                </select>
-              </Campo>
-              <Campo label="Esquema insulina">
-                <select value={trat.esquema_insulina_id} onChange={(e) => setTrat(f => ({ ...f, esquema_insulina_id: e.target.value }))}>
-                  <option value="">— Seleccionar —</option>
-                  {[["1","Tradicional"],["2","Premezcla"],["3","Basal"],["4","Basal-Bolo"],["5","Microinfusora"]].map(([v,l]) => <option key={v} value={v}>{l}</option>)}
-                </select>
-              </Campo>
-              <Campo label="Dispositivo">
-                <select value={trat.dispositivo_id} onChange={(e) => setTrat(f => ({ ...f, dispositivo_id: e.target.value }))}>
-                  <option value="">— Seleccionar —</option>
-                  {[["1","Jeringa"],["2","Pluma"],["3","Microinfusora"],["4","Otro"]].map(([v,l]) => <option key={v} value={v}>{l}</option>)}
-                </select>
-              </Campo>
-              <Campo label="Insulina">
-                <select value={trat.insulina_id} onChange={(e) => setTrat(f => ({ ...f, insulina_id: e.target.value }))}>
-                  <option value="">— Ninguna —</option>
-                  {[["1","NPH"],["2","Glargina"],["3","Detemir"],["4","Degludec"],["5","Rápida"],["6","Lispro"],["7","Aspart"],["8","Glulisina"],["14","Glargina U300"],["15","FiAsp"]].map(([v,l]) => <option key={v} value={v}>{l}</option>)}
-                </select>
-              </Campo>
-              <Campo label="Dosis insulina (U)">
-                <input type="number" step="0.01" value={trat.dosis_unidades} onChange={(e) => setTrat(f => ({ ...f, dosis_unidades: e.target.value }))} />
-              </Campo>
-              <Campo label="Antidiabético oral">
-                <select value={trat.antidiabetico_id} onChange={(e) => setTrat(f => ({ ...f, antidiabetico_id: e.target.value }))}>
-                  <option value="">— Ninguno —</option>
-                  {[["1","Metformina"],["2","Sulfonilureas"],["7","Análogos GLP-1"],["8","Inhibidores DPP-4"],["9","Inhibidores SGLT2"],["5","Glitazonas"],["10","Otro"]].map(([v,l]) => <option key={v} value={v}>{l}</option>)}
-                </select>
-              </Campo>
-              <Campo label="Dosis oral (mg)">
-                <input type="number" step="0.01" value={trat.dosis_mg} onChange={(e) => setTrat(f => ({ ...f, dosis_mg: e.target.value }))} />
-              </Campo>
-              <Campo label="Frecuencia" colSpan={2}>
-                <input type="text" placeholder="ej. 1 vez al día con desayuno" value={trat.frecuencia} onChange={(e) => setTrat(f => ({ ...f, frecuencia: e.target.value }))} />
-              </Campo>
-            </div>
-            <Feedback ok={tratOk} error={tratErr} />
-            <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 16 }}>
-              <button type="submit" className="btn btn-primary" disabled={tratLoading}>
-                {tratLoading ? "Guardando…" : "Guardar Tratamiento"}
-              </button>
-            </div>
-          </div>
-        </form>
-      )}
-
-      {/* ══════════════════════════════════════════════════════════════════════ */}
-      {/* TAB: EVALUACIÓN                                                       */}
-      {/* ══════════════════════════════════════════════════════════════════════ */}
-      {tab === "Evaluación" && (
-        <form onSubmit={guardarEval}>
-          <div className="card">
-            <h3 style={{ margin: "0 0 16px", fontSize: "0.9rem", color: "#6366f1" }}>Evaluación de Complicaciones</h3>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 14 }}>
-              <Campo label="Fecha evaluación" required>
-                <input type="date" value={eval_.fecha_evaluacion} onChange={(e) => setEval(f => ({ ...f, fecha_evaluacion: e.target.value }))} required />
-              </Campo>
-              {[["Retinopatía","retinopatia_id",cats.retinopatia],["Nefropatía","nefropatia_id",cats.nefropatia],["Neuropatía","neuropatia_id",cats.neuropatia],["Pie diabético","pie_diabetico_id",cats.pie_diabetico],["Enf. cardiovascular","enf_cardiovascular_id",cats.cardiovascular]].map(([label, field, opciones]) => (
-                <Campo key={field} label={label}>
-                  <select value={eval_[field]} onChange={(e) => setEval(f => ({ ...f, [field]: e.target.value }))}>
-                    <option value="">— Sin registro —</option>
-                    {opciones.map((o) => <option key={o.id} value={o.id}>{o.descripcion}</option>)}
-                  </select>
-                </Campo>
-              ))}
-              <Campo label="Observaciones" colSpan={2}>
-                <textarea rows={3} value={eval_.observaciones} onChange={(e) => setEval(f => ({ ...f, observaciones: e.target.value }))} style={{ resize: "vertical" }} />
-              </Campo>
-            </div>
-            <Feedback ok={evalOk} error={evalErr} />
-            <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 16 }}>
-              <button type="submit" className="btn btn-primary" disabled={evalLoading}>
-                {evalLoading ? "Guardando…" : "Guardar Evaluación"}
-              </button>
-            </div>
-          </div>
-        </form>
-      )}
-
-      {/* ══════════════════════════════════════════════════════════════════════ */}
-      {/* TAB: EDUCACIÓN                                                        */}
-      {/* ══════════════════════════════════════════════════════════════════════ */}
-      {tab === "Educación" && (
-        <form onSubmit={guardarEdu}>
-          <div className="card">
-            <h3 style={{ margin: "0 0 16px", fontSize: "0.9rem", color: "#6366f1" }}>Sesión de Educación</h3>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 14 }}>
-              <Campo label="Fecha" required>
-                <input type="date" value={edu.fecha} onChange={(e) => setEdu(f => ({ ...f, fecha: e.target.value }))} required />
-              </Campo>
-              <Campo label="Duración (min)">
-                <input type="number" value={edu.duracion_min} onChange={(e) => setEdu(f => ({ ...f, duracion_min: e.target.value }))} />
-              </Campo>
-              <Campo label="Tema" required colSpan={2}>
-                <input type="text" value={edu.tema} onChange={(e) => setEdu(f => ({ ...f, tema: e.target.value }))} required placeholder="ej. Conteo de carbohidratos, ajuste de dosis…" />
-              </Campo>
-              <Campo label="Modalidad">
-                <select value={edu.modalidad} onChange={(e) => setEdu(f => ({ ...f, modalidad: e.target.value }))}>
-                  <option value="">Seleccionar</option>
-                  {["Individual","Grupal","Virtual","Taller"].map((m) => <option key={m} value={m}>{m}</option>)}
-                </select>
-              </Campo>
-              <Campo label="Educador">
-                <input type="text" value={edu.educador} onChange={(e) => setEdu(f => ({ ...f, educador: e.target.value }))} />
-              </Campo>
-              <Campo label="Observaciones" colSpan={2}>
-                <textarea rows={3} value={edu.observaciones} onChange={(e) => setEdu(f => ({ ...f, observaciones: e.target.value }))} style={{ resize: "vertical" }} />
-              </Campo>
-            </div>
-            <Feedback ok={eduOk} error={eduErr} />
-            <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 16 }}>
-              <button type="submit" className="btn btn-primary" disabled={eduLoading}>
-                {eduLoading ? "Guardando…" : "Guardar Educación"}
-              </button>
-            </div>
-          </div>
-        </form>
+      {/* ══════════ CONSULTA: hoja única (visita, laboratorio, tratamiento, complicaciones, educación) ══════════ */}
+      {tab === "Consulta" && (
+        <HojaConsulta paciente={paciente} pacienteId={pacienteId} cats={cats} />
       )}
 
       {/* ══════════════════════════════════════════════════════════════════════ */}

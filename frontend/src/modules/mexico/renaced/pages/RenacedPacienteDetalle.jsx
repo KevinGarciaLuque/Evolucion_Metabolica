@@ -683,7 +683,7 @@ export default function RenacedPacienteDetalle() {
       {tab === "Consultas" && (
         <div>
           <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 12 }}>
-            <button className="btn btn-primary btn-sm" onClick={() => setModalConsulta(true)}>
+            <button className="btn btn-primary btn-sm" onClick={() => navigate(`/renaced/consultas/${id}`)}>
               + Nueva Consulta
             </button>
           </div>

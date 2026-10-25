@@ -4,6 +4,7 @@ import { fileURLToPath } from "url";
 import { getTenantPool } from "../config/db.js";
 import { UPLOADS_PATH } from "../../../../shared/paths.js";
 import { dumpDatabase, importSqlDump } from "../../../../shared/utils/sqlDump.js";
+import { asegurarEsquema } from "../utils/asegurarEsquema.js";
 import { iniciarMigracionLegacy, obtenerTrabajo, hayTrabajoActivo } from "../utils/migracionLegacy.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -51,6 +52,9 @@ export async function importarBaseDatosMexico(req, res) {
       },
       sqlText
     );
+
+    // Un respaldo antiguo puede no traer las columnas nuevas (consulta_id, extras…): se recrean.
+    await asegurarEsquema(pool, req.usuario.db_name || "mx", true);
 
     res.json({
       mensaje: "Base de datos de RENACED México importada correctamente",

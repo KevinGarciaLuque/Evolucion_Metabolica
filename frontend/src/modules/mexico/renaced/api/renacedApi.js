@@ -19,6 +19,8 @@ export const saveDiagnosticoClinico = (pacId, data) => api.put(`${BASE}/diagnost
 // ── Consultas ─────────────────────────────────────────────────────────────────
 export const getConsultas    = (pacId)       => api.get(`${BASE}/pacientes/${pacId}/consultas`);
 export const createConsulta  = (pacId, data) => api.post(`${BASE}/pacientes/${pacId}/consultas`, data);
+// Consulta completa: visita + laboratorio, tratamiento, complicaciones y educación (solo lo que traiga datos)
+export const createHojaConsulta = (pacId, data) => api.post(`${BASE}/pacientes/${pacId}/consultas/hoja`, data);
 
 // ── Laboratorio ───────────────────────────────────────────────────────────────
 export const getLaboratorios  = (pacId)       => api.get(`${BASE}/pacientes/${pacId}/laboratorio`);

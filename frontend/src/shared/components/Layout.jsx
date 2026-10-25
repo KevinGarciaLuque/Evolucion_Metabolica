@@ -16,6 +16,7 @@ export default function Layout({ children }) {
   const [infoOpen, setInfoOpen]       = useState(false);
   const { usuario, logout, permisos }   = useAuth();
   const navigate                      = useNavigate();
+  const enRenaced                     = useLocation().pathname.startsWith("/renaced");
   const menuRef                       = useRef(null);
 
   // Cerrar el dropdown al hacer clic fuera

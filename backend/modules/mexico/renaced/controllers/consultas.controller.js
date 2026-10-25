@@ -1,3 +1,5 @@
+import { asegurarEsquema } from "../utils/asegurarEsquema.js";
+import { guardarHojaConsulta } from "../services/hojaConsulta.js";
 
 export const getConsultasByPaciente = async (req, res) => {
   try {
@@ -44,5 +46,31 @@ export const createConsulta = async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Error al registrar consulta" });
+  }
+};
+
+// Guarda la consulta completa (visita + secciones con datos) en una sola transacción.
+export const createHojaConsulta = async (req, res) => {
+  const { paciente_id } = req.params;
+  let conn;
+  try {
+    await asegurarEsquema(req.db, req.usuario?.db_name || "mx");
+    conn = await req.db.getConnection();
+    await conn.beginTransaction();
+    const r = await guardarHojaConsulta(conn, {
+      pacienteId: paciente_id,
+      usuarioId: req.usuario?.id || null,
+      medicoCurp: req.body?.medico_curp || "",
+      datos: req.body,
+    });
+    await conn.commit();
+    res.status(201).json({ ...r, message: "Consulta registrada" });
+  } catch (err) {
+    if (conn) await conn.rollback();
+    if (err.status) return res.status(err.status).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: "Error al registrar la consulta" });
+  } finally {
+    if (conn) conn.release();
   }
 };

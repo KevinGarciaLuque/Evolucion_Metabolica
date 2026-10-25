@@ -1,3 +1,4 @@
+import { asegurarEsquema } from "./asegurarEsquema.js";
 import fs from "fs";
 import path from "path";
 import crypto from "crypto";
@@ -125,6 +126,9 @@ export function iniciarMigracionLegacy({ sqlText, cfg, pool, usuario }) {
         if (code !== 0) throw new Error(`El paso "${nombre}" terminó con error (código ${code}). Revisa el detalle.`);
         t.pasoActual = 3 + i;
       }
+
+      t.paso = "Verificando esquema";
+      await asegurarEsquema(pool, cfg.database, true);
 
       t.paso = "Terminado";
       t.estado = "terminado";

@@ -8,13 +8,15 @@ export const NOVEDADES = [
   {
     version: "1.2.0",
     fecha: "2026-10-24",
-    titulo: "Importación de reportes de monitores en RENACED",
+    titulo: "Hoja de consulta única e importación de reportes de monitores en RENACED",
     cambios: [
       "Ahora se pueden importar reportes PDF de Dexcom Clarity, Medtronic CareLink, Tandem y Tidepool, además de FreeStyle Libre",
       "El sistema reconoce solo el tipo de reporte; si no lo detecta, se puede elegir manualmente",
       "Nueva pestaña \"Reportes MCG\" en el paciente con el historial, la clasificación y el enlace al PDF original",
       "Se guardan también datos propios de cada monitor, como la insulina diaria de bombas Tandem y Medtronic",
       "\"Escanear PDF\" ahora se llama \"Importar MCG\", con un diseño renovado, animación de análisis y resumen visual de los rangos",
+      "Consultas: ahora la consulta es una sola hoja con secciones que se abren al hacer clic (Visita, Laboratorio, Tratamiento, Complicaciones y Educación)",
+      "La fecha de la consulta se captura una sola vez; solo se guarda lo que se llene",
       "Corregido: los PDFs con acentos en el nombre ya se guardan con un nombre válido",
     ],
   },
