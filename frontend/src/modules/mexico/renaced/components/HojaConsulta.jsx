@@ -29,7 +29,7 @@ const hoy = () => {
 const lleno = (v) => v !== undefined && v !== null && String(v).trim() !== "";
 
 const INIT = {
-  visita: { peso: "", estatura: "", cintura: "", cadera: "", pa_sistolica: "", pa_diastolica: "", percentil: "" },
+  visita: { peso: "", estatura: "", cintura: "", cadera: "", musculo_kg: "", grasa_kg: "", grasa_pct: "", grasa_visceral: "", perimetro_cefalico: "", pa_sistolica: "", pa_diastolica: "", percentil: "" },
   lab: { fecha_muestra: "", ...Object.fromEntries(LAB_CAMPOS.map(([, n]) => [n, ""])), observaciones: "" },
   trat: { fecha_inicio: "", terapia_id: "", esquema_insulina_id: "", dispositivo_id: "", insulinas: [{ insulina_id: "", dosis_unidades: "", frecuencia: "" }], orales: [{ antidiabetico_id: "", dosis_mg: "", frecuencia: "" }] },
   evalu: { retinopatia_id: "", nefropatia_id: "", neuropatia_id: "", pie_diabetico_id: "", enf_cardiovascular_id: "", observaciones: "" },
@@ -117,17 +117,23 @@ export default function HojaConsulta({ paciente, pacienteId, cats }) {
     set("visita", campo, valor);
   }
   const v = f.visita;
+  // La estatura se captura en cm; en la base se guarda en metros.
+  const estCm = parseFloat(v.estatura);
   const imc = useMemo(() => {
-    const p = parseFloat(v.peso), h = parseFloat(v.estatura);
-    return p > 0 && h > 0 ? (p / (h * h)).toFixed(2) : "";
-  }, [v.peso, v.estatura]);
-  const indiceCC = useMemo(() => {
+    const p = parseFloat(v.peso);
+    return p > 0 && estCm > 0 ? (p / ((estCm / 100) ** 2)).toFixed(2) : "";
+  }, [v.peso, estCm]);
+  const icc = useMemo(() => {
     const a = parseFloat(v.cintura), b = parseFloat(v.cadera);
     return a > 0 && b > 0 ? (a / b).toFixed(2) : "";
   }, [v.cintura, v.cadera]);
+  const ica = useMemo(() => {
+    const a = parseFloat(v.cintura);
+    return a > 0 && estCm > 0 ? (a / estCm).toFixed(3) : "";
+  }, [v.cintura, estCm]);
 
   // ¿Qué secciones traen datos?
-  const llenoVisita = ["peso", "estatura", "cintura", "cadera", "pa_sistolica", "pa_diastolica"].some((k) => lleno(v[k]));
+  const llenoVisita = ["peso", "estatura", "cintura", "cadera", "musculo_kg", "grasa_kg", "grasa_pct", "grasa_visceral", "perimetro_cefalico", "pa_sistolica", "pa_diastolica"].some((k) => lleno(v[k]));
   const llenoLab = LAB_CAMPOS.some(([, n]) => lleno(f.lab[n])) || lleno(f.lab.observaciones);
   const tr = f.trat;
   const llenoTrat = ["terapia_id", "esquema_insulina_id", "dispositivo_id"].some((k) => lleno(tr[k])) ||
@@ -145,7 +151,7 @@ export default function HojaConsulta({ paciente, pacienteId, cats }) {
     try {
       const payload = {
         fecha_consulta: fecha,
-        visita: { ...f.visita, imc, indice_cc: indiceCC },
+        visita: { ...f.visita, estatura: estCm > 0 ? (estCm / 100).toFixed(3) : "", imc, indice_cc: icc, ica },
         laboratorio: llenoLab ? { ...f.lab, fecha_muestra: otraFechaLab ? f.lab.fecha_muestra : "" } : null,
         tratamiento: llenoTrat ? f.trat : null,
         evaluacion: llenoEval ? f.evalu : null,
@@ -222,17 +228,28 @@ export default function HojaConsulta({ paciente, pacienteId, cats }) {
       )}
 
       {/* 1 · Visita */}
-      <Seccion icono={FiActivity} color="#6366f1" titulo="Visita" descripcion="Peso, talla, cintura y presión arterial" abierta={!!abiertas.visita} onToggle={() => alternar("visita")} estado={llenoVisita}>
+      <Seccion icono={FiActivity} color="#6366f1" titulo="Visita" descripcion="Medidas corporales y presión arterial" abierta={!!abiertas.visita} onToggle={() => alternar("visita")} estado={llenoVisita}>
+        <div style={subt}>Medidas</div>
         <div style={grid(160)}>
           <Campo label="Peso (kg)"><input type="number" step="0.01" value={v.peso} onChange={(e) => cambiarVisita("peso", e.target.value)} /></Campo>
-          <Campo label="Estatura (m)"><input type="number" step="0.001" value={v.estatura} onChange={(e) => cambiarVisita("estatura", e.target.value)} placeholder={ultima?.estatura ? `Últ.: ${ultima.estatura}` : ""} /></Campo>
-          <Campo label={<>IMC <span style={{ fontSize: 11, color: "#94a3b8" }}>(auto)</span></>}><input value={imc} readOnly style={{ background: "#f8fafc", color: C.slate }} /></Campo>
+          <Campo label="Estatura (cm)"><input type="number" step="0.1" value={v.estatura} onChange={(e) => cambiarVisita("estatura", e.target.value)} placeholder={ultima?.estatura ? `Últ.: ${Math.round(ultima.estatura * 100)}` : ""} /></Campo>
+          <Campo label={<>IMC <span style={auto}>(auto)</span></>}><input value={imc} readOnly style={soloLectura} /></Campo>
+          <Campo label="Cintura (cm)"><input type="number" step="0.1" value={v.cintura} onChange={(e) => cambiarVisita("cintura", e.target.value)} /></Campo>
+          <Campo label="Cadera (cm)"><input type="number" step="0.1" value={v.cadera} onChange={(e) => cambiarVisita("cadera", e.target.value)} /></Campo>
+          <Campo label={<>ICA <span style={auto}>(cintura/estatura)</span></>}><input value={ica} readOnly style={soloLectura} /></Campo>
+          <Campo label={<>ICC <span style={auto}>(cintura/cadera)</span></>}><input value={icc} readOnly style={soloLectura} /></Campo>
+          <Campo label="Músculo (kg)"><input type="number" step="0.01" value={v.musculo_kg} onChange={(e) => cambiarVisita("musculo_kg", e.target.value)} /></Campo>
+          <Campo label="Grasa (kg)"><input type="number" step="0.01" value={v.grasa_kg} onChange={(e) => cambiarVisita("grasa_kg", e.target.value)} /></Campo>
+          <Campo label="Grasa (%)"><input type="number" step="0.01" value={v.grasa_pct} onChange={(e) => cambiarVisita("grasa_pct", e.target.value)} /></Campo>
+          <Campo label="Grasa visceral"><input type="number" step="0.01" value={v.grasa_visceral} onChange={(e) => cambiarVisita("grasa_visceral", e.target.value)} /></Campo>
+          <Campo label="Perímetro cefálico (cm)"><input type="number" step="0.1" value={v.perimetro_cefalico} onChange={(e) => cambiarVisita("perimetro_cefalico", e.target.value)} /></Campo>
+        </div>
+
+        <div style={{ ...subt, marginTop: 18 }}>Signos</div>
+        <div style={grid(160)}>
           {paciente?.edad != null && paciente.edad < 20 && (
             <Campo label="Percentil"><input type="text" value={v.percentil} onChange={(e) => cambiarVisita("percentil", e.target.value)} placeholder="ej. p50" /></Campo>
           )}
-          <Campo label="Cintura (cm)"><input type="number" step="0.1" value={v.cintura} onChange={(e) => cambiarVisita("cintura", e.target.value)} /></Campo>
-          <Campo label="Cadera (cm)"><input type="number" step="0.1" value={v.cadera} onChange={(e) => cambiarVisita("cadera", e.target.value)} /></Campo>
-          <Campo label={<>Índice C/C <span style={{ fontSize: 11, color: "#94a3b8" }}>(auto)</span></>}><input value={indiceCC} readOnly style={{ background: "#f8fafc", color: C.slate }} /></Campo>
           <Campo label="PA sistólica (mmHg)"><input type="number" value={v.pa_sistolica} onChange={(e) => cambiarVisita("pa_sistolica", e.target.value)} /></Campo>
           <Campo label="PA diastólica (mmHg)"><input type="number" value={v.pa_diastolica} onChange={(e) => cambiarVisita("pa_diastolica", e.target.value)} /></Campo>
         </div>
@@ -363,4 +380,6 @@ export default function HojaConsulta({ paciente, pacienteId, cats }) {
   );
 }
 
+const auto = { fontSize: 11, color: "#94a3b8", fontWeight: 400 };
+const soloLectura = { background: "#f8fafc", color: "#64748b" };
 const subt = { fontSize: 12, fontWeight: 800, color: "#334155", textTransform: "uppercase", letterSpacing: "0.05em", margin: "0 0 8px", paddingBottom: 6, borderBottom: "1px solid #f1f5f9" };

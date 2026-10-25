@@ -44,17 +44,22 @@ export async function guardarHojaConsulta(conn, { pacienteId, usuarioId = null, 
   const cin = parseFloat(visita.cintura), cad = parseFloat(visita.cadera);
   const imc = valor(visita.imc) ?? (peso > 0 && estatura > 0 ? (peso / (estatura * estatura)).toFixed(2) : null);
   const indice_cc = valor(visita.indice_cc) ?? (cin > 0 && cad > 0 ? (cin / cad).toFixed(2) : null);
+  // ICA = cintura / estatura (ambas en cm); la estatura se guarda en metros
+  const ica = valor(visita.ica) ?? (cin > 0 && estatura > 0 ? (cin / (estatura * 100)).toFixed(3) : null);
 
   const [rc] = await conn.query(
     `INSERT INTO consulta (
        paciente_id, medico_curp, fecha_consulta, peso, estatura, imc,
-       percentil, cintura, cadera, indice_cc, pa_sistolica, pa_diastolica, usuario_id
-     ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+       percentil, cintura, cadera, indice_cc, pa_sistolica, pa_diastolica, usuario_id,
+       ica, musculo_kg, grasa_kg, grasa_pct, grasa_visceral, perimetro_cefalico
+     ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
     [
       pacienteId, medicoCurp || "", fecha_consulta,
       valor(visita.peso), valor(visita.estatura), imc,
       valor(visita.percentil), valor(visita.cintura), valor(visita.cadera), indice_cc,
       valor(visita.pa_sistolica), valor(visita.pa_diastolica), usuarioId,
+      ica, valor(visita.musculo_kg), valor(visita.grasa_kg), valor(visita.grasa_pct),
+      valor(visita.grasa_visceral), valor(visita.perimetro_cefalico),
     ]
   );
   const consultaId = rc.insertId;

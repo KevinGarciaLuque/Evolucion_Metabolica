@@ -50,12 +50,18 @@ function Detalle({ v }) {
       {c && (
         <Bloque icono={FiActivity} color="#6366f1" titulo="Visita">
           <Dato etiqueta="Peso" valor={num(c.peso) && `${num(c.peso)} kg`} />
-          <Dato etiqueta="Estatura" valor={num(c.estatura) && `${num(c.estatura)} m`} />
+          <Dato etiqueta="Estatura" valor={num(c.estatura) && `${Math.round(parseFloat(c.estatura) * 100)} cm`} />
           <Dato etiqueta="IMC" valor={num(c.imc)} />
           <Dato etiqueta="Percentil" valor={c.percentil} />
           <Dato etiqueta="Cintura" valor={num(c.cintura) && `${num(c.cintura)} cm`} />
           <Dato etiqueta="Cadera" valor={num(c.cadera) && `${num(c.cadera)} cm`} />
-          <Dato etiqueta="Índice C/C" valor={num(c.indice_cc)} />
+          <Dato etiqueta="ICA" valor={num(c.ica)} />
+          <Dato etiqueta="ICC" valor={num(c.indice_cc)} />
+          <Dato etiqueta="Músculo" valor={num(c.musculo_kg) && `${num(c.musculo_kg)} kg`} />
+          <Dato etiqueta="Grasa" valor={num(c.grasa_kg) && `${num(c.grasa_kg)} kg`} />
+          <Dato etiqueta="Grasa %" valor={num(c.grasa_pct) && `${num(c.grasa_pct)} %`} />
+          <Dato etiqueta="Grasa visceral" valor={num(c.grasa_visceral)} />
+          <Dato etiqueta="Perímetro cefálico" valor={num(c.perimetro_cefalico) && `${num(c.perimetro_cefalico)} cm`} />
           <Dato etiqueta="Presión arterial" valor={c.pa_sistolica && c.pa_diastolica ? `${c.pa_sistolica}/${c.pa_diastolica} mmHg` : null} />
         </Bloque>
       )}

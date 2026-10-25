@@ -9,6 +9,13 @@ const COLUMNAS = [
   ["tratamiento_oral", "consulta_id", "BIGINT UNSIGNED DEFAULT NULL"],
   ["educacion",        "consulta_id", "BIGINT UNSIGNED DEFAULT NULL"],
   ["escaneo_mcg",      "extras",      "TEXT DEFAULT NULL"],
+  // Medidas corporales ampliadas de la consulta
+  ["consulta", "ica",                "DECIMAL(5,3) DEFAULT NULL"],
+  ["consulta", "musculo_kg",         "DECIMAL(5,2) DEFAULT NULL"],
+  ["consulta", "grasa_kg",           "DECIMAL(5,2) DEFAULT NULL"],
+  ["consulta", "grasa_pct",          "DECIMAL(5,2) DEFAULT NULL"],
+  ["consulta", "grasa_visceral",     "DECIMAL(5,2) DEFAULT NULL"],
+  ["consulta", "perimetro_cefalico", "DECIMAL(5,2) DEFAULT NULL"],
 ];
 
 // Índices para agrupar/consultar por consulta
