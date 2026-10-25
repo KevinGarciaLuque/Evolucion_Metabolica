@@ -149,7 +149,19 @@ export const iniciarMigracionPHP = (archivo) => {
 export const getEstadoMigracionPHP = (id) => api.get(`${BASE}/importar-bd/php/${id}`);
 
 // ── Reportes / Exportación ────────────────────────────────────────────────────
-export const descargarExcel = () => api.get(`${BASE}/reportes/excel`, { responseType: "blob" });
+// Excel: exportación en segundo plano (iniciar → consultar estado → descargar)
+export const iniciarExcel   = () => api.post(`${BASE}/reportes/excel/iniciar`);
+export const estadoExcel    = (id) => api.get(`${BASE}/reportes/excel/estado/${id}`);
+export const descargarExcelListo = (id) => api.get(`${BASE}/reportes/excel/descargar/${id}`, { responseType: "blob", timeout: 10 * 60 * 1000 });
+export const descargarExcel = async () => {
+  const { data } = await iniciarExcel();
+  for (;;) {
+    await new Promise((r) => setTimeout(r, 1500));
+    const { data: st } = await estadoExcel(data.id);
+    if (st.estado === "terminado") return descargarExcelListo(data.id);
+    if (st.estado === "error") throw new Error(st.error || "Error al generar el Excel");
+  }
+};
 export const descargarCSV   = () => api.get(`${BASE}/reportes/csv`,   { responseType: "blob" });
 export const descargarPDF   = () => api.get(`${BASE}/reportes/pdf`,   { responseType: "blob" });
 export const descargarReporteClinica = (unidadId) =>

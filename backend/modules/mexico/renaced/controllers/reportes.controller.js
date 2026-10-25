@@ -1,191 +1,52 @@
-import XLSX from "xlsx";
 import PDFDocument from "pdfkit";
+import { exportarCSVStream, iniciarExcel, obtenerTrabajo, trabajosActivos } from "../services/exportacion.js";
 
-function formatDate(value) {
-  if (!value) return "";
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return String(value);
-  return d.toISOString().slice(0, 10);
-}
+// El admin puede acotar la exportación a una clínica (query unidad_id); sin acotar,
+// exporta el país completo. Cualquier otro perfil queda forzado a su propia clínica.
+const unidadDe = (req) => (req.alcance.esAdmin ? (req.query.unidad_id || null) : req.alcance.unidadId);
 
-// ── Excel (multi-hoja: Pacientes, Laboratorio, Consultas) ────────────────────
-export const exportarExcel = async (req, res) => {
-  try {
-    // El admin puede acotar el export a una clínica (query unidad_id) opcionalmente;
-    // sin acotar, exporta el país completo. El admin siempre ve el detalle
-    // completo — la restricción de identidad solo aplica a perfiles no admin.
-    const unidadId = req.alcance.esAdmin ? (req.query.unidad_id || null) : req.alcance.unidadId;
-    const scoped = !!unidadId;
-
-    const [pacientes] = await req.db.query(`
-      SELECT p.expediente, p.ap_pat, p.ap_mat, p.nombre, p.sexo,
-             p.fecha_nacimiento,
-             TIMESTAMPDIFF(YEAR, p.fecha_nacimiento, CURDATE()) AS edad,
-             p.curp, p.estado_nacimiento, p.estado_residencia,
-             p.colonia, p.calle_num, p.codigo_postal,
-             p.telefonos, p.email, p.establecimiento_cve,
-             u.nombre AS unidad, pe.descripcion AS estatus,
-             (SELECT td.descripcion
-              FROM diagnostico d JOIN cat_tipo_diabetes td ON td.id = d.tipo_diabetes_id
-              WHERE d.paciente_id = p.id ORDER BY d.fecha_captura DESC LIMIT 1) AS tipo_diabetes,
-             (SELECT d.fecha_diagnostico FROM diagnostico d
-              WHERE d.paciente_id = p.id ORDER BY d.fecha_captura DESC LIMIT 1) AS fecha_diagnostico,
-             (SELECT d.edad_diagnostico FROM diagnostico d
-              WHERE d.paciente_id = p.id ORDER BY d.fecha_captura DESC LIMIT 1) AS edad_diagnostico,
-             IF(p.tiene_aviso_privacidad, 'Sí', 'No') AS aviso_privacidad,
-             IF(p.tiene_consentimiento,   'Sí', 'No') AS consentimiento
-      FROM paciente p
-      LEFT JOIN cat_paciente_estatus pe ON pe.id = p.estatus_id
-      LEFT JOIN unidad_servicio_salud u  ON u.id  = p.unidad_servicio_id
-      ${scoped ? "WHERE p.unidad_servicio_id = ?" : ""}
-      ORDER BY p.ap_pat, p.nombre
-    `, scoped ? [unidadId] : []);
-
-    const [laboratorio] = await req.db.query(`
-      SELECT CONCAT(p.ap_pat, ' ', IFNULL(p.ap_mat,''), ', ', p.nombre) AS paciente,
-             p.expediente, l.fecha_muestra, l.hba1c, l.glucosa_ayuno,
-             l.colesterol_total, l.hdl, l.ldl, l.trigliceridos, l.creatinina
-      FROM laboratorio l
-      JOIN paciente p ON p.id = l.paciente_id
-      WHERE l.id IN (SELECT MAX(id) FROM laboratorio GROUP BY paciente_id)
-        ${scoped ? "AND p.unidad_servicio_id = ?" : ""}
-      ORDER BY p.ap_pat, p.nombre
-    `, scoped ? [unidadId] : []);
-
-    const [consultas] = await req.db.query(`
-      SELECT CONCAT(p.ap_pat, ' ', IFNULL(p.ap_mat,''), ', ', p.nombre) AS paciente,
-             p.expediente, c.fecha_consulta, c.peso, c.estatura, c.imc,
-             c.cintura, c.pa_sistolica, c.pa_diastolica
-      FROM consulta c
-      JOIN paciente p ON p.id = c.paciente_id
-      WHERE c.id IN (SELECT MAX(id) FROM consulta GROUP BY paciente_id)
-        ${scoped ? "AND p.unidad_servicio_id = ?" : ""}
-      ORDER BY p.ap_pat, p.nombre
-    `, scoped ? [unidadId] : []);
-
-    const wb = XLSX.utils.book_new();
-
-    const mapPaciente = (p) => ({
-      "Expediente":          p.expediente || "",
-      "Apellido Paterno":    p.ap_pat || "",
-      "Apellido Materno":    p.ap_mat || "",
-      "Nombre(s)":           p.nombre || "",
-      "Sexo":                p.sexo === "F" ? "Femenino" : "Masculino",
-      "Fecha Nacimiento":    formatDate(p.fecha_nacimiento),
-      "Edad":                p.edad ?? "",
-      "CURP":                p.curp || "",
-      "Estado Nacimiento":   p.estado_nacimiento || "",
-      "Estado Residencia":   p.estado_residencia || "",
-      "Colonia":             p.colonia || "",
-      "Calle y Número":      p.calle_num || "",
-      "Código Postal":       p.codigo_postal || "",
-      "Teléfonos":           p.telefonos || "",
-      "Email":               p.email || "",
-      "Establecimiento":     p.establecimiento_cve || "",
-      "Unidad":              p.unidad || "",
-      "Tipo Diabetes":       p.tipo_diabetes || "",
-      "Fecha Diagnóstico":   formatDate(p.fecha_diagnostico),
-      "Edad al Diagnóstico": p.edad_diagnostico ?? "",
-      "Aviso Privacidad":    p.aviso_privacidad,
-      "Consentimiento":      p.consentimiento,
-      "Estatus":             p.estatus || "",
-    });
-
-    const mapLab = (l) => ({
-      "Paciente":          l.paciente,
-      "Expediente":        l.expediente || "",
-      "Fecha Muestra":     formatDate(l.fecha_muestra),
-      "HbA1c (%)":         l.hba1c ?? "",
-      "Glucosa Ayuno":     l.glucosa_ayuno ?? "",
-      "Colesterol Total":  l.colesterol_total ?? "",
-      "HDL":               l.hdl ?? "",
-      "LDL":               l.ldl ?? "",
-      "Triglicéridos":     l.trigliceridos ?? "",
-      "Creatinina":        l.creatinina ?? "",
-    });
-
-    const mapConsulta = (c) => ({
-      "Paciente":       c.paciente,
-      "Expediente":     c.expediente || "",
-      "Fecha Consulta": formatDate(c.fecha_consulta),
-      "Peso (kg)":      c.peso ?? "",
-      "Talla (m)":      c.estatura ?? "",
-      "IMC":            c.imc ?? "",
-      "Cintura (cm)":   c.cintura ?? "",
-      "PA Sistólica":   c.pa_sistolica ?? "",
-      "PA Diastólica":  c.pa_diastolica ?? "",
-    });
-
-    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(pacientes.map(mapPaciente)), "Pacientes");
-    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(laboratorio.map(mapLab)), "Laboratorio");
-    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(consultas.map(mapConsulta)), "Consultas");
-
-    const buffer = XLSX.write(wb, { type: "buffer", bookType: "xlsx" });
-    const fecha = new Date().toISOString().slice(0, 10);
-    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-    res.setHeader("Content-Disposition", `attachment; filename="RENACED_Mexico_${fecha}.xlsx"`);
-    res.send(buffer);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Error al generar Excel" });
+// ── Excel: trabajo en segundo plano (no cabe en memoria con millones de filas) ──
+// POST /reportes/excel/iniciar → { id }
+export const iniciarExportExcel = async (req, res) => {
+  if (trabajosActivos() >= 2) {
+    return res.status(429).json({ error: "Hay varias exportaciones en curso. Intenta de nuevo en un minuto." });
   }
+  const t = iniciarExcel({ db: req.db, unidadId: unidadDe(req), usuarioId: req.usuario.id });
+  res.status(202).json({ id: t.id });
 };
 
-// ── CSV (lista de pacientes) ─────────────────────────────────────────────────
+// GET /reportes/excel/estado/:id
+export const estadoExportExcel = (req, res) => {
+  const t = obtenerTrabajo(req.params.id);
+  if (!t || t.usuarioId !== req.usuario.id) return res.status(404).json({ error: "Exportación no encontrada" });
+  res.json({ estado: t.estado, filas: t.filas, error: t.error, nota: t.nota });
+};
+
+// GET /reportes/excel/descargar/:id
+export const descargarExportExcel = (req, res) => {
+  const t = obtenerTrabajo(req.params.id);
+  if (!t || t.usuarioId !== req.usuario.id) return res.status(404).json({ error: "Exportación no encontrada" });
+  if (t.estado !== "terminado") return res.status(409).json({ error: "La exportación aún no termina" });
+  const fecha = new Date().toISOString().slice(0, 10);
+  res.download(t.archivo, `RENACED_Mexico_${fecha}.xlsx`, (err) => {
+    if (err && !res.headersSent) res.status(404).json({ error: "El archivo ya no está disponible" });
+  });
+};
+
+// Compatibilidad: GET /reportes/excel responde con el mismo flujo pero sin esperar
+export const exportarExcel = (req, res) => res.status(410).json({ error: "Usa POST /reportes/excel/iniciar" });
+
+// ── CSV (lista de pacientes) en streaming ────────────────────────────────────
 export const exportarCSV = async (req, res) => {
   try {
-    const unidadId = req.alcance.esAdmin ? (req.query.unidad_id || null) : req.alcance.unidadId;
-    const scoped = !!unidadId;
-
-    const [pacientes] = await req.db.query(`
-      SELECT p.expediente, p.ap_pat, p.ap_mat, p.nombre, p.sexo,
-             p.fecha_nacimiento,
-             TIMESTAMPDIFF(YEAR, p.fecha_nacimiento, CURDATE()) AS edad,
-             p.curp, p.estado_residencia, p.telefonos, p.email,
-             p.establecimiento_cve,
-             (SELECT td.descripcion
-              FROM diagnostico d JOIN cat_tipo_diabetes td ON td.id = d.tipo_diabetes_id
-              WHERE d.paciente_id = p.id ORDER BY d.fecha_captura DESC LIMIT 1) AS tipo_diabetes,
-             (SELECT d.fecha_diagnostico FROM diagnostico d
-              WHERE d.paciente_id = p.id ORDER BY d.fecha_captura DESC LIMIT 1) AS fecha_diagnostico,
-             IF(p.tiene_aviso_privacidad, 'Si', 'No') AS aviso_privacidad,
-             IF(p.tiene_consentimiento,   'Si', 'No') AS consentimiento,
-             pe.descripcion AS estatus
-      FROM paciente p
-      LEFT JOIN cat_paciente_estatus pe ON pe.id = p.estatus_id
-      ${scoped ? "WHERE p.unidad_servicio_id = ?" : ""}
-      ORDER BY p.ap_pat, p.nombre
-    `, scoped ? [unidadId] : []);
-
-    const rows = pacientes.map((p) => ({
-      expediente:          p.expediente || "",
-      ap_pat:              p.ap_pat || "",
-      ap_mat:              p.ap_mat || "",
-      nombre:              p.nombre || "",
-      sexo:                p.sexo || "",
-      fecha_nacimiento:    formatDate(p.fecha_nacimiento),
-      edad:                p.edad ?? "",
-      curp:                p.curp || "",
-      estado_residencia:   p.estado_residencia || "",
-      telefonos:           p.telefonos || "",
-      email:               p.email || "",
-      establecimiento_cve: p.establecimiento_cve || "",
-      tipo_diabetes:       p.tipo_diabetes || "",
-      fecha_diagnostico:   formatDate(p.fecha_diagnostico),
-      aviso_privacidad:    p.aviso_privacidad,
-      consentimiento:      p.consentimiento,
-      estatus:             p.estatus || "",
-    }));
-
-    const ws  = XLSX.utils.json_to_sheet(rows);
-    const csv = XLSX.utils.sheet_to_csv(ws);
     const fecha = new Date().toISOString().slice(0, 10);
     res.setHeader("Content-Type", "text/csv; charset=utf-8");
     res.setHeader("Content-Disposition", `attachment; filename="RENACED_Mexico_${fecha}.csv"`);
-    res.send("﻿" + csv); // BOM para compatibilidad con Excel
+    await exportarCSVStream(req.db, unidadDe(req), res);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "Error al generar CSV" });
+    if (!res.headersSent) res.status(500).json({ error: "Error al generar CSV" });
+    else res.end();
   }
 };
 

@@ -1,26 +1,18 @@
+import { condicionBusqueda, esErrorSinFulltext } from "../services/busquedaPacientes.js";
+
 
 export const getPacientes = async (req, res) => {
   try {
     const { busqueda, unidad_id, estatus_id, estado_residencia, municipio_residencia, page = 1, limit = 20 } = req.query;
-    const offset = (parseInt(page) - 1) * parseInt(limit);
-
-    let where = "WHERE 1=1";
-    const params = [];
-
-    if (busqueda) {
-      const texto = busqueda.trim();
-      if (/^\d+$/.test(texto)) {
-        // Búsqueda puramente numérica: se interpreta como folio exacto
-        // (ej. "1" o "22" deben regresar solo ese paciente, no todos los que
-        // contengan ese dígito).
-        where += ` AND p.folio_renaced = ?`;
-        params.push(parseInt(texto, 10));
-      } else {
-        where += ` AND (p.nombre LIKE ? OR p.ap_pat LIKE ? OR p.curp LIKE ? OR p.expediente LIKE ?)`;
-        const q = `%${texto}%`;
-        params.push(q, q, q, q);
-      }
-    }
+    // Tope de página: nadie puede pedir miles de filas de una sola vez
+    const lim = Math.min(100, Math.max(1, parseInt(limit) || 20));
+    const pag = Math.max(1, parseInt(page) || 1);
+    const offset = (pag - 1) * lim;
+    const armar = (fulltext) => {
+      let where = "WHERE 1=1";
+      const params = [];
+      const cond = condicionBusqueda(busqueda, { fulltext });
+      if (cond) { where += cond.sql; params.push(...cond.params); }
     // El admin de país puede filtrar por cualquier clínica (drill-down); el resto
     // queda forzado a su propia unidad sin importar lo que envíe el cliente.
     if (!req.alcance.esAdmin) {
@@ -33,32 +25,49 @@ export const getPacientes = async (req, res) => {
     if (estado_residencia)     { where += " AND p.estado_residencia = ?";     params.push(estado_residencia); }
     if (municipio_residencia) { where += " AND p.municipio_residencia = ?"; params.push(municipio_residencia); }
 
-    const [rows] = await req.db.query(
-      `SELECT p.id, p.expediente, p.folio_renaced, p.iniciales, p.nombre, p.ap_pat, p.ap_mat,
-              p.sexo, p.fecha_nacimiento, p.curp,
-              TIMESTAMPDIFF(YEAR, p.fecha_nacimiento, CURDATE()) AS edad,
-              pe.descripcion AS estatus, p.estatus_id, p.fecha_alta, p.unidad_servicio_id,
-              u.nombre AS unidad,
-              (SELECT td.descripcion
-               FROM diagnostico d
-               JOIN cat_tipo_diabetes td ON td.id = d.tipo_diabetes_id
-               WHERE d.paciente_id = p.id
-               ORDER BY d.fecha_captura DESC LIMIT 1) AS tipo_diabetes
-       FROM paciente p
-       LEFT JOIN cat_paciente_estatus pe ON pe.id = p.estatus_id
-       LEFT JOIN unidad_servicio_salud u  ON u.id  = p.unidad_servicio_id
-       ${where}
-       ORDER BY p.fecha_alta DESC
-       LIMIT ? OFFSET ?`,
-      [...params, parseInt(limit), offset]
-    );
+      return { where, params };
+    };
 
-    const [[{ total }]] = await req.db.query(
-      `SELECT COUNT(*) AS total FROM paciente p ${where}`,
-      params
-    );
+    const consultar = async (fulltext) => {
+      const { where, params } = armar(fulltext);
+      const [rows] = await req.db.query(
+        `SELECT p.id, p.expediente, p.folio_renaced, p.iniciales, p.nombre, p.ap_pat, p.ap_mat,
+                p.sexo, p.fecha_nacimiento, p.curp,
+                TIMESTAMPDIFF(YEAR, p.fecha_nacimiento, CURDATE()) AS edad,
+                pe.descripcion AS estatus, p.estatus_id, p.fecha_alta, p.unidad_servicio_id,
+                u.nombre AS unidad,
+                (SELECT td.descripcion
+                 FROM diagnostico d
+                 JOIN cat_tipo_diabetes td ON td.id = d.tipo_diabetes_id
+                 WHERE d.paciente_id = p.id
+                 ORDER BY d.fecha_captura DESC LIMIT 1) AS tipo_diabetes
+         FROM paciente p
+         LEFT JOIN cat_paciente_estatus pe ON pe.id = p.estatus_id
+         LEFT JOIN unidad_servicio_salud u  ON u.id  = p.unidad_servicio_id
+         ${where}
+         ORDER BY p.fecha_alta DESC
+         LIMIT ? OFFSET ?`,
+        [...params, lim, offset]
+      );
 
-    res.json({ data: rows, total, page: parseInt(page), limit: parseInt(limit) });
+      const [[{ total }]] = await req.db.query(
+        `SELECT COUNT(*) AS total FROM paciente p ${where}`,
+        params
+      );
+
+      return { rows, total };
+    };
+
+    let resultado;
+    try {
+      resultado = await consultar(true);
+    } catch (err) {
+      if (!esErrorSinFulltext(err)) throw err;
+      resultado = await consultar(false); // índice FULLTEXT aún no creado: búsqueda anterior
+    }
+    const { rows, total } = resultado;
+
+    res.json({ data: rows, total, page: pag, limit: lim });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Error al obtener pacientes" });

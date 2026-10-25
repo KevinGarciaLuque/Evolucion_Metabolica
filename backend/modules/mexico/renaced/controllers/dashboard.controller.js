@@ -1,14 +1,14 @@
+import { obtenerResumen } from "../services/resumenCache.js";
 
-export const getResumen = async (req, res) => {
-  try {
-    // El admin de país puede filtrar opcionalmente por clínica (drill-down) o ver
-    // el agregado nacional; cualquier otro perfil queda forzado a su propia unidad.
-    const unidad_id = req.alcance.esAdmin ? (req.query.unidad_id || null) : req.alcance.unidadId;
+// Calcula el resumen del dashboard directamente sobre las tablas (consulta pesada
+// con muchos registros). Nunca se llama por petición: resumenCache.js lo guarda
+// en la tabla resumen_dashboard y lo refresca en segundo plano.
+export const calcularResumen = async (db, { esAdmin, unidad_id }) => {
     const filtro = unidad_id ? "WHERE p.unidad_servicio_id = ?" : "";
     const params = unidad_id ? [unidad_id] : [];
 
     // ── Totales básicos ─────────────────────────────────────────────────────
-    const [[totales]] = await req.db.query(
+    const [[totales]] = await db.query(
       `SELECT
         COUNT(*)                             AS total_pacientes,
         SUM(p.sexo = 'F')                    AS mujeres,
@@ -23,7 +23,7 @@ export const getResumen = async (req, res) => {
     );
 
     // ── Distribución por tipo de diabetes ───────────────────────────────────
-    const [por_tipo] = await req.db.query(
+    const [por_tipo] = await db.query(
       `SELECT td.descripcion AS tipo, COUNT(*) AS total
        FROM diagnostico d
        JOIN paciente p ON p.id = d.paciente_id
@@ -34,7 +34,7 @@ export const getResumen = async (req, res) => {
     );
 
     // ── Control glucémico (último HbA1c por paciente) ───────────────────────
-    const [[control_hba1c]] = await req.db.query(
+    const [[control_hba1c]] = await db.query(
       `SELECT
         ROUND(AVG(hba1c), 1)              AS promedio,
         SUM(hba1c < 7)                    AS optimo,
@@ -52,7 +52,7 @@ export const getResumen = async (req, res) => {
     );
 
     // ── Pacientes sin consulta en los últimos 6 meses ──────────────────────
-    const [[{ sin_consulta }]] = await req.db.query(
+    const [[{ sin_consulta }]] = await db.query(
       `SELECT COUNT(DISTINCT p.id) AS sin_consulta
        FROM paciente p
        LEFT JOIN consulta c
@@ -65,7 +65,7 @@ export const getResumen = async (req, res) => {
     );
 
     // ── Eventos adversos totales ────────────────────────────────────────────
-    const [[eventos_resumen]] = await req.db.query(
+    const [[eventos_resumen]] = await db.query(
       `SELECT
         SUM(tipo = 'CETOACIDOSIS')        AS cetoacidosis,
         SUM(tipo = 'HIPOGLUCEMIA_SEVERA') AS hipo_severa,
@@ -78,7 +78,7 @@ export const getResumen = async (req, res) => {
     );
 
     // ── Calidad de datos ────────────────────────────────────────────────────
-    const [[calidad_datos]] = await req.db.query(
+    const [[calidad_datos]] = await db.query(
       `SELECT
         COUNT(*)                                                     AS total,
         SUM(p.expediente IS NOT NULL AND p.expediente <> '')         AS con_expediente,
@@ -100,7 +100,7 @@ export const getResumen = async (req, res) => {
     );
 
     // ── Distribución por edad al diagnóstico ────────────────────────────────
-    const [edad_dx] = await req.db.query(
+    const [edad_dx] = await db.query(
       `SELECT
         CASE
           WHEN edad_diagnostico < 1  THEN '< 1'
@@ -122,7 +122,7 @@ export const getResumen = async (req, res) => {
     );
 
     // ── Nuevos pacientes por mes (últimos 12 meses) ─────────────────────────
-    const [nuevos_por_mes] = await req.db.query(
+    const [nuevos_por_mes] = await db.query(
       `SELECT DATE_FORMAT(fecha_alta, '%Y-%m')        AS mes,
               MIN(DATE_FORMAT(fecha_alta, '%b %Y'))   AS mes_label,
               COUNT(*) AS n
@@ -134,8 +134,8 @@ export const getResumen = async (req, res) => {
     );
 
     // ── Top unidades por pacientes (comparativo entre clínicas — solo admin país) ──
-    const [top_unidades] = req.alcance.esAdmin
-      ? await req.db.query(
+    const [top_unidades] = esAdmin
+      ? await db.query(
           `SELECT u.nombre AS unidad, COUNT(*) AS n
            FROM paciente p
            JOIN unidad_servicio_salud u ON u.id = p.unidad_servicio_id
@@ -145,7 +145,7 @@ export const getResumen = async (req, res) => {
       : [[]];
 
     // ── HbA1c recientes (para la lista del lado derecho) ───────────────────
-    const [hba1c_recientes] = await req.db.query(
+    const [hba1c_recientes] = await db.query(
       `SELECT l.paciente_id, l.hba1c, l.fecha_muestra,
               p.nombre, p.ap_pat
        FROM laboratorio l
@@ -156,7 +156,7 @@ export const getResumen = async (req, res) => {
       params
     );
 
-    res.json({
+    return {
       totales: { ...totales, sin_consulta },
       calidad_datos,
       por_tipo,
@@ -166,7 +166,17 @@ export const getResumen = async (req, res) => {
       top_unidades,
       hba1c_recientes,
       eventos_resumen,
-    });
+    };
+};
+
+export const getResumen = async (req, res) => {
+  try {
+    // El admin de país puede filtrar opcionalmente por clínica (drill-down) o ver
+    // el agregado nacional; cualquier otro perfil queda forzado a su propia unidad.
+    const esAdmin = req.alcance.esAdmin;
+    const unidad_id = esAdmin ? (req.query.unidad_id || null) : req.alcance.unidadId;
+    const resumen = await obtenerResumen(req.db, { esAdmin, unidad_id, forzar: req.query.actualizar === "1", calcular: calcularResumen });
+    res.json(resumen);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Error al obtener resumen" });

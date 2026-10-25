@@ -34,12 +34,35 @@ function soloSuperAdmin(req, res) {
 }
 
 // ── Campana ───────────────────────────────────────────────────────────────────
-async function altoRiesgoEM(u) {
-  const params = [];
-  let filtro = "";
+// Si existe la tabla alerta_riesgo (mantenida por triggers, ver scripts/*/migrate_alertas_riesgo.cjs)
+// se lee de ahí: una consulta por clave primaria, sin recorrer todos los pacientes.
+// Si todavía no se aplicó la migración, se usa la consulta anterior (más lenta con muchos datos).
+const existeTablaCache = new WeakMap(); // pool -> { existe, hasta }
+async function existeTabla(db, nombre) {
+  const c = existeTablaCache.get(db);
+  if (c && c.hasta > Date.now()) return c.existe;
+  const [[{ n }]] = await db.query(
+    "SELECT COUNT(*) n FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ?", [nombre]);
+  existeTablaCache.set(db, { existe: n > 0, hasta: Date.now() + 5 * 60 * 1000 });
+  return n > 0;
+}
+
+function filtroInstituciones(u) {
   if (Array.isArray(u.instituciones_acceso) && u.rol !== "admin" && u.rol !== "SUPER_ADMIN") {
     const inst = u.instituciones_acceso.map((i) => String(i).trim().toUpperCase()).filter(Boolean);
-    if (inst.length) { filtro = ` AND p.institucion IN (${inst.map(() => "?").join(",")})`; params.push(...inst); }
+    if (inst.length) return { sql: ` AND p.institucion IN (${inst.map(() => "?").join(",")})`, params: inst };
+  }
+  return { sql: "", params: [] };
+}
+
+async function altoRiesgoEM(u) {
+  const { sql: filtro, params } = filtroInstituciones(u);
+  if (await existeTabla(pool, "alerta_riesgo")) {
+    const base = `FROM alerta_riesgo ar JOIN pacientes p ON p.id = ar.paciente_id WHERE p.estado = 1${filtro}`;
+    const [rows] = await pool.query(
+      `SELECT p.id AS paciente_id, p.nombre, ar.fecha, ar.tir, ar.tbr ${base} ORDER BY ar.fecha DESC LIMIT 15`, params);
+    const [[{ total }]] = await pool.query(`SELECT COUNT(*) AS total ${base}`, params);
+    return { rows, total };
   }
   const [rows] = await pool.query(
     `SELECT p.id AS paciente_id, p.nombre, a.fecha, a.tir, a.tbr
@@ -48,10 +71,18 @@ async function altoRiesgoEM(u) {
                                   ORDER BY a2.fecha DESC, a2.id DESC LIMIT 1)
       WHERE p.estado = 1 AND a.clasificacion = 'ALTO_RIESGO'${filtro}
       ORDER BY a.fecha DESC LIMIT 100`, params);
-  return rows;
+  return { rows: rows.slice(0, 15), total: rows.length };
 }
 
 async function altoRiesgoRenaced(db) {
+  if (await existeTabla(db, "alerta_riesgo")) {
+    const [rows] = await db.query(
+      `SELECT p.id AS paciente_id, CONCAT_WS(' ', p.nombre, p.ap_pat) AS nombre, ar.fecha, ar.tir, ar.tbr
+         FROM alerta_riesgo ar JOIN paciente p ON p.id = ar.paciente_id
+        ORDER BY ar.fecha DESC LIMIT 15`);
+    const [[{ total }]] = await db.query("SELECT COUNT(*) AS total FROM alerta_riesgo");
+    return { rows, total };
+  }
   const [rows] = await db.query(
     `SELECT p.id AS paciente_id, CONCAT_WS(' ', p.nombre, p.ap_pat) AS nombre, e.fecha, e.tir, e.tbr
        FROM paciente p
@@ -59,7 +90,7 @@ async function altoRiesgoRenaced(db) {
                                      ORDER BY e2.fecha DESC, e2.id DESC LIMIT 1)
       WHERE e.clasificacion = 'ALTO_RIESGO'
       ORDER BY e.fecha DESC LIMIT 100`);
-  return rows;
+  return { rows: rows.slice(0, 15), total: rows.length };
 }
 
 const aTxt = (v) => (v === null || v === undefined ? null : String(v));
@@ -86,10 +117,10 @@ export async function obtenerNotificaciones(req, res) {
 
   // 2) Pacientes en alto riesgo (último análisis/escaneo)
   await intentar(async () => {
-    const rows = esRenaced
+    const { rows, total } = esRenaced
       ? await altoRiesgoRenaced(getTenantPool(u.db_name, u.db_host))
       : await altoRiesgoEM(u);
-    for (const r of rows.slice(0, 15)) {
+    for (const r of rows) {
       items.push({
         clave: `riesgo-${r.paciente_id}-${r.fecha}`, tipo: "riesgo",
         titulo: `${r.nombre || "Paciente"} en alto riesgo`,
@@ -97,7 +128,7 @@ export async function obtenerNotificaciones(req, res) {
         fecha: aTxt(r.fecha), paciente_id: r.paciente_id,
       });
     }
-    items.totalRiesgo = rows.length;
+    items.totalRiesgo = total;
   });
   const totalRiesgo = items.totalRiesgo ?? 0;
 
