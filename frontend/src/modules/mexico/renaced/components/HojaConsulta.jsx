@@ -59,7 +59,8 @@ function Campo({ label, children, ancho }) {
 
 const grid = (min = 170) => ({ display: "grid", gridTemplateColumns: `repeat(auto-fill, minmax(${min}px, 1fr))`, gap: 14 });
 
-export default function HojaConsulta({ paciente, pacienteId, cats, children }) {
+// `children` = Ficha del paciente y Casos especiales; `fichaPrimero` los muestra antes de "Consulta de hoy".
+export default function HojaConsulta({ paciente, pacienteId, cats, children, fichaPrimero = false }) {
   const [fecha, setFecha] = useState(hoy());
   const [abiertas, setAbiertas] = useState({});
   const [f, setF] = useState(INIT);
@@ -215,6 +216,8 @@ export default function HojaConsulta({ paciente, pacienteId, cats, children }) {
       {error && (
         <div className="card" style={{ borderLeft: "4px solid #ef4444", color: "#b91c1c", padding: "10px 14px", marginBottom: 12, fontSize: 14 }}>{error}</div>
       )}
+
+      {fichaPrimero && children}
 
       <div style={grupoTitulo}>Consulta de hoy <span style={grupoSub}>· se guarda con la fecha de la consulta</span></div>
 
@@ -421,7 +424,7 @@ export default function HojaConsulta({ paciente, pacienteId, cats, children }) {
         <button type="button" className="btn btn-secondary btn-sm" onClick={() => setF((p) => ({ ...p, eventos: [...p.eventos, { tipo: "", fecha: "", descripcion: "", requirio_hospitalizacion: false }] }))}><FiPlus /> Agregar evento</button>
       </SeccionAcordeon>
 
-      {children}
+      {!fichaPrimero && children}
     </div>
   );
 }

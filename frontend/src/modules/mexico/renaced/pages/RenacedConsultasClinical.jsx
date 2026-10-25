@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import RenacedLayout from "../components/RenacedLayout";
 import HojaConsulta from "../components/HojaConsulta";
 import SeccionAcordeon from "../components/SeccionAcordeon";
+import ResumenPaciente from "../components/ResumenPaciente";
 import { FiClipboard, FiActivity, FiLayers, FiUsers, FiHeart, FiRepeat, FiPlus, FiX } from "react-icons/fi";
 import HistorialConsultas from "../components/HistorialConsultas";
 import {
@@ -227,6 +228,12 @@ export default function RenacedConsultasClinical() {
     });
   }
 
+  // Paciente sin diagnóstico: la ficha va primero y el Diagnóstico aparece abierto
+  useEffect(() => {
+    const d = paciente?.diagnostico;
+    if (paciente && !d?.fecha_diagnostico && !d?.fecha_approx_anio) setAb((a) => ({ ...a, dx: true }));
+  }, [paciente]);
+
   // ── Carga de las fichas al entrar (así cada acordeón ya muestra si tiene datos) ──
   function cargarPat() {
     getPatologia(pacienteId).then((r) => setPatList((r.data || []).map((x) => ({
@@ -326,6 +333,8 @@ export default function RenacedConsultasClinical() {
   const nombreCompleto = `${p.nombre} ${p.ap_pat} ${p.ap_mat || ""}`.trim();
   const dmC = DM_COLOR[p.diagnostico?.tipo_diabetes] || { bg: "#f1f5f9", color: "#475569" };
   const tipoDM5 = String(p.diagnostico?.tipo_diabetes_id) === "4";
+  // Primera consulta / sin diagnóstico: la Ficha del paciente va antes que "Consulta de hoy"
+  const sinDiagnostico = !p.diagnostico?.fecha_diagnostico && !p.diagnostico?.fecha_approx_anio;
   const esMODY  = String(p.diagnostico?.tipo_diabetes_otra_id) === "1";
   const esLADA  = String(p.diagnostico?.tipo_diabetes_otra_id) === "2";
 
@@ -372,7 +381,9 @@ export default function RenacedConsultasClinical() {
       {vista === "historial" && <HistorialConsultas pacienteId={pacienteId} />}
 
       {vista === "consulta" && (
-        <HojaConsulta paciente={paciente} pacienteId={pacienteId} cats={cats}>
+        <>
+        <ResumenPaciente paciente={paciente} pacienteId={pacienteId} patologias={patList} />
+        <HojaConsulta paciente={paciente} pacienteId={pacienteId} cats={cats} fichaPrimero={sinDiagnostico}>
 
           {/* ═══════ GRUPO 2 · Ficha del paciente ═══════ */}
           <div style={grupoTitulo}>Ficha del paciente <span style={grupoSub}>· se actualiza; cada apartado se guarda con su botón</span></div>
@@ -855,6 +866,7 @@ export default function RenacedConsultasClinical() {
             </form>
           </SeccionAcordeon>
         </HojaConsulta>
+        </>
       )}
     </RenacedLayout>
   );

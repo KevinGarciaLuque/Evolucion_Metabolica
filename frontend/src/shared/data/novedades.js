@@ -20,6 +20,8 @@ export const NOVEDADES = [
       "Consulta de hoy: Visita, Laboratorio, Tratamiento, Complicaciones, Educación, Estilo de vida, Toxicomanías y Eventos agudos se guardan con la fecha de la consulta, con un solo botón",
       "Ficha del paciente: Diagnóstico, Comorbilidades, Patologías y Antecedentes ginecobstétricos (solo mujeres) conservan sus propias fechas",
       "Casos especiales: Embarazo (solo mujeres) y Reclasificación del tipo de diabetes",
+      "Franja de resumen al abrir la consulta: tipo de diabetes, evolución, patologías, última HbA1c, tratamiento y última consulta",
+      "En la primera consulta (sin diagnóstico) la Ficha del paciente aparece primero y con el Diagnóstico abierto; en seguimientos se abre primero la consulta de hoy",
       "El historial ahora también muestra Estilo de vida, Toxicomanías y Eventos agudos",
       "Corregido: Patologías, Eventos, Embarazo y Reclasificación ya guardan correctamente en la base de datos",
     ],
