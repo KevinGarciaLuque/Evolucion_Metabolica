@@ -1,4 +1,5 @@
 import { VERSION } from "../../../../shared/data/novedades";
+import MenuUsuario from "../../../../shared/components/MenuUsuario";
 import { useState, useRef, useEffect } from "react";
 import { useNavigate, NavLink } from "react-router-dom";
 import { useRenacedAuth } from "../context/RenacedAuthContext";
@@ -104,14 +105,22 @@ export default function RenacedLayout({ children }) {
             </div>
             <HiChevronDown size={16} className={`topbar-chevron${menuOpen ? " rotated" : ""}`} />
           </button>
-          {menuOpen && (
-            <div className="topbar-dropdown">
-              <button className="topbar-dropdown-item danger" onClick={handleLogout}>
-                <HiOutlineArrowRightOnRectangle size={16} />
-                Cerrar sesión
-              </button>
-            </div>
-          )}
+          <MenuUsuario
+            abierto={menuOpen}
+            onCerrar={() => setMenuOpen(false)}
+            onLogout={handleLogout}
+            nombreApp="RENACED"
+            usuario={{
+              nombre: usuario?.nombre,
+              subtitulo: usuario?.email,
+              rol: PERFIL_LABEL[usuario?.perfil_id] || "Usuario",
+              datos: [
+                ["País", usuario?.tenant_nombre || "México"],
+                ["Clínica", usuario?.unidad_nombre || (usuario?.perfil_id === 1 ? "Todas las clínicas" : "")],
+                ["Médico vinculado", usuario?.medico_nombre],
+              ],
+            }}
+          />
         </div>
       </header>
 

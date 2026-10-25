@@ -1,0 +1,156 @@
+/* Menú del usuario (barra superior): panel redondeado, avatar circular y opciones con ícono en círculo */
+
+.mu-panel {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 300px;
+  max-width: calc(100vw - 24px);
+  z-index: 320;
+  border-radius: 22px;
+  overflow: hidden;
+  color: #e2e8f0;
+  background: linear-gradient(180deg, #0f1a2e 0%, #0b1424 100%);
+  border: 1px solid rgba(99, 179, 237, 0.2);
+  box-shadow: 0 22px 60px rgba(2, 6, 23, 0.55);
+}
+
+.mu-cabecera {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 18px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+.mu-cabecera-texto { min-width: 0; }
+.mu-nombre { font-size: 1.05rem; font-weight: 700; color: #f8fafc; line-height: 1.25; overflow-wrap: anywhere; }
+.mu-sub { font-size: 0.8rem; color: #94a3b8; margin-top: 2px; overflow-wrap: anywhere; }
+
+.mu-rol {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 3px 11px;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #86efac;
+  background: rgba(34, 197, 94, 0.14);
+}
+.mu-rol--claro { color: #4338ca; background: #eef2ff; margin-top: 4px; }
+
+/* Avatar circular con aro degradado */
+.mu-avatar {
+  width: 56px;
+  height: 56px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 1.1rem;
+  letter-spacing: 0.02em;
+  color: #fff;
+  background: linear-gradient(145deg, #1e293b, #0f172a);
+  border: 2.5px solid transparent;
+  background-clip: padding-box;
+  box-shadow: 0 0 0 2.5px #6366f1, 0 6px 18px rgba(99, 102, 241, 0.35);
+}
+.mu-avatar--grande { width: 72px; height: 72px; font-size: 1.4rem; }
+
+.mu-lista { padding: 8px 10px 10px; }
+.mu-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 10px;
+  border: none;
+  border-radius: 14px;
+  background: transparent;
+  color: #e2e8f0;
+  font-size: 0.92rem;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s;
+}
+.mu-item:hover { background: rgba(255, 255, 255, 0.07); }
+.mu-icono {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #a5b4fc;
+  background: rgba(99, 102, 241, 0.16);
+}
+.mu-item--salir { color: #f87171; }
+.mu-item--salir .mu-icono { color: #f87171; background: rgba(239, 68, 68, 0.16); }
+.mu-item--salir:hover { background: rgba(239, 68, 68, 0.1); }
+.mu-separador { height: 1px; margin: 6px 8px; background: rgba(255, 255, 255, 0.08); }
+
+/* ── Ventanas (Mi perfil / Ayuda y soporte) ─────────────────────────────── */
+.mu-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(2, 6, 23, 0.6);
+  backdrop-filter: blur(3px);
+}
+.mu-modal {
+  width: 100%;
+  max-width: 440px;
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  color: #0f172a;
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.4);
+}
+.mu-modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid #e2e8f0;
+}
+.mu-modal-head h3 { margin: 0; font-size: 1.05rem; display: flex; align-items: center; gap: 8px; }
+.mu-x {
+  width: 34px; height: 34px; border-radius: 50%;
+  border: none; background: #f1f5f9; color: #475569; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.mu-x:hover { background: #e2e8f0; }
+.mu-modal-body { padding: 18px 20px 22px; overflow-y: auto; }
+
+.mu-perfil-cab { display: flex; align-items: center; gap: 16px; margin-bottom: 18px; }
+.mu-perfil-nombre { font-size: 1.15rem; font-weight: 800; }
+.mu-datos { display: grid; grid-template-columns: auto 1fr; gap: 10px 16px; margin: 0; font-size: 0.9rem; }
+.mu-datos dt { color: #64748b; font-weight: 600; }
+.mu-datos dd { margin: 0; color: #0f172a; overflow-wrap: anywhere; }
+.mu-nota { margin: 18px 0 0; font-size: 0.8rem; color: #94a3b8; }
+
+.mu-ayuda { margin: 0 0 14px; padding-left: 18px; display: flex; flex-direction: column; gap: 10px; font-size: 0.9rem; color: #334155; }
+.mu-contacto { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+.mu-contacto a {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 9px 16px; border-radius: 999px;
+  background: #eef2ff; color: #4338ca; font-weight: 600; font-size: 0.88rem; text-decoration: none;
+}
+.mu-contacto a:hover { background: #e0e7ff; }
+
+/* Móvil: el desplegable se pega al borde con un pequeño margen */
+@media (max-width: 480px) {
+  .mu-panel { position: fixed; top: 64px; right: 12px; left: 12px; width: auto; max-width: none; }
+}

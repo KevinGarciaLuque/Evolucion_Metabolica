@@ -11,6 +11,18 @@
 // Cada país ve en el panel las entradas "global" + las suyas. La versión (VERSION) es una sola para todos.
 export const NOVEDADES = [
   {
+    version: "1.6.0",
+    alcance: "global",
+    fecha: "2026-10-24",
+    titulo: "Nuevo menú de usuario",
+    cambios: [
+      "Menú de usuario rediseñado: avatar redondo con tus iniciales, tu nombre, tu rol y opciones con íconos",
+      "Nueva opción \"Mi perfil\" con tus datos (usuario, rol, país, clínica y médico vinculado)",
+      "Nueva opción \"Ayuda y soporte\" con consejos para instalar y actualizar la app",
+      "\"Cerrar sesión\" ahora se destaca en rojo",
+    ],
+  },
+  {
     version: "1.5.2",
     alcance: "global",
     fecha: "2026-10-24",

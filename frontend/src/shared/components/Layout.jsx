@@ -6,7 +6,9 @@ import TopbarAvisos from "./TopbarAvisos";
 import api from "../api/axios";
 import apiRenaced from "../../modules/mexico/renaced/api/axiosRenaced";
 import { useAuth } from "../context/AuthContext";
+import { useRenacedAuth } from "../../modules/mexico/renaced/context/RenacedAuthContext";
 import { HiOutlineArrowRightOnRectangle, HiChevronDown, HiOutlineInformationCircle, HiOutlineXMark } from "react-icons/hi2";
+import MenuUsuario from "./MenuUsuario";
 import "./Layout.css";
 
 export default function Layout({ children }) {
@@ -15,6 +17,12 @@ export default function Layout({ children }) {
   const [menuOpen, setMenuOpen]       = useState(false);
   const [infoOpen, setInfoOpen]       = useState(false);
   const { usuario, logout, permisos }   = useAuth();
+  const ROL_LABEL = { admin: "Administrador", doctor: "Médico", asistente: "Asistente", SUPER_ADMIN: "Super Admin" };
+  // Si el Super Admin está dentro de un país RENACED, solo hay sesión de RENACED: de ahí salen nombre y rol del menú
+  const { usuario: usuarioRenaced }     = useRenacedAuth();
+  const usuarioVisible                  = usuario || usuarioRenaced;
+  const PERFIL_RENACED                  = { 1: "Administrador", 2: "Médico", 3: "Asistente", 4: "Enfermera", 5: "Investigador" };
+  const rolVisible                      = usuario ? (ROL_LABEL[usuario.rol] || usuario.rol) : (usuarioRenaced?.super_admin ? "Super Admin" : PERFIL_RENACED[usuarioRenaced?.perfil_id]);
   const navigate                      = useNavigate();
   const enRenaced                     = useLocation().pathname.startsWith("/renaced");
   const menuRef                       = useRef(null);
@@ -35,7 +43,6 @@ export default function Layout({ children }) {
     navigate("/login");
   }
 
-  const ROL_LABEL = { admin: "Administrador", doctor: "Médico", asistente: "Asistente", SUPER_ADMIN: "Super Admin" };
 
   return (
     <div className="layout">
@@ -81,32 +88,28 @@ export default function Layout({ children }) {
             aria-expanded={menuOpen}
           >
             <div className="topbar-avatar">
-              {usuario?.nombre?.[0]?.toUpperCase()}
+              {usuarioVisible?.nombre?.[0]?.toUpperCase()}
             </div>
             <div className="topbar-user-info">
-              <span className="topbar-user-name">{usuario?.nombre}</span>
-              <span className="topbar-user-role">{ROL_LABEL[usuario?.rol] || usuario?.rol}</span>
+              <span className="topbar-user-name">{usuarioVisible?.nombre}</span>
+              <span className="topbar-user-role">{rolVisible}</span>
             </div>
             <HiChevronDown size={16} className={`topbar-chevron${menuOpen ? " rotated" : ""}`} />
           </button>
 
-          {menuOpen && (
-            <div className="topbar-dropdown">
-              {(permisos === null || permisos.includes("acerca")) && (
-                <button className="topbar-dropdown-item" onClick={() => { setInfoOpen(true); setMenuOpen(false); }}>
-                  <HiOutlineInformationCircle size={16} />
-                  Acerca del sistema
-                </button>
-              )}
-              {(permisos === null || permisos.includes("acerca")) && (
-                <div className="topbar-dropdown-divider" />
-              )}
-              <button className="topbar-dropdown-item danger" onClick={handleLogout}>
-                <HiOutlineArrowRightOnRectangle size={16} />
-                Cerrar sesión
-              </button>
-            </div>
-          )}
+          <MenuUsuario
+            abierto={menuOpen}
+            onCerrar={() => setMenuOpen(false)}
+            onLogout={handleLogout}
+            onAcerca={permisos === null || permisos.includes("acerca") ? () => setInfoOpen(true) : undefined}
+            nombreApp={enRenaced ? "RENACED" : "Evolución Metabólica"}
+            usuario={{
+              nombre: usuarioVisible?.nombre,
+              subtitulo: usuarioVisible?.email || usuarioVisible?.username || usuarioVisible?.usuario,
+              rol: rolVisible,
+              datos: [["Sistema", enRenaced ? "RENACED México" : "SAAPD Honduras"]],
+            }}
+          />
         </div>
       </header>
 

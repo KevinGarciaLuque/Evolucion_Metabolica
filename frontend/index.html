@@ -8,14 +8,6 @@
 
     <!-- App instalable (PWA): el manifest depende del país por el que se entra -->
     <link rel="manifest" id="manifest-link" href="/manifest.webmanifest" />
-    <script>
-      (function () {
-        var renaced = location.pathname.indexOf("/renaced") === 0;
-        document.getElementById("manifest-link").href = renaced ? "/manifest-renaced.webmanifest" : "/manifest.webmanifest";
-        document.documentElement.setAttribute("data-pwa", renaced ? "renaced" : "general");
-        if (renaced) document.getElementById("apple-title").setAttribute("content", "RENACED");
-      })();
-    </script>
     <meta name="theme-color" content="#0f1a2e" />
     <meta name="mobile-web-app-capable" content="yes" />
     <!-- iPhone / iPad: "Agregar a pantalla de inicio".
@@ -25,6 +17,16 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black" />
     <meta name="apple-mobile-web-app-title" id="apple-title" content="Evol. Metabólica" />
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+
+    <!-- Selección del manifest por país (va después de las etiquetas que modifica) -->
+    <script>
+      (function () {
+        var renaced = location.pathname.indexOf("/renaced") === 0;
+        document.getElementById("manifest-link").href = renaced ? "/manifest-renaced.webmanifest" : "/manifest.webmanifest";
+        document.documentElement.setAttribute("data-pwa", renaced ? "renaced" : "general");
+        if (renaced) document.getElementById("apple-title").setAttribute("content", "RENACED");
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

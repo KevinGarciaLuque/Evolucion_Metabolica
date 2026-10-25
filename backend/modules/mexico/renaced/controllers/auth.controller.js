@@ -116,7 +116,12 @@ export async function meRenaced(req, res) {
   }
   try {
     const [rows] = await req.db.query(
-      "SELECT id, username, nombre_completo, email, perfil_id, unidad_servicio_id FROM usuario WHERE id = ? AND activo = 1",
+      `SELECT u.id, u.username, u.nombre_completo, u.email, u.perfil_id, u.unidad_servicio_id,
+              us.nombre AS unidad_nombre, CONCAT_WS(' ', m.nombre, m.ap_pat, m.ap_mat) AS medico_nombre
+       FROM usuario u
+       LEFT JOIN unidad_servicio_salud us ON us.id = u.unidad_servicio_id
+       LEFT JOIN medico m ON m.curp = u.recurso_humano_curp
+       WHERE u.id = ? AND u.activo = 1`,
       [req.usuario.id]
     );
     if (rows.length === 0) return res.status(404).json({ error: "Usuario no encontrado" });
@@ -138,6 +143,7 @@ export async function meRenaced(req, res) {
     res.json({
       id: u.id, nombre: u.nombre_completo, email: u.email || u.username, perfil_id: u.perfil_id,
       unidad_servicio_id: u.unidad_servicio_id ?? null,
+      unidad_nombre: u.unidad_nombre || null, medico_nombre: u.medico_nombre || null,
       tenant: req.usuario.tenant, tenant_nombre: req.usuario.tenant_nombre,
       db_name: req.usuario.db_name, db_host: req.usuario.db_host,
       modulos, tipo: "renaced",
