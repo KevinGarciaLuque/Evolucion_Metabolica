@@ -3,8 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import RenacedLayout from "../components/RenacedLayout";
 import { useRenacedAuth } from "../context/RenacedAuthContext";
 import {
-  getUsuarioRenaced, createUsuarioRenaced, updateUsuarioRenaced, getClinicasRenaced,
-} from "../api/renacedApi";
+  getUsuarioRenaced, createUsuarioRenaced, updateUsuarioRenaced, getClinicasRenaced, getMedicosCatalogo } from "../api/renacedApi";
 
 const PERFILES_BASE = [
   { id: 5, label: "Investigador de Clínica" },
@@ -23,6 +22,7 @@ const INITIAL = {
   password: "",
   perfil_id: 2,
   unidad_servicio_id: "",
+  recurso_humano_curp: "",
   activo: 1,
 };
 
@@ -38,10 +38,15 @@ export default function RenacedUsuarioForm() {
   const [exito, setExito]     = useState("");
   const [verPass, setVerPass] = useState(false);
   const [clinicas, setClinicas] = useState([]);
+  const [medicos, setMedicos]   = useState([]);
   const { usuario: sesion } = useRenacedAuth();
   const esSuperAdmin = !!sesion?.super_admin;
   const PERFILES = esSuperAdmin ? [PERFIL_ADMIN, ...PERFILES_BASE] : PERFILES_BASE;
   const esAdministrador = Number(form.perfil_id) === 1;
+
+  useEffect(() => {
+    getMedicosCatalogo().then((r) => setMedicos(r.data)).catch(() => setMedicos([]));
+  }, []);
 
   useEffect(() => {
     getClinicasRenaced()
@@ -61,6 +66,7 @@ export default function RenacedUsuarioForm() {
           password: "",
           perfil_id: u.perfil_id,
           unidad_servicio_id: u.unidad_servicio_id || "",
+          recurso_humano_curp: u.recurso_humano_curp || "",
           activo: u.activo,
         });
       })
@@ -220,6 +226,23 @@ export default function RenacedUsuarioForm() {
                   <option key={p.id} value={p.id}>{p.label}</option>
                 ))}
               </select>
+            </div>
+
+            <div>
+              <label className="form-label">Médico vinculado <span style={{ color: "#94a3b8", fontWeight: 400 }}>(opcional)</span></label>
+              <select
+                name="recurso_humano_curp"
+                value={form.recurso_humano_curp}
+                onChange={(e) => setForm((f) => ({ ...f, recurso_humano_curp: e.target.value }))}
+              >
+                <option value="">Sin vincular</option>
+                {medicos.map((m) => (
+                  <option key={m.curp} value={m.curp}>{m.nombre} · {m.curp}</option>
+                ))}
+              </select>
+              <p style={{ fontSize: 12, color: "#94a3b8", marginTop: 4 }}>
+                Las consultas que capture este usuario quedarán a nombre de este médico.
+              </p>
             </div>
 
             {esAdministrador ? (

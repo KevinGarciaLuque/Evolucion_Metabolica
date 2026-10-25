@@ -5,7 +5,7 @@ import {
   FiActivity, FiDroplet, FiHeart, FiShield, FiBookOpen, FiCalendar, FiCheck, FiPlus, FiX, FiSun, FiWind, FiAlertTriangle,
 } from "react-icons/fi";
 import SeccionAcordeon from "./SeccionAcordeon";
-import { createHojaConsulta, getConsultas, getTratamiento, getToxicomanias } from "../api/renacedApi";
+import { createHojaConsulta, getConsultas, getTratamiento, getToxicomanias, getMedicoActual } from "../api/renacedApi";
 
 const C = { violet: "#6366f1", green: "#22c55e", slate: "#64748b" };
 
@@ -71,10 +71,12 @@ export default function HojaConsulta({ paciente, pacienteId, cats, children, fic
   const [ultima, setUltima] = useState(null);
   const [vigente, setVigente] = useState(null);
   const [toxOriginal, setToxOriginal] = useState(INIT.tox);
+  const [medico, setMedico] = useState(undefined); // undefined = cargando, null = usuario sin médico vinculado
 
   useEffect(() => {
     getConsultas(pacienteId).then((r) => setUltima(r.data?.[0] || null)).catch(() => {});
     cargarTox();
+    getMedicoActual(pacienteId).then((r) => setMedico(r.data || null)).catch(() => setMedico(null));
     getTratamiento(pacienteId).then((r) => {
       const t = r.data?.tratamientos?.[0];
       if (!t) return setVigente(null);
@@ -207,6 +209,11 @@ export default function HojaConsulta({ paciente, pacienteId, cats, children, fic
         <div style={{ flex: 1, minWidth: 160, fontSize: 12.5, color: C.slate }}>
           {ultima ? <>Última consulta: <strong>{String(ultima.fecha_consulta).slice(0, 10)}</strong>{imcAnterior ? ` · IMC ${imcAnterior}` : ""}</> : "Sin consultas previas"}
           <div>Abre una sección para capturar; las que queden vacías no se guardan.</div>
+          {medico === null ? (
+            <div style={{ color: "#b45309" }}>⚠ Tu usuario no está vinculado a un médico: la consulta se guardará sin médico. Pide al administrador que lo vincule.</div>
+          ) : medico ? (
+            <div>Médico de la consulta: <strong style={{ color: "#0f172a" }}>{medico.nombre}</strong></div>
+          ) : null}
         </div>
         <button className="btn btn-primary" disabled={guardando} onClick={guardar} style={{ padding: "10px 24px", fontWeight: 700 }}>
           {guardando ? "Guardando…" : `Guardar consulta${totalConDatos ? ` (${totalConDatos})` : ""}`}

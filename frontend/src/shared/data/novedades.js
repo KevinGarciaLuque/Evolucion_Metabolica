@@ -11,6 +11,26 @@
 // Cada país ve en el panel las entradas "global" + las suyas. La versión (VERSION) es una sola para todos.
 export const NOVEDADES = [
   {
+    version: "1.5.1",
+    alcance: "global",
+    fecha: "2026-10-24",
+    titulo: "Corrección de la app en iPhone",
+    cambios: [
+      "Corregido: en iPhone la barra de estado (hora y batería) ya no tapa el encabezado de la app instalada",
+    ],
+  },
+  {
+    version: "1.5.0",
+    alcance: "mexico",
+    fecha: "2026-10-24",
+    titulo: "Consultas firmadas por el médico",
+    cambios: [
+      "Cada usuario puede vincularse a su médico (desde Usuarios → Médico vinculado)",
+      "Las consultas quedan registradas a nombre del médico del usuario que las captura, y se ve en la hoja de consulta y en el historial",
+      "Si el usuario no tiene médico vinculado, la hoja lo avisa antes de guardar",
+    ],
+  },
+  {
     version: "1.4.0",
     alcance: "global",
     fecha: "2026-10-24",

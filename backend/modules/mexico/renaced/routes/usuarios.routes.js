@@ -3,7 +3,7 @@ import { verificarToken } from "../../../../shared/middlewares/auth.js";
 import { resolverTenantDB } from "../middlewares/tenantDb.js";
 import { verificarModulo } from "../middlewares/verificarModulo.js";
 import {
-  getUsuarios, getUsuarioById, createUsuario, updateUsuario, toggleUsuario,
+  getUsuarios, getMedicos, getUsuarioById, createUsuario, updateUsuario, toggleUsuario,
 } from "../controllers/usuarios.controller.js";
 
 const router = Router();
@@ -18,6 +18,7 @@ function soloAdminRenaced(req, res, next) {
 router.use(verificarToken, resolverTenantDB, soloAdminRenaced, verificarModulo("usuarios"));
 
 router.get("/",          getUsuarios);
+router.get("/medicos",   getMedicos);   // antes de "/:id"
 router.get("/:id",       getUsuarioById);
 router.post("/",         createUsuario);
 router.put("/:id",       updateUsuario);

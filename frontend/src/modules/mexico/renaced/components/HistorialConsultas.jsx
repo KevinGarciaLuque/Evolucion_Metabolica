@@ -56,6 +56,7 @@ function Detalle({ v }) {
     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 12, padding: "4px 18px 18px" }}>
       {c && (
         <Bloque icono={FiActivity} color="#6366f1" titulo="Visita">
+          <Dato etiqueta="Médico" valor={c.medico_nombre ? [c.medico_nombre, c.medico_ap_pat].filter(Boolean).join(" ") : null} />
           <Dato etiqueta="Peso" valor={num(c.peso) && `${num(c.peso)} kg`} />
           <Dato etiqueta="Estatura" valor={num(c.estatura) && `${Math.round(parseFloat(c.estatura) * 100)} cm`} />
           <Dato etiqueta="IMC" valor={num(c.imc)} />

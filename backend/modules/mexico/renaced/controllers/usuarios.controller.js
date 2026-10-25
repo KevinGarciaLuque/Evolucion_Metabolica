@@ -15,10 +15,12 @@ export async function getUsuarios(req, res) {
     const [rows] = await req.db.query(
       `SELECT u.id, u.username, u.nombre_completo, u.email, u.perfil_id,
               u.unidad_servicio_id, us.nombre AS unidad_nombre,
+              u.recurso_humano_curp, CONCAT_WS(' ', m.nombre, m.ap_pat, m.ap_mat) AS medico_nombre,
               u.activo, u.ultimo_acceso, p.nombre AS perfil_nombre
        FROM usuario u
        JOIN perfil p ON p.id = u.perfil_id
        LEFT JOIN unidad_servicio_salud us ON us.id = u.unidad_servicio_id
+       LEFT JOIN medico m ON m.curp = u.recurso_humano_curp
        ORDER BY u.nombre_completo`
     );
     res.json(rows);
@@ -28,15 +30,39 @@ export async function getUsuarios(req, res) {
   }
 }
 
+/** Catálogo de médicos (para vincular un usuario con su CURP profesional). */
+export async function getMedicos(req, res) {
+  try {
+    const [rows] = await req.db.query(
+      `SELECT curp, CONCAT_WS(' ', nombre, ap_pat, ap_mat) AS nombre, cedula_prof
+       FROM medico ORDER BY ap_pat, ap_mat, nombre`
+    );
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Error al obtener médicos" });
+  }
+}
+
+/** Devuelve la CURP si existe en medico; null si viene vacía; lanza error 400 si no existe. */
+async function validarMedico(db, curp) {
+  if (!curp) return null;
+  const [[m]] = await db.query("SELECT curp FROM medico WHERE curp = ?", [curp]);
+  if (!m) { const e = new Error("El médico seleccionado no existe en el catálogo"); e.status = 400; throw e; }
+  return m.curp;
+}
+
 export async function getUsuarioById(req, res) {
   try {
     const [[row]] = await req.db.query(
       `SELECT u.id, u.username, u.nombre_completo, u.email, u.perfil_id,
               u.unidad_servicio_id, us.nombre AS unidad_nombre,
+              u.recurso_humano_curp, CONCAT_WS(' ', m.nombre, m.ap_pat, m.ap_mat) AS medico_nombre,
               u.activo, u.ultimo_acceso, p.nombre AS perfil_nombre
        FROM usuario u
        JOIN perfil p ON p.id = u.perfil_id
        LEFT JOIN unidad_servicio_salud us ON us.id = u.unidad_servicio_id
+       LEFT JOIN medico m ON m.curp = u.recurso_humano_curp
        WHERE u.id = ?`,
       [req.params.id]
     );
@@ -49,7 +75,7 @@ export async function getUsuarioById(req, res) {
 }
 
 export async function createUsuario(req, res) {
-  const { nombre_completo, username, email, password, perfil_id, unidad_servicio_id } = req.body;
+  const { nombre_completo, username, email, password, perfil_id, unidad_servicio_id, recurso_humano_curp } = req.body;
 
   if (!nombre_completo || !username || !password || !perfil_id) {
     return res.status(400).json({ error: "nombre_completo, username, contraseña y perfil son requeridos" });
@@ -82,15 +108,17 @@ export async function createUsuario(req, res) {
       clinicaId = unidad_servicio_id;
     }
 
+    const curpMedico = await validarMedico(req.db, recurso_humano_curp);
     const hash = await bcrypt.hash(password, 10);
     const [result] = await req.db.query(
-      `INSERT INTO usuario (username, password_hash, nombre_completo, email, perfil_id, unidad_servicio_id, activo)
-       VALUES (?, ?, ?, ?, ?, ?, 1)`,
-      [username, hash, nombre_completo, email || null, perfil_id, clinicaId]
+      `INSERT INTO usuario (username, password_hash, nombre_completo, email, perfil_id, unidad_servicio_id, recurso_humano_curp, activo)
+       VALUES (?, ?, ?, ?, ?, ?, ?, 1)`,
+      [username, hash, nombre_completo, email || null, perfil_id, clinicaId, curpMedico]
     );
 
     res.status(201).json({ id: result.insertId, message: "Usuario creado correctamente" });
   } catch (err) {
+    if (err.status) return res.status(err.status).json({ error: err.message });
     console.error(err);
     res.status(500).json({ error: "Error al crear usuario" });
   }
@@ -98,14 +126,14 @@ export async function createUsuario(req, res) {
 
 export async function updateUsuario(req, res) {
   const { id } = req.params;
-  const { nombre_completo, username, email, password, perfil_id, unidad_servicio_id, activo } = req.body;
+  const { nombre_completo, username, email, password, perfil_id, unidad_servicio_id, activo, recurso_humano_curp } = req.body;
 
   if (perfil_id !== undefined && !perfilesPermitidos(req).includes(Number(perfil_id))) {
     return res.status(400).json({ error: MSG_PERFIL_INVALIDO });
   }
 
   try {
-    const [[current]] = await req.db.query("SELECT id, perfil_id, unidad_servicio_id FROM usuario WHERE id = ?", [id]);
+    const [[current]] = await req.db.query("SELECT id, perfil_id, unidad_servicio_id, recurso_humano_curp FROM usuario WHERE id = ?", [id]);
     if (!current) return res.status(404).json({ error: "Usuario no encontrado" });
 
     // Perfil resultante tras esta actualización (el nuevo si se envía, si no el actual).
@@ -150,6 +178,9 @@ export async function updateUsuario(req, res) {
       params.push(hash);
     }
 
+    // Sin el campo en la petición se conserva; vacío = desvincular
+    const curpFinal = recurso_humano_curp === undefined ? current.recurso_humano_curp : await validarMedico(req.db, recurso_humano_curp);
+
     await req.db.query(
       `UPDATE usuario SET
         nombre_completo    = COALESCE(?, nombre_completo),
@@ -157,15 +188,17 @@ export async function updateUsuario(req, res) {
         email              = COALESCE(?, email),
         perfil_id          = COALESCE(?, perfil_id),
         unidad_servicio_id = ?,
+        recurso_humano_curp = ?,
         activo             = COALESCE(?, activo)
         ${passwordClause}
        WHERE id = ?`,
       [nombre_completo || null, username || null, email || null,
-       perfil_id ?? null, unidadFinal, activo ?? null, ...params, id]
+       perfil_id ?? null, unidadFinal, curpFinal, activo ?? null, ...params, id]
     );
 
     res.json({ message: "Usuario actualizado correctamente" });
   } catch (err) {
+    if (err.status) return res.status(err.status).json({ error: err.message });
     console.error(err);
     res.status(500).json({ error: "Error al actualizar usuario" });
   }

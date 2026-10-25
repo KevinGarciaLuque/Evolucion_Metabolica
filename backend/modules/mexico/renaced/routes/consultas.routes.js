@@ -6,6 +6,7 @@ import {
   createConsulta,
   createHojaConsulta,
   getHistorialConsultas,
+  getMedicoActual,
 } from "../controllers/consultas.controller.js";
 
 const router = Router({ mergeParams: true });
@@ -13,6 +14,7 @@ const router = Router({ mergeParams: true });
 router.use(verificarToken, resolverTenantDB);
 
 router.get("/",   getConsultasByPaciente);
+router.get("/medico-actual", getMedicoActual); // médico vinculado al usuario en sesión
 router.get("/historial", getHistorialConsultas); // visitas agrupadas por fecha (incluye datos del sistema anterior)
 router.post("/",  createConsulta);
 router.post("/hoja", createHojaConsulta); // consulta completa: visita + secciones con datos

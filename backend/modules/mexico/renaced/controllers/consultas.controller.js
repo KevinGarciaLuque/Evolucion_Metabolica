@@ -56,12 +56,13 @@ export const createHojaConsulta = async (req, res) => {
   let conn;
   try {
     await asegurarEsquema(req.db, req.usuario?.db_name || "mx");
+    const medico = await medicoDelUsuario(req.db, req.usuario?.id);
     conn = await req.db.getConnection();
     await conn.beginTransaction();
     const r = await guardarHojaConsulta(conn, {
       pacienteId: paciente_id,
       usuarioId: req.usuario?.id || null,
-      medicoCurp: req.body?.medico_curp || "",
+      medicoCurp: req.body?.medico_curp || medico?.curp || "",
       datos: req.body,
     });
     await conn.commit();
@@ -84,5 +85,26 @@ export const getHistorialConsultas = async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Error al obtener el historial de consultas" });
+  }
+};
+
+// Médico vinculado al usuario que está capturando (usuario.recurso_humano_curp → medico).
+async function medicoDelUsuario(db, usuarioId) {
+  if (!usuarioId) return null;
+  const [[m]] = await db.query(
+    `SELECT m.curp, CONCAT_WS(' ', m.nombre, m.ap_pat, m.ap_mat) AS nombre
+     FROM usuario u JOIN medico m ON m.curp = u.recurso_humano_curp WHERE u.id = ?`,
+    [usuarioId]
+  );
+  return m || null;
+}
+
+// Para mostrar en la hoja quién quedará registrado como médico de la consulta.
+export const getMedicoActual = async (req, res) => {
+  try {
+    res.json(await medicoDelUsuario(req.db, req.usuario?.id));
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Error al obtener el médico" });
   }
 };
