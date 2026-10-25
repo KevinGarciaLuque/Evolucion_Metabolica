@@ -21,7 +21,7 @@ const MENU_BASE = [
   { to: "/renaced/dashboard",  clave: "dashboard", icon: HiOutlineSquares2X2,            label: "Dashboard" },
   { to: "/renaced/pacientes",  clave: "pacientes", icon: HiOutlineUsers,                  label: "Pacientes" },
   { to: "/renaced/consultas",  clave: "consultas", icon: HiOutlineClipboardDocumentList,  label: "Consultas" },
-  { to: "/renaced/escanear-pdf", clave: "escanear", icon: HiOutlineDocumentMagnifyingGlass, label: "Escanear PDF" },
+  { to: "/renaced/escanear-pdf", clave: "escanear", icon: HiOutlineDocumentMagnifyingGlass, label: "Importar MCG" },
   { to: "/renaced/reportes",   clave: "reportes",  icon: HiOutlineDocumentArrowDown,      label: "Reportes"  },
   { to: "/renaced/mapa",       clave: "mapa",      icon: HiOutlineMapPin,                 label: "Mapa"      },
 ];

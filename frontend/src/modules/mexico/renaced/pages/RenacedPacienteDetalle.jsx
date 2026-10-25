@@ -26,11 +26,11 @@ import {
   getEmbarazos,
 } from "../api/renacedApi";
 
-const TABS = ["Resumen", "Diagnóstico", "Consultas", "Laboratorio", "Tratamiento", "Evaluación", "Monitoreo", "Escaneos MCG", "Educación",
+const TABS = ["Resumen", "Diagnóstico", "Consultas", "Laboratorio", "Tratamiento", "Evaluación", "Monitoreo", "Reportes MCG", "Educación",
   "Comorbilidades", "Patologías", "Ant. G.O.", "Eventos", "Estilo Vida", "Toxicomanías", "Reclasificación", "Embarazo"];
 
 const TAB_GRUPOS = [
-  { label: "Expediente", tabs: ["Resumen","Diagnóstico","Consultas","Laboratorio","Tratamiento","Evaluación","Monitoreo","Escaneos MCG","Educación"] },
+  { label: "Expediente", tabs: ["Resumen","Diagnóstico","Consultas","Laboratorio","Tratamiento","Evaluación","Monitoreo","Reportes MCG","Educación"] },
   { label: "Antecedentes", tabs: ["Comorbilidades","Patologías","Ant. G.O.","Eventos","Estilo Vida","Toxicomanías","Reclasificación","Embarazo"] },
 ];
 
@@ -206,7 +206,7 @@ export default function RenacedPacienteDetalle() {
       getEvaluacionesComplementarias(id).then((r) => setComplementarias(r.data)).catch(() => setComplementarias([]));
     }
     if (tab === "Monitoreo")   getMonitoreo(id).then((r)      => setMonitoreo(r.data)).catch(() => setMonitoreo([]));
-    if (tab === "Escaneos MCG") getEscaneos(id).then((r)      => setEscaneos(r.data)).catch(() => setEscaneos([]));
+    if (tab === "Reportes MCG") getEscaneos(id).then((r)      => setEscaneos(r.data)).catch(() => setEscaneos([]));
     if (tab === "Educación")   getEducacion(id).then((r)     => setEducacion(r.data));
     // nuevos módulos
     const nuevos = { "Comorbilidades": ()=>getComorbilidad(id).then(r=>setComorb(r.data||null)).catch(()=>{}),
@@ -1006,7 +1006,7 @@ export default function RenacedPacienteDetalle() {
             <h3 style={{ margin: 0, fontSize: "0.9rem", color: "#6366f1" }}>Monitoreo de Glucosa por Periodo</h3>
             <div style={{ display: "flex", gap: 8 }}>
               <button className="btn btn-secondary btn-sm" onClick={() => navigate(`/renaced/escanear-pdf?paciente=${id}`)}>
-                📄 Escanear PDF
+                📄 Importar reporte
               </button>
               <button className="btn btn-primary btn-sm" onClick={abrirMonNuevo}>+ Nuevo</button>
             </div>
@@ -1054,13 +1054,13 @@ export default function RenacedPacienteDetalle() {
         </div>
       )}
 
-      {/* ── Escaneos MCG (reportes PDF de monitores) ─────────────────────────── */}
-      {tab === "Escaneos MCG" && (
+      {/* ── Reportes MCG (reportes PDF de monitores) ─────────────────────────── */}
+      {tab === "Reportes MCG" && (
         <div className="card">
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-            <h3 style={{ margin: 0, fontSize: "0.9rem", color: "#6366f1" }}>Reportes escaneados de monitoreo continuo</h3>
+            <h3 style={{ margin: 0, fontSize: "0.9rem", color: "#6366f1" }}>Reportes de monitoreo continuo importados</h3>
             <button className="btn btn-primary btn-sm" onClick={() => navigate(`/renaced/escanear-pdf?paciente=${id}`)}>
-              📄 Escanear PDF
+              📄 Importar reporte
             </button>
           </div>
           <div className="table-wrapper">
@@ -1149,7 +1149,7 @@ export default function RenacedPacienteDetalle() {
                   );
                 })}
                 {escaneos.length === 0 && (
-                  <tr><td colSpan={11} className="empty-cell">Sin reportes escaneados</td></tr>
+                  <tr><td colSpan={11} className="empty-cell">Sin reportes importados</td></tr>
                 )}
               </tbody>
             </table>

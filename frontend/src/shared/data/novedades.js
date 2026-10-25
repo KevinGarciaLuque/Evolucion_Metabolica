@@ -6,6 +6,19 @@
 // La versión mostrada es siempre la de la primera entrada.
 export const NOVEDADES = [
   {
+    version: "1.2.0",
+    fecha: "2026-10-24",
+    titulo: "Importación de reportes de monitores en RENACED",
+    cambios: [
+      "Ahora se pueden importar reportes PDF de Dexcom Clarity, Medtronic CareLink, Tandem y Tidepool, además de FreeStyle Libre",
+      "El sistema reconoce solo el tipo de reporte; si no lo detecta, se puede elegir manualmente",
+      "Nueva pestaña \"Reportes MCG\" en el paciente con el historial, la clasificación y el enlace al PDF original",
+      "Se guardan también datos propios de cada monitor, como la insulina diaria de bombas Tandem y Medtronic",
+      "\"Escanear PDF\" ahora se llama \"Importar MCG\", con un diseño renovado, animación de análisis y resumen visual de los rangos",
+      "Corregido: los PDFs con acentos en el nombre ya se guardan con un nombre válido",
+    ],
+  },
+  {
     version: "1.1.0",
     fecha: "2026-10-24",
     titulo: "Notificaciones, novedades y migración de base de datos",

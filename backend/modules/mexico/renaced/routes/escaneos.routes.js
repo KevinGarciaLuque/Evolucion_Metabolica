@@ -20,7 +20,10 @@ fs.mkdirSync(destino, { recursive: true });
 const storage = multer.diskStorage({
   destination: destino,
   filename: (_req, file, cb) => {
-    cb(null, `${Date.now()}-${file.originalname.replace(/\s+/g, "_")}`);
+    // multer entrega el nombre en latin1: se recupera el UTF-8 y se deja sólo ASCII seguro para la URL
+    const original = Buffer.from(file.originalname, "latin1").toString("utf8");
+    const limpio = original.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^A-Za-z0-9._-]+/g, "_");
+    cb(null, `${Date.now()}-${limpio}`);
   },
 });
 
