@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import { AnimatePresence, motion } from "framer-motion";
 import {
   HiOutlineBell, HiOutlineSparkles, HiOutlineXMark, HiOutlineTrash, HiOutlinePlus,
 } from "react-icons/hi2";
-import { NOVEDADES } from "../data/novedades";
+import { novedadesDe } from "../data/novedades";
 import "./TopbarAvisos.css";
 
 // Campana de notificaciones + botón de novedades para la barra superior.
@@ -21,7 +22,8 @@ function fechaCorta(f) {
   return d.toLocaleDateString("es-MX", { day: "2-digit", month: "short", year: "numeric" });
 }
 
-export default function TopbarAvisos({ api, esSuperAdmin, basePacientes, storageKey }) {
+export default function TopbarAvisos({ api, esSuperAdmin, basePacientes, storageKey, alcance }) {
+  const novedades = novedadesDe(alcance);
   const navigate = useNavigate();
   const [items, setItems] = useState([]);
   const [totalRiesgo, setTotalRiesgo] = useState(0);
@@ -55,8 +57,15 @@ export default function TopbarAvisos({ api, esSuperAdmin, basePacientes, storage
     return () => document.removeEventListener("mousedown", fuera);
   }, []);
 
+  useEffect(() => {
+    if (!novOpen) return undefined;
+    const alTeclear = (e) => { if (e.key === "Escape") setNovOpen(false); };
+    document.addEventListener("keydown", alTeclear);
+    return () => document.removeEventListener("keydown", alTeclear);
+  }, [novOpen]);
+
   const sinLeer = items.filter((i) => String(i.fecha || "") > visto).length;
-  const hayNovedades = NOVEDADES[0].version !== novVisto;
+  const hayNovedades = !!novedades[0] && novedades[0].version !== novVisto;
 
   function abrirCampana() {
     setPanel((p) => (p ? null : "campana"));
@@ -69,8 +78,9 @@ export default function TopbarAvisos({ api, esSuperAdmin, basePacientes, storage
   function abrirNovedades() {
     setNovOpen(true);
     setPanel(null);
-    setNovVisto(NOVEDADES[0].version);
-    guardar(`novedades_version_${storageKey}`, NOVEDADES[0].version);
+    if (!novedades[0]) return;
+    setNovVisto(novedades[0].version);
+    guardar(`novedades_version_${storageKey}`, novedades[0].version);
   }
 
   async function publicarAviso(e) {
@@ -161,33 +171,47 @@ export default function TopbarAvisos({ api, esSuperAdmin, basePacientes, storage
         )}
       </div>
 
-      {novOpen && (
-        <div className="tba-overlay" onClick={() => setNovOpen(false)}>
-          <div className="tba-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="tba-modal-head">
-              <h3><HiOutlineSparkles size={20} /> Novedades</h3>
-              <button className="tba-icon" onClick={() => setNovOpen(false)} aria-label="Cerrar">
-                <HiOutlineXMark size={20} />
-              </button>
-            </div>
+      <AnimatePresence>
+        {novOpen && (
+          <>
+            <motion.div
+              className="tba-drawer-overlay"
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              transition={{ duration: 0.25 }}
+              onClick={() => setNovOpen(false)}
+            />
+            <motion.aside
+              className="tba-drawer"
+              role="dialog" aria-label="Novedades"
+              initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }}
+              transition={{ type: "tween", duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+            >
+              <div className="tba-drawer-head">
+                <h3><HiOutlineSparkles size={20} /> Novedades</h3>
+                <button className="tba-drawer-x" onClick={() => setNovOpen(false)} aria-label="Cerrar">
+                  <HiOutlineXMark size={20} />
+                </button>
+              </div>
 
-            <div className="tba-modal-body">
-              {NOVEDADES.map((n) => (
-                <article key={n.version} className="tba-nov">
-                  <header>
+              <div className="tba-drawer-body">
+                {novedades.map((n, i) => (
+                  <article key={n.version} className="tba-nov">
+                    <header>
+                      <span className="tba-ver">v{n.version}</span>
+                      {i === 0 && <span className="tba-nuevo">Nuevo</span>}
+                      <time>{fechaCorta(n.fecha)}</time>
+                    </header>
                     <h4>{n.titulo}</h4>
-                    <span className="tba-ver">v{n.version}</span>
-                  </header>
-                  <time>{fechaCorta(n.fecha)}</time>
-                  <ul>
-                    {n.cambios.map((c, idx) => <li key={idx}>{c}</li>)}
-                  </ul>
-                </article>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
+                    <ul>
+                      {n.cambios.map((c, idx) => <li key={idx}>{c}</li>)}
+                    </ul>
+                  </article>
+                ))}
+              </div>
+            </motion.aside>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

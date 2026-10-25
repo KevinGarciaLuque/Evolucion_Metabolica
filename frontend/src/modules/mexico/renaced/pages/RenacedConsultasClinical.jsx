@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import RenacedLayout from "../components/RenacedLayout";
 import HojaConsulta from "../components/HojaConsulta";
+import HistorialConsultas from "../components/HistorialConsultas";
 import {
   getPaciente,
   getDiagnosticoClinico, saveDiagnosticoClinico,
@@ -47,11 +48,11 @@ const DM_COLOR = {
   "Otros":       { bg: "#f3e8ff", color: "#6b21a8" },
 };
 
-const TABS_CLINICOS = ["Consulta", "Diagnóstico",
+const TABS_CLINICOS = ["Consulta", "Historial", "Diagnóstico",
   "Comorbilidades", "Patologías", "Ant. G.O.", "Eventos", "Estilo Vida", "Toxicomanías", "Reclasificación", "Embarazo"];
 
 const TAB_GRUPOS_CLIN = [
-  { label: "Consulta clínica", tabs: ["Consulta","Diagnóstico"] },
+  { label: "Consulta clínica", tabs: ["Consulta","Historial","Diagnóstico"] },
   { label: "Antecedentes",     tabs: ["Comorbilidades","Patologías","Ant. G.O.","Eventos","Estilo Vida","Toxicomanías","Reclasificación","Embarazo"] },
 ];
 
@@ -714,6 +715,8 @@ export default function RenacedConsultasClinical() {
       {tab === "Consulta" && (
         <HojaConsulta paciente={paciente} pacienteId={pacienteId} cats={cats} />
       )}
+
+      {tab === "Historial" && <HistorialConsultas pacienteId={pacienteId} />}
 
       {/* ══════════════════════════════════════════════════════════════════════ */}
       {/* TAB: COMORBILIDADES CRÓNICAS                                          */}

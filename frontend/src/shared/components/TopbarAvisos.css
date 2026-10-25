@@ -82,3 +82,26 @@
 @media (max-width: 640px) {
   .tba-panel { position: fixed; top: 64px; right: 12px; left: 12px; width: auto; max-width: none; }
 }
+
+/* ── Panel de novedades: se desliza desde la derecha, como el menú lateral ── */
+.tba-drawer-overlay { position: fixed; inset: 0; background: rgba(2,6,23,.5); backdrop-filter: blur(2px); z-index: 500; }
+.tba-drawer {
+  position: fixed; top: 0; right: 0; bottom: 0; width: 420px; max-width: 100%; z-index: 501;
+  display: flex; flex-direction: column; color: #e2e8f0;
+  background: linear-gradient(180deg, #0b1220 0%, #0f1a2e 100%);
+  border-left: 1px solid rgba(99,179,237,.15);
+  box-shadow: -18px 0 50px rgba(0,0,0,.45);
+}
+.tba-drawer-head { display: flex; justify-content: space-between; align-items: center; padding: 18px 20px; border-bottom: 1px solid rgba(255,255,255,.08); }
+.tba-drawer-head h3 { margin: 0; font-size: 1.05rem; display: flex; align-items: center; gap: 8px; color: #f1f5f9; }
+.tba-drawer-x { background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1); color: #cbd5e1; width: 32px; height: 32px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
+.tba-drawer-x:hover { background: rgba(255,255,255,.12); color: #fff; }
+.tba-drawer-body { padding: 18px 20px 28px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; }
+.tba-drawer .tba-nov { background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08); border-radius: 12px; padding: 14px 16px; }
+.tba-drawer .tba-nov:last-child { border: 1px solid rgba(255,255,255,.08); }
+.tba-drawer .tba-nov header { display: flex; align-items: center; gap: 8px; }
+.tba-drawer .tba-nov h4 { margin: 8px 0 0; font-size: 15px; color: #f8fafc; }
+.tba-drawer .tba-nov time { margin-left: auto; font-size: 11.5px; color: #64748b; }
+.tba-drawer .tba-nov ul { margin: 10px 0 0; padding-left: 18px; font-size: 13.5px; color: #cbd5e1; display: flex; flex-direction: column; gap: 5px; }
+.tba-drawer .tba-ver { background: rgba(124,58,237,.25); color: #c4b5fd; }
+.tba-nuevo { background: linear-gradient(135deg,#22c55e,#16a34a); color: #fff; font-size: 10px; font-weight: 800; letter-spacing: .5px; text-transform: uppercase; padding: 2px 8px; border-radius: 20px; }

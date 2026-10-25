@@ -3,10 +3,16 @@
 //
 // Regla: en CADA push se agrega una entrada NUEVA al inicio de este arreglo
 // (versión semver: patch = correcciones, minor = funciones nuevas, major = cambios grandes).
-// La versión mostrada es siempre la de la primera entrada.
+//
+// Cada entrada lleva `alcance`:
+//   "global"   → cambio de toda la aplicación: lo ven todos los países.
+//   "mexico"   → solo RENACED México.      "honduras" → solo SAAPD Honduras.
+//   (un país nuevo = usar el nombre de su carpeta en modules/<pais>)
+// Cada país ve en el panel las entradas "global" + las suyas. La versión (VERSION) es una sola para todos.
 export const NOVEDADES = [
   {
     version: "1.2.0",
+    alcance: "mexico",
     fecha: "2026-10-24",
     titulo: "Hoja de consulta única e importación de reportes de monitores en RENACED",
     cambios: [
@@ -17,11 +23,13 @@ export const NOVEDADES = [
       "\"Escanear PDF\" ahora se llama \"Importar MCG\", con un diseño renovado, animación de análisis y resumen visual de los rangos",
       "Consultas: ahora la consulta es una sola hoja con secciones que se abren al hacer clic (Visita, Laboratorio, Tratamiento, Complicaciones y Educación)",
       "La fecha de la consulta se captura una sola vez; solo se guarda lo que se llene",
+      "Nuevo historial de consultas: línea de tiempo por fecha con visita, laboratorio, tratamiento, complicaciones y educación, incluyendo los datos del sistema anterior",
       "Corregido: los PDFs con acentos en el nombre ya se guardan con un nombre válido",
     ],
   },
   {
     version: "1.1.0",
+    alcance: "global",
     fecha: "2026-10-24",
     titulo: "Notificaciones, novedades y migración de base de datos",
     cambios: [
@@ -32,6 +40,7 @@ export const NOVEDADES = [
   },
   {
     version: "1.0.0",
+    alcance: "mexico",
     fecha: "2026-07-24",
     titulo: "Versión inicial de RENACED México",
     cambios: [
@@ -42,4 +51,9 @@ export const NOVEDADES = [
   },
 ];
 
+/** Novedades visibles para un país: las globales + las de ese país. */
+export const novedadesDe = (alcance) =>
+  NOVEDADES.filter((n) => n.alcance === "global" || n.alcance === alcance);
+
+/** Versión de la aplicación: es una sola para todos los países (la de la entrada más reciente). */
 export const VERSION = NOVEDADES[0].version;

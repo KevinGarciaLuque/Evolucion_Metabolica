@@ -91,7 +91,7 @@ export default function RenacedLayout({ children }) {
         </span>
         <div style={{ flex: 1 }} />
 
-        <TopbarAvisos api={apiRenaced} esSuperAdmin={false} basePacientes="/renaced/pacientes" storageKey="renaced" />
+        <TopbarAvisos api={apiRenaced} esSuperAdmin={false} basePacientes="/renaced/pacientes" storageKey="renaced" alcance="mexico" />
 
         <div className="topbar-user" ref={menuRef}>
           <button className={`topbar-user-btn${menuOpen ? " open" : ""}`} onClick={() => setMenuOpen((o) => !o)}>

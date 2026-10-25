@@ -20,6 +20,8 @@ export const saveDiagnosticoClinico = (pacId, data) => api.put(`${BASE}/diagnost
 export const getConsultas    = (pacId)       => api.get(`${BASE}/pacientes/${pacId}/consultas`);
 export const createConsulta  = (pacId, data) => api.post(`${BASE}/pacientes/${pacId}/consultas`, data);
 // Consulta completa: visita + laboratorio, tratamiento, complicaciones y educación (solo lo que traiga datos)
+// Historial: una visita por fecha con todo lo registrado (incluye lo importado del sistema anterior)
+export const getHistorialConsultas = (pacId) => api.get(`${BASE}/pacientes/${pacId}/consultas/historial`);
 export const createHojaConsulta = (pacId, data) => api.post(`${BASE}/pacientes/${pacId}/consultas/hoja`, data);
 
 // ── Laboratorio ───────────────────────────────────────────────────────────────

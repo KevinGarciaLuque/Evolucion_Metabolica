@@ -4,6 +4,7 @@
 Antes de cada `git push` (o cuando el usuario pida subir cambios):
 1. Agrega una entrada NUEVA al inicio del arreglo `NOVEDADES` en `frontend/src/data/novedades.js`
    con `version`, `fecha` (YYYY-MM-DD), `titulo` y `cambios` (frases cortas, en español, para el usuario final).
+   y `alcance`: `"global"` si el cambio es de toda la aplicación (lo ven todos los países) o el nombre del país (`"mexico"`, `"honduras"`…) si solo toca ese país; cada país ve lo global + lo suyo, y su versión es la de su entrada más reciente visible.
 2. Sube la versión según el tipo de cambio: patch = correcciones, minor = funciones nuevas, major = cambios grandes.
 3. Incluye ese archivo en el commit. La versión del pie del menú lateral y el botón ✨ de Novedades salen de ahí; no hay que tocar nada más.
 

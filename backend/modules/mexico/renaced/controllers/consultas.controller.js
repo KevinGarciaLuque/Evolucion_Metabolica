@@ -1,3 +1,4 @@
+import { armarHistorial } from "../services/historialConsultas.js";
 import { asegurarEsquema } from "../utils/asegurarEsquema.js";
 import { guardarHojaConsulta } from "../services/hojaConsulta.js";
 
@@ -72,5 +73,16 @@ export const createHojaConsulta = async (req, res) => {
     res.status(500).json({ error: "Error al registrar la consulta" });
   } finally {
     if (conn) conn.release();
+  }
+};
+
+// Historial: una visita por fecha con visita, laboratorio, tratamiento, complicaciones y educación.
+export const getHistorialConsultas = async (req, res) => {
+  try {
+    await asegurarEsquema(req.db, req.usuario?.db_name || "mx");
+    res.json(await armarHistorial(req.db, req.params.paciente_id));
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Error al obtener el historial de consultas" });
   }
 };
