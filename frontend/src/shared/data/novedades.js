@@ -207,9 +207,11 @@ export const NOVEDADES = [
   },
 ];
 
-/** Novedades visibles para un país: las globales + las de ese país. */
+/** Novedades visibles para un país: las globales + las de ese país. "todos" (Super Admin) ve todas. */
 export const novedadesDe = (alcance) =>
-  NOVEDADES.filter((n) => n.alcance === "global" || n.alcance === alcance);
+  alcance === "todos"
+    ? NOVEDADES
+    : NOVEDADES.filter((n) => n.alcance === "global" || n.alcance === alcance);
 
 /** Versión de la aplicación: es una sola para todos los países (la de la entrada más reciente). */
 export const VERSION = NOVEDADES[0].version;

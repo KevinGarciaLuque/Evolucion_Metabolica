@@ -76,7 +76,7 @@ export default function Layout({ children }) {
           esSuperAdmin={usuario?.rol === "SUPER_ADMIN"}
           basePacientes={enRenaced ? "/renaced/pacientes" : "/pacientes"}
           storageKey={enRenaced ? "renaced" : "em"}
-          alcance={enRenaced ? "mexico" : "honduras"}
+          alcance={enRenaced ? "mexico" : usuario?.rol === "SUPER_ADMIN" ? "todos" : "honduras"}
         />
 
         {/* Perfil de usuario */}
