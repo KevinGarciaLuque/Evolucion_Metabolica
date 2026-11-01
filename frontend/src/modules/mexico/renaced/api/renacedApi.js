@@ -28,7 +28,13 @@ export const createHojaConsulta = (pacId, data) => api.post(`${BASE}/pacientes/$
 
 // ── Laboratorio ───────────────────────────────────────────────────────────────
 export const getLaboratorios  = (pacId)       => api.get(`${BASE}/pacientes/${pacId}/laboratorio`);
-export const createLaboratorio = (pacId, data) => api.post(`${BASE}/pacientes/${pacId}/laboratorio`, data);
+// Lee un PDF de examen y devuelve valores para rellenar el formulario (no guarda)
+export const escanearExamenPDF = (pacId, archivo) => {
+  const fd = new FormData();
+  fd.append("pdf", archivo);
+  return api.post(`${BASE}/pacientes/${pacId}/laboratorio/escanear`, fd, { headers: { "Content-Type": "multipart/form-data" } });
+};
+export const createLaboratorio =(pacId, data) => api.post(`${BASE}/pacientes/${pacId}/laboratorio`, data);
 
 // ── Tratamiento ───────────────────────────────────────────────────────────────
 export const getTratamiento    = (pacId)       => api.get(`${BASE}/pacientes/${pacId}/tratamiento`);

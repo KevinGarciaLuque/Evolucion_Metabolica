@@ -5,7 +5,7 @@ import {
   FiActivity, FiDroplet, FiHeart, FiShield, FiBookOpen, FiCalendar, FiCheck, FiPlus, FiX, FiSun, FiWind, FiAlertTriangle,
 } from "react-icons/fi";
 import SeccionAcordeon from "./SeccionAcordeon";
-import { createHojaConsulta, getConsultas, getTratamiento, getToxicomanias, getMedicoActual } from "../api/renacedApi";
+import { escanearExamenPDF, createHojaConsulta, getConsultas, getTratamiento, getToxicomanias, getMedicoActual } from "../api/renacedApi";
 
 const C = { violet: "#6366f1", green: "#22c55e", slate: "#64748b" };
 
@@ -15,12 +15,18 @@ const DISPOSITIVOS = [["1", "Jeringa"], ["2", "Pluma"], ["3", "Microinfusora"], 
 const INSULINAS = [["1", "NPH"], ["2", "Glargina"], ["3", "Detemir"], ["4", "Degludec"], ["5", "Rápida"], ["6", "Lispro"], ["7", "Aspart"], ["8", "Glulisina"], ["14", "Glargina U300"], ["15", "FiAsp"]];
 const ORALES = [["1", "Metformina"], ["2", "Sulfonilureas"], ["7", "Análogos GLP-1"], ["8", "Inhibidores DPP-4"], ["9", "Inhibidores SGLT2"], ["5", "Glitazonas"], ["10", "Otro"]];
 
-const LAB_CAMPOS = [
+export const LAB_CAMPOS = [
   ["HbA1c (%)", "hba1c", "0.01"], ["Glucosa en ayuno", "glucosa_ayuno", "0.1"], ["Glucosa postprandial", "glucosa_postprandial", "0.1"],
   ["Colesterol total", "colesterol_total", "0.1"], ["HDL (mg/dl)", "hdl", "0.1"], ["LDL (mg/dl)", "ldl", "0.1"],
   ["Triglicéridos", "trigliceridos", "0.1"], ["Creatinina (mg/dl)", "creatinina", "0.001"], ["TFG (ml/min)", "tasa_filtracion", "0.1"],
   ["Microalbuminuria", "microalbuminuria", "0.1"], ["TSH (µUI/ml)", "tsh", "0.001"], ["Péptido C (ng/ml)", "c_peptido", "0.001"],
   ["Anti-GAD (nmol/L)", "anti_gad", "0.01"], ["Anti-IA2 (nmol/L)", "anti_ia2", "0.01"],
+  ["Glucosa al azar (mg/dl)", "glucosa_azar", "0.1"], ["Péptido C al azar (ng/ml)", "peptido_c_azar", "0.001"],
+  ["25-OH Vitamina D (ng/ml)", "vitamina_d", "0.01"], ["Ácido úrico (mg/dl)", "acido_urico", "0.001"],
+  ["Anti-Insulina (nmol/L)", "anti_insulina", "0.01"], ["Anti-Islotes (nmol/L)", "anti_islotes", "0.01"],
+  ["Anti-ZnT8 (nmol/L)", "anti_zct8", "0.01"], ["Anti-TPO (UI/ml)", "anti_tpo", "0.1"],
+  ["Creatinina urinaria (mg/dl)", "creatinina_urinaria", "0.01"], ["Relación Alb/Creat (mg/g)", "rel_album_creat", "0.01"],
+  ["Volumen urinario (ml)", "volumen_urinario", "0.01"],
 ];
 
 const hoy = () => {
@@ -65,6 +71,7 @@ export default function HojaConsulta({ paciente, pacienteId, cats, children, fic
   const [abiertas, setAbiertas] = useState({});
   const [f, setF] = useState(INIT);
   const [otraFechaLab, setOtraFechaLab] = useState(false);
+  const [escaneo, setEscaneo] = useState({ cargando: false, error: "", ok: null, avisos: [] });
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState("");
   const [resultado, setResultado] = useState(null);
@@ -97,6 +104,25 @@ export default function HojaConsulta({ paciente, pacienteId, cats, children, fic
 
   const set = (sec, campo, valor) => setF((p) => ({ ...p, [sec]: { ...p[sec], [campo]: valor } }));
   const alternar = (k) => setAbiertas((a) => ({ ...a, [k]: !a[k] }));
+
+  // Sube el PDF del examen y rellena los campos reconocidos; el médico revisa y guarda con la consulta
+  async function escanearExamen(e) {
+    const archivo = e.target.files?.[0];
+    e.target.value = "";
+    if (!archivo) return;
+    setEscaneo({ cargando: true, error: "", ok: null, avisos: [] });
+    try {
+      const { data } = await escanearExamenPDF(pacienteId, archivo);
+      setF((p) => ({ ...p, lab: { ...p.lab, ...data.valores, archivo_pdf: data.archivo } }));
+      if (data.fecha_muestra && data.fecha_muestra !== fecha) {
+        setOtraFechaLab(true);
+        set("lab", "fecha_muestra", data.fecha_muestra);
+      }
+      setEscaneo({ cargando: false, error: "", ok: data.detalle.length, avisos: data.avisos || [] });
+    } catch (err) {
+      setEscaneo({ cargando: false, error: err.response?.data?.error || "No se pudo leer el PDF", ok: null, avisos: [] });
+    }
+  }
 
   function cambiarVisita(campo, valor) {
     set("visita", campo, valor);
@@ -258,6 +284,20 @@ export default function HojaConsulta({ paciente, pacienteId, cats, children, fic
 
       {/* 2 · Laboratorio */}
       <SeccionAcordeon icono={FiDroplet} color="#0ea5e9" titulo="Laboratorio" descripcion="HbA1c, glucosa, lípidos, función renal y otros" abierta={!!abiertas.lab} onToggle={() => alternar("lab")} estado={llenoLab}>
+        <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 12, flexWrap: "wrap", marginBottom: 12 }}>
+          <span style={{ fontSize: 12.5, color: C.slate }}>¿Tienes el examen en PDF? Se leen los resultados y se llenan los campos.</span>
+          <label className="btn btn-secondary btn-sm" style={{ cursor: escaneo.cargando ? "wait" : "pointer", opacity: escaneo.cargando ? 0.6 : 1 }}>
+            {escaneo.cargando ? "Leyendo examen…" : "📄 Subir examen (PDF)"}
+            <input type="file" accept="application/pdf" hidden disabled={escaneo.cargando} onChange={escanearExamen} />
+          </label>
+        </div>
+        {escaneo.error && <div style={{ color: "#b91c1c", fontSize: 13, marginBottom: 10 }}>{escaneo.error}</div>}
+        {escaneo.ok != null && (
+          <div style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", color: "#166534", borderRadius: 8, padding: "8px 12px", fontSize: 13, marginBottom: 12 }}>
+            Se llenaron {escaneo.ok} resultado{escaneo.ok === 1 ? "" : "s"} del examen. Revísalos antes de guardar la consulta.
+            {escaneo.avisos.map((a, i) => <div key={i} style={{ color: "#b45309" }}>⚠ {a}</div>)}
+          </div>
+        )}
         <div style={grid(180)}>
           {LAB_CAMPOS.map(([label, name, step]) => (
             <Campo key={name} label={label}><input type="number" step={step} value={f.lab[name]} onChange={(e) => set("lab", name, e.target.value)} /></Campo>

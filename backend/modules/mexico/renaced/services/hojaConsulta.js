@@ -6,10 +6,13 @@
 // así los reportes y la importación del sistema anterior siguen funcionando igual.
 // Las fechas que son de otro momento (inicio de tratamiento, toma de muestra) se respetan si llegan.
 
-const LAB_COLS = [
+export const LAB_COLS = [
   "hba1c", "glucosa_ayuno", "glucosa_postprandial", "colesterol_total", "hdl", "ldl",
   "trigliceridos", "creatinina", "tasa_filtracion", "microalbuminuria", "tsh",
-  "c_peptido", "anti_gad", "anti_ia2", "insulinemia", "observaciones",
+  "c_peptido", "anti_gad", "anti_ia2", "insulinemia",
+  "glucosa_azar", "peptido_c_azar", "acido_urico", "vitamina_d", "anti_insulina", "anti_islotes",
+  "anti_zct8", "anti_tpo", "creatinina_urinaria", "rel_album_creat", "volumen_urinario",
+  "archivo_pdf", "observaciones",
 ];
 const EVAL_COLS = [
   "retinopatia_id", "nefropatia_id", "neuropatia_id", "neuropatia_autonomica_id",

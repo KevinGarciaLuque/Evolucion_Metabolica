@@ -1,3 +1,4 @@
+import { LAB_CAMPOS } from "../components/HojaConsulta";
 import { useEffect, useState, Fragment } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import RenacedLayout from "../components/RenacedLayout";
@@ -5,7 +6,7 @@ import {
   getPaciente,
   getDiagnosticoClinico,
   getConsultas, createConsulta,
-  getLaboratorios, createLaboratorio,
+  getLaboratorios, createLaboratorio, escanearExamenPDF,
   getTratamiento, createTratamiento,
   createTratamientoOtx, updateTratamientoOtx, deleteTratamientoOtx,
   createAjusteDosis, updateAjusteDosis, deleteAjusteDosis,
@@ -158,7 +159,9 @@ export default function RenacedPacienteDetalle() {
   const [modalEvaluacion, setModalEvaluacion] = useState(false);
   const [modalEducacion, setModalEducacion]   = useState(false);
   const [formConsulta, setFormConsulta]     = useState({ fecha_consulta: "", peso: "", estatura: "", pa_sistolica: "", pa_diastolica: "", cintura: "" });
-  const [formLab, setFormLab]               = useState({ fecha_muestra: "", hba1c: "", glucosa_ayuno: "", colesterol_total: "", hdl: "", ldl: "", trigliceridos: "", creatinina: "" });
+  const LAB_VACIO = { fecha_muestra: "", ...Object.fromEntries(LAB_CAMPOS.map(([, n]) => [n, ""])), archivo_pdf: "" };
+  const [formLab, setFormLab]               = useState(LAB_VACIO);
+  const [escaneoLab, setEscaneoLab]         = useState({ cargando: false, error: "", ok: null, avisos: [] });
   const [formTratamiento, setFormTratamiento] = useState({ fecha_inicio: "", terapia_id: "", esquema_insulina_id: "", dispositivo_id: "", insulina_id: "", dosis_unidades: "", antidiabetico_id: "", dosis_mg: "", frecuencia: "" });
   const [formEvaluacion, setFormEvaluacion] = useState({ fecha_evaluacion: "", retinopatia_id: "", nefropatia_id: "", neuropatia_id: "", pie_diabetico_id: "", enf_cardiovascular_id: "", observaciones: "" });
   const [formEducacion, setFormEducacion]   = useState({ fecha: "", tema: "", modalidad: "", duracion_min: "", educador: "", observaciones: "" });
@@ -242,8 +245,25 @@ export default function RenacedPacienteDetalle() {
       const r = await getLaboratorios(id);
       setLaboratorios(r.data);
       setModalLab(false);
-      setFormLab({ fecha_muestra: "", hba1c: "", glucosa_ayuno: "", colesterol_total: "", hdl: "", ldl: "", trigliceridos: "", creatinina: "" });
+      setFormLab(LAB_VACIO);
+      setEscaneoLab({ cargando: false, error: "", ok: null, avisos: [] });
     } finally { setGuardando(false); }
+  }
+
+  // Lee el PDF del examen, rellena el formulario y lo abre para revisar antes de guardar
+  async function escanearLab(e) {
+    const archivo = e.target.files?.[0];
+    e.target.value = "";
+    if (!archivo) return;
+    setEscaneoLab({ cargando: true, error: "", ok: null, avisos: [] });
+    try {
+      const { data } = await escanearExamenPDF(id, archivo);
+      setFormLab({ ...LAB_VACIO, ...data.valores, fecha_muestra: data.fecha_muestra || "", archivo_pdf: data.archivo });
+      setEscaneoLab({ cargando: false, error: "", ok: data.detalle.length, avisos: data.avisos || [] });
+      setModalLab(true);
+    } catch (err) {
+      setEscaneoLab({ cargando: false, error: err.response?.data?.error || "No se pudo leer el PDF", ok: null, avisos: [] });
+    }
   }
 
   async function guardarTratamiento(e) {
@@ -722,8 +742,13 @@ export default function RenacedPacienteDetalle() {
       {/* ── Laboratorio ──────────────────────────────────────────────────────── */}
       {tab === "Laboratorio" && (
         <div>
-          <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 12 }}>
-            <button className="btn btn-primary btn-sm" onClick={() => setModalLab(true)}>
+          <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 12 }}>
+            {escaneoLab.error && <span style={{ color: "#b91c1c", fontSize: 13 }}>{escaneoLab.error}</span>}
+            <label className="btn btn-secondary btn-sm" style={{ cursor: escaneoLab.cargando ? "wait" : "pointer", opacity: escaneoLab.cargando ? 0.6 : 1 }}>
+              {escaneoLab.cargando ? "Leyendo examen…" : "📄 Subir examen (PDF)"}
+              <input type="file" accept="application/pdf" hidden disabled={escaneoLab.cargando} onChange={escanearLab} />
+            </label>
+            <button className="btn btn-primary btn-sm" onClick={() => { setFormLab(LAB_VACIO); setEscaneoLab({ cargando: false, error: "", ok: null, avisos: [] }); setModalLab(true); }}>
               + Nuevo Laboratorio
             </button>
           </div>
@@ -740,6 +765,8 @@ export default function RenacedPacienteDetalle() {
                     <th>LDL</th>
                     <th>Triglicéridos</th>
                     <th>Creatinina</th>
+                    <th>Otros</th>
+                    <th>PDF</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -757,9 +784,18 @@ export default function RenacedPacienteDetalle() {
                       <td>{l.ldl ?? "—"}</td>
                       <td>{l.trigliceridos ?? "—"}</td>
                       <td>{l.creatinina ?? "—"}</td>
+                      <td style={{ fontSize: 12, color: "#475569", minWidth: 160 }}>
+                        {LAB_CAMPOS.filter(([, n]) => !["hba1c", "glucosa_ayuno", "colesterol_total", "hdl", "ldl", "trigliceridos", "creatinina"].includes(n) && l[n] != null)
+                          .map(([label, n]) => `${label.replace(/\s*\(.*\)/, "")}: ${l[n]}`).join(" · ") || "—"}
+                      </td>
+                      <td>
+                        {l.archivo_pdf
+                          ? <a href={`${API_ARCHIVOS}/uploads/renaced_laboratorios/${l.archivo_pdf}`} target="_blank" rel="noopener noreferrer" style={btnEditar}>Ver PDF</a>
+                          : "—"}
+                      </td>
                     </tr>
                   ))}
-                  {laboratorios.length === 0 && <tr><td colSpan={8} className="empty-cell">Sin resultados de laboratorio</td></tr>}
+                  {laboratorios.length === 0 && <tr><td colSpan={10} className="empty-cell">Sin resultados de laboratorio</td></tr>}
                 </tbody>
               </table>
             </div>
@@ -1245,22 +1281,22 @@ export default function RenacedPacienteDetalle() {
       {/* ── Modal nuevo laboratorio ──────────────────────────────────────────── */}
       {modalLab && (
         <div style={{ position: "fixed", inset: 0, zIndex: 9999, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
-          <div style={{ background: "#fff", borderRadius: 14, padding: 28, maxWidth: 520, width: "100%", boxShadow: "0 24px 64px rgba(0,0,0,0.25)" }}>
+          <div style={{ background: "#fff", borderRadius: 14, padding: 28, maxWidth: 640, width: "100%", boxShadow: "0 24px 64px rgba(0,0,0,0.25)", maxHeight: "90vh", overflowY: "auto" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
               <h3 style={{ margin: 0 }}>Nuevo Laboratorio</h3>
               <button onClick={() => setModalLab(false)} style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer", color: "#94a3b8" }}>✕</button>
             </div>
+            {escaneoLab.ok != null && formLab.archivo_pdf && (
+              <div style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", color: "#166534", borderRadius: 8, padding: "8px 12px", fontSize: 13, marginBottom: 12 }}>
+                Se leyeron {escaneoLab.ok} resultado{escaneoLab.ok === 1 ? "" : "s"} del examen (el PDF se guardará con el registro). Revísalos antes de guardar.
+                {escaneoLab.avisos.map((a, i) => <div key={i} style={{ color: "#b45309" }}>⚠ {a}</div>)}
+              </div>
+            )}
             <form onSubmit={guardarLab}>
               <div className="detalle-2col">
                 {[
                   ["Fecha muestra", "fecha_muestra", "date"],
-                  ["HbA1c (%)", "hba1c", "number"],
-                  ["Glucosa en ayuno", "glucosa_ayuno", "number"],
-                  ["Colesterol total", "colesterol_total", "number"],
-                  ["HDL", "hdl", "number"],
-                  ["LDL", "ldl", "number"],
-                  ["Triglicéridos", "trigliceridos", "number"],
-                  ["Creatinina", "creatinina", "number"],
+                  ...LAB_CAMPOS.map(([l, n]) => [l, n, "number"]),
                 ].map(([label, name, type]) => (
                   <div className="form-group" key={name}>
                     <label style={{ fontSize: 12 }}>{label}</label>
