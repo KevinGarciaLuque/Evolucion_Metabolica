@@ -11,6 +11,20 @@
 // Cada país ve en el panel las entradas "global" + las suyas. La versión (VERSION) es una sola para todos.
 export const NOVEDADES = [
   {
+    version: "1.11.0",
+    alcance: "global",
+    fecha: "2026-11-01",
+    titulo: "Zona horaria por país y por clínica",
+    cambios: [
+      "Cada país usa su propia zona horaria: el \"hoy\", las horas y las fechas de los reportes ya no dependen del reloj del equipo ni del servidor",
+      "En México cada clínica puede tener su zona horaria (centro, sureste, pacífico, Sonora, noroeste, frontera)",
+      "El Super Admin elige la zona de cada país al crear o editar el país",
+      "Los contadores y filtros de la bitácora y la auditoría usan el día del país",
+      "Pacientes (México): ahora se busca también por número de expediente",
+      "El Super Admin ve las novedades de todos los países",
+    ],
+  },
+  {
     version: "1.10.0",
     alcance: "mexico",
     fecha: "2026-10-31",
