@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { ZONAS_MEXICO } from "../../../../shared/utils/zonaHoraria";
 import RenacedLayout from "../components/RenacedLayout";
 import {
   getClinicasRenaced, getEstablecimientosRenaced, createClinicaRenaced,
@@ -7,7 +8,7 @@ import {
 import { HiOutlinePlusCircle, HiOutlinePencilSquare, HiOutlineCheckCircle, HiOutlineXCircle } from "react-icons/hi2";
 
 const FORM_INICIAL = {
-  nombre: "", establecimiento_cve: "",
+  nombre: "", establecimiento_cve: "", zona_horaria: "",
   investigador_nombre: "", investigador_email: "", investigador_password: "",
 };
 
@@ -63,7 +64,7 @@ export default function RenacedClinicasList() {
 
   function abrirEditar(clinica) {
     setEditando(clinica);
-    setForm({ nombre: clinica.nombre, establecimiento_cve: clinica.establecimiento_cve || "" });
+    setForm({ nombre: clinica.nombre, establecimiento_cve: clinica.establecimiento_cve || "", zona_horaria: clinica.zona_horaria || "" });
     setOrigen("manual");
     setError("");
     setModalAbierto(true);
@@ -151,6 +152,7 @@ export default function RenacedClinicasList() {
                 <tr>
                   <th>Nombre</th>
                   <th className="hide-mobile">Clave establecimiento</th>
+                  <th className="hide-mobile">Zona horaria</th>
                   <th>Usuarios</th>
                   <th>Pacientes</th>
                   <th>Estado</th>
@@ -163,6 +165,9 @@ export default function RenacedClinicasList() {
                     <td style={{ fontWeight: 600 }}>{c.nombre}</td>
                     <td className="hide-mobile" style={{ fontFamily: "monospace", fontSize: 13 }}>
                       {c.establecimiento_cve || <span style={{ color: "#cbd5e1" }}>—</span>}
+                    </td>
+                    <td className="hide-mobile" style={{ fontSize: 13 }}>
+                      {c.zona_horaria ? (ZONAS_MEXICO.find(([z]) => z === c.zona_horaria)?.[1] || c.zona_horaria) : <span style={{ color: "#94a3b8" }}>Igual que el país</span>}
                     </td>
                     <td>{c.total_usuarios}</td>
                     <td>{c.total_pacientes}</td>
@@ -275,6 +280,15 @@ export default function RenacedClinicasList() {
                   />
                 </div>
               )}
+
+              <div>
+                <label className="form-label">Zona horaria de la clínica</label>
+                <select value={form.zona_horaria} onChange={(e) => setForm((f) => ({ ...f, zona_horaria: e.target.value }))}>
+                  <option value="">Igual que el país</option>
+                  {ZONAS_MEXICO.map(([z, nombre]) => <option key={z} value={z}>{nombre}</option>)}
+                </select>
+                <small style={{ color: "#64748b" }}>Define el «hoy» y las horas que ven los usuarios de esta clínica.</small>
+              </div>
 
               {!editando && (
                 <>

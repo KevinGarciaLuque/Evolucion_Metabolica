@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { fmtFecha } from "../../../../../shared/utils/zonaHoraria";
 import { useNavigate } from "react-router-dom";
 import api from "../../../../../shared/api/axios";
 import Layout from "../../../../../shared/components/Layout";
@@ -134,7 +135,7 @@ export default function UsuariosList() {
                       </span>
                     </td>
                     <td className="hide-mobile" style={{ color: "#64748b", fontSize: "0.83rem" }}>
-                      {u.created_at ? new Date(u.created_at).toLocaleDateString("es-HN") : "—"}
+                      {u.created_at ? fmtFecha(u.created_at, undefined, "es-HN") : "—"}
                     </td>
                     <td>
                       <div className="acciones">

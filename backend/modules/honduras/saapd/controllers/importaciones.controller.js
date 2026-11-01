@@ -1,5 +1,6 @@
 import XLSX from "xlsx";
 import pool from "../config/db.js";
+import { hoySync } from "../../../../shared/utils/zonaHoraria.js";
 
 async function ensureImportTables() {
   await ensurePacientesInstitucionSupportsHEU();
@@ -217,7 +218,7 @@ function parseFecha(v) {
 
 function mapRow(row) {
   const fechaRaw = getByAliases(row, ["Fecha", "fecha", "_submission_time", "_submissiondate", "today"]);
-  const fechaNormalizada = parseFecha(fechaRaw) || new Date().toISOString().slice(0, 10);
+  const fechaNormalizada = parseFecha(fechaRaw) || hoySync("hn");
 
   return {
     dni: norm(getByAliases(row, [

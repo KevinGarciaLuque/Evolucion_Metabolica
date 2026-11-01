@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { hoyISO } from "../../../../shared/utils/zonaHoraria";
 import { useParams, Link } from "react-router-dom";
 import RenacedLayout from "../components/RenacedLayout";
 import HojaConsulta from "../components/HojaConsulta";
@@ -62,10 +63,7 @@ const PAT_SUGERIDAS = ["HIPOTIROIDISMO", "ENFERMEDAD CELÍACA", "ENFERMEDAD DE A
 const TIPOS_DM = [["1", "Tipo 1"], ["2", "Tipo 2"], ["3", "Gestacional"], ["4", "Otros"]];
 const TERAPIAS_GEST = [["1", "Dieta y ejercicio"], ["2", "Metformina"], ["3", "Insulina"], ["4", "Glibenclamida"]];
 const RESULTADOS_EMB = [["EMBARAZADA", "Embarazada (en curso)"], ["NACIMIENTO", "Nacimiento"], ["ABORTO", "Aborto"]];
-const hoy = () => {
-  const n = new Date();
-  return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, "0")}-${String(n.getDate()).padStart(2, "0")}`;
-};
+const hoy = () => hoyISO();
 const sumarDias = (fecha, dias) => {
   const d = new Date(`${fecha}T12:00:00`);
   d.setDate(d.getDate() + dias);

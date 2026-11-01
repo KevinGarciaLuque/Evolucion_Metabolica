@@ -1,9 +1,12 @@
 import pool from "../../honduras/saapd/config/db.js";
+import { zonaDeClinica } from "../../mexico/renaced/utils/zonaClinica.js";
+import { getTenantPool } from "../../mexico/renaced/config/db.js";
 import poolMaster from "../../../shared/config/db.master.js";
 import mysql from "mysql2/promise";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { registrarLoginLog } from "../../../shared/utils/loginLog.js";
+import { zonaDeTenant } from "../../../shared/utils/zonaHoraria.js";
 
 const INSTITUCIONES_VALIDAS = ["HMEP", "IHSS", "HEU"];
 
@@ -24,7 +27,7 @@ function parsearInstitucionesDB(valor) {
   }
 }
 
-function construirPayloadUsuario(usuario, modulosHonduras) {
+function construirPayloadUsuario(usuario, modulosHonduras, zonaHoraria = null) {
   return {
     id: usuario.id,
     nombre: usuario.nombre,
@@ -34,6 +37,7 @@ function construirPayloadUsuario(usuario, modulosHonduras) {
     mostrar_info_graficas: usuario.mostrar_info_graficas ? 1 : 0,
     instituciones_acceso: parsearInstitucionesDB(usuario.instituciones_acceso) || INSTITUCIONES_VALIDAS,
     modulos: modulosHonduras ?? null,
+    zona_horaria: zonaHoraria,
     tipo: "evolucion",
   };
 }
@@ -114,6 +118,7 @@ async function buscarEnRenaced(email, password, req) {
           db_name: tenant.db_name,
           db_host: tenant.db_host,
           modulos: tenant.modulos ?? null,
+          zona_horaria: (await zonaDeClinica(getTenantPool(tenant.db_name, tenant.db_host), u.unidad_servicio_id, tenant.db_name)) || await zonaDeTenant(tenant.codigo),
           tipo: "renaced",
         },
         tenant,
@@ -149,7 +154,7 @@ export async function login(req, res) {
 
       if (valido) {
         const modulosHonduras = await obtenerModulosHonduras();
-        const usuarioPayload = construirPayloadUsuario(usuario, modulosHonduras);
+        const usuarioPayload = construirPayloadUsuario(usuario, modulosHonduras, await zonaDeTenant("hn"));
         const token = jwt.sign(usuarioPayload, process.env.JWT_SECRET, { expiresIn: "8h" });
 
         pool.query(
@@ -192,7 +197,7 @@ export async function me(req, res) {
     );
     if (rows.length === 0) return res.status(404).json({ error: "Usuario no encontrado" });
     const modulosHonduras = await obtenerModulosHonduras();
-    res.json(construirPayloadUsuario(rows[0], modulosHonduras));
+    res.json(construirPayloadUsuario(rows[0], modulosHonduras, await zonaDeTenant("hn")));
   } catch (err) {
     res.status(500).json({ error: "Error del servidor" });
   }

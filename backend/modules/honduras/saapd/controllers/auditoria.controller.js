@@ -1,4 +1,5 @@
 import pool from "../config/db.js";
+import { zonaDeTenant, hoyEn, desfaseEn, desfaseDelDia } from "../../../../shared/utils/zonaHoraria.js";
 
 /**
  * GET /api/auditoria
@@ -24,6 +25,7 @@ export async function listar(req, res) {
     const entidad = req.query.entidad?.trim() || "";
     const desde   = req.query.desde?.trim()   || "";
     const hasta   = req.query.hasta?.trim()   || "";
+    const zona    = await zonaDeTenant("hn"); // desde/hasta son días de calendario de Honduras; `fecha` está en UTC
 
     const where  = ["1=1"];
     const params = [];
@@ -41,12 +43,12 @@ export async function listar(req, res) {
       params.push(entidad);
     }
     if (desde) {
-      where.push("fecha >= ?");
-      params.push(`${desde} 00:00:00`);
+      where.push("fecha >= CONVERT_TZ(?, ?, '+00:00')");
+      params.push(`${desde} 00:00:00`, desfaseDelDia(zona, desde));
     }
     if (hasta) {
-      where.push("fecha <= ?");
-      params.push(`${hasta} 23:59:59`);
+      where.push("fecha <= CONVERT_TZ(?, ?, '+00:00')");
+      params.push(`${hasta} 23:59:59`, desfaseDelDia(zona, hasta));
     }
 
     const whereStr = where.join(" AND ");
@@ -79,14 +81,16 @@ export async function listar(req, res) {
  */
 export async function estadisticas(req, res) {
   try {
+    const zona = await zonaDeTenant("hn");
+    const off = desfaseEn(zona), hoyL = hoyEn(zona);
     const [[hoy]]    = await pool.query(
-      "SELECT COUNT(*) AS total FROM auditoria_sesiones WHERE accion='login' AND DATE(fecha)=CURDATE()"
+      "SELECT COUNT(*) AS total FROM auditoria_sesiones WHERE accion='login' AND DATE(CONVERT_TZ(fecha,'+00:00',?))=?", [off, hoyL]
     );
     const [[semana]] = await pool.query(
       "SELECT COUNT(*) AS total FROM auditoria_sesiones WHERE accion='login' AND fecha >= DATE_SUB(NOW(), INTERVAL 7 DAY)"
     );
     const [[unicos]] = await pool.query(
-      "SELECT COUNT(DISTINCT usuario_id) AS total FROM auditoria_sesiones WHERE accion='login' AND DATE(fecha)=CURDATE()"
+      "SELECT COUNT(DISTINCT usuario_id) AS total FROM auditoria_sesiones WHERE accion='login' AND DATE(CONVERT_TZ(fecha,'+00:00',?))=?", [off, hoyL]
     );
 
     res.json({

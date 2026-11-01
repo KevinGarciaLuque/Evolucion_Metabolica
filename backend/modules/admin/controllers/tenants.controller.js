@@ -2,6 +2,7 @@ import pool from "../../../shared/config/db.master.js";
 import mysql from "mysql2/promise";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
+import { zonaDeTenant, desfaseDelDia, hoyEn, desfaseEn, zonaValida, olvidarZona } from "../../../shared/utils/zonaHoraria.js";
 dotenv.config();
 
 export const getTenants = async (req, res) => {
@@ -169,6 +170,7 @@ export const impersonarTenant = async (req, res) => {
       db_name: tenant.db_name,
       db_host: tenant.db_host,
       modulos: tenant.modulos ?? null,
+      zona_horaria: await zonaDeTenant(tenant.codigo),
       tipo: "renaced",
       super_admin: true,
     };
@@ -190,7 +192,21 @@ export const impersonarTenant = async (req, res) => {
 export const updateTenant = async (req, res) => {
   try {
     const { id } = req.params;
-    const { nombre, subdominio, activo, modulos, configuracion } = req.body;
+    const { nombre, subdominio, activo, modulos, configuracion, zona_horaria } = req.body;
+
+    // La zona horaria vive en configuracion.zona_horaria (nombre IANA); se actualiza sin pisar el resto
+    if (zona_horaria !== undefined) {
+      if (!zonaValida(zona_horaria)) {
+        return res.status(400).json({ error: "Zona horaria no válida (ej. America/Tegucigalpa)" });
+      }
+      const [[fila]] = await pool.query("SELECT codigo, configuracion FROM tenants WHERE id = ?", [id]);
+      if (!fila) return res.status(404).json({ error: "País no encontrado" });
+      let conf = fila.configuracion;
+      if (typeof conf === "string") { try { conf = JSON.parse(conf); } catch { conf = {}; } }
+      await pool.query("UPDATE tenants SET configuracion = ? WHERE id = ?",
+        [JSON.stringify({ ...(conf || {}), zona_horaria }), id]);
+      olvidarZona(fila.codigo);
+    }
 
     await pool.query(
       `UPDATE tenants SET
@@ -245,6 +261,8 @@ export const deleteTenant = async (req, res) => {
 export const listarBitacoraTenant = async (req, res) => {
   try {
     const { id } = req.params;
+    const [[tn]] = await pool.query("SELECT codigo FROM tenants WHERE id = ?", [id]);
+    const zona = await zonaDeTenant(tn?.codigo);
     const page   = Math.max(1, parseInt(req.query.page  || "1",  10));
     const limit  = Math.min(200, Math.max(1, parseInt(req.query.limit || "50", 10)));
     const offset = (page - 1) * limit;
@@ -265,12 +283,12 @@ export const listarBitacoraTenant = async (req, res) => {
       params.push(exito);
     }
     if (desde) {
-      where.push("fecha >= ?");
-      params.push(`${desde} 00:00:00`);
+      where.push("fecha >= CONVERT_TZ(?, ?, '+00:00')");
+      params.push(`${desde} 00:00:00`, desfaseDelDia(zona, desde));
     }
     if (hasta) {
-      where.push("fecha <= ?");
-      params.push(`${hasta} 23:59:59`);
+      where.push("fecha <= CONVERT_TZ(?, ?, '+00:00')");
+      params.push(`${hasta} 23:59:59`, desfaseDelDia(zona, hasta));
     }
 
     const whereStr = where.join(" AND ");
@@ -305,21 +323,24 @@ export const listarBitacoraTenant = async (req, res) => {
 export const estadisticasBitacoraTenant = async (req, res) => {
   try {
     const { id } = req.params;
+    const [[t]] = await pool.query("SELECT codigo FROM tenants WHERE id = ?", [id]);
+    const zona = await zonaDeTenant(t?.codigo);
+    const off = desfaseEn(zona), hoyL = hoyEn(zona);
     const [[hoy]] = await pool.query(
-      "SELECT COUNT(*) AS total FROM login_logs WHERE tenant_id = ? AND exito = 1 AND DATE(fecha) = CURDATE()",
-      [id]
+      "SELECT COUNT(*) AS total FROM login_logs WHERE tenant_id = ? AND exito = 1 AND DATE(CONVERT_TZ(fecha,'+00:00',?)) = ?",
+      [id, off, hoyL]
     );
     const [[semana]] = await pool.query(
       "SELECT COUNT(*) AS total FROM login_logs WHERE tenant_id = ? AND exito = 1 AND fecha >= DATE_SUB(NOW(), INTERVAL 7 DAY)",
       [id]
     );
     const [[fallidosHoy]] = await pool.query(
-      "SELECT COUNT(*) AS total FROM login_logs WHERE tenant_id = ? AND exito = 0 AND DATE(fecha) = CURDATE()",
-      [id]
+      "SELECT COUNT(*) AS total FROM login_logs WHERE tenant_id = ? AND exito = 0 AND DATE(CONVERT_TZ(fecha,'+00:00',?)) = ?",
+      [id, off, hoyL]
     );
     const [[unicos]] = await pool.query(
-      "SELECT COUNT(DISTINCT usuario_email) AS total FROM login_logs WHERE tenant_id = ? AND exito = 1 AND DATE(fecha) = CURDATE()",
-      [id]
+      "SELECT COUNT(DISTINCT usuario_email) AS total FROM login_logs WHERE tenant_id = ? AND exito = 1 AND DATE(CONVERT_TZ(fecha,'+00:00',?)) = ?",
+      [id, off, hoyL]
     );
 
     res.json({

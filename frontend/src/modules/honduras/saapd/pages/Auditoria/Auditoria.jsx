@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import api from "../../../../../shared/api/axios";
+import { fmtFechaHora } from "../../../../../shared/utils/zonaHoraria";
 import Layout from "../../../../../shared/components/Layout";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../../../../shared/context/AuthContext";
@@ -38,14 +39,8 @@ const ROL_BADGE = {
 
 function formatFecha(iso) {
   if (!iso) return "—";
-  // Railway MySQL corre en UTC; agregamos Z para que JS lo parsee como UTC
-  const s = typeof iso === "string" ? iso.replace(" ", "T") + "Z" : iso;
-  const d = new Date(s);
-  return d.toLocaleString("es-HN", {
-    day: "2-digit", month: "2-digit", year: "numeric",
-    hour: "2-digit", minute: "2-digit", second: "2-digit",
-    hour12: true,
-  });
+  // La bitácora guarda UTC; se muestra en la zona horaria del país
+  return fmtFechaHora(iso, { month: "2-digit", second: "2-digit", hour12: true });
 }
 
 export default function Auditoria() {

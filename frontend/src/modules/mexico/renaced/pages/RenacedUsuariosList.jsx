@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { fmtFecha } from "../../../../shared/utils/zonaHoraria";
 import { useNavigate } from "react-router-dom";
 import RenacedLayout from "../components/RenacedLayout";
 import { getUsuariosRenaced, toggleUsuarioRenaced } from "../api/renacedApi";
@@ -138,7 +139,7 @@ export default function RenacedUsuariosList() {
                       </td>
                       <td className="hide-mobile" style={{ fontSize: 12, color: "#94a3b8" }}>
                         {u.ultimo_acceso
-                          ? new Date(u.ultimo_acceso).toLocaleDateString("es-MX", { day: "2-digit", month: "short", year: "numeric" })
+                          ? fmtFecha(u.ultimo_acceso, { day: "2-digit", month: "short", year: "numeric" }, "es-MX")
                           : "Nunca"}
                       </td>
                       <td>

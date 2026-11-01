@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { anioActual } from "../../../../shared/utils/zonaHoraria";
 import { getConsultas, getLaboratorios, getTratamiento } from "../api/renacedApi";
 
 const C = { slate: "#64748b" };
@@ -19,7 +20,7 @@ function aniosEvolucion(dx) {
   if (!dx) return null;
   const anio = dx.fecha_diagnostico ? parseInt(String(dx.fecha_diagnostico).slice(0, 4), 10) : parseInt(dx.fecha_approx_anio, 10);
   if (!anio) return null;
-  const n = new Date().getFullYear() - anio;
+  const n = anioActual() - anio;
   return n <= 0 ? "menos de 1 año" : `${n} ${n === 1 ? "año" : "años"}`;
 }
 

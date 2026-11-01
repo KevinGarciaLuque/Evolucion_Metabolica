@@ -1,11 +1,12 @@
 import { useEffect, useState, useRef } from "react";
+import { hoyISO } from "../../../../../shared/utils/zonaHoraria";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { FiArrowLeft } from "react-icons/fi";
 import api from "../../../../../shared/api/axios";
 import Layout from "../../../../../shared/components/Layout";
 import { calcularZScores, calcularEdadMeses } from "../../utils/who_zscore";
 
-const hoy = () => { const n = new Date(); return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,"0")}-${String(n.getDate()).padStart(2,"0")}`; };
+const hoy = () => hoyISO();
 const VACÍO = {
   paciente_id: "", fecha: hoy(),
   tipo_consulta: "Presencial",

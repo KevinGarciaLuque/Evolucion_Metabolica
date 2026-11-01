@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from "react";
+import { horaActual, hoyComoFecha, hoyLargo } from "../../../../shared/utils/zonaHoraria";
 import { Link, useNavigate } from "react-router-dom";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
@@ -43,7 +44,7 @@ const Lottie = typeof _LottieLib === "function" ? _LottieLib : _LottieLib.defaul
 
 /* ── Saludo según hora ────────────────────────────────────── */
 function useSaludo() {
-  const hora = new Date().getHours();
+  const hora = horaActual();
   if (hora >= 5  && hora < 12) return { texto: "Buenos días",   lottie: solData,   color: "#f59e0b", emoji: "☀️" };
   if (hora >= 12 && hora < 19) return { texto: "Buenas tardes", lottie: tardeData, color: "#f97316", emoji: "⛅" };
   return                              { texto: "Buenas noches", lottie: lunaData,  color: "#6366f1", emoji: "🌙" };
@@ -60,10 +61,8 @@ const MENSAJES = [
 ];
 
 function useFechaYMensaje() {
-  const hoy = new Date();
-  const fecha = hoy.toLocaleDateString("es-HN", {
-    weekday: "long", day: "numeric", month: "long", year: "numeric",
-  });
+  const hoy = hoyComoFecha();
+  const fecha = hoyLargo(undefined, "es-HN");
   // Capitalizar primera letra
   const fechaFormateada = fecha.charAt(0).toUpperCase() + fecha.slice(1);
   // Mensaje del día (basado en el día del año para que rote pero sea estable)

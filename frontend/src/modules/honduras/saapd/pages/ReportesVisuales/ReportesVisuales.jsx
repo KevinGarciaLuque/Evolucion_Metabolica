@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { hoyISO } from "../../../../../shared/utils/zonaHoraria";
 import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Cell,
   LineChart, Line, Legend,
@@ -113,7 +114,7 @@ export default function ReportesVisuales() {
     try {
       const params = Object.fromEntries(Object.entries(filtros).filter(([, v]) => v !== ""));
       const resp = await api.get("/reportes-visuales/export-excel", { params, responseType: "blob" });
-      const fecha = new Date().toISOString().slice(0, 10);
+      const fecha = hoyISO();
       descargarBlob(resp.data, `reporte_visual_${fecha}.xlsx`);
     } finally {
       setExportando(false);

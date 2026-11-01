@@ -1,4 +1,7 @@
 import bcrypt from "bcryptjs";
+import { asegurarEsquema } from "../utils/asegurarEsquema.js";
+import { zonaValida } from "../../../../shared/utils/zonaHoraria.js";
+import { olvidarZonaClinica } from "../utils/zonaClinica.js";
 
 // Gestión de clínicas (unidad_servicio_salud) por el Administrador del país.
 // El catálogo de establecimientos (establecimiento_salud) llega precargado por el
@@ -11,8 +14,9 @@ const PERFIL_INVESTIGADOR = 5;
 
 export async function getClinicas(req, res) {
   try {
+    await asegurarEsquema(req.db, req.usuario?.db_name || "mx");
     const [rows] = await req.db.query(
-      `SELECT u.id, u.nombre, u.establecimiento_cve, u.activo,
+      `SELECT u.id, u.nombre, u.establecimiento_cve, u.activo, u.zona_horaria,
               e.estado_cve, e.municipio_cve,
               (SELECT COUNT(*) FROM usuario  us WHERE us.unidad_servicio_id = u.id) AS total_usuarios,
               (SELECT COUNT(*) FROM paciente p  WHERE p.unidad_servicio_id  = u.id) AS total_pacientes
@@ -55,11 +59,13 @@ export async function createClinica(req, res) {
   const conn = await req.db.getConnection();
   try {
     const {
-      nombre, establecimiento_cve,
+      nombre, establecimiento_cve, zona_horaria,
       investigador_nombre, investigador_email, investigador_password,
     } = req.body;
 
     if (!nombre) return res.status(400).json({ error: "El nombre de la clínica es requerido" });
+    if (zona_horaria && !zonaValida(zona_horaria)) return res.status(400).json({ error: "Zona horaria no válida" });
+    await asegurarEsquema(req.db, req.usuario?.db_name || "mx");
     if (!investigador_nombre || !investigador_email || !investigador_password) {
       return res.status(400).json({
         error: "Nombre, correo y contraseña del investigador responsable son requeridos",
@@ -77,8 +83,8 @@ export async function createClinica(req, res) {
     await conn.beginTransaction();
 
     const [clinica] = await conn.query(
-      `INSERT INTO unidad_servicio_salud (nombre, establecimiento_cve, activo) VALUES (?, ?, 1)`,
-      [nombre, establecimiento_cve || null]
+      `INSERT INTO unidad_servicio_salud (nombre, establecimiento_cve, zona_horaria, activo) VALUES (?, ?, ?, 1)`,
+      [nombre, establecimiento_cve || null, zona_horaria || null]
     );
     const clinicaId = clinica.insertId;
 
@@ -110,7 +116,10 @@ export async function createClinica(req, res) {
 export async function updateClinica(req, res) {
   try {
     const { id } = req.params;
-    const { nombre, establecimiento_cve } = req.body;
+    const { nombre, establecimiento_cve, zona_horaria } = req.body;
+    // zona_horaria: texto = fijarla, "" = volver a la del país, undefined = no tocarla
+    if (zona_horaria && !zonaValida(zona_horaria)) return res.status(400).json({ error: "Zona horaria no válida" });
+    await asegurarEsquema(req.db, req.usuario?.db_name || "mx");
 
     const [[actual]] = await req.db.query("SELECT id FROM unidad_servicio_salud WHERE id = ?", [id]);
     if (!actual) return res.status(404).json({ error: "Clínica no encontrada" });
@@ -122,6 +131,10 @@ export async function updateClinica(req, res) {
        WHERE id = ?`,
       [nombre || null, establecimiento_cve || null, id]
     );
+    if (zona_horaria !== undefined) {
+      await req.db.query("UPDATE unidad_servicio_salud SET zona_horaria = ? WHERE id = ?", [zona_horaria || null, id]);
+      olvidarZonaClinica();
+    }
     res.json({ message: "Clínica actualizada correctamente" });
   } catch (err) {
     console.error(err);

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { ZONAS_SUGERIDAS, zonaDelTenant, fmtFechaHora } from "../../../shared/utils/zonaHoraria";
 import Layout from "../../../shared/components/Layout";
 import FlagIcon from "../../../shared/components/FlagIcon";
 import TenantBitacoraModal from "./TenantBitacoraModal";
@@ -49,7 +50,7 @@ const PERFIL_LABELS = {
 };
 
 const EMPTY_FORM = {
-  nombre: "", codigo: "", subdominio: "", db_name: "", db_host: "",
+  nombre: "", codigo: "", subdominio: "", db_name: "", db_host: "", zona_horaria: "",
   admin_nombre: "", admin_email: "", admin_password: "",
 };
 
@@ -134,7 +135,7 @@ export default function AdminPanel() {
   }
 
   function abrirEditar(t) {
-    setForm({ nombre: t.nombre, codigo: t.codigo, subdominio: t.subdominio || "", db_name: t.db_name, db_host: t.db_host || "" });
+    setForm({ nombre: t.nombre, codigo: t.codigo, subdominio: t.subdominio || "", db_name: t.db_name, db_host: t.db_host || "", zona_horaria: zonaDelTenant(t) });
     setEditTarget(t);
     setError("");
     setModal("editar");
@@ -221,7 +222,8 @@ export default function AdminPanel() {
     setError("");
     try {
       if (modal === "crear") {
-        const res = await createTenant(form);
+        const { zona_horaria, ...resto } = form;
+        const res = await createTenant(zona_horaria ? { ...resto, configuracion: { zona_horaria } } : resto);
         await cargar();
         setModal(false);
         setExito({
@@ -487,6 +489,23 @@ export default function AdminPanel() {
                   <label style={{ fontSize: 12 }}>Nombre de la BD *</label>
                   <input type="text" placeholder="Ej: renaced_mexico" value={form.db_name}
                     onChange={(e) => setForm((f) => ({ ...f, db_name: e.target.value }))} required />
+                </div>
+                <div className="form-group" style={{ gridColumn: "1/-1" }}>
+                  <label style={{ fontSize: 12 }}>Zona horaria del país</label>
+                  <select value={form.zona_horaria}
+                    onChange={(e) => setForm((f) => ({ ...f, zona_horaria: e.target.value }))}>
+                    <option value="">{modal === "crear" ? "Automática según el país" : "Seleccionar…"}</option>
+                    {form.zona_horaria && !ZONAS_SUGERIDAS.some(([z]) => z === form.zona_horaria) && (
+                      <option value={form.zona_horaria}>{form.zona_horaria}</option>
+                    )}
+                    {ZONAS_SUGERIDAS.map(([z, nombre]) => <option key={z} value={z}>{nombre} — {z}</option>)}
+                  </select>
+                  {form.zona_horaria && (
+                    <small style={{ color: "#64748b" }}>
+                      Hora actual allí: {fmtFechaHora(new Date(), { timeZone: form.zona_horaria, month: "2-digit", second: "2-digit" })}.
+                      Define el «hoy», las fechas de reportes y la hora que ven los usuarios de este país.
+                    </small>
+                  )}
                 </div>
                 <div className="form-group">
                   <label style={{ fontSize: 12 }}>Host de la BD</label>

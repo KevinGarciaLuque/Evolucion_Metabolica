@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { hoyISO } from "../../../../shared/utils/zonaHoraria";
 import RenacedLayout from "../components/RenacedLayout";
 import { descargarExcel, descargarCSV, descargarPDF, descargarReporteClinica, getClinicasRenaced } from "../api/renacedApi";
 import { useRenacedAuth } from "../context/RenacedAuthContext";
@@ -15,7 +16,7 @@ function descargarBlob(blob, filename) {
   window.URL.revokeObjectURL(url);
 }
 
-const fecha = () => new Date().toISOString().slice(0, 10);
+const fecha = () => hoyISO();
 
 const REPORTES = [
   {

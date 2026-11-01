@@ -1,5 +1,6 @@
 import pool from "../config/db.js";
 import XLSX from "xlsx";
+import { zonaDeTenant, hoySync } from "../../../../shared/utils/zonaHoraria.js";
 
 function buildFiltros(query) {
   const { buscar, departamento, sexo, clasificacion, institucion, fecha_desde, fecha_hasta } = query;
@@ -106,7 +107,8 @@ export async function exportarExcel(req, res) {
     XLSX.utils.book_append_sheet(wb, ws, "Reportes");
     const buffer = XLSX.write(wb, { type: "buffer", bookType: "xlsx" });
 
-    const fecha = new Date().toISOString().slice(0, 10);
+    await zonaDeTenant("hn");
+    const fecha = hoySync("hn");
     res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
     res.setHeader("Content-Disposition", `attachment; filename="reporte_visual_${fecha}.xlsx"`);
     res.send(buffer);

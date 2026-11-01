@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import api from "../../../../../shared/api/axios";
+import { fmtFechaHora } from "../../../../../shared/utils/zonaHoraria";
 import Layout from "../../../../../shared/components/Layout";
 import { HiOutlineChatBubbleLeftEllipsis, HiOutlinePaperAirplane, HiOutlineCheckCircle, HiOutlineXCircle, HiArrowPath, HiOutlineTrash } from "react-icons/hi2";
 import { useAuth } from "../../../../../shared/context/AuthContext";
@@ -8,13 +9,7 @@ import "./MensajesPanel.css";
 
 function formatFecha(iso) {
   if (!iso) return "—";
-  const s = typeof iso === "string" ? iso.replace(" ", "T") + "Z" : iso;
-  const d = new Date(s);
-  return d.toLocaleString("es-HN", {
-    day: "2-digit", month: "2-digit", year: "numeric",
-    hour: "2-digit", minute: "2-digit",
-    hour12: true,
-  });
+  return fmtFechaHora(iso, { month: "2-digit", hour12: true });
 }
 
 const CLASIFICACIONES = {

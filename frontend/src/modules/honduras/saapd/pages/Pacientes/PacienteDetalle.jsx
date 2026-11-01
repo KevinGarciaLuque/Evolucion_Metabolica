@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef, useCallback } from "react";
+import { hoyISO, hoyComoFecha, fmtFecha } from "../../../../../shared/utils/zonaHoraria";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import { useParams, Link, useNavigate, useLocation } from "react-router-dom";
@@ -18,7 +19,7 @@ import { calcularZScores, calcularEdadMeses } from "../../utils/who_zscore";
 import { LISTA_ANTICUERPOS, ESTADOS_ANTICUERPO, COLOR_ESTADO_ANTICUERPO, parseAnticuerpos, serializarAnticuerpos, esFormatoEstructurado } from "../../utils/anticuerpos";
 
 // ─── Fecha local (evita desfase UTC) ────────────────────────────────────────
-function fechaHoy() { const n = new Date(); return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,"0")}-${String(n.getDate()).padStart(2,"0")}`; }
+function fechaHoy() { return hoyISO(); }
 
 // ─── Colores por clasificación ──────────────────────────────────────────────
 const COLORS_CLASIF = { OPTIMO: "#16a34a", MODERADO: "#d97706", ALTO_RIESGO: "#dc2626" };
@@ -2409,7 +2410,7 @@ export default function PacienteDetalle() {
               <div style={{ background: "#fef3c7", border: "1px solid #fde68a", borderRadius: 8, padding: "10px 14px", fontSize: "0.8rem", color: "#92400e", marginBottom: 16 }}>
                 Este paciente ya está marcado como trasladado
                 {paciente.trasladado_por ? ` por ${paciente.trasladado_por}` : ""}
-                {paciente.trasladado_en ? ` el ${new Date(paciente.trasladado_en).toLocaleDateString("es-HN")}` : ""}.
+                {paciente.trasladado_en ? ` el ${fmtFecha(paciente.trasladado_en, undefined, "es-HN")}` : ""}.
               </div>
             )}
 
@@ -2981,12 +2982,12 @@ function TabCrecimiento({ paciente, crecimiento, isMobile, isTablet, tabGrafica,
 
   // ── Generar HTML para impresión/PDF ──────────────────────────────────────
   function buildPrintHTML(titulo, chartImgBase64, curvaObj, modo) {
-    const fecha = new Date().toLocaleDateString("es-HN", { day: "2-digit", month: "long", year: "numeric" });
+    const fecha = fmtFecha(hoyISO(), { day: "2-digit", month: "long", year: "numeric" }, "es-HN");
     const sexoLabel = paciente.sexo === "F" ? "Femenino" : "Masculino";
     const edadLabel = (() => {
       if (!paciente.fecha_nacimiento) return "—";
       const n = new Date(paciente.fecha_nacimiento);
-      const hoy = new Date();
+      const hoy = hoyComoFecha();
       const y = hoy.getFullYear() - n.getFullYear();
       const m = hoy.getMonth() - n.getMonth();
       return m < 0 ? `${y - 1} años ${12 + m} meses` : `${y} años ${m} meses`;
@@ -3108,12 +3109,12 @@ function TabCrecimiento({ paciente, crecimiento, isMobile, isTablet, tabGrafica,
 
   // ── Reporte consolidado (5 curvas + resumen + historial) ──────────────────
   function buildConsolidadoHTML(chartImgs) {
-    const fecha = new Date().toLocaleDateString("es-HN", { day: "2-digit", month: "long", year: "numeric" });
+    const fecha = fmtFecha(hoyISO(), { day: "2-digit", month: "long", year: "numeric" }, "es-HN");
     const sexoLabel = paciente.sexo === "F" ? "femenino" : "masculino";
     const u = crecimiento.length > 0 ? crecimiento[0] : null;
     const edadStr = (() => {
       if (!paciente.fecha_nacimiento) return "—";
-      const n = new Date(paciente.fecha_nacimiento + "T00:00:00"), hoy = new Date();
+      const n = new Date(paciente.fecha_nacimiento + "T00:00:00"), hoy = hoyComoFecha();
       let y = hoy.getFullYear() - n.getFullYear(), m = hoy.getMonth() - n.getMonth();
       if (m < 0) { y--; m += 12; }
       if (hoy.getDate() < n.getDate()) { m--; if (m < 0) { y--; m += 11; } }

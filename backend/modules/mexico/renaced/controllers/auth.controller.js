@@ -1,8 +1,10 @@
 import poolRenaced from "../config/db.js";
+import { zonaDeUsuario } from "../utils/zonaClinica.js";
 import poolMaster from "../../../../shared/config/db.master.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { registrarLoginLog } from "../../../../shared/utils/loginLog.js";
+import { zonaDeTenant } from "../../../../shared/utils/zonaHoraria.js";
 
 // Intersecta los módulos habilitados para el país con los permisos
 // individuales del usuario (tabla permisos_modulos de la BD del tenant).
@@ -81,6 +83,7 @@ export async function loginRenaced(req, res) {
       unidad_servicio_id: usuario.unidad_servicio_id ?? null,
       tenant: "mx",
       tenant_nombre: "México",
+      zona_horaria: await zonaDeUsuario(poolRenaced, { tenant: "mx", unidad_servicio_id: usuario.unidad_servicio_id, db_name: "mx" }),
       modulos,
       // Este login es específico de RENACED México (poolRenaced apunta siempre a
       // renaced_mexico); resolverTenantDB exige db_name/db_host en el token para
@@ -109,9 +112,10 @@ export async function meRenaced(req, res) {
   // Sesión de Super Admin (impersonación) — no corresponde a un usuario real del tenant
   if (req.usuario?.super_admin) {
     const { id, nombre, email, perfil_id, tenant, tenant_nombre, db_name, db_host, modulos } = req.usuario;
+    const zona_horaria = await zonaDeTenant(tenant);
     return res.json({
       id, nombre, email, perfil_id, tenant, tenant_nombre, db_name, db_host,
-      modulos: modulos ?? null, tipo: "renaced", super_admin: true,
+      modulos: modulos ?? null, zona_horaria, tipo: "renaced", super_admin: true,
     });
   }
   try {
@@ -146,7 +150,7 @@ export async function meRenaced(req, res) {
       unidad_nombre: u.unidad_nombre || null, medico_nombre: u.medico_nombre || null,
       tenant: req.usuario.tenant, tenant_nombre: req.usuario.tenant_nombre,
       db_name: req.usuario.db_name, db_host: req.usuario.db_host,
-      modulos, tipo: "renaced",
+      modulos, zona_horaria: await zonaDeUsuario(req.db, { ...req.usuario, unidad_servicio_id: u.unidad_servicio_id }), tipo: "renaced",
     });
   } catch (err) {
     res.status(500).json({ error: "Error del servidor" });

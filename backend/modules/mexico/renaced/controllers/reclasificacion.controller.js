@@ -1,4 +1,6 @@
 // Reclasificación del tipo de diabetes. Tabla: tipo_diabetes_anterior_id, tipo_diabetes_nuevo_id, motivo, fecha.
+import { hoyEn } from "../../../../shared/utils/zonaHoraria.js";
+import { zonaDeUsuario } from "../utils/zonaClinica.js";
 
 export const getReclasificaciones = async (req, res) => {
   try {
@@ -26,7 +28,7 @@ export const createReclasificacion = async (req, res) => {
       `INSERT INTO reclasificacion (paciente_id, tipo_diabetes_anterior_id, tipo_diabetes_nuevo_id, motivo, fecha, usuario_id)
        VALUES (?,?,?,?,?,?)`,
       [paciente_id, f.tipo_diabetes_anterior_id || null, f.tipo_diabetes_nuevo_id, f.motivo || null,
-        f.fecha || new Date().toISOString().slice(0, 10), req.usuario?.id || null]
+        f.fecha || hoyEn(await zonaDeUsuario(req.db, req.usuario)), req.usuario?.id || null]
     );
     res.status(201).json({ id: result.insertId });
   } catch (err) {

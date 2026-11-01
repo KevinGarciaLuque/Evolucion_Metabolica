@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { hoyISO } from "../../../../shared/utils/zonaHoraria";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import RenacedLayout from "../components/RenacedLayout";
 import FlagIcon from "../../../../shared/components/FlagIcon";
@@ -77,16 +78,15 @@ const Campo = ({ label, name, type = "text", required, children, colSpan, value,
   </div>
 );
 
-const HOY = new Date().toISOString().slice(0, 10);
 
 const CURP_RE = /^[A-Z]{4}\d{6}[HMX][A-Z]{2}[B-DF-HJ-NP-TV-Z]{3}[A-Z0-9]\d$/;
 
 function errorFecha(v) {
   if (!v) return null;
   const anio = Number(v.slice(0, 4));
-  if (v > HOY) return "La fecha de nacimiento no puede ser futura";
+  if (v > hoyISO()) return "La fecha de nacimiento no puede ser futura";
   if (anio < 1900) return "El año debe ser 1900 o posterior";
-  if (anio < Number(HOY.slice(0, 4)) - 120) return "La edad no puede ser mayor a 120 años";
+  if (anio < Number(hoyISO().slice(0, 4)) - 120) return "La edad no puede ser mayor a 120 años";
   return null;
 }
 
@@ -386,7 +386,7 @@ export default function RenacedPacienteForm() {
                 value={form.fecha_nacimiento}
                 onChange={cambiar}
                 min="1900-01-01"
-                max={HOY}
+                max={hoyISO()}
               />
               {errorFecha(form.fecha_nacimiento) && <span style={msgError}>{errorFecha(form.fecha_nacimiento)}</span>}
             </Campo>

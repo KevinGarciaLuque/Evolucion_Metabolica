@@ -5,6 +5,7 @@ import {
   HiOutlineBell, HiOutlineSparkles, HiOutlineXMark, HiOutlineTrash, HiOutlinePlus,
 } from "react-icons/hi2";
 import { novedadesDe } from "../data/novedades";
+import { fmtFecha } from "../utils/zonaHoraria";
 import "./TopbarAvisos.css";
 
 // Campana de notificaciones + botón de novedades para la barra superior.
@@ -17,9 +18,7 @@ const guardar = (k, v) => { try { localStorage.setItem(k, v); } catch { /* sin s
 
 function fechaCorta(f) {
   if (!f) return "";
-  const d = new Date(String(f).replace(" ", "T"));
-  if (Number.isNaN(d.getTime())) return String(f).slice(0, 10);
-  return d.toLocaleDateString("es-MX", { day: "2-digit", month: "short", year: "numeric" });
+  return fmtFecha(f, { day: "2-digit", month: "short", year: "numeric" }, "es-MX") || String(f).slice(0, 10);
 }
 
 export default function TopbarAvisos({ api, esSuperAdmin, basePacientes, storageKey, alcance }) {

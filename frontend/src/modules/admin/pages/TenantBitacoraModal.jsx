@@ -1,32 +1,22 @@
 import { useCallback, useEffect, useState } from "react";
 import FlagIcon from "../../../shared/components/FlagIcon";
+import { fmtFechaHora, hoyISO, zonaDelTenant } from "../../../shared/utils/zonaHoraria";
 import { getBitacoraTenant, getBitacoraTenantEstadisticas } from "../api/adminApi";
 import {
   HiOutlineClipboardDocumentList, HiOutlineShieldCheck, HiOutlineArrowRightOnRectangle,
   HiOutlineXCircle, HiOutlineUsers,
 } from "react-icons/hi2";
 
-function formatFecha(iso) {
+function formatFecha(iso, zona) {
   if (!iso) return "—";
-  // Railway MySQL corre en UTC; agregamos Z para que JS lo parsee como UTC
-  const s = typeof iso === "string" ? iso.replace(" ", "T") + "Z" : iso;
-  const d = new Date(s);
-  return d.toLocaleString("es-HN", {
-    day: "2-digit", month: "2-digit", year: "numeric",
-    hour: "2-digit", minute: "2-digit", second: "2-digit",
-    hour12: true,
-  });
+  // La bitácora guarda UTC; se muestra en la zona horaria del país consultado
+  return fmtFechaHora(iso, { timeZone: zona, second: "2-digit", hour12: true, month: "2-digit" });
 }
 
 const LIMIT = 50;
 
-// La columna `fecha` se guarda en UTC (el MySQL de Railway corre en UTC, igual
-// que auditoria_sesiones). Los filtros deben calcularse también en UTC —si se
-// usara la fecha local del navegador, después de cierta hora local ya sería
-// "mañana" en UTC y el filtro no encontraría los registros de hoy.
-function hoyISO() {
-  return new Date().toISOString().slice(0, 10);
-}
+// La columna `fecha` se guarda en UTC; el servidor interpreta desde/hasta en la zona horaria del país,
+// así que "hoy" aquí también es el día de ese país (no el del navegador ni el de UTC).
 
 export default function TenantBitacoraModal({ tenant, onClose }) {
   const [registros, setRegistros] = useState([]);
@@ -37,8 +27,8 @@ export default function TenantBitacoraModal({ tenant, onClose }) {
 
   const [buscar, setBuscar] = useState("");
   const [exito, setExito]   = useState("");
-  const [desde, setDesde]   = useState(hoyISO());
-  const [hasta, setHasta]   = useState(hoyISO());
+  const [desde, setDesde]   = useState(() => hoyISO(new Date(), zonaDelTenant(tenant)));
+  const [hasta, setHasta]   = useState(() => hoyISO(new Date(), zonaDelTenant(tenant)));
 
   const cargar = useCallback(async () => {
     setCargando(true);
@@ -160,7 +150,7 @@ export default function TenantBitacoraModal({ tenant, onClose }) {
                 <tbody>
                   {registros.map((r) => (
                     <tr key={r.id}>
-                      <td style={{ whiteSpace: "nowrap", fontSize: "0.8rem" }}>{formatFecha(r.fecha)}</td>
+                      <td style={{ whiteSpace: "nowrap", fontSize: "0.8rem" }}>{formatFecha(r.fecha, zonaDelTenant(tenant))}</td>
                       <td>
                         <div style={{ fontWeight: 600, lineHeight: 1.3, fontSize: 13 }}>{r.usuario_nombre || "—"}</div>
                         <div style={{ fontSize: "0.76rem", color: "#94a3b8" }}>{r.usuario_email || "—"}</div>

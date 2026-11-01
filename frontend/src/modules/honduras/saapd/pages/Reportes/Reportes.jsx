@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { hoyISO } from "../../../../../shared/utils/zonaHoraria";
 import Layout from "../../../../../shared/components/Layout";
 import api from "../../../../../shared/api/axios";
 
@@ -63,7 +64,7 @@ export default function BackupPacientes() {
       const params = new URLSearchParams({ format: formatMasivo });
       if (institucionMasiva) params.set("institucion", institucionMasiva);
       const resp = await api.get(`/backup-pacientes/todos/zip?${params.toString()}`, { responseType: "blob" });
-      const fecha = new Date().toISOString().slice(0, 10);
+      const fecha = hoyISO();
       descargarBlob(resp.data, `backup_pacientes_${fecha}.zip`);
     } finally {
       setDescargando("");

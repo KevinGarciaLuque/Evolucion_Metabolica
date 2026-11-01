@@ -6,6 +6,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import pool from "../config/db.js";
 import { UPLOADS_PATH } from "../../../../shared/paths.js";
+import { zonaDeTenant, hoySync } from "../../../../shared/utils/zonaHoraria.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -82,7 +83,7 @@ function crearPdfBuffer(data) {
 
     doc.fontSize(18).text("Reporte Clinico de Paciente", { align: "center" });
     doc.moveDown(0.6);
-    doc.fontSize(10).text(`Generado: ${formatDate(new Date())}`, { align: "center" });
+    doc.fontSize(10).text(`Generado: ${hoySync("hn")}`, { align: "center" });
     doc.moveDown();
 
     doc.fontSize(12).text("Datos generales", { underline: true });
@@ -214,7 +215,8 @@ export async function exportarTodosZip(req, res) {
     }
     sql += " ORDER BY nombre ASC";
     const [pacientes] = await pool.query(sql, params);
-    const fecha = formatDate(new Date());
+    await zonaDeTenant("hn");
+    const fecha = hoySync("hn");
 
     res.setHeader("Content-Type", "application/zip");
     res.setHeader("Content-Disposition", `attachment; filename="backup_pacientes_${fecha}.zip"`);

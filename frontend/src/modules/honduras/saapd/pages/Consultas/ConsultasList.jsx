@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { hoyISO } from "../../../../../shared/utils/zonaHoraria";
 import { Link, useNavigate } from "react-router-dom";
 import { FiEye, FiTrash2 } from "react-icons/fi";
 import api from "../../../../../shared/api/axios";
@@ -17,8 +18,7 @@ const TIPO_BADGE = {
 };
 
 function hoy() {
-  const n = new Date();
-  return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,"0")}-${String(n.getDate()).padStart(2,"0")}`;
+  return hoyISO();
 }
 
 export default function ConsultasList() {

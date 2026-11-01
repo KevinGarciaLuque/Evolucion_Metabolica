@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { hoyComoFecha } from "../../../../../shared/utils/zonaHoraria";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import { FiArrowLeft } from "react-icons/fi";
 import api from "../../../../../shared/api/axios";
@@ -55,7 +56,7 @@ function SeccionTitulo({ children }) {
 
 function calcularEdad(fechaNacimiento) {
   if (!fechaNacimiento) return "";
-  const hoy = new Date();
+  const hoy = hoyComoFecha();
   const nac = new Date(fechaNacimiento + "T00:00:00");
   let edad = hoy.getFullYear() - nac.getFullYear();
   const m = hoy.getMonth() - nac.getMonth();

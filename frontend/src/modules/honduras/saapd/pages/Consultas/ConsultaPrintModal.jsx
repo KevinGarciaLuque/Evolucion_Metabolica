@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { hoyISO, hoyComoFecha } from "../../../../../shared/utils/zonaHoraria";
 import { FiX, FiPrinter, FiLoader } from "react-icons/fi";
 import api from "../../../../../shared/api/axios";
 import { useAuth } from "../../../../../shared/context/AuthContext";
@@ -19,7 +20,7 @@ function fmtFecha(s) {
 
 function calcularEdad(fechaNac) {
   if (!fechaNac) return null;
-  const hoy = new Date();
+  const hoy = hoyComoFecha();
   const nac = new Date(fechaNac.split("T")[0] + "T12:00:00");
   let anios = hoy.getFullYear() - nac.getFullYear();
   const m = hoy.getMonth() - nac.getMonth();
@@ -134,7 +135,7 @@ function generarHTMLImpresion(consulta, paciente, doctor) {
       <div class="doc-nombre">${doctor?.nombre || "—"}</div>
       <div class="doc-email">${doctor?.email || ""}</div>
       <div class="doc-rol">${doctor?.rol === "admin" ? "Administrador" : "Médico"}</div>
-      <div style="font-size:11px;color:#64748b;margin-top:3px">Fecha de emisión: ${fmtFecha((() => { const n = new Date(); return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}`; })())}</div>
+      <div style="font-size:11px;color:#64748b;margin-top:3px">Fecha de emisión: ${fmtFecha(hoyISO())}</div>
     </div>
   </div>
 
@@ -450,7 +451,7 @@ function PreviewConsulta({ consulta, paciente, doctor }) {
             {doctor?.rol === "admin" ? "Administrador" : "Médico"}
           </div>
           <div style={{ fontSize: "0.72rem", color: "#94a3b8", marginTop: 3 }}>
-            Emitido: {fmtFecha((() => { const n = new Date(); return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}`; })())}
+            Emitido: {fmtFecha(hoyISO())}
           </div>
         </div>
       </div>

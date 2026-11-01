@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { hoyISO } from "../../../../shared/utils/zonaHoraria";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -29,10 +30,7 @@ export const LAB_CAMPOS = [
   ["Volumen urinario (ml)", "volumen_urinario", "0.01"],
 ];
 
-const hoy = () => {
-  const n = new Date();
-  return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, "0")}-${String(n.getDate()).padStart(2, "0")}`;
-};
+const hoy = () => hoyISO();
 const lleno = (v) => v !== undefined && v !== null && String(v).trim() !== "";
 
 const INIT = {

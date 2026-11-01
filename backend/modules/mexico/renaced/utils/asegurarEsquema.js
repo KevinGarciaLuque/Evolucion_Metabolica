@@ -11,6 +11,7 @@ const COLUMNAS = [
   ["toxicomanias",     "consulta_id", "BIGINT UNSIGNED DEFAULT NULL"],
   ["evento",           "consulta_id", "BIGINT UNSIGNED DEFAULT NULL"],
   ["escaneo_mcg",      "extras",      "TEXT DEFAULT NULL"],
+  ["unidad_servicio_salud", "zona_horaria", "VARCHAR(64) DEFAULT NULL"], // zona horaria propia de la clínica
   ["paciente",         "anios_estudio", "TINYINT UNSIGNED DEFAULT NULL"],
   ["paciente",         "aviso_ruta",          "VARCHAR(255) DEFAULT NULL"],
   ["paciente",         "consentimiento_ruta", "VARCHAR(255) DEFAULT NULL"],

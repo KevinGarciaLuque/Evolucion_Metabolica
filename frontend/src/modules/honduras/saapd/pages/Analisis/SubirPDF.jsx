@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { hoyISO } from "../../../../../shared/utils/zonaHoraria";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { FiArrowLeft } from "react-icons/fi";
 import { AnimatePresence, motion } from "framer-motion";
@@ -400,7 +401,7 @@ export default function SubirPDF() {
       const d = data.datos;
       setForm({
         paciente_id:          pacienteId,
-        fecha:                (() => { const n = new Date(); return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,"0")}-${String(n.getDate()).padStart(2,"0")}`; })(),
+        fecha:                hoyISO(),
         fecha_colocacion:     "",
         fecha_inicio_mcg:     d.fechaInicioMCG ?? "",
         fecha_fin_mcg:        d.fechaFinMCG    ?? "",

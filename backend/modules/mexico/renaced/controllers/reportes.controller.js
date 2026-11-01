@@ -1,5 +1,10 @@
 import PDFDocument from "pdfkit";
+import { zonaDeUsuario } from "../utils/zonaClinica.js";
 import { exportarCSVStream, iniciarExcel, obtenerTrabajo, trabajosActivos } from "../services/exportacion.js";
+import { hoyEn, fechaLargaEn } from "../../../../shared/utils/zonaHoraria.js";
+
+// "Hoy" según la zona horaria del país del usuario (no la del servidor, que está en UTC)
+const zonaDe = (req) => zonaDeUsuario(req.db, req.usuario);
 
 // El admin puede acotar la exportación a una clínica (query unidad_id); sin acotar,
 // exporta el país completo. Cualquier otro perfil queda forzado a su propia clínica.
@@ -23,11 +28,11 @@ export const estadoExportExcel = (req, res) => {
 };
 
 // GET /reportes/excel/descargar/:id
-export const descargarExportExcel = (req, res) => {
+export const descargarExportExcel = async (req, res) => {
   const t = obtenerTrabajo(req.params.id);
   if (!t || t.usuarioId !== req.usuario.id) return res.status(404).json({ error: "Exportación no encontrada" });
   if (t.estado !== "terminado") return res.status(409).json({ error: "La exportación aún no termina" });
-  const fecha = new Date().toISOString().slice(0, 10);
+  const fecha = hoyEn(await zonaDe(req));
   res.download(t.archivo, `RENACED_Mexico_${fecha}.xlsx`, (err) => {
     if (err && !res.headersSent) res.status(404).json({ error: "El archivo ya no está disponible" });
   });
@@ -39,7 +44,7 @@ export const exportarExcel = (req, res) => res.status(410).json({ error: "Usa PO
 // ── CSV (lista de pacientes) en streaming ────────────────────────────────────
 export const exportarCSV = async (req, res) => {
   try {
-    const fecha = new Date().toISOString().slice(0, 10);
+    const fecha = hoyEn(await zonaDe(req));
     res.setHeader("Content-Type", "text/csv; charset=utf-8");
     res.setHeader("Content-Disposition", `attachment; filename="RENACED_Mexico_${fecha}.csv"`);
     await exportarCSVStream(req.db, unidadDe(req), res);
@@ -102,12 +107,13 @@ async function generarReportePDF(req, res, { unidadId, nombreClinica }) {
     const comp = complicaciones[0];
 
     // ── Construir PDF ──
+    const zona = await zonaDe(req);
     const doc = new PDFDocument({ margin: 50, size: "A4" });
     const chunks = [];
     doc.on("data", (c) => chunks.push(c));
     doc.on("end", () => {
       const buf = Buffer.concat(chunks);
-      const fecha = new Date().toISOString().slice(0, 10);
+      const fecha = hoyEn(zona);
       const slugClinica = nombreClinica
         ? "_" + nombreClinica.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^A-Za-z0-9]+/g, "_")
         : "";
@@ -116,9 +122,7 @@ async function generarReportePDF(req, res, { unidadId, nombreClinica }) {
       res.send(buf);
     });
 
-    const fechaLarga = new Date().toLocaleDateString("es-MX", {
-      year: "numeric", month: "long", day: "numeric",
-    });
+    const fechaLarga = fechaLargaEn(zona, "es-MX");
 
     const LINE = "#e2e8f0";
     const BLUE = "#1d4ed8";
