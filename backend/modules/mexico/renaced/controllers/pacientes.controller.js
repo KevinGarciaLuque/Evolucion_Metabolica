@@ -1,3 +1,4 @@
+import { asegurarEsquema } from "../utils/asegurarEsquema.js";
 import { condicionBusqueda, esErrorSinFulltext } from "../services/busquedaPacientes.js";
 
 
@@ -142,6 +143,7 @@ export const getPacienteById = async (req, res) => {
 export const createPaciente = async (req, res) => {
   const conn = await req.db.getConnection();
   try {
+    await asegurarEsquema(req.db, req.usuario?.db_name || "mx");
     const {
       tipo_diabetes_id, tipo_diabetes_otra_id,
       expediente, iniciales, nombre, ap_pat, ap_mat, sexo, fecha_nacimiento, curp,
@@ -219,6 +221,7 @@ export const createPaciente = async (req, res) => {
 export const updatePaciente = async (req, res) => {
   const conn = await req.db.getConnection();
   try {
+    await asegurarEsquema(req.db, req.usuario?.db_name || "mx");
     const { id } = req.params;
     const campos = req.body;
     const { tipo_diabetes_id, tipo_diabetes_otra_id } = campos;

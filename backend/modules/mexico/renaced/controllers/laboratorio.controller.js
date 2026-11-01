@@ -1,4 +1,5 @@
 import fs from "fs";
+import { asegurarEsquema } from "../utils/asegurarEsquema.js";
 import { LAB_COLS } from "../services/hojaConsulta.js";
 import { parsearPDFLaboratorio } from "../services/pdfLaboratorioRenaced.js";
 
@@ -50,6 +51,7 @@ export const getLaboratoriosByPaciente = async (req, res) => {
 
 export const createLaboratorio = async (req, res) => {
   try {
+    await asegurarEsquema(req.db, req.usuario?.db_name || "mx");
     const { paciente_id } = req.params;
     const b = req.body;
     const v = (x) => (x === "" || x === undefined ? null : x);

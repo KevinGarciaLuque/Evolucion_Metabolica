@@ -11,6 +11,7 @@ const COLUMNAS = [
   ["toxicomanias",     "consulta_id", "BIGINT UNSIGNED DEFAULT NULL"],
   ["evento",           "consulta_id", "BIGINT UNSIGNED DEFAULT NULL"],
   ["escaneo_mcg",      "extras",      "TEXT DEFAULT NULL"],
+  ["paciente",         "anios_estudio", "TINYINT UNSIGNED DEFAULT NULL"],
   // Analitos ampliados de laboratorio (los llena el escaneo de exámenes y la hoja de consulta)
   ["laboratorio", "archivo_pdf",         "VARCHAR(255) DEFAULT NULL"],
   ["laboratorio", "glucosa_azar",        "DECIMAL(7,2) DEFAULT NULL"],

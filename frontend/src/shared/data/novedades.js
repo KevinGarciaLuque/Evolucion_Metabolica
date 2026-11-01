@@ -11,6 +11,15 @@
 // Cada país ve en el panel las entradas "global" + las suyas. La versión (VERSION) es una sola para todos.
 export const NOVEDADES = [
   {
+    version: "1.8.1",
+    alcance: "mexico",
+    fecha: "2026-10-31",
+    titulo: "Corrección al registrar pacientes",
+    cambios: [
+      "Se corrigió el error \"Error al registrar paciente\" al guardar un paciente nuevo",
+    ],
+  },
+  {
     version: "1.8.0",
     alcance: "mexico",
     fecha: "2026-10-31",
