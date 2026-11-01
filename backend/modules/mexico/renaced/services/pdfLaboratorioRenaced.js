@@ -55,7 +55,7 @@ export const ANALITOS = [
   { col: "ldl",                 label: "Colesterol LDL",                unidad: "mg/dl",
     re: /^(colesterol\s+ldl(\s*\((medido|calculado)\))?|lipoprote[ií]nas?\s+de\s+baja\s+densidad(\s*\(ldl\))?|ldl)/i },
   { col: "trigliceridos",       label: "Triglicéridos",                 unidad: "mg/dl",
-    re: /^trigl[ií]ceridos/i },
+    re: /^trigl[ií]c[eé]ridos/i },
   { col: "tsh",                 label: "TSH",                           unidad: "µui/ml",
     re: /^(tsh|hormona\s+estimulante\s+de\s+la\s+tiroides)/i },
   { col: "acido_urico",         label: "Ácido úrico",                   unidad: "mg/dl",

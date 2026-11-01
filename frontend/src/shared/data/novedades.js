@@ -11,6 +11,15 @@
 // Cada país ve en el panel las entradas "global" + las suyas. La versión (VERSION) es una sola para todos.
 export const NOVEDADES = [
   {
+    version: "1.8.2",
+    alcance: "mexico",
+    fecha: "2026-10-31",
+    titulo: "Lectura de triglicéridos en el examen",
+    cambios: [
+      "Al subir el PDF del examen ahora también se lee el valor de triglicéridos",
+    ],
+  },
+  {
     version: "1.8.1",
     alcance: "mexico",
     fecha: "2026-10-31",
