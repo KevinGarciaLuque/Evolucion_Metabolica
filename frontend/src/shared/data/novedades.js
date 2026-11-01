@@ -11,6 +11,17 @@
 // Cada país ve en el panel las entradas "global" + las suyas. La versión (VERSION) es una sola para todos.
 export const NOVEDADES = [
   {
+    version: "1.13.0",
+    alcance: "mexico",
+    fecha: "2026-11-01",
+    titulo: "Importar consentimientos firmados desde la pantalla",
+    cambios: [
+      "En Importar BD (Super Admin) hay una nueva sección para subir los PDF de avisos de privacidad y consentimientos del sistema anterior, sin usar la terminal",
+      "Muestra cuántos documentos hacen falta, sube solo los necesarios en tandas y avanza con una barra de progreso",
+      "Se puede repetir sin problema: continúa con los que falten",
+    ],
+  },
+  {
     version: "1.12.1",
     alcance: "mexico",
     fecha: "2026-11-01",

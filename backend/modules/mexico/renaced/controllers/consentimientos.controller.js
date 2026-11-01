@@ -96,3 +96,27 @@ export function importarArchivos(req, res) {
   const guardados = (req.files || []).map((f) => f.filename);
   res.status(201).json({ guardados: guardados.length, archivos: guardados });
 }
+
+/**
+ * Resumen para la carga masiva: nombres de archivo referenciados por las fichas de los pacientes
+ * y cuáles ya están en el servidor. El navegador lo usa para subir solo los que faltan.
+ */
+export async function pendientesImportar(req, res) {
+  try {
+    await asegurarEsquema(req.db, req.usuario?.db_name || "mx");
+    const [filas] = await req.db.query(
+      `SELECT aviso_ruta, consentimiento_ruta FROM paciente
+        WHERE (aviso_ruta IS NOT NULL AND aviso_ruta <> '') OR (consentimiento_ruta IS NOT NULL AND consentimiento_ruta <> '')`
+    );
+    const nombres = new Set();
+    for (const r of filas) for (const ruta of [r.aviso_ruta, r.consentimiento_ruta]) {
+      const n = nombreArchivo(ruta);
+      if (n) nombres.add(n);
+    }
+    const faltantes = [...nombres].filter((n) => !fs.existsSync(rutaFisica(n)));
+    res.json({ referenciados: nombres.size, en_servidor: nombres.size - faltantes.length, faltantes });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Error al revisar los consentimientos" });
+  }
+}

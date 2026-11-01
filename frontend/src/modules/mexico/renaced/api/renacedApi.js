@@ -192,3 +192,13 @@ export const subirConsentimiento = (pacId, tipo, archivo) => {
   fd.append("archivo", archivo);
   return api.post(`${BASE}/pacientes/${pacId}/consentimientos/${tipo}`, fd, { headers: { "Content-Type": "multipart/form-data" }, timeout: 120000 });
 };
+
+// Carga masiva (administrador): qué archivos referencian las fichas y cuáles faltan en el servidor
+export const getConsentimientosPendientes = () => api.get(`${BASE}/consentimientos/pendientes`);
+export const subirLoteConsentimientos = (archivos, onProgress) => {
+  const fd = new FormData();
+  for (const a of archivos) fd.append("archivos", a, a.name);
+  return api.post(`${BASE}/consentimientos/archivos`, fd, {
+    headers: { "Content-Type": "multipart/form-data" }, timeout: 300000, onUploadProgress: onProgress,
+  });
+};

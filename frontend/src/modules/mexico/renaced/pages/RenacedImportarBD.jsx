@@ -3,6 +3,7 @@ import RenacedLayout from "../components/RenacedLayout";
 import { useAuth } from "../../../../shared/context/AuthContext";
 import { useRenacedAuth } from "../context/RenacedAuthContext";
 import { importarBaseDatosMexico, iniciarMigracionPHP, getEstadoMigracionPHP } from "../api/renacedApi";
+import ImportarConsentimientos from "../components/ImportarConsentimientos";
 import { HiOutlineDocumentArrowUp, HiOutlineExclamationTriangle } from "react-icons/hi2";
 
 function MigrarBDPHP() {
@@ -286,6 +287,7 @@ export default function RenacedImportarBD() {
         </div>
       )}
       {esSuperAdmin && <MigrarBDPHP />}
+      {esSuperAdmin && <ImportarConsentimientos />}
     </RenacedLayout>
   );
 }

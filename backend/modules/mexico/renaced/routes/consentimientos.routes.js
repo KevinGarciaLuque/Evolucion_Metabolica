@@ -5,7 +5,7 @@ import { verificarToken } from "../../../../shared/middlewares/auth.js";
 import { resolverTenantDB } from "../middlewares/tenantDb.js";
 import { resolverAlcanceClinica } from "../middlewares/scopeClinica.js";
 import {
-  DIR_CONSENTIMIENTOS, listarConsentimientos, verConsentimiento, subirConsentimiento, importarArchivos,
+  DIR_CONSENTIMIENTOS, listarConsentimientos, verConsentimiento, subirConsentimiento, importarArchivos, pendientesImportar,
 } from "../controllers/consentimientos.controller.js";
 
 // multer entrega el nombre en latin1: se recupera el UTF-8
@@ -49,3 +49,4 @@ cargaMasiva.use(verificarToken, resolverTenantDB, resolverAlcanceClinica);
 const soloAdmin = (req, res, next) =>
   req.alcance?.esAdmin ? next() : res.status(403).json({ error: "Solo el administrador puede importar archivos" });
 cargaMasiva.post("/archivos", soloAdmin, masiva.array("archivos", 40), importarArchivos);
+cargaMasiva.get("/pendientes", soloAdmin, pendientesImportar);
