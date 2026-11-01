@@ -11,6 +11,17 @@
 // Cada país ve en el panel las entradas "global" + las suyas. La versión (VERSION) es una sola para todos.
 export const NOVEDADES = [
   {
+    version: "1.12.1",
+    alcance: "mexico",
+    fecha: "2026-11-01",
+    titulo: "Nuevo encabezado en el expediente",
+    cambios: [
+      "El expediente del paciente usa el mismo encabezado en tarjeta que la consulta, con iniciales, tipo de diabetes, sexo, edad, expediente y CURP",
+      "Botones \"Volver a pacientes\", \"Consentimientos\" y \"Editar\" con icono y mejor presentación",
+      "La edad en el expediente ahora muestra años y meses (o meses/días en bebés)",
+    ],
+  },
+  {
     version: "1.12.0",
     alcance: "mexico",
     fecha: "2026-11-01",

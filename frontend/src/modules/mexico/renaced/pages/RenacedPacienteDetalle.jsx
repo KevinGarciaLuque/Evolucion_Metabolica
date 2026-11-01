@@ -1,5 +1,7 @@
 import { LAB_CAMPOS } from "../components/HojaConsulta";
 import ConsentimientosModal from "../components/ConsentimientosModal";
+import EncabezadoPaciente, { EnlaceEncabezado, BotonEncabezado } from "../components/EncabezadoPaciente";
+import { FiArrowLeft, FiFileText, FiEdit2 } from "react-icons/fi";
 import { useEffect, useState, Fragment } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import RenacedLayout from "../components/RenacedLayout";
@@ -489,33 +491,19 @@ export default function RenacedPacienteDetalle() {
 
   return (
     <RenacedLayout>
-      {/* Header */}
-      <div className="page-header" style={{ alignItems: "flex-start", flexWrap: "wrap", gap: 12 }}>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <Link to="/renaced/pacientes" style={{ color: "#94a3b8", fontSize: 13, display: "inline-block", marginBottom: 4 }}>
-            ← Pacientes RENACED
-          </Link>
-          <h1 style={{ margin: 0, fontSize: "clamp(1.1rem, 2.5vw, 1.5rem)", wordBreak: "break-word" }}>{nombreCompleto}</h1>
-          <div style={{ display: "flex", gap: 6, marginTop: 6, flexWrap: "wrap" }}>
-            <span style={{ background: "#ede9fe", color: "#6d28d9", borderRadius: 20, padding: "2px 10px", fontSize: 12, fontWeight: 600 }}>
-              {p.diagnostico?.tipo_diabetes || "Sin diagnóstico"}
-            </span>
-            <span style={{ background: p.sexo === "F" ? "#fce7f3" : "#dbeafe", color: p.sexo === "F" ? "#be185d" : "#1d4ed8", borderRadius: 20, padding: "2px 10px", fontSize: 12, fontWeight: 600 }}>
-              {({ F: "Mujer", M: "Hombre", I: "Intersexual", N: "No reportado" })[p.sexo] || "—"}
-            </span>
-            {p.edad != null && <span style={{ background: "#f1f5f9", color: "#64748b", borderRadius: 20, padding: "2px 10px", fontSize: 12 }}>{p.edad} años</span>}
-            {p.curp && <span style={{ background: "#f8fafc", color: "#64748b", borderRadius: 20, padding: "2px 10px", fontSize: 11, fontFamily: "monospace" }}>{p.curp}</span>}
-          </div>
-        </div>
-        <div style={{ display: "flex", gap: 8, flexShrink: 0, flexWrap: "wrap" }}>
-          <button className="btn btn-outline btn-sm" onClick={() => setModalConsent(true)}>
-            📄 Consentimientos
-          </button>
-          <Link to={`/renaced/pacientes/${id}/editar`} className="btn btn-outline btn-sm">
-            Editar
-          </Link>
-        </div>
-      </div>
+      <EncabezadoPaciente
+        nombre={nombreCompleto}
+        sexo={p.sexo}
+        tipoDiabetes={p.diagnostico?.tipo_diabetes || "Sin diagnóstico"}
+        fechaNacimiento={p.fecha_nacimiento}
+        expediente={p.expediente}
+        curp={p.curp}
+        acciones={<>
+          <EnlaceEncabezado to="/renaced/pacientes"><FiArrowLeft size={15} /> Volver a pacientes</EnlaceEncabezado>
+          <BotonEncabezado onClick={() => setModalConsent(true)}><FiFileText size={15} /> Consentimientos</BotonEncabezado>
+          <EnlaceEncabezado to={`/renaced/pacientes/${id}/editar`} variante="primario"><FiEdit2 size={15} /> Editar</EnlaceEncabezado>
+        </>}
+      />
 
       {/* ── Tabs responsivos ─────────────────────────────────────────────────── */}
       {/* Móvil: select desplegable */}
