@@ -19,6 +19,7 @@ export const NOVEDADES = [
       "En Importar BD (Super Admin) hay una nueva sección para subir los PDF de avisos de privacidad y consentimientos del sistema anterior, sin usar la terminal",
       "Muestra cuántos documentos hacen falta, sube solo los necesarios en tandas y avanza con una barra de progreso",
       "Se puede repetir sin problema: continúa con los que falten",
+      "Los archivos de RENACED (consentimientos, PDF de monitores y laboratorios, respaldos) ahora se guardan en el volumen del servidor y no se pierden al actualizar la aplicación",
     ],
   },
   {

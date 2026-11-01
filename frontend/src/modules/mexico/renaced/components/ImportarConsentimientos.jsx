@@ -78,6 +78,13 @@ export default function ImportarConsentimientos() {
         solo se envían los archivos que las fichas necesitan y que aún no están en el servidor.
       </p>
 
+      {resumen && resumen.persistente === false && (
+        <div style={{ background: "#fef2f2", border: "1px solid #fecaca", color: "#991b1b", borderRadius: 8, padding: 12, fontSize: 13.5, marginBottom: 14 }}>
+          <strong>El servidor no tiene un volumen de almacenamiento.</strong> Los archivos que subas se borrarán en el próximo
+          despliegue. Crea un volumen en Railway y vincúlalo al servicio del backend antes de subirlos.
+        </div>
+      )}
+
       {resumen && (
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 14 }}>
           {[

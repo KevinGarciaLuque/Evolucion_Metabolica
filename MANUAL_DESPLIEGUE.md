@@ -84,6 +84,7 @@ Los archivos subidos por los usuarios deben sobrevivir entre redeployments. Rail
 2. Vincularlo al servicio **Evolucion Backend**.
 3. Configurar el **Mount Path:** `/app/uploads/pdfs`
 4. Asegurarse de que la variable `UPLOADS_PATH=/app/uploads` esté definida (paso anterior).
+5. Los archivos de RENACED (consentimientos, PDF de monitores y laboratorios, respaldos de la base) también se guardan en este volumen: al arrancar, el backend lee `RAILWAY_VOLUME_MOUNT_PATH` (la inyecta Railway) y enlaza `uploads/renaced_*` a la carpeta `_persistente/` del volumen. No hace falta otro volumen ni cambiar rutas. Si el volumen no está vinculado, el log del backend muestra «Sin volumen de Railway» y la pantalla Importar BD avisa.
 
 Con esto:
 - Multer guarda los PDFs en `/app/uploads/pdfs` (el volumen).

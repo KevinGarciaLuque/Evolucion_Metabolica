@@ -7,7 +7,7 @@
 // se entregan por un endpoint con sesión y validación de clínica.
 import path from "path";
 import fs from "fs";
-import { UPLOADS_PATH } from "../../../../shared/paths.js";
+import { UPLOADS_PATH, HAY_VOLUMEN } from "../../../../shared/paths.js";
 import { asegurarEsquema } from "../utils/asegurarEsquema.js";
 
 export const DIR_CONSENTIMIENTOS = path.join(UPLOADS_PATH, "renaced_consentimientos");
@@ -114,7 +114,7 @@ export async function pendientesImportar(req, res) {
       if (n) nombres.add(n);
     }
     const faltantes = [...nombres].filter((n) => !fs.existsSync(rutaFisica(n)));
-    res.json({ referenciados: nombres.size, en_servidor: nombres.size - faltantes.length, faltantes });
+    res.json({ referenciados: nombres.size, en_servidor: nombres.size - faltantes.length, faltantes, persistente: HAY_VOLUMEN });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Error al revisar los consentimientos" });
