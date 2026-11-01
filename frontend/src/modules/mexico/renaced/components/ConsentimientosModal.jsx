@@ -63,7 +63,7 @@ export default function ConsentimientosModal({ pacienteId, onCerrar, onCambio })
                 <div style={{ fontSize: 12.5, color: d.disponible ? "#166534" : "#64748b" }}>
                   {d.disponible ? "Archivo disponible"
                     : d.archivo ? "Registrado, pero el archivo no está en el servidor"
-                    : d.firmado ? "Marcado como firmado, sin archivo" : "Sin archivo"}
+                    : d.firmado ? "Marcado como firmado, pero sin documento digitalizado" : "Sin firmar"}
                 </div>
               </div>
               <div style={{ display: "flex", gap: 8 }}>

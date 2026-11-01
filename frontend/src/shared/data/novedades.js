@@ -11,6 +11,16 @@
 // Cada país ve en el panel las entradas "global" + las suyas. La versión (VERSION) es una sola para todos.
 export const NOVEDADES = [
   {
+    version: "1.13.1",
+    alcance: "mexico",
+    fecha: "2026-11-01",
+    titulo: "Consentimientos: mejor conteo de pendientes",
+    cambios: [
+      "Los pacientes sin documento firmado ya no aparecen como \"archivo no disponible\": solo se marcan como pendientes los que realmente tienen un documento registrado",
+      "El conteo de documentos faltantes en Importar BD ahora es el real",
+    ],
+  },
+  {
     version: "1.13.0",
     alcance: "mexico",
     fecha: "2026-11-01",

@@ -18,9 +18,13 @@ const TIPOS = {
   consentimiento: { ruta: "consentimiento_ruta", flag: "tiene_consentimiento",   nombre: "Consentimiento informado" },
 };
 
-// Último segmento de la ruta, en NFC (el sistema anterior mezcla formas de acentos)
-const nombreArchivo = (ruta) =>
-  ruta ? path.basename(String(ruta).replace(/\\/g, "/")).normalize("NFC") : null;
+// Último segmento de la ruta, en NFC (el sistema anterior mezcla formas de acentos).
+// El sistema anterior dejó el TEXTO "NULL" (no un nulo real) en las fichas sin documento: se trata como vacío.
+const nombreArchivo = (ruta) => {
+  const limpio = String(ruta ?? "").trim();
+  if (!limpio || limpio.toUpperCase() === "NULL") return null;
+  return path.basename(limpio.replace(/\\/g, "/")).normalize("NFC");
+};
 
 const rutaFisica = (nombre) => path.join(DIR_CONSENTIMIENTOS, nombre);
 
