@@ -1,4 +1,5 @@
 import { LAB_CAMPOS } from "../components/HojaConsulta";
+import ConsentimientosModal from "../components/ConsentimientosModal";
 import { useEffect, useState, Fragment } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import RenacedLayout from "../components/RenacedLayout";
@@ -155,6 +156,7 @@ export default function RenacedPacienteDetalle() {
   // modales de nueva entrada
   const [modalConsulta, setModalConsulta]     = useState(false);
   const [modalLab, setModalLab]               = useState(false);
+  const [modalConsent, setModalConsent]     = useState(false);
   const [modalTratamiento, setModalTratamiento] = useState(false);
   const [modalEvaluacion, setModalEvaluacion] = useState(false);
   const [modalEducacion, setModalEducacion]   = useState(false);
@@ -505,9 +507,14 @@ export default function RenacedPacienteDetalle() {
             {p.curp && <span style={{ background: "#f8fafc", color: "#64748b", borderRadius: 20, padding: "2px 10px", fontSize: 11, fontFamily: "monospace" }}>{p.curp}</span>}
           </div>
         </div>
-        <Link to={`/renaced/pacientes/${id}/editar`} className="btn btn-outline btn-sm" style={{ flexShrink: 0 }}>
-          Editar
-        </Link>
+        <div style={{ display: "flex", gap: 8, flexShrink: 0, flexWrap: "wrap" }}>
+          <button className="btn btn-outline btn-sm" onClick={() => setModalConsent(true)}>
+            📄 Consentimientos
+          </button>
+          <Link to={`/renaced/pacientes/${id}/editar`} className="btn btn-outline btn-sm">
+            Editar
+          </Link>
+        </div>
       </div>
 
       {/* ── Tabs responsivos ─────────────────────────────────────────────────── */}
@@ -1277,6 +1284,8 @@ export default function RenacedPacienteDetalle() {
           </div>
         </div>
       )}
+
+      {modalConsent && <ConsentimientosModal pacienteId={id} onCerrar={() => setModalConsent(false)} />}
 
       {/* ── Modal nuevo laboratorio ──────────────────────────────────────────── */}
       {modalLab && (

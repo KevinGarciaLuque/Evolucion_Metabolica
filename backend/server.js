@@ -27,6 +27,8 @@ app.use(express.urlencoded({ extended: true }));
 // Servir las carpetas de uploads como estáticos
 // UPLOADS_PATH debe coincidir con el punto de montaje del volumen en Railway
 const uploadsPath = process.env.UPLOADS_PATH || path.join(__dirname, "uploads");
+// Los consentimientos firmados tienen datos personales: solo se entregan por la API con sesión
+app.use("/uploads/renaced_consentimientos", (_req, res) => res.sendStatus(404));
 app.use("/uploads", express.static(uploadsPath));
 
 // ── Registro automático de módulos ───────────────────────────────────────────

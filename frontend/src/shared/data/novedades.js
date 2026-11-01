@@ -11,6 +11,17 @@
 // Cada país ve en el panel las entradas "global" + las suyas. La versión (VERSION) es una sola para todos.
 export const NOVEDADES = [
   {
+    version: "1.9.0",
+    alcance: "mexico",
+    fecha: "2026-10-31",
+    titulo: "Consentimientos firmados en el expediente",
+    cambios: [
+      "Nuevo botón \"Consentimientos\" en el expediente del paciente para ver el aviso de privacidad y el consentimiento informado firmados",
+      "Se pueden subir o reemplazar los documentos (PDF o imagen) desde la misma ventana",
+      "Los documentos solo se abren con sesión iniciada y respetan la clínica del usuario",
+    ],
+  },
+  {
     version: "1.8.2",
     alcance: "mexico",
     fecha: "2026-10-31",

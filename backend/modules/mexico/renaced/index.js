@@ -28,6 +28,7 @@ import renacedReclasificacionRoutes from "./routes/reclasificacion.routes.js";
 import renacedEmbarazoRoutes from "./routes/embarazo.routes.js";
 import renacedImportarBDRoutes from "./routes/importarBD.routes.js";
 import renacedMapaRoutes from "./routes/mapa.routes.js";
+import { porPaciente as renacedConsentimientosRoutes, cargaMasiva as renacedConsentimientosMasiva } from "./routes/consentimientos.routes.js";
 
 export const codigo = "mx";
 
@@ -67,4 +68,6 @@ export function montar(app) {
   app.use("/api/renaced/pacientes/:paciente_id/embarazos",     renacedEmbarazoRoutes);
   app.use("/api/renaced/importar-bd",                          renacedImportarBDRoutes);
   app.use("/api/renaced/mapa",                                 renacedMapaRoutes);
+  app.use("/api/renaced/pacientes/:paciente_id/consentimientos", renacedConsentimientosRoutes);
+  app.use("/api/renaced/consentimientos",                      renacedConsentimientosMasiva);
 }

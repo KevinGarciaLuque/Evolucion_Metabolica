@@ -73,3 +73,6 @@ frontend/dist/
 # 📜 PROYECTO PHP ANTERIOR (referencia local, no subir)
 # =========================
 backend/RENACED PHP/
+# Consentimientos del sistema anterior (datos personales)
+backend/consentimientos_faltantes.txt
+backend/uploads/renaced_consentimientos/

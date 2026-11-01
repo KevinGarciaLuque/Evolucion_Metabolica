@@ -180,3 +180,13 @@ export const descargarCSV   = () => api.get(`${BASE}/reportes/csv`,   { response
 export const descargarPDF   = () => api.get(`${BASE}/reportes/pdf`,   { responseType: "blob" });
 export const descargarReporteClinica = (unidadId) =>
   api.get(`${BASE}/reportes/clinica/${unidadId}`, { responseType: "blob" });
+
+// ── Consentimientos firmados (aviso de privacidad y consentimiento informado) ──
+export const getConsentimientos = (pacId) => api.get(`${BASE}/pacientes/${pacId}/consentimientos`);
+export const getArchivoConsentimiento = (pacId, tipo) =>
+  api.get(`${BASE}/pacientes/${pacId}/consentimientos/${tipo}/archivo`, { responseType: "blob" });
+export const subirConsentimiento = (pacId, tipo, archivo) => {
+  const fd = new FormData();
+  fd.append("archivo", archivo);
+  return api.post(`${BASE}/pacientes/${pacId}/consentimientos/${tipo}`, fd, { headers: { "Content-Type": "multipart/form-data" }, timeout: 120000 });
+};
