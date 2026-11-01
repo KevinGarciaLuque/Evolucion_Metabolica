@@ -18,8 +18,12 @@ export function condicionBusqueda(textoOriginal, { fulltext = true } = {}) {
   if (!texto) return null;
 
   if (/^\d+$/.test(texto)) {
-    // Búsqueda puramente numérica: folio exacto (ej. "1" o "22" regresan solo ese paciente).
-    return { sql: " AND p.folio_renaced = ?", params: [parseInt(texto, 10)] };
+    // Búsqueda puramente numérica: folio exacto (ej. "1" o "22" regresan solo ese paciente)
+    // o expediente (exacto o por prefijo, usa índice).
+    return {
+      sql: " AND (p.folio_renaced = ? OR p.expediente LIKE ?)",
+      params: [parseInt(texto, 10), `${texto}%`],
+    };
   }
 
   if (!fulltext) {
