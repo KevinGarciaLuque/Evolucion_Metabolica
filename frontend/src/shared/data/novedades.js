@@ -11,6 +11,17 @@
 // Cada país ve en el panel las entradas "global" + las suyas. La versión (VERSION) es una sola para todos.
 export const NOVEDADES = [
   {
+    version: "1.12.0",
+    alcance: "mexico",
+    fecha: "2026-11-01",
+    titulo: "Nuevo encabezado en la consulta",
+    cambios: [
+      "El encabezado de la consulta es ahora una tarjeta con las iniciales del paciente, su tipo de diabetes, sexo, edad y expediente",
+      "Botones \"Volver a consultas\" y \"Ver expediente\" más claros y fáciles de pulsar",
+      "La edad se muestra con años y meses (y con meses o días en bebés), por ejemplo \"3 años 4 meses\" o \"2 días\"",
+    ],
+  },
+  {
     version: "1.11.0",
     alcance: "global",
     fecha: "2026-11-01",
