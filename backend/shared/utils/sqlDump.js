@@ -72,3 +72,41 @@ export async function importSqlDump({ host, port, user, password, database }, sq
     await connection.end();
   }
 }
+
+// Igual que importSqlDump, pero ejecuta el archivo por tandas (~2 MB) para poder informar el avance.
+// `onProgreso(fraccion, bytesHechos, bytesTotal)` se llama después de cada tanda.
+// Si el dump usa DELIMITER (rutinas/triggers) no se puede partir con seguridad: se ejecuta de una vez.
+export async function importSqlDumpConProgreso({ host, port, user, password, database }, sqlText, onProgreso = () => {}) {
+  const TANDA = 2 * 1024 * 1024;
+  const connection = await mysql.createConnection({
+    host, port, user, password, database,
+    multipleStatements: true,
+    dateStrings: true,
+  });
+  try {
+    await connection.query("SET FOREIGN_KEY_CHECKS=0");
+    const total = Buffer.byteLength(sqlText, "utf8");
+    if (/^\s*DELIMITER\s/im.test(sqlText)) {
+      await connection.query(sqlText);
+      onProgreso(1, total, total);
+    } else {
+      let acc = [], bytes = 0, hechos = 0;
+      for (const linea of sqlText.split("\n")) {
+        acc.push(linea);
+        bytes += Buffer.byteLength(linea, "utf8") + 1;
+        // Se corta solo donde termina una sentencia (línea que acaba en ";")
+        if (bytes >= TANDA && /;\s*$/.test(linea)) {
+          await connection.query(acc.join("\n"));
+          hechos += bytes;
+          onProgreso(Math.min(hechos / total, 1), hechos, total);
+          acc = []; bytes = 0;
+        }
+      }
+      if (acc.length) await connection.query(acc.join("\n"));
+      onProgreso(1, total, total);
+    }
+    await connection.query("SET FOREIGN_KEY_CHECKS=1");
+  } finally {
+    await connection.end();
+  }
+}

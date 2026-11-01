@@ -97,6 +97,7 @@ export async function iniciarMigracionPHP(req, res) {
     cfg: { host: dbHost, port: process.env.DB_PORT, user: process.env.DB_USER, password: process.env.DB_PASSWORD, database: dbName },
     pool: getTenantPool(dbName, dbHost),
     usuario: req.usuario.email || req.usuario.id,
+    modo: req.body?.modo === "actualizar" ? "actualizar" : "fusionar",
   });
   res.status(202).json({ id });
 }
@@ -105,6 +106,6 @@ export function estadoMigracionPHP(req, res) {
   if (!req.usuario?.super_admin) return res.status(403).json({ error: "Acceso denegado" });
   const t = obtenerTrabajo(req.params.id);
   if (!t) return res.status(404).json({ error: "Trabajo no encontrado (el servidor pudo reiniciarse)" });
-  const { id, estado, paso, pasoActual, totalPasos, log, backup, error } = t;
-  res.json({ id, estado, paso, pasoActual, totalPasos, log: log.slice(-300), backup, error });
+  const { id, modo, estado, paso, pasoActual, totalPasos, porcentaje, detalle, log, backup, error } = t;
+  res.json({ id, modo, estado, paso, pasoActual, totalPasos, porcentaje, detalle, log: log.slice(-300), backup, error });
 }

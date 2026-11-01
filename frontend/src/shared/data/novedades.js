@@ -11,6 +11,17 @@
 // Cada país ve en el panel las entradas "global" + las suyas. La versión (VERSION) es una sola para todos.
 export const NOVEDADES = [
   {
+    version: "1.10.0",
+    alcance: "mexico",
+    fecha: "2026-10-31",
+    titulo: "Actualizar la base desde el sistema anterior",
+    cambios: [
+      "Importar BD ahora tiene el modo \"Actualizar\": recarga los datos de pacientes desde el nuevo archivo del sistema anterior sin tocar usuarios ni clínicas",
+      "Barra de progreso con porcentaje, como al copiar archivos: muestra la subida, la carga del archivo y cada paso de la migración",
+      "Los pacientes que ya existían conservan su folio RENACED",
+    ],
+  },
+  {
     version: "1.9.0",
     alcance: "mexico",
     fecha: "2026-10-31",
