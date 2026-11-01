@@ -11,6 +11,18 @@
 // Cada país ve en el panel las entradas "global" + las suyas. La versión (VERSION) es una sola para todos.
 export const NOVEDADES = [
   {
+    version: "1.8.0",
+    alcance: "mexico",
+    fecha: "2026-10-31",
+    titulo: "Subir examen de laboratorio en PDF",
+    cambios: [
+      "Nuevo botón \"Subir examen (PDF)\" en Laboratorio, en la consulta y en el expediente: lee el PDF y llena los resultados",
+      "Revisas los valores antes de guardar; avisa si el nombre del examen no coincide con el paciente",
+      "El PDF queda guardado y se puede abrir con \"Ver PDF\" en la tabla de laboratorio",
+      "Laboratorio ahora incluye vitamina D, ácido úrico, anticuerpos, péptido C al azar y más análisis",
+    ],
+  },
+  {
     version: "1.7.1",
     alcance: "global",
     fecha: "2026-10-24",
