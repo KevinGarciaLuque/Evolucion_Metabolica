@@ -22,3 +22,10 @@ export function edadDetallada(fechaNac, hoy = hoyISO()) {
   else texto = plural(dias, "día", "días");
   return { anios, meses, dias, texto };
 }
+
+// Texto de edad para mostrar: usa años y meses si hay fecha de nacimiento; si no, la edad guardada en años.
+export function textoEdad(fechaNac, edadAnios) {
+  const d = edadDetallada(String(fechaNac || "").slice(0, 10));
+  if (d) return d.texto;
+  return edadAnios != null && edadAnios !== "" ? `${edadAnios} años` : "—";
+}

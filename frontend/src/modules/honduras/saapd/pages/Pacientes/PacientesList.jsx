@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { textoEdad } from "../../../../../shared/utils/edad";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import api from "../../../../../shared/api/axios";
 import Layout from "../../../../../shared/components/Layout";
@@ -463,7 +464,7 @@ export default function PacientesList() {
                         {p.nombre}
                       </Link>
                     </td>
-                    <td className="hide-mobile">{p.edad} años</td>
+                    <td className="hide-mobile">{textoEdad(p.fecha_nacimiento, p.edad)}</td>
                     <td className="hide-mobile">
                       <span className={`badge ${p.sexo === "F" ? "badge-pink" : "badge-blue"}`}>
                         {p.sexo === "F" ? "👧 Niña" : "👦 Niño"}
