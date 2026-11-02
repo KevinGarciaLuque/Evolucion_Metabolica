@@ -741,7 +741,7 @@ export async function listarPacientesHEU(req, res) {
          p.dni,
          p.nombre,
          p.sexo,
-         p.edad,
+         COALESCE(TIMESTAMPDIFF(YEAR, p.fecha_nacimiento, CURDATE()), p.edad) AS edad,
          p.telefono,
          p.institucion,
          COUNT(DISTINCT d.consulta_id) AS total_consultas_heu,
@@ -749,7 +749,7 @@ export async function listarPacientesHEU(req, res) {
        FROM pacientes p
        JOIN consultas_heu_detalle d ON d.paciente_id = p.id
        WHERE p.estado = 1
-       GROUP BY p.id, p.dni, p.nombre, p.sexo, p.edad, p.telefono, p.institucion
+       GROUP BY p.id, p.dni, p.nombre, p.sexo, p.fecha_nacimiento, p.edad, p.telefono, p.institucion
        ORDER BY p.nombre ASC`
     );
     res.json(rows);

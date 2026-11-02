@@ -59,7 +59,7 @@ async function obtenerFilas(query) {
       p.dni AS paciente_dni,
       p.sexo,
       p.departamento,
-      p.edad,
+      COALESCE(TIMESTAMPDIFF(YEAR, p.fecha_nacimiento, CURDATE()), p.edad) AS edad,
       p.institucion
     FROM analisis a
     INNER JOIN pacientes p ON p.id = a.paciente_id

@@ -5,7 +5,7 @@ const INSTITUCIONES_VALIDAS = ["HMEP", "IHSS", "HEU"];
 
 export async function listar(req, res) {
   const inst = String(req.query.institucion || "").trim().toUpperCase();
-  let sql = `SELECT a.*, p.nombre AS paciente_nombre, p.sexo, p.departamento, p.edad, p.institucion
+  let sql = `SELECT a.*, p.nombre AS paciente_nombre, p.sexo, p.departamento, COALESCE(TIMESTAMPDIFF(YEAR, p.fecha_nacimiento, CURDATE()), p.edad) AS edad, p.institucion
              FROM analisis a
              JOIN pacientes p ON p.id = a.paciente_id
              WHERE 1=1`;
@@ -29,7 +29,7 @@ export async function listar(req, res) {
 export async function obtener(req, res) {
   try {
     const [rows] = await pool.query(
-      `SELECT a.*, p.nombre AS paciente_nombre, p.sexo, p.departamento, p.edad, p.tipo_diabetes
+      `SELECT a.*, p.nombre AS paciente_nombre, p.sexo, p.departamento, COALESCE(TIMESTAMPDIFF(YEAR, p.fecha_nacimiento, CURDATE()), p.edad) AS edad, p.tipo_diabetes
        FROM analisis a
        JOIN pacientes p ON p.id = a.paciente_id
        WHERE a.id = ?`,
