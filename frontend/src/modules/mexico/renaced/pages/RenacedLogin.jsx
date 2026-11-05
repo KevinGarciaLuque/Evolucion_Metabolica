@@ -55,10 +55,13 @@ export default function RenacedLogin() {
 
         <form onSubmit={handleSubmit} style={{ marginTop: 28 }}>
           <div className="form-group">
-            <label>Correo electrónico</label>
+            <label>Usuario o correo electrónico</label>
             <input
-              type="email"
-              placeholder="admin@renaced.mx"
+              type="text"
+              autoComplete="username"
+              autoCapitalize="none"
+              spellCheck={false}
+              placeholder="usuario o correo"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
