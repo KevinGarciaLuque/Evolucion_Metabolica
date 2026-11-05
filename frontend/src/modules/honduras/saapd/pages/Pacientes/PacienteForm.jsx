@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { hoyComoFecha } from "../../../../../shared/utils/zonaHoraria";
+import { textoEdad } from "../../../../../shared/utils/edad";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import { FiArrowLeft } from "react-icons/fi";
 import api from "../../../../../shared/api/axios";
@@ -173,7 +174,7 @@ export default function PacienteForm() {
               <input
                 type="text"
                 readOnly
-                value={edadActual !== "" ? `${edadActual} años` : "—"}
+                value={textoEdad(form.fecha_nacimiento, edadActual)}
                 style={{ background: "#f1f5f9", color: "#64748b", cursor: "not-allowed" }}
               />
             </div>

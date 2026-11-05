@@ -16,6 +16,7 @@ import Layout from "../../../../../shared/components/Layout";
 import SemaforoISPAD from "../../components/SemaforoISPAD";
 import { useAuth } from "../../../../../shared/context/AuthContext";
 import { calcularZScores, calcularEdadMeses } from "../../utils/who_zscore";
+import { textoEdad } from "../../../../../shared/utils/edad";
 import { LISTA_ANTICUERPOS, ESTADOS_ANTICUERPO, COLOR_ESTADO_ANTICUERPO, parseAnticuerpos, serializarAnticuerpos, esFormatoEstructurado } from "../../utils/anticuerpos";
 
 // ─── Fecha local (evita desfase UTC) ────────────────────────────────────────
@@ -641,7 +642,7 @@ export default function PacienteDetalle() {
                 {paciente.sexo === "F" ? "♀ Femenino" : "♂ Masculino"}
               </span>
               <span className="patient-chip chip-age">
-                {paciente.edad} años
+                {textoEdad(paciente.fecha_nacimiento, paciente.edad)}
               </span>
               {paciente.departamento && (
                 <span className="patient-chip">{paciente.departamento}</span>
@@ -778,7 +779,7 @@ export default function PacienteDetalle() {
                   <InfoFila label="DNI / Expediente"    valor={paciente.dni || "—"} />
                   <InfoFila label="Nombre"               valor={paciente.nombre || "—"} />
                   <InfoFila label="Fecha Nacimiento"     valor={paciente.fecha_nacimiento?.split("T")[0] || "—"} />
-                  <InfoFila label="Edad actual"          valor={paciente.edad != null ? `${paciente.edad} años` : "—"} />
+                  <InfoFila label="Edad actual"          valor={textoEdad(paciente.fecha_nacimiento, paciente.edad)} />
                   <InfoFila label="Género"               valor={paciente.sexo === "F" ? "👧 Femenino" : "👦 Masculino"} />
                   {paciente.telefono && <InfoFila label="Teléfono" valor={paciente.telefono} />}
 

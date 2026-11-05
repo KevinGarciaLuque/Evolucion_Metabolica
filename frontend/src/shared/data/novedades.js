@@ -11,6 +11,27 @@
 // Cada país ve en el panel las entradas "global" + las suyas. La versión (VERSION) es una sola para todos.
 export const NOVEDADES = [
   {
+    version: "1.13.3",
+    alcance: "honduras",
+    fecha: "2026-11-02",
+    titulo: "La edad del paciente muestra años y meses",
+    cambios: [
+      "La edad ahora se muestra con años y meses, por ejemplo \"8 años 7 meses\" (y con meses o días en bebés)",
+      "Aplica en el encabezado y la información del paciente, el listado y el formulario",
+    ],
+  },
+  {
+    version: "1.13.2",
+    alcance: "honduras",
+    fecha: "2026-11-02",
+    titulo: "La edad del paciente se calcula automáticamente",
+    cambios: [
+      "La edad ya no queda fija: se calcula siempre a partir de la fecha de nacimiento y se actualiza sola cuando el paciente cumple años",
+      "Aplica en el listado, el detalle, el mapa, los filtros por edad, el dashboard, los análisis y los reportes",
+      "Los pacientes sin fecha de nacimiento conservan la edad registrada",
+    ],
+  },
+  {
     version: "1.13.1",
     alcance: "mexico",
     fecha: "2026-11-01",

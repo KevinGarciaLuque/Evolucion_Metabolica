@@ -108,12 +108,12 @@ export async function porEdad(req, res) {
   try {
     const [rows] = await pool.query(`
       SELECT
-        p.id, p.edad, p.sexo, p.departamento,
+        p.id, COALESCE(TIMESTAMPDIFF(YEAR, p.fecha_nacimiento, CURDATE()), p.edad) AS edad, p.sexo, p.departamento,
         a.tir, a.gmi, a.cv, a.tar, a.tbr, a.clasificacion
       FROM pacientes p
       LEFT JOIN analisis a ON a.paciente_id = p.id
-      WHERE p.estado = 1 AND p.edad IS NOT NULL
-      ORDER BY p.edad
+      WHERE p.estado = 1 AND COALESCE(TIMESTAMPDIFF(YEAR, p.fecha_nacimiento, CURDATE()), p.edad) IS NOT NULL
+      ORDER BY edad
     `);
 
     const grupos = {};

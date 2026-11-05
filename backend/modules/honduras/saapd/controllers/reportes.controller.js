@@ -29,7 +29,7 @@ function safeFileName(value) {
 }
 
 async function obtenerDatosPaciente(pacienteId) {
-  const [[paciente]] = await pool.query("SELECT * FROM pacientes WHERE id = ? AND estado = 1", [pacienteId]);
+  const [[paciente]] = await pool.query("SELECT *, COALESCE(TIMESTAMPDIFF(YEAR, fecha_nacimiento, CURDATE()), edad) AS edad FROM pacientes WHERE id = ? AND estado = 1", [pacienteId]);
   if (!paciente) return null;
 
   const [consultas] = await pool.query(

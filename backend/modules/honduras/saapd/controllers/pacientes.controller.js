@@ -30,7 +30,7 @@ export async function listarMapa(req, res) {
   try {
     let sql = `
       SELECT p.id, p.nombre, p.departamento, p.municipio, p.sexo,
-             p.edad, p.institucion, p.latitud, p.longitud,
+             COALESCE(TIMESTAMPDIFF(YEAR, p.fecha_nacimiento, CURDATE()), p.edad) AS edad, p.institucion, p.latitud, p.longitud,
              (
                SELECT a.clasificacion FROM analisis a
                WHERE a.paciente_id = p.id
@@ -61,6 +61,7 @@ export async function listar(req, res) {
   const institucion = resolverInstitucionParaListado(req);
   let sql = `
     SELECT p.*,
+      COALESCE(TIMESTAMPDIFF(YEAR, p.fecha_nacimiento, CURDATE()), p.edad) AS edad,
       sub.tir_promedio,
       sub.ultima_clasificacion
     FROM pacientes p
@@ -85,8 +86,8 @@ export async function listar(req, res) {
   if (departamento) { sql += " AND p.departamento = ?"; params.push(departamento); }
   if (sexo)         { sql += " AND p.sexo = ?";         params.push(sexo); }
   if (buscar)       { sql += " AND p.nombre LIKE ?";    params.push(`%${buscar}%`); }
-  if (edad_min)     { sql += " AND p.edad >= ?";        params.push(Number(edad_min)); }
-  if (edad_max)     { sql += " AND p.edad <= ?";        params.push(Number(edad_max)); }
+  if (edad_min)     { sql += " AND COALESCE(TIMESTAMPDIFF(YEAR, p.fecha_nacimiento, CURDATE()), p.edad) >= ?";        params.push(Number(edad_min)); }
+  if (edad_max)     { sql += " AND COALESCE(TIMESTAMPDIFF(YEAR, p.fecha_nacimiento, CURDATE()), p.edad) <= ?";        params.push(Number(edad_max)); }
   if (con_monitor !== undefined && con_monitor !== "") { sql += " AND p.con_monitor = ?"; params.push(Number(con_monitor)); }
 
   sql += " ORDER BY p.nombre ASC";
@@ -102,7 +103,7 @@ export async function listar(req, res) {
 
 export async function obtener(req, res) {
   try {
-    const [rows] = await pool.query("SELECT * FROM pacientes WHERE id = ?", [req.params.id]);
+    const [rows] = await pool.query("SELECT *, COALESCE(TIMESTAMPDIFF(YEAR, fecha_nacimiento, CURDATE()), edad) AS edad FROM pacientes WHERE id = ?", [req.params.id]);
     if (rows.length === 0) return res.status(404).json({ error: "Paciente no encontrado" });
     res.json(rows[0]);
   } catch (err) {
@@ -278,7 +279,7 @@ export async function quitarTraslado(req, res) {
 export async function historial(req, res) {
   try {
     const [analisis] = await pool.query(
-      `SELECT a.*, p.nombre, p.sexo, p.departamento, p.edad
+      `SELECT a.*, p.nombre, p.sexo, p.departamento, COALESCE(TIMESTAMPDIFF(YEAR, p.fecha_nacimiento, CURDATE()), p.edad) AS edad
        FROM analisis a
        JOIN pacientes p ON p.id = a.paciente_id
        WHERE a.paciente_id = ?
