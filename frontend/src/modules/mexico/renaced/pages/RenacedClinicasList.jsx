@@ -79,7 +79,7 @@ export default function RenacedClinicasList() {
     if (!form.nombre.trim()) { setError("El nombre de la clínica es requerido"); return; }
     if (!editando) {
       if (!form.investigador_nombre.trim() || !form.investigador_email.trim() || !form.investigador_password.trim()) {
-        setError("Nombre, correo y contraseña del investigador responsable son requeridos");
+        setError("Nombre, correo y contraseña del administrador de la clínica son requeridos");
         return;
       }
     }
@@ -120,8 +120,8 @@ export default function RenacedClinicasList() {
         <div>
           <h1>Clínicas</h1>
           <p className="page-subtitle">
-            Unidades de servicio de salud donde se registran pacientes. Cada investigador
-            solo ve los datos de su propia clínica.
+            Unidades de servicio de salud donde se registran pacientes. Cada clínica tiene un administrador
+            que crea a su personal y solo ve los datos de su propia clínica.
           </p>
         </div>
         <button className="btn btn-primary" style={{ display: "flex", alignItems: "center", gap: 6 }} onClick={abrirNueva}>
@@ -294,7 +294,7 @@ export default function RenacedClinicasList() {
                 <>
                   <div style={{ borderTop: "1px solid #e2e8f0", paddingTop: 12 }}>
                     <p style={{ fontSize: 13, fontWeight: 600, color: "#334155", margin: "0 0 10px" }}>
-                      Investigador responsable de la clínica
+                      Administrador de la clínica
                     </p>
                   </div>
                   <div>
@@ -329,7 +329,7 @@ export default function RenacedClinicasList() {
                     />
                   </div>
                   <p style={{ fontSize: 12, color: "#94a3b8", margin: "-6px 0 0" }}>
-                    Se crea como perfil "Investigador de Clínica", ligado únicamente a esta clínica.
+                    Se crea como perfil "Administrador de Clínica": podrá dar de alta médicos, enfermería y asistentes, solo de esta clínica.
                   </p>
                 </>
               )}

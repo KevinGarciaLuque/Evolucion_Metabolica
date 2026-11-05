@@ -89,6 +89,13 @@ export async function asegurarEsquema(pool, dbKey, forzar = false) {
     }
   }
 
+  // Perfil "Administrador de Clínica": crea y gestiona al personal de su propia clínica.
+  if (existentes.has("perfil")) {
+    await pool.query(
+      "INSERT IGNORE INTO perfil (id, nombre, nivel) VALUES (6, 'Administrador de Clínica', 2)"
+    );
+  }
+
   listos.add(dbKey);
 }
 

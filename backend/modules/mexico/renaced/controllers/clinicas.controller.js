@@ -8,9 +8,11 @@ import { olvidarZonaClinica } from "../utils/zonaClinica.js";
 // módulo de importación de BD (RENACED/INEGI); aquí se activan como clínicas
 // operativas o se dan de alta manualmente las que no estén en ese catálogo.
 //
-// Perfil "Investigador de Clínica" — al activar una unidad se crea junto con
-// ella el usuario que la representa; no hay alta de clínica sin un responsable.
-const PERFIL_INVESTIGADOR = 5;
+// Perfil "Administrador de Clínica" — al activar una unidad se crea junto con
+// ella el usuario que la administra (crea al personal de su clínica); no hay alta
+// de clínica sin un responsable. Los campos del body conservan el prefijo
+// "investigador_" por compatibilidad con el formulario existente.
+const PERFIL_ADMIN_CLINICA = 6;
 
 export async function getClinicas(req, res) {
   try {
@@ -68,7 +70,7 @@ export async function createClinica(req, res) {
     await asegurarEsquema(req.db, req.usuario?.db_name || "mx");
     if (!investigador_nombre || !investigador_email || !investigador_password) {
       return res.status(400).json({
-        error: "Nombre, correo y contraseña del investigador responsable son requeridos",
+        error: "Nombre, correo y contraseña del administrador de la clínica son requeridos",
       });
     }
 
@@ -92,14 +94,14 @@ export async function createClinica(req, res) {
     const [usuario] = await conn.query(
       `INSERT INTO usuario (username, password_hash, nombre_completo, email, perfil_id, unidad_servicio_id, activo)
        VALUES (?, ?, ?, ?, ?, ?, 1)`,
-      [investigador_email, hash, investigador_nombre, investigador_email, PERFIL_INVESTIGADOR, clinicaId]
+      [investigador_email, hash, investigador_nombre, investigador_email, PERFIL_ADMIN_CLINICA, clinicaId]
     );
 
     await conn.commit();
     res.status(201).json({
       id: clinicaId,
       usuario_id: usuario.insertId,
-      message: "Clínica activada e investigador creado correctamente",
+      message: "Clínica activada y administrador creado correctamente",
     });
   } catch (err) {
     await conn.rollback();

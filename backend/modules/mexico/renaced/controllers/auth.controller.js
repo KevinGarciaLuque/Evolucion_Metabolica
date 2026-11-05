@@ -2,6 +2,7 @@ import poolRenaced from "../config/db.js";
 import { zonaDeUsuario } from "../utils/zonaClinica.js";
 import poolMaster from "../../../../shared/config/db.master.js";
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
 import jwt from "jsonwebtoken";
 import { registrarLoginLog } from "../../../../shared/utils/loginLog.js";
 import { zonaDeTenant } from "../../../../shared/utils/zonaHoraria.js";
@@ -46,7 +47,21 @@ export async function loginRenaced(req, res) {
     }
 
     const usuario = rows[0];
-    const valido = await bcrypt.compare(password, usuario.password_hash);
+    // Cuentas migradas del sistema PHP anterior: conservan su hash SHA1 (40 hex). Si la
+    // contraseña coincide se acepta y en el mismo momento se reemplaza por bcrypt.
+    const hashLegado = /^[0-9a-f]{40}$/i.test(usuario.password_hash || "");
+    let valido;
+    if (hashLegado) {
+      const sha1 = crypto.createHash("sha1").update(password).digest("hex");
+      valido = crypto.timingSafeEqual(Buffer.from(sha1), Buffer.from(usuario.password_hash.toLowerCase()));
+      if (valido) {
+        bcrypt.hash(password, 10)
+          .then((h) => poolRenaced.query("UPDATE usuario SET password_hash = ? WHERE id = ?", [h, usuario.id]))
+          .catch(() => {});
+      }
+    } else {
+      valido = await bcrypt.compare(password, usuario.password_hash);
+    }
     if (!valido) {
       registrarLoginLog({
         tenantCodigo: "mx", usuarioId: usuario.id, usuarioNombre: usuario.nombre_completo,

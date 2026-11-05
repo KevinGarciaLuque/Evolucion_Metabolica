@@ -8,8 +8,9 @@ import {
 
 const router = Router();
 
+// Administrador del país (1) o Administrador de Clínica (6, limitado a su clínica en el controlador).
 function soloAdminRenaced(req, res, next) {
-  if (req.usuario?.perfil_id !== 1) {
+  if (req.usuario?.perfil_id !== 1 && req.usuario?.perfil_id !== 6) {
     return res.status(403).json({ error: "Acceso denegado: se requiere perfil Administrador" });
   }
   next();

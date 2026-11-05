@@ -31,7 +31,7 @@ const MENU_ADMIN = [
   { to: "/renaced/usuarios",  clave: "usuarios", icon: HiOutlineUserGroup,         label: "Usuarios"  },
 ];
 
-const PERFIL_LABEL = { 1: "Administrador", 2: "Médico", 3: "Asistente", 4: "Enfermera", 5: "Investigador de Clínica" };
+const PERFIL_LABEL = { 1: "Administrador", 2: "Médico", 3: "Asistente", 4: "Enfermera", 5: "Investigador de Clínica", 6: "Administrador de Clínica" };
 
 export default function RenacedLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -45,10 +45,14 @@ export default function RenacedLayout({ children }) {
 
   const modulosActivos = Array.isArray(usuario?.modulos) ? usuario.modulos : null;
   const menuBaseVisible  = MENU_BASE.filter((m) => m.clave === "escanear" || !modulosActivos || modulosActivos.includes(m.clave));
-  let menuAdminVisible = MENU_ADMIN.filter((m) => !modulosActivos || modulosActivos.includes(m.clave));
+  const esAdminClinica = usuario?.perfil_id === 6 && !usuario?.super_admin;
+  // El Administrador de Clínica solo ve "Usuarios" (su personal); Clínicas e Importar BD son del admin del país.
+  let menuAdminVisible = MENU_ADMIN
+    .filter((m) => !esAdminClinica || m.clave === "usuarios")
+    .filter((m) => !modulosActivos || modulosActivos.includes(m.clave));
   // Importar base de datos: exclusivo de México, no aplica a otros países RENACED,
   // y respeta el mismo toggle de módulos que el resto del sidebar.
-  if (usuario?.tenant === "mx" && (!modulosActivos || modulosActivos.includes("importar_bd"))) {
+  if (!esAdminClinica && usuario?.tenant === "mx" && (!modulosActivos || modulosActivos.includes("importar_bd"))) {
     menuAdminVisible = [
       ...menuAdminVisible,
       { to: "/renaced/importar-bd", clave: "importar_bd", icon: HiOutlineDocumentArrowUp, label: "Importar BD" },
@@ -162,7 +166,7 @@ export default function RenacedLayout({ children }) {
                 <span className="sidebar-link-label">{label}</span>
               </NavLink>
             ))}
-            {usuario?.perfil_id === 1 && menuAdminVisible.length > 0 && (
+            {(usuario?.perfil_id === 1 || esAdminClinica) && menuAdminVisible.length > 0 && (
               <>
                 <div className="sidebar-section-label" style={{ marginTop: 12 }}>
                   {!collapsed && <span>ADMINISTRACIÓN</span>}

@@ -6,13 +6,14 @@ import { getUsuariosRenaced, toggleUsuarioRenaced } from "../api/renacedApi";
 import { useRenacedAuth } from "../context/RenacedAuthContext";
 import { HiOutlineUserPlus, HiOutlinePencilSquare, HiOutlineCheckCircle, HiOutlineXCircle } from "react-icons/hi2";
 
-const PERFIL_LABEL = { 1: "Administrador", 2: "Médico", 3: "Asistente", 4: "Enfermera", 5: "Investigador de Clínica" };
+const PERFIL_LABEL = { 1: "Administrador", 2: "Médico", 3: "Asistente", 4: "Enfermera", 5: "Investigador de Clínica", 6: "Administrador de Clínica" };
 const PERFIL_COLOR = {
   1: { bg: "#dbeafe", color: "#1d4ed8" },
   2: { bg: "#dcfce7", color: "#166534" },
   3: { bg: "#fef9c3", color: "#854d0e" },
   4: { bg: "#fce7f3", color: "#9d174d" },
   5: { bg: "#ede9fe", color: "#5b21b6" },
+  6: { bg: "#ccfbf1", color: "#0f766e" },
 };
 
 export default function RenacedUsuariosList() {

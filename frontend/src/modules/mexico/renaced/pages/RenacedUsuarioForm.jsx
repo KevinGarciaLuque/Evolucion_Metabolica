@@ -11,6 +11,7 @@ const PERFILES_BASE = [
   { id: 3, label: "Asistente" },
   { id: 4, label: "Enfermera" },
 ];
+const PERFIL_ADMIN_CLINICA = { id: 6, label: "Administrador de Clínica" };
 // Solo el Super Admin (sesión de impersonación) puede ascender a alguien a
 // Administrador del país — evita que un admin normal se auto-otorgue más acceso.
 const PERFIL_ADMIN = { id: 1, label: "Administrador" };
@@ -41,7 +42,11 @@ export default function RenacedUsuarioForm() {
   const [medicos, setMedicos]   = useState([]);
   const { usuario: sesion } = useRenacedAuth();
   const esSuperAdmin = !!sesion?.super_admin;
-  const PERFILES = esSuperAdmin ? [PERFIL_ADMIN, ...PERFILES_BASE] : PERFILES_BASE;
+  // Administrador de Clínica: solo crea personal de su clínica (sin administradores).
+  const esAdminClinica = sesion?.perfil_id === 6 && !esSuperAdmin;
+  const PERFILES = esAdminClinica ? PERFILES_BASE
+    : esSuperAdmin ? [PERFIL_ADMIN, PERFIL_ADMIN_CLINICA, ...PERFILES_BASE]
+    : [PERFIL_ADMIN_CLINICA, ...PERFILES_BASE];
   const esAdministrador = Number(form.perfil_id) === 1;
 
   useEffect(() => {
@@ -49,6 +54,7 @@ export default function RenacedUsuarioForm() {
   }, []);
 
   useEffect(() => {
+    if (esAdminClinica) return; // su clínica es fija; además ese listado es solo del admin del país
     getClinicasRenaced()
       .then((r) => setClinicas(r.data.filter((c) => c.activo)))
       .catch(() => setClinicas([]));
@@ -92,7 +98,7 @@ export default function RenacedUsuarioForm() {
       setError("La contraseña es requerida al crear un usuario");
       return;
     }
-    if (!esAdministrador && !form.unidad_servicio_id) {
+    if (!esAdministrador && !esAdminClinica && !form.unidad_servicio_id) {
       setError("Debes asignar una clínica al usuario");
       return;
     }
@@ -248,6 +254,10 @@ export default function RenacedUsuarioForm() {
             {esAdministrador ? (
               <p style={{ fontSize: 13, color: "#64748b", margin: 0, background: "#f8fafc", padding: "10px 14px", borderRadius: 8 }}>
                 Un Administrador ve todas las clínicas del país — no se asigna a ninguna en particular.
+              </p>
+            ) : esAdminClinica ? (
+              <p style={{ fontSize: 13, color: "#64748b", margin: 0, background: "#f8fafc", padding: "10px 14px", borderRadius: 8 }}>
+                El usuario se creará en tu clínica{sesion?.unidad_nombre ? `: ${sesion.unidad_nombre}` : ""}.
               </p>
             ) : (
               <div>

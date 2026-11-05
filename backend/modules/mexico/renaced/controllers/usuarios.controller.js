@@ -1,17 +1,34 @@
 import bcrypt from "bcryptjs";
+import { asegurarEsquema } from "../utils/asegurarEsquema.js";
 
 // perfil_id permitidos al crear/editar. Un admin de país no puede ascender a
 // nadie a Administrador desde esta pantalla (evita auto-escalada de privilegios);
 // el Super Admin (sesión de impersonación, req.usuario.super_admin) sí puede,
 // porque es quien reparte el rol de admin de cada país.
+const PERFIL_ADMIN_CLINICA = 6;
 const PERFILES_BASE = [2, 3, 4, 5]; // Médico, Asistente, Enfermera, Investigador de Clínica
+
+// Administrador de Clínica (perfil 6): solo gestiona a su propio personal, en su clínica.
+const esAdminClinica = (req) => req.usuario?.perfil_id === PERFIL_ADMIN_CLINICA && !req.usuario?.super_admin;
+const clinicaPropia = (req) => req.usuario?.unidad_servicio_id ?? null;
+
 function perfilesPermitidos(req) {
-  return req.usuario?.super_admin ? [1, ...PERFILES_BASE] : PERFILES_BASE;
+  if (req.usuario?.super_admin) return [1, PERFIL_ADMIN_CLINICA, ...PERFILES_BASE];
+  if (esAdminClinica(req)) return PERFILES_BASE; // no puede crear administradores
+  return [PERFIL_ADMIN_CLINICA, ...PERFILES_BASE];
 }
-const MSG_PERFIL_INVALIDO = "Perfil no válido (1=Administrador*, 2=Médico, 3=Asistente, 4=Enfermera, 5=Investigador de Clínica) — *solo el Super Admin puede asignar Administrador";
+const MSG_PERFIL_INVALIDO = "Perfil no válido (1=Administrador*, 6=Administrador de Clínica, 2=Médico, 3=Asistente, 4=Enfermera, 5=Investigador de Clínica) — *solo el Super Admin puede asignar Administrador";
+
+// Un Administrador de Clínica solo puede ver/editar usuarios de su clínica que no sean administradores.
+function fueraDeAlcance(req, u) {
+  if (!esAdminClinica(req)) return false;
+  return u.unidad_servicio_id !== clinicaPropia(req) || [1, PERFIL_ADMIN_CLINICA].includes(u.perfil_id);
+}
+const MSG_SIN_ALCANCE = "No tienes permiso sobre este usuario: solo puedes gestionar al personal de tu clínica";
 
 export async function getUsuarios(req, res) {
   try {
+    await asegurarEsquema(req.db, req.usuario?.db_name || "mx"); // garantiza el perfil 6
     const [rows] = await req.db.query(
       `SELECT u.id, u.username, u.nombre_completo, u.email, u.perfil_id,
               u.unidad_servicio_id, us.nombre AS unidad_nombre,
@@ -21,7 +38,9 @@ export async function getUsuarios(req, res) {
        JOIN perfil p ON p.id = u.perfil_id
        LEFT JOIN unidad_servicio_salud us ON us.id = u.unidad_servicio_id
        LEFT JOIN medico m ON m.curp = u.recurso_humano_curp
-       ORDER BY u.nombre_completo`
+       ${esAdminClinica(req) ? "WHERE u.unidad_servicio_id = ?" : ""}
+       ORDER BY u.nombre_completo`,
+      esAdminClinica(req) ? [clinicaPropia(req)] : []
     );
     res.json(rows);
   } catch (err) {
@@ -33,9 +52,14 @@ export async function getUsuarios(req, res) {
 /** Catálogo de médicos (para vincular un usuario con su CURP profesional). */
 export async function getMedicos(req, res) {
   try {
+    const propia = esAdminClinica(req);
     const [rows] = await req.db.query(
       `SELECT curp, CONCAT_WS(' ', nombre, ap_pat, ap_mat) AS nombre, cedula_prof
-       FROM medico ORDER BY ap_pat, ap_mat, nombre`
+       FROM medico
+       ${propia ? `WHERE unidad_servicio_id = ?
+          OR curp IN (SELECT recurso_humano_curp FROM usuario WHERE unidad_servicio_id = ? AND recurso_humano_curp IS NOT NULL)` : ""}
+       ORDER BY ap_pat, ap_mat, nombre`,
+      propia ? [clinicaPropia(req), clinicaPropia(req)] : []
     );
     res.json(rows);
   } catch (err) {
@@ -67,6 +91,7 @@ export async function getUsuarioById(req, res) {
       [req.params.id]
     );
     if (!row) return res.status(404).json({ error: "Usuario no encontrado" });
+    if (fueraDeAlcance(req, row)) return res.status(403).json({ error: MSG_SIN_ALCANCE });
     res.json(row);
   } catch (err) {
     console.error(err);
@@ -75,7 +100,9 @@ export async function getUsuarioById(req, res) {
 }
 
 export async function createUsuario(req, res) {
-  const { nombre_completo, username, email, password, perfil_id, unidad_servicio_id, recurso_humano_curp } = req.body;
+  const { nombre_completo, username, email, password, perfil_id, recurso_humano_curp } = req.body;
+  // El Administrador de Clínica solo crea personal en su propia clínica, sin importar el body.
+  const unidad_servicio_id = esAdminClinica(req) ? clinicaPropia(req) : req.body.unidad_servicio_id;
 
   if (!nombre_completo || !username || !password || !perfil_id) {
     return res.status(400).json({ error: "nombre_completo, username, contraseña y perfil son requeridos" });
@@ -126,7 +153,8 @@ export async function createUsuario(req, res) {
 
 export async function updateUsuario(req, res) {
   const { id } = req.params;
-  const { nombre_completo, username, email, password, perfil_id, unidad_servicio_id, activo, recurso_humano_curp } = req.body;
+  const { nombre_completo, username, email, password, perfil_id, activo, recurso_humano_curp } = req.body;
+  const unidad_servicio_id = esAdminClinica(req) ? undefined : req.body.unidad_servicio_id; // su clínica no se cambia
 
   if (perfil_id !== undefined && !perfilesPermitidos(req).includes(Number(perfil_id))) {
     return res.status(400).json({ error: MSG_PERFIL_INVALIDO });
@@ -135,6 +163,7 @@ export async function updateUsuario(req, res) {
   try {
     const [[current]] = await req.db.query("SELECT id, perfil_id, unidad_servicio_id, recurso_humano_curp FROM usuario WHERE id = ?", [id]);
     if (!current) return res.status(404).json({ error: "Usuario no encontrado" });
+    if (fueraDeAlcance(req, current)) return res.status(403).json({ error: MSG_SIN_ALCANCE });
 
     // Perfil resultante tras esta actualización (el nuevo si se envía, si no el actual).
     const perfilFinal = perfil_id !== undefined ? Number(perfil_id) : current.perfil_id;
@@ -209,6 +238,8 @@ export async function toggleUsuario(req, res) {
   try {
     const [[u]] = await req.db.query("SELECT id, activo FROM usuario WHERE id = ?", [id]);
     if (!u) return res.status(404).json({ error: "Usuario no encontrado" });
+    const [[destino]] = await req.db.query("SELECT unidad_servicio_id, perfil_id FROM usuario WHERE id = ?", [id]);
+    if (fueraDeAlcance(req, destino)) return res.status(403).json({ error: MSG_SIN_ALCANCE });
 
     // Prevent self-deactivation
     if (u.id === req.usuario?.id) {

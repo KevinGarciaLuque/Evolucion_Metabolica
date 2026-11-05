@@ -31,8 +31,8 @@ export default [
   <Route key="9" path="/renaced/reportes" element={<RenacedProtectedRoute><RenacedReportes /></RenacedProtectedRoute>} />,
   <Route key="10" path="/renaced/mapa" element={<RenacedProtectedRoute><RenacedMapaPacientes /></RenacedProtectedRoute>} />,
   <Route key="11" path="/renaced/clinicas" element={<RenacedProtectedRoute adminOnly><RenacedClinicasList /></RenacedProtectedRoute>} />,
-  <Route key="12" path="/renaced/usuarios" element={<RenacedProtectedRoute adminOnly><RenacedUsuariosList /></RenacedProtectedRoute>} />,
-  <Route key="13" path="/renaced/usuarios/nuevo" element={<RenacedProtectedRoute adminOnly><RenacedUsuarioForm /></RenacedProtectedRoute>} />,
-  <Route key="14" path="/renaced/usuarios/:id/editar" element={<RenacedProtectedRoute adminOnly><RenacedUsuarioForm /></RenacedProtectedRoute>} />,
+  <Route key="12" path="/renaced/usuarios" element={<RenacedProtectedRoute adminOnly conClinica><RenacedUsuariosList /></RenacedProtectedRoute>} />,
+  <Route key="13" path="/renaced/usuarios/nuevo" element={<RenacedProtectedRoute adminOnly conClinica><RenacedUsuarioForm /></RenacedProtectedRoute>} />,
+  <Route key="14" path="/renaced/usuarios/:id/editar" element={<RenacedProtectedRoute adminOnly conClinica><RenacedUsuarioForm /></RenacedProtectedRoute>} />,
   <Route key="15" path="/renaced/importar-bd" element={<RenacedProtectedRoute adminOnly><RenacedImportarBD /></RenacedProtectedRoute>} />,
 ];
