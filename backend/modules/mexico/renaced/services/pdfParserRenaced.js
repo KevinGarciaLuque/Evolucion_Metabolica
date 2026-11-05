@@ -309,9 +309,84 @@ function parseTidepoolAGP(texto) {
   ]);
 }
 
+// ─── Parser: Medtronic CareLink — "Evaluación y progreso" (compara dos periodos) ─
+// Columna A = periodo más reciente, B = el anterior. Se importa A y B queda como contexto.
+function parseCareLinkEvaluacion(t) {
+  const N = "(\\d+(?:[.,]\\d+)?)";
+  const f = (s) => parseFloat(String(s).replace(",", "."));
+  const par = (re) => { const m = t.match(re); return m ? [f(m[1]), f(m[2])] : [null, null]; };
+
+  // Periodos: "21/10/26 - 3/11/26 (14 Días)"; A es el de fecha final más reciente.
+  const pag1 = t.split(/--\s*1 of \d+\s*--/)[0];
+  const periodos = [...pag1.matchAll(/(\d{1,2})\/(\d{1,2})\/(\d{2})\s*-\s*(\d{1,2})\/(\d{1,2})\/(\d{2})\s*\((\d+)\s*D[ií]as\)/gi)]
+    .map((m) => ({ dias: parseInt(m[7], 10), ini: fechaDMY(m[1], m[2], m[3]), fin: fechaDMY(m[4], m[5], m[6]) }))
+    .sort((a, b) => (a.fin < b.fin ? 1 : -1));
+  const A = periodos[0], B = periodos[1];
+
+  // Tiempo en rango: dos columnas de 4 % (>250, 181-250, 70-180, <70).
+  // En el texto la de B aparece antes de la letra "B" y la de A justo antes del título "Tiempo en rango".
+  const cuatro = "(\\d+)%\\s*\\n\\s*(\\d+)%\\s*\\n\\s*(\\d+)%\\s*\\n\\s*(\\d+)%";
+  const gA = t.match(new RegExp(cuatro + "\\s*\\n\\s*Tiempo en rango", "i"));
+  const gB = t.match(new RegExp(cuatro + "\\s*\\n\\s*B\\s*\\n", "i"));
+  const [aMA, aA, aR, aB] = gA ? gA.slice(1).map(Number) : [];
+  const [bMA, bA, bR, bB] = gB ? gB.slice(1).map(Number) : [];
+
+  const [promA, promB] = par(new RegExp(`Promedio SG ± DE\\s*${N}\\s*±\\s*\\d+(?:[.,]\\d+)?\\s*mg/dL\\s*${N}`, "i"));
+  const dsA = f((t.match(new RegExp(`Promedio SG ± DE\\s*${N}\\s*±\\s*${N}`, "i")) || [])[2] ?? NaN);
+  const [gmiA, gmiB] = par(new RegExp(`ICG³\\s*${N}\\s*%\\s*${N}\\s*%`, "i"));
+  const [cvA, cvB] = par(new RegExp(`Coeficiente de variaci[óo]n \\(%\\)\\s*${N}\\s*%\\s*${N}\\s*%`, "i"));
+  const [usoA] = par(new RegExp(`Uso del sensor \\(a la semana\\)\\s*${N}\\s*%[^\\n]*?${N}\\s*%`, "i"));
+  const [sgA] = par(new RegExp(`SmartGuard \\(a la semana\\)\\s*${N}\\s*%[^\\n]*?${N}\\s*%`, "i"));
+  const [manA] = par(new RegExp(`Modo manual \\(a la semana\\)\\s*${N}\\s*%[^\\n]*?${N}\\s*%`, "i"));
+  const [tddA, tddB] = par(new RegExp(`Dosis diaria total \\(al d[ií]a\\)\\s*${N}\\s*unidades\\s*${N}`, "i"));
+  const ins = (etq) => {
+    const m = t.match(new RegExp(`${etq}[^\\n]*?${N}\\s*U\\s*\\((\\d+)%\\)`, "i"));
+    return m ? `${m[1]} U (${m[2]} %)` : null;
+  };
+  const hc = t.match(new RegExp(`HC introducidos/comida \\(al d[ií]a\\)\\s*(\\d+)\\s*±\\s*\\d+\\s*g\\s*/\\s*${N}`, "i"));
+  const [gsA] = par(new RegExp(`Promedio GS\\s*${N}\\s*±\\s*\\d+\\s*mg/dL\\s*${N}`, "i"));
+
+  const tbrA = aB ?? null;
+  return resultado("Medtronic CareLink", (t.match(/Origen de datos:\s*(MiniMed\s*\w+)/i) || [])[1] || "Medtronic MiniMed", {
+    periodo_dias: A?.dias ?? null,
+    fecha_inicio: A?.ini ?? null,
+    fecha_fin: A?.fin ?? null,
+    glucosa_promedio: promA,
+    desv_std: Number.isFinite(dsA) ? dsA : null,
+    gmi: gmiA,
+    cv: cvA,
+    tiempo_activo: usoA,
+    tir: aR ?? null,
+    tar: gA ? suma(aMA, aA) : null,
+    tar_muy_alto: aMA ?? null,
+    tar_alto: aA ?? null,
+    tbr: tbrA,
+  }, [
+    ex("Tipo de informe", "Evaluación y progreso (se importó el periodo más reciente)"),
+    ex("Uso de SmartGuard", sgA, " %"),
+    ex("Modo manual", manA, " %"),
+    ex("Dosis diaria total", tddA, " U"),
+    ex("Bolo", ins("Cantidad de bolus")),
+    ex("Autocorrección", ins("Cantidad autocorrecci[óo]n")),
+    ex("Basal", ins("Valor basal")),
+    ex("Carbohidratos introducidos / comida", hc ? `${hc[1]} g (${hc[2]} comidas/día)` : null),
+    ex("Promedio glucosa en sangre (GS)", gsA, " mg/dL"),
+    ex("Periodo anterior", B ? `${B.ini} a ${B.fin}` : null),
+    ex("Anterior: tiempo en rango", gB ? bR : null, " %"),
+    ex("Anterior: promedio SG", promB, " mg/dL"),
+    ex("Anterior: GMI", gmiB, " %"),
+    ex("Anterior: CV", cvB, " %"),
+    ex("Anterior: dosis diaria total", tddB, " U"),
+  ]);
+}
+
 // ─── Parser: Medtronic CareLink (MiniMed) ────────────────────────────────────
 function parseCareLink(texto) {
   const t = texto.replace(/\x00/g, " ");
+  if (/Evaluaci[óo]n y progreso/i.test(t)) {
+    const r = parseCareLinkEvaluacion(t);
+    if (r.tir != null) return r; // si no se leyó el tiempo en rango, se usa la lectura anterior
+  }
 
   const per = t.match(/Per[ií]odo de informe \((\d+)\s*D[ií]as\)\s*-\s*(\d{2})\/(\d{2})\/(\d{2})\s*-\s*(\d{2})\/(\d{2})\/(\d{2})/i);
   const prom = t.match(/PROMEDIO DE GLUCOSA DEL SENSOR\s*\n\s*(\d+(?:[.,]\d+)?)\s*±\s*(\d+(?:[.,]\d+)?)/i);
