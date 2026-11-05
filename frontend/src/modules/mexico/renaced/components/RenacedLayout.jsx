@@ -31,7 +31,7 @@ const MENU_ADMIN = [
   { to: "/renaced/usuarios",  clave: "usuarios", icon: HiOutlineUserGroup,         label: "Usuarios"  },
 ];
 
-const PERFIL_LABEL = { 1: "Administrador", 2: "Médico", 3: "Asistente", 4: "Enfermera", 5: "Investigador de Clínica", 6: "Administrador de Clínica" };
+const PERFIL_LABEL = { 1: "Administrador", 2: "Médico", 3: "Asistente", 4: "Enfermera", 5: "Investigador de Clínica", 6: "Administrador de Clínica", 7: "Consulta nacional" };
 
 export default function RenacedLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -44,7 +44,10 @@ export default function RenacedLayout({ children }) {
   const esSuperAdmin                  = usuarioSuperAdmin?.rol === "SUPER_ADMIN" || !!usuario?.super_admin;
 
   const modulosActivos = Array.isArray(usuario?.modulos) ? usuario.modulos : null;
-  const menuBaseVisible  = MENU_BASE.filter((m) => m.clave === "escanear" || !modulosActivos || modulosActivos.includes(m.clave));
+  const soloLectura = usuario?.perfil_id === 7 && !usuario?.super_admin; // Consulta nacional
+  const menuBaseVisible  = MENU_BASE
+    .filter((m) => !(soloLectura && m.clave === "escanear")) // importar PDF escribe datos
+    .filter((m) => m.clave === "escanear" || !modulosActivos || modulosActivos.includes(m.clave));
   const esAdminClinica = usuario?.perfil_id === 6 && !usuario?.super_admin;
   // El Administrador de Clínica solo ve "Usuarios" (su personal); Clínicas e Importar BD son del admin del país.
   let menuAdminVisible = MENU_ADMIN

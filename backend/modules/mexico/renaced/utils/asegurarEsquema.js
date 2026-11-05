@@ -94,6 +94,10 @@ export async function asegurarEsquema(pool, dbKey, forzar = false) {
     await pool.query(
       "INSERT IGNORE INTO perfil (id, nombre, nivel) VALUES (6, 'Administrador de Clínica', 2)"
     );
+    // Consulta nacional: ve todas las clínicas del país, solo lectura, sin administrar.
+    await pool.query(
+      "INSERT IGNORE INTO perfil (id, nombre, nivel) VALUES (7, 'Consulta nacional', 3)"
+    );
   }
 
   listos.add(dbKey);

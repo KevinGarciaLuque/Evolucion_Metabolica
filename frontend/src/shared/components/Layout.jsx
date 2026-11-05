@@ -21,7 +21,7 @@ export default function Layout({ children }) {
   // Si el Super Admin está dentro de un país RENACED, solo hay sesión de RENACED: de ahí salen nombre y rol del menú
   const { usuario: usuarioRenaced }     = useRenacedAuth();
   const usuarioVisible                  = usuario || usuarioRenaced;
-  const PERFIL_RENACED                  = { 1: "Administrador", 2: "Médico", 3: "Asistente", 4: "Enfermera", 5: "Investigador", 6: "Admin. de Clínica" };
+  const PERFIL_RENACED                  = { 1: "Administrador", 2: "Médico", 3: "Asistente", 4: "Enfermera", 5: "Investigador", 6: "Admin. de Clínica", 7: "Consulta nacional" };
   const rolVisible                      = usuario ? (ROL_LABEL[usuario.rol] || usuario.rol) : (usuarioRenaced?.super_admin ? "Super Admin" : PERFIL_RENACED[usuarioRenaced?.perfil_id]);
   const navigate                      = useNavigate();
   const enRenaced                     = useLocation().pathname.startsWith("/renaced");

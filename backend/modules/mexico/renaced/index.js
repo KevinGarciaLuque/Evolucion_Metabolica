@@ -2,7 +2,7 @@
 // Registro del módulo: server.js descubre este archivo y llama a montar(app).
 import { verificarToken } from "../../../shared/middlewares/auth.js";
 import { resolverTenantDB } from "./middlewares/tenantDb.js";
-import { resolverAlcanceClinica, verificarAccesoPaciente } from "./middlewares/scopeClinica.js";
+import { resolverAlcanceClinica, verificarAccesoPaciente, soloLecturaConsultaNacional } from "./middlewares/scopeClinica.js";
 import renacedAuthRoutes from "./routes/auth.routes.js";
 import renacedPacientesRoutes from "./routes/pacientes.routes.js";
 import renacedConsultasRoutes from "./routes/consultas.routes.js";
@@ -34,6 +34,9 @@ export const codigo = "mx";
 
 export function montar(app) {
   app.use("/api/renaced/auth",     renacedAuthRoutes);
+
+  // El perfil "Consulta nacional" (7) es de solo lectura en todo RENACED México.
+  app.use("/api/renaced", soloLecturaConsultaNacional);
 
   // Guarda de acceso para TODOS los sub-recursos de un paciente (consultas, laboratorio,
   // tratamiento, evaluación, etc.). Se registra antes de cada router específico y

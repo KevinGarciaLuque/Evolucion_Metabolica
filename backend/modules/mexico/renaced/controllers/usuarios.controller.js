@@ -6,6 +6,8 @@ import { asegurarEsquema } from "../utils/asegurarEsquema.js";
 // el Super Admin (sesión de impersonación, req.usuario.super_admin) sí puede,
 // porque es quien reparte el rol de admin de cada país.
 const PERFIL_ADMIN_CLINICA = 6;
+const PERFIL_CONSULTA_NACIONAL = 7; // ve todo el país en solo lectura; no pertenece a una clínica
+const SIN_CLINICA = [1, PERFIL_CONSULTA_NACIONAL];
 const PERFILES_BASE = [2, 3, 4, 5]; // Médico, Asistente, Enfermera, Investigador de Clínica
 
 // Administrador de Clínica (perfil 6): solo gestiona a su propio personal, en su clínica.
@@ -13,11 +15,11 @@ const esAdminClinica = (req) => req.usuario?.perfil_id === PERFIL_ADMIN_CLINICA 
 const clinicaPropia = (req) => req.usuario?.unidad_servicio_id ?? null;
 
 function perfilesPermitidos(req) {
-  if (req.usuario?.super_admin) return [1, PERFIL_ADMIN_CLINICA, ...PERFILES_BASE];
+  if (req.usuario?.super_admin) return [1, PERFIL_ADMIN_CLINICA, PERFIL_CONSULTA_NACIONAL, ...PERFILES_BASE];
   if (esAdminClinica(req)) return PERFILES_BASE; // no puede crear administradores
-  return [PERFIL_ADMIN_CLINICA, ...PERFILES_BASE];
+  return [PERFIL_ADMIN_CLINICA, PERFIL_CONSULTA_NACIONAL, ...PERFILES_BASE];
 }
-const MSG_PERFIL_INVALIDO = "Perfil no válido (1=Administrador*, 6=Administrador de Clínica, 2=Médico, 3=Asistente, 4=Enfermera, 5=Investigador de Clínica) — *solo el Super Admin puede asignar Administrador";
+const MSG_PERFIL_INVALIDO = "Perfil no válido (1=Administrador*, 6=Administrador de Clínica, 7=Consulta nacional, 2=Médico, 3=Asistente, 4=Enfermera, 5=Investigador de Clínica) — *solo el Super Admin puede asignar Administrador";
 
 // Un Administrador de Clínica solo puede ver/editar usuarios de su clínica que no sean administradores.
 function fueraDeAlcance(req, u) {
@@ -110,7 +112,7 @@ export async function createUsuario(req, res) {
   if (!perfilesPermitidos(req).includes(Number(perfil_id))) {
     return res.status(400).json({ error: MSG_PERFIL_INVALIDO });
   }
-  const esAdministrador = Number(perfil_id) === 1;
+  const esAdministrador = SIN_CLINICA.includes(Number(perfil_id));
   // Médico, Asistente, Enfermera e Investigador de Clínica solo ven su propia
   // clínica — deben tener una asignada. Un Administrador no pertenece a ninguna.
   if (!esAdministrador && !unidad_servicio_id) {
@@ -167,7 +169,7 @@ export async function updateUsuario(req, res) {
 
     // Perfil resultante tras esta actualización (el nuevo si se envía, si no el actual).
     const perfilFinal = perfil_id !== undefined ? Number(perfil_id) : current.perfil_id;
-    const esAdministrador = perfilFinal === 1;
+    const esAdministrador = SIN_CLINICA.includes(perfilFinal);
 
     if (!esAdministrador && unidad_servicio_id !== undefined && !unidad_servicio_id) {
       return res.status(400).json({ error: "Debes asignar una clínica al usuario" });

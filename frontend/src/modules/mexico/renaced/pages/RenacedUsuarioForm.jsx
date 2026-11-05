@@ -12,6 +12,7 @@ const PERFILES_BASE = [
   { id: 4, label: "Enfermera" },
 ];
 const PERFIL_ADMIN_CLINICA = { id: 6, label: "Administrador de Clínica" };
+const PERFIL_CONSULTA = { id: 7, label: "Consulta nacional (solo lectura, todas las clínicas)" };
 // Solo el Super Admin (sesión de impersonación) puede ascender a alguien a
 // Administrador del país — evita que un admin normal se auto-otorgue más acceso.
 const PERFIL_ADMIN = { id: 1, label: "Administrador" };
@@ -45,9 +46,9 @@ export default function RenacedUsuarioForm() {
   // Administrador de Clínica: solo crea personal de su clínica (sin administradores).
   const esAdminClinica = sesion?.perfil_id === 6 && !esSuperAdmin;
   const PERFILES = esAdminClinica ? PERFILES_BASE
-    : esSuperAdmin ? [PERFIL_ADMIN, PERFIL_ADMIN_CLINICA, ...PERFILES_BASE]
-    : [PERFIL_ADMIN_CLINICA, ...PERFILES_BASE];
-  const esAdministrador = Number(form.perfil_id) === 1;
+    : esSuperAdmin ? [PERFIL_ADMIN, PERFIL_ADMIN_CLINICA, PERFIL_CONSULTA, ...PERFILES_BASE]
+    : [PERFIL_ADMIN_CLINICA, PERFIL_CONSULTA, ...PERFILES_BASE];
+  const esAdministrador = [1, 7].includes(Number(form.perfil_id)); // no se asignan a una clínica
 
   useEffect(() => {
     getMedicosCatalogo().then((r) => setMedicos(r.data)).catch(() => setMedicos([]));
@@ -253,7 +254,7 @@ export default function RenacedUsuarioForm() {
 
             {esAdministrador ? (
               <p style={{ fontSize: 13, color: "#64748b", margin: 0, background: "#f8fafc", padding: "10px 14px", borderRadius: 8 }}>
-                Un Administrador ve todas las clínicas del país — no se asigna a ninguna en particular.
+                Este perfil ve todas las clínicas del país — no se asigna a ninguna en particular.
               </p>
             ) : esAdminClinica ? (
               <p style={{ fontSize: 13, color: "#64748b", margin: 0, background: "#f8fafc", padding: "10px 14px", borderRadius: 8 }}>
