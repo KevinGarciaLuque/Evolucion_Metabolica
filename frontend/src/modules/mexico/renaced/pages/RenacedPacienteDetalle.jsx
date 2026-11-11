@@ -1,4 +1,5 @@
 import { LAB_CAMPOS } from "../components/HojaConsulta";
+import GraficasMCG from "../components/GraficasMCG";
 import ConsentimientosModal from "../components/ConsentimientosModal";
 import EncabezadoPaciente, { EnlaceEncabezado, BotonEncabezado } from "../components/EncabezadoPaciente";
 import { FiArrowLeft, FiFileText, FiEdit2 } from "react-icons/fi";
@@ -1087,6 +1088,8 @@ export default function RenacedPacienteDetalle() {
 
       {/* ── Reportes MCG (reportes PDF de monitores) ─────────────────────────── */}
       {tab === "Reportes MCG" && (
+        <>
+        <GraficasMCG escaneos={escaneos} />
         <div className="card">
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
             <h3 style={{ margin: 0, fontSize: "0.9rem", color: "#6366f1" }}>Reportes de monitoreo continuo importados</h3>
@@ -1186,6 +1189,7 @@ export default function RenacedPacienteDetalle() {
             </table>
           </div>
         </div>
+        </>
       )}
 
       {/* ── Educación ────────────────────────────────────────────────────────── */}

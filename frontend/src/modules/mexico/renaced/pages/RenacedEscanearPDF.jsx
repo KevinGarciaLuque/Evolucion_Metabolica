@@ -105,14 +105,14 @@ function BarraRangos({ tir, tar, tbr }) {
   return (
     <div>
       <div style={{ display: "flex", height: 12, borderRadius: 8, overflow: "hidden", background: "#e2e8f0" }}>
-        <div style={seg(a, C.amber)} title={`Arriba ${a}%`} />
-        <div style={seg(r, C.green)} title={`En rango ${r}%`} />
         <div style={seg(b, C.red)} title={`Abajo ${b}%`} />
+        <div style={seg(r, C.green)} title={`En rango ${r}%`} />
+        <div style={seg(a, C.amber)} title={`Arriba ${a}%`} />
       </div>
       <div style={{ display: "flex", gap: 14, marginTop: 6, fontSize: 11.5, color: C.slate, flexWrap: "wrap" }}>
-        <span><i style={{ ...punto, background: C.amber }} /> Arriba {a}%</span>
-        <span><i style={{ ...punto, background: C.green }} /> En rango {r}%</span>
         <span><i style={{ ...punto, background: C.red }} /> Abajo {b}%</span>
+        <span><i style={{ ...punto, background: C.green }} /> En rango {r}%</span>
+        <span><i style={{ ...punto, background: C.amber }} /> Arriba {a}%</span>
       </div>
     </div>
   );

@@ -11,6 +11,17 @@
 // Cada país ve en el panel las entradas "global" + las suyas. La versión (VERSION) es una sola para todos.
 export const NOVEDADES = [
   {
+    version: "1.14.0",
+    alcance: "mexico",
+    fecha: "2026-11-11",
+    titulo: "Gráficas en los reportes de monitoreo continuo",
+    cambios: [
+      "Nuevas gráficas en la pestaña Reportes MCG del paciente: tiempo en rango, glucosa promedio con GMI y variabilidad (CV)",
+      "Tarjetas que comparan el último reporte con el anterior, con flechas verdes o rojas según mejore o empeore",
+      "En Importar MCG, la barra de rangos ahora muestra abajo (rojo), en rango (verde) y arriba (ámbar)",
+    ],
+  },
+  {
     version: "1.13.3",
     alcance: "honduras",
     fecha: "2026-11-02",
