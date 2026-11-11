@@ -11,6 +11,15 @@
 // Cada país ve en el panel las entradas "global" + las suyas. La versión (VERSION) es una sola para todos.
 export const NOVEDADES = [
   {
+    version: "1.15.1",
+    alcance: "honduras",
+    fecha: "2026-11-11",
+    titulo: "Fotos del inicio de sesión mejor integradas",
+    cambios: [
+      "Las fotos de las doctoras en el login se difuminan en los bordes para que se integren con el fondo",
+    ],
+  },
+  {
     version: "1.15.0",
     alcance: "honduras",
     fecha: "2026-11-11",
