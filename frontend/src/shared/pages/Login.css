@@ -1,13 +1,118 @@
 .login-page {
   min-height: 100vh;
-  background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%);
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse 55% 60% at 12% 85%, rgba(34, 211, 238, 0.28), transparent 70%),
+    radial-gradient(ellipse 55% 60% at 88% 85%, rgba(99, 102, 241, 0.32), transparent 70%),
+    radial-gradient(ellipse 40% 40% at 50% 0%, rgba(56, 189, 248, 0.14), transparent 70%),
+    linear-gradient(135deg, #0b1224 0%, #14284b 60%, #0f3a5f 100%);
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 20px;
 }
 
+/* Trama de puntos sutil que se desvanece hacia los bordes */
+.login-page::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.10) 1px, transparent 1px);
+  background-size: 26px 26px;
+  -webkit-mask-image: radial-gradient(ellipse at center, #000 20%, transparent 75%);
+  mask-image: radial-gradient(ellipse at center, #000 20%, transparent 75%);
+  pointer-events: none;
+}
+
+/* Curva de glucosa decorativa */
+.login-curva {
+  position: absolute;
+  left: 0;
+  bottom: 12%;
+  width: 100%;
+  height: 34%;
+  pointer-events: none;
+}
+.login-curva-linea {
+  stroke-dasharray: 2400;
+  stroke-dashoffset: 2400;
+  animation: login-trazo 4.5s ease-out 0.3s forwards;
+}
+@keyframes login-trazo { to { stroke-dashoffset: 0; } }
+
+/* Doctoras a los lados, ancladas al borde inferior */
+.login-doctora {
+  position: absolute;
+  bottom: 0;
+  margin: 0;
+  height: min(90vh, 46vw);
+  aspect-ratio: 4 / 5;
+  pointer-events: none;
+  animation: login-doctora-in 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.login-doctora-izq { left: 1vw; }
+.login-doctora-der { right: 1vw; animation-delay: 0.15s; }
+
+/* Halo de luz detrás de cada doctora */
+.login-doctora::before {
+  content: "";
+  position: absolute;
+  left: 8%;
+  right: 8%;
+  bottom: 4%;
+  height: 78%;
+  border-radius: 50%;
+  filter: blur(40px);
+  opacity: 0.55;
+}
+.login-doctora-izq::before { background: radial-gradient(circle, #22d3ee, transparent 68%); }
+.login-doctora-der::before { background: radial-gradient(circle, #818cf8, transparent 68%); }
+
+.login-doctora img {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: bottom;
+  filter: drop-shadow(0 18px 30px rgba(0, 0, 0, 0.45));
+  /* difumina el corte inferior del torso */
+  -webkit-mask-image: linear-gradient(to bottom, #000 78%, transparent 97%);
+  mask-image: linear-gradient(to bottom, #000 78%, transparent 97%);
+}
+
+.login-doctora figcaption {
+  position: absolute;
+  left: 50%;
+  bottom: 5%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  padding: 8px 18px;
+  border-radius: 14px;
+  background: rgba(15, 23, 42, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  backdrop-filter: blur(8px);
+  white-space: nowrap;
+  color: #fff;
+}
+.login-doctora figcaption strong { font-size: 0.92rem; font-weight: 700; }
+.login-doctora figcaption span { font-size: 0.7rem; color: #7dd3fc; letter-spacing: 0.04em; }
+
+@keyframes login-doctora-in {
+  from { opacity: 0; transform: translateY(40px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* En pantallas angostas no hay espacio: se ocultan las doctoras */
+@media (max-width: 1000px) {
+  .login-doctora { display: none; }
+}
+
 .login-card {
+  z-index: 2;
   background: #fff;
   border-radius: 16px;
   padding: 48px 40px;

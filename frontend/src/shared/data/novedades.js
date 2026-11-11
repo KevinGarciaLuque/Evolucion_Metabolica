@@ -11,6 +11,16 @@
 // Cada país ve en el panel las entradas "global" + las suyas. La versión (VERSION) es una sola para todos.
 export const NOVEDADES = [
   {
+    version: "1.15.0",
+    alcance: "honduras",
+    fecha: "2026-11-11",
+    titulo: "Nuevo diseño de la pantalla de inicio de sesión",
+    cambios: [
+      "El login de SAAPD Honduras estrena un fondo renovado con la curva de glucosa y su rango objetivo",
+      "Aparecen la Dra. Lesby Espinoza y la Dra. Leonela Membreño a los lados del formulario",
+    ],
+  },
+  {
     version: "1.14.0",
     alcance: "mexico",
     fecha: "2026-11-11",
