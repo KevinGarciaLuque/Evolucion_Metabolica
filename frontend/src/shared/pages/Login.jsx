@@ -131,14 +131,16 @@ export default function Login() {
     <div className="login-page">
       <div className="login-aros" aria-hidden="true" />
 
-      <figure className="login-doctora login-doctora-izq">
-        <img src={fotoLesvy} alt="Dra. Lesby Espinoza" />
-        <figcaption><strong>Dra. Lesby Espinoza</strong><span>Equipo médico SAAPD</span></figcaption>
-      </figure>
-      <figure className="login-doctora login-doctora-der">
-        <img src={fotoLeonela} alt="Dra. Leonela Membreño" />
-        <figcaption><strong>Dra. Leonela Membreño</strong><span>Equipo médico SAAPD</span></figcaption>
-      </figure>
+      <div className="login-doctoras">
+        <figure className="login-doctora login-doctora-izq">
+          <img src={fotoLesvy} alt="Dra. Lesby Espinoza" />
+          <figcaption><strong>Dra. Lesby Espinoza</strong><span>Equipo médico SAAPD</span></figcaption>
+        </figure>
+        <figure className="login-doctora login-doctora-der">
+          <img src={fotoLeonela} alt="Dra. Leonela Membreño" />
+          <figcaption><strong>Dra. Leonela Membreño</strong><span>Equipo médico SAAPD</span></figcaption>
+        </figure>
+      </div>
 
       <div className="login-card">
         <button type="button" className="btn-volver-inicio" onClick={() => navigate("/")}>

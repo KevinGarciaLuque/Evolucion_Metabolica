@@ -11,6 +11,15 @@
 // Cada país ve en el panel las entradas "global" + las suyas. La versión (VERSION) es una sola para todos.
 export const NOVEDADES = [
   {
+    version: "1.15.3",
+    alcance: "honduras",
+    fecha: "2026-11-11",
+    titulo: "Inicio de sesión con las doctoras también en celular",
+    cambios: [
+      "En celular y tablet, las fotos de la Dra. Lesby Espinoza y la Dra. Leonela Membreño ahora se ven debajo del formulario de ingreso",
+    ],
+  },
+  {
     version: "1.15.2",
     alcance: "honduras",
     fecha: "2026-11-11",

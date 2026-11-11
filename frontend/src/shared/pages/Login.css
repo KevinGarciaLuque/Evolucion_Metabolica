@@ -118,9 +118,53 @@
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* En pantallas angostas no hay espacio: se ocultan las doctoras */
+/* En escritorio el contenedor no afecta el diseño (las doctoras se posicionan solas) */
+.login-doctoras { display: contents; }
+
+/* Tablet y celular: formulario arriba y las dos doctoras lado a lado debajo */
 @media (max-width: 1000px) {
-  .login-doctora { display: none; }
+  .login-page {
+    flex-direction: column;
+    justify-content: flex-start;
+    padding: 24px 16px 0;
+  }
+  .login-card { order: 1; }
+  .login-doctoras {
+    order: 2;
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    gap: 8px;
+    width: 100%;
+    max-width: 520px;
+    margin-top: 20px;
+    position: relative;
+    z-index: 1;
+  }
+  .login-doctora {
+    position: relative;
+    left: auto;
+    right: auto;
+    bottom: auto;
+    flex: 1 1 0;
+    min-width: 0;
+    height: auto;
+    aspect-ratio: 1 / 1.1;
+  }
+  .login-doctora img {
+    object-fit: cover;
+    object-position: bottom;
+  }
+  .login-doctora figcaption {
+    bottom: 4%;
+    padding: 6px 10px;
+    border-radius: 12px;
+    white-space: normal;
+    text-align: center;
+    max-width: 94%;
+  }
+  .login-doctora figcaption strong { font-size: 0.74rem; line-height: 1.2; }
+  .login-doctora figcaption span { font-size: 0.62rem; }
 }
 
 .login-card {
