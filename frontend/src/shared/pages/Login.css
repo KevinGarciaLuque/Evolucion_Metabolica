@@ -156,15 +156,17 @@
     object-position: bottom;
   }
   .login-doctora figcaption {
-    bottom: 4%;
-    padding: 6px 10px;
-    border-radius: 12px;
-    white-space: normal;
+    bottom: 2%;
+    padding: 4px 8px;
+    border-radius: 10px;
+    white-space: nowrap;
+    width: max-content;
+    max-width: 100%;
     text-align: center;
-    max-width: 94%;
+    gap: 0;
   }
-  .login-doctora figcaption strong { font-size: 0.74rem; line-height: 1.2; }
-  .login-doctora figcaption span { font-size: 0.62rem; }
+  .login-doctora figcaption strong { font-size: 0.68rem; line-height: 1.25; }
+  .login-doctora figcaption span { font-size: 0.56rem; line-height: 1.2; }
 }
 
 .login-card {
