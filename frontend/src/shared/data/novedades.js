@@ -11,6 +11,16 @@
 // Cada país ve en el panel las entradas "global" + las suyas. La versión (VERSION) es una sola para todos.
 export const NOVEDADES = [
   {
+    version: "1.16.0",
+    alcance: "mexico",
+    fecha: "2026-11-11",
+    titulo: "Nuevo diseño del inicio de sesión de RENACED",
+    cambios: [
+      "El login de RENACED México estrena un fondo renovado",
+      "Aparecen la Dra. Raquel Faradji y la Dra. Paloma Almendares junto al formulario, también en celular y tablet",
+    ],
+  },
+  {
     version: "1.15.4",
     alcance: "honduras",
     fecha: "2026-11-11",

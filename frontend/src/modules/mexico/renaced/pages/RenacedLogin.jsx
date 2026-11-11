@@ -4,6 +4,8 @@ import { useNavigate } from "react-router-dom";
 import { useRenacedAuth } from "../context/RenacedAuthContext";
 import { FiArrowLeft } from "react-icons/fi";
 import FlagIcon from "../../../../shared/components/FlagIcon";
+import fotoRaquel from "../../../../assets/Dra Raquel Faradji.png";
+import fotoPaloma from "../../../../assets/Dra. Paloma Almendares.png";
 import "../../../../shared/pages/Login.css";
 
 export default function RenacedLogin() {
@@ -30,7 +32,20 @@ export default function RenacedLogin() {
   }
 
   return (
-    <div className="login-page" style={{ background: "linear-gradient(135deg, #0c2340 0%, #1a4a7a 100%)" }}>
+    <div className="login-page login-page-mx">
+      <div className="login-aros" aria-hidden="true" />
+
+      <div className="login-doctoras">
+        <figure className="login-doctora login-doctora-izq">
+          <img src={fotoRaquel} alt="Dra. Raquel Faradji" />
+          <figcaption><strong>Dra. Raquel Faradji</strong><span>Equipo médico RENACED</span></figcaption>
+        </figure>
+        <figure className="login-doctora login-doctora-der">
+          <img src={fotoPaloma} alt="Dra. Paloma Almendares" />
+          <figcaption><strong>Dra. Paloma Almendares</strong><span>Equipo médico RENACED</span></figcaption>
+        </figure>
+      </div>
+
       <div className="login-card">
         <button type="button" className="btn-volver-inicio" onClick={() => navigate("/")}>
           <FiArrowLeft size={15} />

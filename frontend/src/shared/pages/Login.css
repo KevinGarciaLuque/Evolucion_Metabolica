@@ -75,6 +75,18 @@
 .login-doctora-izq::before { background: radial-gradient(circle, #22d3ee, transparent 68%); }
 .login-doctora-der::before { background: radial-gradient(circle, #818cf8, transparent 68%); }
 
+/* Variante RENACED México: mismo diseño, fondo azul con resplandores verde y rosa */
+.login-page-mx {
+  background:
+    radial-gradient(ellipse 55% 60% at 12% 85%, rgba(52, 211, 153, 0.26), transparent 70%),
+    radial-gradient(ellipse 55% 60% at 88% 85%, rgba(251, 113, 133, 0.22), transparent 70%),
+    radial-gradient(ellipse 40% 40% at 50% 0%, rgba(56, 189, 248, 0.14), transparent 70%),
+    linear-gradient(135deg, #0c2340 0%, #1a4a7a 100%);
+}
+.login-page-mx .login-doctora-izq::before { background: radial-gradient(circle, #34d399, transparent 68%); }
+.login-page-mx .login-doctora-der::before { background: radial-gradient(circle, #fb7185, transparent 68%); }
+.login-page-mx .login-doctora figcaption span { color: #6ee7b7; }
+
 .login-doctora img {
   position: relative;
   width: 100%;
