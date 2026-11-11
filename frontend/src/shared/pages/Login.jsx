@@ -9,30 +9,6 @@ import fotoLesvy from "../../assets/Lesvy.png";
 import fotoLeonela from "../../assets/Leonela.png";
 import "./Login.css";
 
-// Fondo decorativo: banda de rango objetivo + curva de glucosa (tema de monitoreo continuo)
-function FondoGlucosa() {
-  return (
-    <svg className="login-curva" viewBox="0 0 1440 400" preserveAspectRatio="none" aria-hidden="true">
-      <defs>
-        <linearGradient id="lg-curva" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0" stopColor="#22d3ee" stopOpacity="0" />
-          <stop offset=".25" stopColor="#22d3ee" stopOpacity=".7" />
-          <stop offset=".75" stopColor="#818cf8" stopOpacity=".7" />
-          <stop offset="1" stopColor="#818cf8" stopOpacity="0" />
-        </linearGradient>
-      </defs>
-      <rect x="0" y="150" width="1440" height="110" fill="#22c55e" opacity=".06" />
-      <line x1="0" y1="150" x2="1440" y2="150" stroke="#22c55e" strokeOpacity=".18" strokeDasharray="6 8" />
-      <line x1="0" y1="260" x2="1440" y2="260" stroke="#22c55e" strokeOpacity=".18" strokeDasharray="6 8" />
-      <path
-        className="login-curva-linea"
-        d="M0 220 C90 180 150 120 240 170 S380 290 480 220 S620 110 720 190 S860 300 960 210 S1100 120 1200 185 S1340 260 1440 200"
-        fill="none" stroke="url(#lg-curva)" strokeWidth="3" strokeLinecap="round"
-      />
-    </svg>
-  );
-}
-
 function ModalAcercaDe({ onClose, origin }) {
   const [cerrando, setCerrando] = useState(false);
 
@@ -153,7 +129,7 @@ export default function Login() {
 
   return (
     <div className="login-page">
-      <FondoGlucosa />
+      <div className="login-aros" aria-hidden="true" />
 
       <figure className="login-doctora login-doctora-izq">
         <img src={fotoLesvy} alt="Dra. Lesby Espinoza" />

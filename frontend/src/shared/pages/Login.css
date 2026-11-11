@@ -25,21 +25,27 @@
   pointer-events: none;
 }
 
-/* Curva de glucosa decorativa */
-.login-curva {
+/* Anillos concéntricos tenues detrás del formulario (se desvanecen antes de llegar a las fotos) */
+.login-aros {
   position: absolute;
-  left: 0;
-  bottom: 12%;
-  width: 100%;
-  height: 34%;
+  left: 50%;
+  top: 50%;
+  width: min(900px, 70vw);
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, rgba(56, 189, 248, 0.16), transparent 55%),
+    repeating-radial-gradient(circle, transparent 0 46px, rgba(125, 211, 252, 0.10) 46px 47px);
+  -webkit-mask-image: radial-gradient(circle, #000 25%, transparent 68%);
+  mask-image: radial-gradient(circle, #000 25%, transparent 68%);
   pointer-events: none;
+  animation: login-aros-pulso 9s ease-in-out infinite;
 }
-.login-curva-linea {
-  stroke-dasharray: 2400;
-  stroke-dashoffset: 2400;
-  animation: login-trazo 4.5s ease-out 0.3s forwards;
+@keyframes login-aros-pulso {
+  0%, 100% { opacity: 0.75; transform: translate(-50%, -50%) scale(1); }
+  50%      { opacity: 1;    transform: translate(-50%, -50%) scale(1.04); }
 }
-@keyframes login-trazo { to { stroke-dashoffset: 0; } }
 
 /* Doctoras a los lados, ancladas al borde inferior */
 .login-doctora {
