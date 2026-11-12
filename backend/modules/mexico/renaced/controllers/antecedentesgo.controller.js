@@ -1,4 +1,11 @@
 
+// Campos que se guardan en antecedentes_go. Los embarazos previos NO van aquí:
+// se registran en la sección Embarazo (tabla antecedente_embarazo).
+const CAMPOS = [
+  "menarca", "fum", "visa", "mac", "peso_4000",
+  "menopausia", "menopausia_fecha", "tipo_menopausia", "trh", "observaciones",
+];
+
 export const getAntecedentesGO = async (req, res) => {
   try {
     const [rows] = await req.db.query(
@@ -15,20 +22,17 @@ export const getAntecedentesGO = async (req, res) => {
 export const saveAntecedentesGO = async (req, res) => {
   try {
     const { paciente_id } = req.params;
-    const f = req.body;
+    const f = req.body || {};
 
-    // Serializar embarazos previos (hasta 10)
-    const embFields = [];
-    const embVals   = [];
-    for (let i = 1; i <= 10; i++) {
-      embFields.push(`emb_previo${i}_des`, `emb_previo${i}_fecha`, `emb_previo${i}_diabetes`);
-      embVals.push(f[`emb_previo${i}_des`]||null, f[`emb_previo${i}_fecha`]||null, f[`emb_previo${i}_diabetes`]||null);
-    }
+    // Solo columnas que realmente existen (la tabla puede variar según la importación)
+    const [info] = await req.db.query("SHOW COLUMNS FROM antecedentes_go");
+    const existentes = new Set(info.map((c) => c.Field));
+    const campos = CAMPOS.filter((c) => existentes.has(c));
 
-    const cols   = ["paciente_id","menarca","fum","visa","mac","peso_4000","menopausia","menopausia_fecha","tipo_menopausia","trh",...embFields];
-    const vals   = [paciente_id, f.menarca||null, f.fum||null, f.visa||null, f.mac||null, f.peso_4000||null, f.menopausia||null, f.menopausia_fecha||null, f.tipo_menopausia||null, f.trh||null,...embVals];
-    const ph     = cols.map(() => "?").join(",");
-    const onDup  = cols.filter(c => c !== "paciente_id").map(c => `${c}=VALUES(${c})`).join(",");
+    const cols  = ["paciente_id", ...campos];
+    const vals  = [paciente_id, ...campos.map((c) => (f[c] === "" || f[c] === undefined ? null : f[c]))];
+    const ph    = cols.map(() => "?").join(",");
+    const onDup = campos.map((c) => `${c}=VALUES(${c})`).join(",");
 
     await req.db.query(
       `INSERT INTO antecedentes_go (${cols.join(",")}) VALUES (${ph}) ON DUPLICATE KEY UPDATE ${onDup}`,

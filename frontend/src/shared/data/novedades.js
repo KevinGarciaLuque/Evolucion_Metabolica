@@ -11,6 +11,18 @@
 // Cada país ve en el panel las entradas "global" + las suyas. La versión (VERSION) es una sola para todos.
 export const NOVEDADES = [
   {
+    version: "1.16.1",
+    alcance: "mexico",
+    fecha: "2026-11-11",
+    titulo: "Corrección de Antecedentes G.O. y secciones que se cierran al guardar",
+    cambios: [
+      "Se corrigió el error al guardar los Antecedentes ginecobstétricos",
+      "Los embarazos previos se registran en la sección Embarazo",
+      "Al guardar Diagnóstico, Comorbilidades, Patologías, Ant. G.O., Embarazo o Reclasificación, la sección se cierra sola",
+      "La pestaña Consultas del expediente ahora muestra el historial completo de visitas",
+    ],
+  },
+  {
     version: "1.16.0",
     alcance: "mexico",
     fecha: "2026-11-11",

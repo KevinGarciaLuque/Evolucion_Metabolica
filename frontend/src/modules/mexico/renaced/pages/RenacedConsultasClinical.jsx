@@ -102,6 +102,7 @@ export default function RenacedConsultasClinical() {
   const [vista, setVista] = useState("consulta"); // consulta | historial
   const [ab, setAb] = useState({});                  // secciones de la ficha abiertas
   const alternarAb = (k) => setAb((a) => ({ ...a, [k]: !a[k] }));
+  const cerrarAb = (k) => setAb((a) => ({ ...a, [k]: false })); // al guardar, la sección se encoge
   const [cats, setCats] = useState({ retinopatia: [], nefropatia: [], neuropatia: [], pie_diabetico: [], cardiovascular: [] });
 
   // ── Estado por sección ────────────────────────────────────────────────────
@@ -256,6 +257,7 @@ export default function RenacedConsultasClinical() {
       await saveDiagnosticoClinico(pacienteId, dx);
       setDxOk("Diagnóstico guardado");
       setTimeout(() => setDxOk(""), 3000);
+      cerrarAb("dx");
     } catch (err) {
       setDxErr(err.response?.data?.error || "Error al guardar");
     } finally { setDxLoading(false); }
@@ -264,7 +266,7 @@ export default function RenacedConsultasClinical() {
   // ── Guardar comorbilidades ─────────────────────────────────────────────────
   async function guardarComorb(e) {
     e.preventDefault(); setComorbLoad(true); setComorbOk(""); setComorbErr("");
-    try { await saveComorbilidad(pacienteId, comorb); setComorbOk("Comorbilidades guardadas"); setTimeout(()=>setComorbOk(""),3000); }
+    try { await saveComorbilidad(pacienteId, comorb); setComorbOk("Comorbilidades guardadas"); setTimeout(()=>setComorbOk(""),3000); cerrarAb("comorb"); }
     catch (err) { setComorbErr(err.response?.data?.error||"Error al guardar"); }
     finally { setComorbLoad(false); }
   }
@@ -272,7 +274,7 @@ export default function RenacedConsultasClinical() {
   // ── Guardar antecedentes G.O. ──────────────────────────────────────────────
   async function guardarAgo(e) {
     e.preventDefault(); setAgoLoad(true); setAgoOk(""); setAgoErr("");
-    try { await saveAntecedentesGO(pacienteId, ago); setAgoOk("Antecedentes G.O. guardados"); setTimeout(()=>setAgoOk(""),3000); }
+    try { await saveAntecedentesGO(pacienteId, ago); setAgoOk("Antecedentes G.O. guardados"); setTimeout(()=>setAgoOk(""),3000); cerrarAb("ago"); }
     catch (err) { setAgoErr(err.response?.data?.error||"Error al guardar"); }
     finally { setAgoLoad(false); }
   }
@@ -282,7 +284,7 @@ export default function RenacedConsultasClinical() {
     e.preventDefault(); setPatLoad(true); setPatOk(""); setPatErr("");
     try {
       await savePatologia(pacienteId, { enfermedades: patList.filter((p) => p.nombre.trim()) });
-      setPatOk("Patologías guardadas"); setTimeout(() => setPatOk(""), 3000); cargarPat();
+      setPatOk("Patologías guardadas"); setTimeout(() => setPatOk(""), 3000); cargarPat(); cerrarAb("pat");
     } catch (err) { setPatErr(err.response?.data?.error || "Error al guardar"); }
     finally { setPatLoad(false); }
   }
@@ -301,7 +303,7 @@ export default function RenacedConsultasClinical() {
     e.preventDefault(); setEmbLoad(true); setEmbOk(""); setEmbErr("");
     try {
       await createEmbarazo(pacienteId, emb);
-      setEmbOk("Embarazo registrado"); setEmb(EMB_INIT); setTimeout(() => setEmbOk(""), 3000); cargarEmb();
+      setEmbOk("Embarazo registrado"); setEmb(EMB_INIT); setTimeout(() => setEmbOk(""), 3000); cargarEmb(); cerrarAb("emb");
     } catch (err) { setEmbErr(err.response?.data?.error || "Error al guardar"); }
     finally { setEmbLoad(false); }
   }
@@ -316,7 +318,7 @@ export default function RenacedConsultasClinical() {
     try {
       await createReclasificacion(pacienteId, { ...recl, tipo_diabetes_anterior_id: recl.tipo_diabetes_anterior_id || paciente?.diagnostico?.tipo_diabetes_id || "" });
       setReclOk("Reclasificación registrada"); setRecl({ tipo_diabetes_anterior_id: "", tipo_diabetes_nuevo_id: "", motivo: "", fecha: hoy() });
-      setTimeout(() => setReclOk(""), 3000); cargarRecl();
+      setTimeout(() => setReclOk(""), 3000); cargarRecl(); cerrarAb("recl");
     } catch (err) { setReclErr(err.response?.data?.error || "Error al guardar"); }
     finally { setReclLoad(false); }
   }
@@ -695,11 +697,6 @@ export default function RenacedConsultasClinical() {
             <SeccionAcordeon icono={FiUsers} color="#ec4899" titulo="Antecedentes ginecobstétricos" descripcion="Menarca, ciclo, menopausia y anticoncepción" abierta={!!ab.ago} onToggle={() => alternarAb("ago")} estado={Object.values(ago).some((v) => v !== "" && v !== null && v !== undefined)}>
               <div className="seccion-plana">
                 <form onSubmit={guardarAgo}>
-          {paciente.sexo !== "F" && (
-            <div className="card" style={{ background:"#fef9c3", border:"1px solid #fde68a", color:"#92400e", marginBottom:16 }}>
-              Este módulo aplica solo para pacientes femeninas.
-            </div>
-          )}
           <div className="card" style={{ marginBottom:16 }}>
             <h3 style={{ margin:"0 0 14px", fontSize:"0.9rem", color:"#6366f1" }}>Datos Ginecológicos</h3>
             <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))", gap:14 }}>
@@ -744,29 +741,6 @@ export default function RenacedConsultasClinical() {
                 </Campo>
               </>}
             </div>
-          </div>
-          <div className="card" style={{ marginBottom:16 }}>
-            <h3 style={{ margin:"0 0 14px", fontSize:"0.9rem", color:"#6366f1" }}>Embarazos Previos</h3>
-            <div style={{ display:"grid", gridTemplateColumns:"40px 1fr 160px 100px", gap:8, marginBottom:8 }}>
-              <span style={{ fontSize:12, color:"#94a3b8" }}>#</span>
-              <span style={{ fontSize:12, color:"#94a3b8" }}>Desenlace</span>
-              <span style={{ fontSize:12, color:"#94a3b8" }}>Fecha</span>
-              <span style={{ fontSize:12, color:"#94a3b8" }}>DM</span>
-            </div>
-            {[1,2,3,4,5,6,7,8,9,10].map(i=>(
-              <div key={i} style={{ display:"grid", gridTemplateColumns:"40px 1fr 160px 100px", gap:8, marginBottom:6 }}>
-                <span style={{ fontSize:13, color:"#64748b", paddingTop:4 }}>{i}</span>
-                <select value={ago[`emb_previo${i}_des`]||""} onChange={e=>setAgo(f=>({...f,[`emb_previo${i}_des`]:e.target.value}))}>
-                  <option value="">—</option>
-                  <option value="P">Parto</option><option value="C">Cesárea</option>
-                  <option value="A">Aborto</option><option value="O">Otro</option>
-                </select>
-                <input type="date" value={ago[`emb_previo${i}_fecha`]||""} onChange={e=>setAgo(f=>({...f,[`emb_previo${i}_fecha`]:e.target.value}))} />
-                <select value={ago[`emb_previo${i}_diabetes`]||""} onChange={e=>setAgo(f=>({...f,[`emb_previo${i}_diabetes`]:e.target.value}))}>
-                  <option value="">—</option><option>SI</option><option>NO</option>
-                </select>
-              </div>
-            ))}
           </div>
           <Feedback ok={agoOk} error={agoErr} />
           <div style={{ display:"flex", justifyContent:"flex-end" }}>

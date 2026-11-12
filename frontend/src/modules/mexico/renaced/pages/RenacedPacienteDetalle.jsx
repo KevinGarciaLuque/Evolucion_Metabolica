@@ -1,5 +1,6 @@
 import { LAB_CAMPOS } from "../components/HojaConsulta";
 import GraficasMCG from "../components/GraficasMCG";
+import HistorialConsultas from "../components/HistorialConsultas";
 import ConsentimientosModal from "../components/ConsentimientosModal";
 import EncabezadoPaciente, { EnlaceEncabezado, BotonEncabezado } from "../components/EncabezadoPaciente";
 import { FiArrowLeft, FiFileText, FiEdit2 } from "react-icons/fi";
@@ -206,7 +207,6 @@ export default function RenacedPacienteDetalle() {
         .catch(() => setDx(null))
         .finally(() => setDxCargando(false));
     }
-    if (tab === "Consultas")   getConsultas(id).then((r)    => setConsultas(r.data));
     if (tab === "Laboratorio") getLaboratorios(id).then((r)  => setLaboratorios(r.data));
     if (tab === "Tratamiento") getTratamiento(id).then((r)   => setTratamiento(r.data));
     if (tab === "Evaluación") {
@@ -703,35 +703,7 @@ export default function RenacedPacienteDetalle() {
               + Nueva Consulta
             </button>
           </div>
-          <div className="card">
-            <div className="table-wrapper">
-              <table className="tabla">
-                <thead>
-                  <tr>
-                    <th>Fecha</th>
-                    <th>Peso (kg)</th>
-                    <th>Talla (m)</th>
-                    <th>IMC</th>
-                    <th>Cintura (cm)</th>
-                    <th>PA</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {consultas.map((c) => (
-                    <tr key={c.id}>
-                      <td>{c.fecha_consulta}</td>
-                      <td>{c.peso ?? "—"}</td>
-                      <td>{c.estatura ?? "—"}</td>
-                      <td>{c.imc ?? "—"}</td>
-                      <td>{c.cintura ?? "—"}</td>
-                      <td>{c.pa_sistolica && c.pa_diastolica ? `${c.pa_sistolica}/${c.pa_diastolica}` : "—"}</td>
-                    </tr>
-                  ))}
-                  {consultas.length === 0 && <tr><td colSpan={6} className="empty-cell">Sin consultas registradas</td></tr>}
-                </tbody>
-              </table>
-            </div>
-          </div>
+          <HistorialConsultas pacienteId={id} />
         </div>
       )}
 
