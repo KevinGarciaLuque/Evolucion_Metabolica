@@ -654,8 +654,8 @@ export default function RenacedPacienteDetalle() {
                 {/* Antecedentes */}
                 <div className="card" style={{ margin: 0 }}>
                   <h3 style={{ margin: "0 0 12px", fontSize: "0.9rem", color: "#6366f1" }}>Antecedentes</h3>
-                  <InfoRow label="DM T1 familiar" value={val(dx.antec_dm1) != null ? `${dx.antec_dm1}${dx.antec_dm1_grado ? ` — ${dx.antec_dm1_grado}° grado` : ""}` : null} />
-                  <InfoRow label="DM T2 familiar" value={val(dx.antec_dm2) != null ? `${dx.antec_dm2}${dx.antec_dm2_grado ? ` — ${dx.antec_dm2_grado}° grado` : ""}` : null} />
+                  <InfoRow label="DM T1 familiar" value={val(dx.antec_dm1) != null ? `${dx.antec_dm1}${dx.antec_dm1_familiares ? ` — ${dx.antec_dm1_familiares}` : dx.antec_dm1_grado ? ` — ${dx.antec_dm1_grado}° grado` : ""}` : null} />
+                  <InfoRow label="DM T2 familiar" value={val(dx.antec_dm2) != null ? `${dx.antec_dm2}${dx.antec_dm2_familiares ? ` — ${dx.antec_dm2_familiares}` : dx.antec_dm2_grado ? ` — ${dx.antec_dm2_grado}° grado` : ""}` : null} />
                   <InfoRow label="Nacido por"        value={val(dx.nacido_por)} />
                   <InfoRow label="Lactancia materna" value={val(dx.lactancia_materna)} />
                   <InfoRow label="Hipotiroidismo"    value={val(dx.hipotiroidismo_dx)} />

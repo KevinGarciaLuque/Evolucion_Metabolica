@@ -1,3 +1,4 @@
+import { asegurarEsquema } from "../utils/asegurarEsquema.js";
 
 const CAMPOS_PERMITIDOS = [
   "fecha_diagnostico","fecha_approx","fecha_approx_anio","fecha_approx_mes",
@@ -12,8 +13,8 @@ const CAMPOS_PERMITIDOS = [
   "anti_zct8","anti_zct8_valor",
   "hospitalizacion","hospitalizacion_dias",
   "terapia_intensiva","terapia_intensiva_dias",
-  "antec_dm1","antec_dm1_grado",
-  "antec_dm2","antec_dm2_grado",
+  "antec_dm1","antec_dm1_grado","antec_dm1_familiares",
+  "antec_dm2","antec_dm2_grado","antec_dm2_familiares",
   "nacido_por","lactancia_materna","hipotiroidismo_dx",
   "terapia_id","esquema_insulina_id","calculo_dosis_id",
   "dosis_prescrita","dispositivo_id","institucion_id",
@@ -27,6 +28,7 @@ const nullify = (v) => (v === "" || v === undefined ? null : v);
 export async function getDiagnostico(req, res) {
   try {
     const { pacienteId } = req.params;
+    await asegurarEsquema(req.db, req.usuario?.db_name || "mx");
     const [[row]] = await req.db.query(
       `SELECT d.*,
               td.descripcion  AS tipo_diabetes,
@@ -58,6 +60,7 @@ export async function getDiagnostico(req, res) {
 export async function saveDiagnostico(req, res) {
   try {
     const { pacienteId } = req.params;
+    await asegurarEsquema(req.db, req.usuario?.db_name || "mx");
     const body = { ...req.body };
 
     // Auto-calcular IMC

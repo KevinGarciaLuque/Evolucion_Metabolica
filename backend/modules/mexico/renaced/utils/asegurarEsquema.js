@@ -15,6 +15,9 @@ const COLUMNAS = [
   ["paciente",         "anios_estudio", "TINYINT UNSIGNED DEFAULT NULL"],
   ["paciente",         "aviso_ruta",          "VARCHAR(255) DEFAULT NULL"],
   ["paciente",         "consentimiento_ruta", "VARCHAR(255) DEFAULT NULL"],
+  // Antecedentes familiares de DM: quiénes de la familia (lista separada por comas: "Mamá, Papá"). `antec_dm*_grado` queda para lo importado.
+  ["diagnostico", "antec_dm1_familiares", "VARCHAR(150) DEFAULT NULL"],
+  ["diagnostico", "antec_dm2_familiares", "VARCHAR(150) DEFAULT NULL"],
   // Analitos ampliados de laboratorio (los llena el escaneo de exámenes y la hoja de consulta)
   ["laboratorio", "archivo_pdf",         "VARCHAR(255) DEFAULT NULL"],
   ["laboratorio", "glucosa_azar",        "DECIMAL(7,2) DEFAULT NULL"],

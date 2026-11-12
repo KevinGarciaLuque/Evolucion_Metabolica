@@ -11,6 +11,17 @@
 // Cada país ve en el panel las entradas "global" + las suyas. La versión (VERSION) es una sola para todos.
 export const NOVEDADES = [
   {
+    version: "1.17.0",
+    alcance: "mexico",
+    fecha: "2026-11-11",
+    titulo: "Familiares con diabetes en el diagnóstico",
+    cambios: [
+      "En Antecedentes DM Tipo 1 y Tipo 2 ahora se marcan los familiares (mamá, papá, hermano, hermana, abuelos, tíos u otro), pudiendo elegir varios",
+      "El expediente muestra los familiares seleccionados",
+      "Se quitó la pregunta «¿Terapia intensiva?» del diagnóstico",
+    ],
+  },
+  {
     version: "1.16.1",
     alcance: "mexico",
     fecha: "2026-11-11",

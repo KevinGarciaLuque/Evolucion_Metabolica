@@ -23,7 +23,8 @@ import {
 const SINON    = ["", "SI", "NO", "SE DESCONOCE"];
 const SINON2   = ["", "SI", "NO"];
 const POSNEG   = ["", "POS", "NEG"];
-const GRADOS   = [{ id: "", label: "—" }, { id: 1, label: "1er grado" }, { id: 2, label: "2do grado" }, { id: 3, label: "Otro" }];
+// Quiénes de la familia tienen DM, se pueden marcar varios (reemplaza al "grado" numérico; ese sigue existiendo solo para lo importado)
+const PARENTESCOS = ["Mamá", "Papá", "Hermano", "Hermana", "Abuelo", "Abuela", "Tío", "Tía", "Otro"];
 
 const DX_INIT = {
   fecha_diagnostico: "", fecha_approx: 0, fecha_approx_anio: "", fecha_approx_mes: "",
@@ -35,7 +36,7 @@ const DX_INIT = {
   anti_zct8: "", anti_zct8_valor: "",
   hospitalizacion: "", hospitalizacion_dias: "",
   terapia_intensiva: "", terapia_intensiva_dias: "",
-  antec_dm1: "", antec_dm1_grado: "", antec_dm2: "", antec_dm2_grado: "",
+  antec_dm1: "", antec_dm1_grado: "", antec_dm1_familiares: "", antec_dm2: "", antec_dm2_grado: "", antec_dm2_familiares: "",
   nacido_por: "", lactancia_materna: "", hipotiroidismo_dx: "",
   terapia_id: "", esquema_insulina_id: "", calculo_dosis_id: "",
   dosis_prescrita: "", dispositivo_id: "", institucion_id: "",
@@ -192,8 +193,10 @@ export default function RenacedConsultasClinical() {
         terapia_intensiva_dias:  d.terapia_intensiva_dias ?? "",
         antec_dm1:               d.antec_dm1 || "",
         antec_dm1_grado:         d.antec_dm1_grado ?? "",
+        antec_dm1_familiares:    d.antec_dm1_familiares || "",
         antec_dm2:               d.antec_dm2 || "",
         antec_dm2_grado:         d.antec_dm2_grado ?? "",
+        antec_dm2_familiares:    d.antec_dm2_familiares || "",
         nacido_por:              d.nacido_por || "",
         lactancia_materna:       d.lactancia_materna || "",
         hipotiroidismo_dx:       d.hipotiroidismo_dx || "",
@@ -485,12 +488,6 @@ export default function RenacedConsultasClinical() {
                 </select>
               </Campo>
               {dx.hospitalizacion === "SI" && <Campo label="Días hospitalizados"><input type="number" name="hospitalizacion_dias" value={dx.hospitalizacion_dias} onChange={cambiarDx} min="1" /></Campo>}
-              <Campo label="¿Terapia intensiva?" required>
-                <select name="terapia_intensiva" value={dx.terapia_intensiva} onChange={cambiarDx}>
-                  {SINON2.map((v) => <option key={v} value={v}>{v || "— Seleccionar —"}</option>)}
-                </select>
-              </Campo>
-              {dx.terapia_intensiva === "SI" && <Campo label="Días en UCI"><input type="number" name="terapia_intensiva_dias" value={dx.terapia_intensiva_dias} onChange={cambiarDx} min="1" /></Campo>}
             </div>
           </div>
 
@@ -498,7 +495,7 @@ export default function RenacedConsultasClinical() {
           <div className="card" style={{ marginBottom: 16 }}>
             <h3 style={{ margin: "0 0 14px", fontSize: "0.9rem", color: "#6366f1" }}>Antecedentes Familiares</h3>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(190px, 1fr))", gap: 14 }}>
-              {[["Antecedentes DM Tipo 1","antec_dm1","antec_dm1_grado"],["Antecedentes DM Tipo 2","antec_dm2","antec_dm2_grado"]].map(([label, campo, campoGrado]) => (
+              {[["Antecedentes DM Tipo 1","antec_dm1","antec_dm1_familiares"],["Antecedentes DM Tipo 2","antec_dm2","antec_dm2_familiares"]].map(([label, campo, campoFam]) => (
                 <div key={campo} style={{ display: "contents" }}>
                   <Campo label={label} required>
                     <select name={campo} value={dx[campo]} onChange={cambiarDx}>
@@ -506,10 +503,24 @@ export default function RenacedConsultasClinical() {
                     </select>
                   </Campo>
                   {dx[campo] === "SI" && (
-                    <Campo label="Grado">
-                      <select name={campoGrado} value={dx[campoGrado]} onChange={cambiarDx}>
-                        {GRADOS.map(({ id, label: l }) => <option key={id} value={id}>{l}</option>)}
-                      </select>
+                    <Campo label="¿Quiénes? (marca los que apliquen)" colSpan={2}>
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                        {PARENTESCOS.map((p) => {
+                          const marcados = (dx[campoFam] || "").split(",").map((s) => s.trim()).filter(Boolean);
+                          const activo = marcados.includes(p);
+                          const alternar = () => {
+                            const nuevos = activo ? marcados.filter((m) => m !== p) : PARENTESCOS.filter((x) => x === p || marcados.includes(x));
+                            setDx((f) => ({ ...f, [campoFam]: nuevos.join(", ") }));
+                          };
+                          return (
+                            <button type="button" key={p} onClick={alternar} aria-pressed={activo}
+                              style={{ padding: "6px 12px", borderRadius: 999, fontSize: 13, cursor: "pointer", fontWeight: activo ? 700 : 500,
+                                       border: `1px solid ${activo ? "#6366f1" : "#cbd5e1"}`, background: activo ? "#eef2ff" : "#fff", color: activo ? "#4338ca" : "#475569" }}>
+                              {activo ? "✓ " : ""}{p}
+                            </button>
+                          );
+                        })}
+                      </div>
                     </Campo>
                   )}
                 </div>
