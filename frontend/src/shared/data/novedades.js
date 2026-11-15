@@ -11,6 +11,15 @@
 // Cada país ve en el panel las entradas "global" + las suyas. La versión (VERSION) es una sola para todos.
 export const NOVEDADES = [
   {
+    version: "1.20.1",
+    alcance: "mexico",
+    fecha: "2026-11-15",
+    titulo: "Animación al analizar PDFs",
+    cambios: [
+      "Al importar la historia clínica, subir un examen de laboratorio o un ultrasonido ahora aparece la pantalla «Analizando…» con sus pasos, igual que en los reportes MCG",
+    ],
+  },
+  {
     version: "1.20.0",
     alcance: "mexico",
     fecha: "2026-11-15",

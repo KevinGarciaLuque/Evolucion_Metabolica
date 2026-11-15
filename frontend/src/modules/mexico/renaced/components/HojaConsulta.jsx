@@ -1,5 +1,6 @@
 import { forwardRef, useEffect, useImperativeHandle, useMemo, useState } from "react";
 import { llenarVacios, resumen } from "../utils/historiaClinica";
+import AnalizandoOverlay, { conAnimacion, ANALISIS_LABORATORIO } from "../../../../shared/components/AnalizandoOverlay";
 import { hoyISO } from "../../../../shared/utils/zonaHoraria";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -138,7 +139,7 @@ const HojaConsulta = forwardRef(function HojaConsulta({ paciente, pacienteId, ca
     if (!archivo) return;
     setEscaneo({ cargando: true, error: "", ok: null, avisos: [] });
     try {
-      const { data } = await escanearExamenPDF(pacienteId, archivo);
+      const { data } = await conAnimacion(escanearExamenPDF(pacienteId, archivo), ANALISIS_LABORATORIO);
       // `otros_resultados`: lo que el PDF trae además de los campos de abajo (biometría, química, orina…); se guarda aparte
       setF((p) => ({ ...p, lab: { ...p.lab, ...data.valores, archivo_pdf: data.archivo, otros_resultados: data.otros || [], laboratorio_origen: data.laboratorio_nombre || "" } }));
       if (data.fecha_muestra && data.fecha_muestra !== fecha) {
@@ -311,6 +312,7 @@ const HojaConsulta = forwardRef(function HojaConsulta({ paciente, pacienteId, ca
 
       {/* 2 · Laboratorio */}
       <SeccionAcordeon icono={FiDroplet} color="#0ea5e9" titulo="Laboratorio" descripcion="HbA1c, glucosa, lípidos, función renal y otros" abierta={!!abiertas.lab} onToggle={() => alternar("lab")} estado={llenoLab}>
+        <AnalizandoOverlay visible={escaneo.cargando} preset={ANALISIS_LABORATORIO} subtitulo="Lectura automática · Examen de laboratorio" etiqueta="Análisis de laboratorio" />
         <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 12, flexWrap: "wrap", marginBottom: 12 }}>
           <span style={{ fontSize: 12.5, color: C.slate }}>¿Tienes el examen en PDF? Se leen los resultados y se llenan los campos.</span>
           <label className="btn btn-secondary btn-sm" style={{ cursor: escaneo.cargando ? "wait" : "pointer", opacity: escaneo.cargando ? 0.6 : 1 }}>

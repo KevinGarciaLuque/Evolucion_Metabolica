@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import AnalizandoOverlay, { conAnimacion, ANALISIS_ULTRASONIDO } from "../../../../shared/components/AnalizandoOverlay";
 import { getUltrasonidos, createUltrasonido, deleteUltrasonido, escanearUltrasonidoPDF } from "../api/renacedApi";
 
 const API_ARCHIVOS = import.meta.env.VITE_API_URL?.replace("/api", "") || "http://localhost:3001";
@@ -31,7 +32,7 @@ export default function UltrasonidosPanel({ pacienteId }) {
     if (!archivo) return;
     setEscaneo({ cargando: true, error: "", avisos: [] });
     try {
-      const { data } = await escanearUltrasonidoPDF(pacienteId, archivo);
+      const { data } = await conAnimacion(escanearUltrasonidoPDF(pacienteId, archivo), ANALISIS_ULTRASONIDO);
       setForm({ ...VACIO, ...Object.fromEntries(Object.entries(data).filter(([k, v]) => k in VACIO && v)), archivo_pdf: data.archivo });
       setEscaneo({ cargando: false, error: "", avisos: data.avisos || [] });
     } catch (err) {
@@ -62,6 +63,7 @@ export default function UltrasonidosPanel({ pacienteId }) {
 
   return (
     <div>
+      <AnalizandoOverlay visible={escaneo.cargando} preset={ANALISIS_ULTRASONIDO} subtitulo="Lectura automática · Ultrasonido" etiqueta="Análisis de ultrasonido" />
       <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 12 }}>
         {escaneo.error && <span style={{ color: "#b91c1c", fontSize: 13 }}>{escaneo.error}</span>}
         <label className="btn btn-primary btn-sm" style={{ cursor: escaneo.cargando ? "wait" : "pointer", opacity: escaneo.cargando ? 0.6 : 1 }}>

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 
 // Pantalla de "Analizando reporte" (animación). Se usa mientras el PDF se sube y se lee.
@@ -13,6 +14,31 @@ const PASOS_ANALISIS = [
 const PASO_MS    = 800;
 const VERDE_HOLD = 1000;
 const TIEMPO_MIN = PASOS_ANALISIS.length * PASO_MS + VERDE_HOLD;
+/** Tiempo mínimo para que la animación se vea completa con otra lista de pasos. */
+export const tiempoMin = (pasos = PASOS_ANALISIS) => pasos.length * PASO_MS + VERDE_HOLD;
+
+const paso = (...t) => t.map((texto, i) => ({ id: i + 1, texto }));
+// Cada preset: { titulo, pasos, tokens } — se pasan como props al overlay
+export const ANALISIS_LABORATORIO = {
+  titulo: "Analizando examen",
+  pasos: paso("Subiendo archivo al servidor...", "Reconociendo el laboratorio...", "Extrayendo resultados...", "Ordenando biometría, química y orina...", "Preparando resultados..."),
+  tokens: ["abriendo documento PDF...", "identificando el laboratorio...", "ubicando la tabla de resultados...", "separando sangre y orina...", "leyendo valores y unidades...", "validando resultados  ✓  listo"],
+};
+export const ANALISIS_HISTORIA_CLINICA = {
+  titulo: "Analizando historia clínica",
+  pasos: paso("Subiendo archivo al servidor...", "Leyendo contenido del PDF...", "Identificando secciones de la historia...", "Asignando datos a los campos de RENACED...", "Preparando resultados..."),
+  tokens: ["abriendo documento PDF...", "localizando datos personales...", "leyendo antecedentes familiares y personales...", "leyendo tratamiento y estilo de vida...", "emparejando con catálogos...", "validando campos  ✓  listo"],
+};
+export const ANALISIS_ULTRASONIDO = {
+  titulo: "Analizando ultrasonido",
+  pasos: paso("Subiendo archivo al servidor...", "Leyendo contenido del PDF...", "Ubicando hallazgos y conclusión...", "Preparando resultados..."),
+  tokens: ["abriendo documento PDF...", "identificando el estudio...", "leyendo hallazgos...", "leyendo conclusión...", "validando informe  ✓  listo"],
+};
+/** Espera la lectura del PDF y, como mínimo, lo que dura la animación. Devuelve el resultado de la lectura. */
+export async function conAnimacion(promesa, preset) {
+  const [r] = await Promise.all([promesa, new Promise((ok) => setTimeout(ok, tiempoMin(preset?.pasos)))]);
+  return r;
+}
 
 // Nodos y aristas de la red neuronal decorativa
 const N_POS   = [[10,12],[90,10],[50,6],[4,55],[96,48],[18,90],[82,85],[50,96],[33,42],[67,38]];
@@ -28,7 +54,9 @@ const TOKENS_DEFECTO = [
   "validando métricas  ✓  listo",
 ];
 
-export default function AnalizandoOverlay({ visible, subtitulo = "Extracción automática de datos del reporte", tokens = TOKENS_DEFECTO, etiqueta = "Análisis automático" }) {
+export default function AnalizandoOverlay({ visible, subtitulo = "Extracción automática de datos del reporte", tokens: tokensProp, etiqueta = "Análisis automático", preset }) {
+  const pasos = preset?.pasos || PASOS_ANALISIS;
+  const tokens = tokensProp || preset?.tokens || TOKENS_DEFECTO;
   const [pasoActual, setPasoActual] = useState(0);
   const [tokenIdx,   setTokenIdx]   = useState(0);
 
@@ -36,16 +64,17 @@ export default function AnalizandoOverlay({ visible, subtitulo = "Extracción au
     if (!visible) { setPasoActual(0); setTokenIdx(0); return; }
     setPasoActual(0);
     const intervalos = [
-      ...PASOS_ANALISIS.map((_, i) =>
+      ...pasos.map((_, i) =>
         setTimeout(() => setPasoActual(i), i * PASO_MS)
       ),
-      setTimeout(() => setPasoActual(PASOS_ANALISIS.length), PASOS_ANALISIS.length * PASO_MS),
+      setTimeout(() => setPasoActual(pasos.length), pasos.length * PASO_MS),
     ];
     const tokenTimer = setInterval(() => setTokenIdx(i => (i + 1) % tokens.length), 1100);
     return () => { intervalos.forEach(clearTimeout); clearInterval(tokenTimer); };
   }, [visible]);
 
-  return (
+  // En un portal: así se ve a pantalla completa aunque se use dentro de secciones con animación o transformaciones
+  return createPortal(
     <AnimatePresence>
       {visible && (
         <motion.div
@@ -211,7 +240,7 @@ export default function AnalizandoOverlay({ visible, subtitulo = "Extracción au
             </div>
 
             <motion.h2 style={{ color: "#f1f5f9", fontSize: 21, fontWeight: 700, marginBottom: 5, letterSpacing: "-0.4px" }}>
-              Analizando reporte
+              {preset?.titulo || "Analizando reporte"}
             </motion.h2>
             <p style={{ color: "#4e6080", fontSize: 12.5, marginBottom: 24 }}>
               {subtitulo}
@@ -247,7 +276,7 @@ export default function AnalizandoOverlay({ visible, subtitulo = "Extracción au
 
             {/* ── Pasos ── */}
             <div style={{ textAlign: "left", display: "flex", flexDirection: "column", gap: 10 }}>
-              {PASOS_ANALISIS.map((paso, i) => {
+              {pasos.map((paso, i) => {
                 const completado = i < pasoActual;
                 const activo     = i === pasoActual;
                 return (
@@ -303,7 +332,7 @@ export default function AnalizandoOverlay({ visible, subtitulo = "Extracción au
             {/* ── Barra de progreso ── */}
             <div style={{ marginTop: 26, height: 3, background: "rgba(255,255,255,0.06)", borderRadius: 99, overflow: "hidden" }}>
               <motion.div
-                animate={{ width: `${Math.min(((pasoActual + 1) / PASOS_ANALISIS.length) * 100, 100)}%` }}
+                animate={{ width: `${Math.min(((pasoActual + 1) / pasos.length) * 100, 100)}%` }}
                 transition={{ duration: 0.5, ease: "easeOut" }}
                 style={{
                   height: "100%",
@@ -314,12 +343,13 @@ export default function AnalizandoOverlay({ visible, subtitulo = "Extracción au
               />
             </div>
             <p style={{ marginTop: 8, color: "#2d3f55", fontSize: 10.5, textAlign: "right", fontFamily: "monospace" }}>
-              {Math.min(Math.round(((pasoActual + 1) / PASOS_ANALISIS.length) * 100), 100)}% completado
+              {Math.min(Math.round(((pasoActual + 1) / pasos.length) * 100), 100)}% completado
             </p>
           </motion.div>
         </motion.div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 }
 

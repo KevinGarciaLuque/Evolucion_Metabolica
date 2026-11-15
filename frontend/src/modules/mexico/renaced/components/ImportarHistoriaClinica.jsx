@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { escanearHistoriaClinicaPDF } from "../api/renacedApi";
+import AnalizandoOverlay, { conAnimacion, ANALISIS_HISTORIA_CLINICA } from "../../../../shared/components/AnalizandoOverlay";
 
 /**
  * Botón "Importar historia clínica (PDF)". Lee el PDF y llama a `onImportar(datos)`, que rellena los formularios
@@ -16,7 +17,7 @@ export default function ImportarHistoriaClinica({ pacienteId, onImportar, texto 
     if (!archivo) return;
     setEstado({ cargando: true, error: "", datos: null, resumen: null });
     try {
-      const { data } = await escanearHistoriaClinicaPDF(archivo, pacienteId);
+      const { data } = await conAnimacion(escanearHistoriaClinicaPDF(archivo, pacienteId), ANALISIS_HISTORIA_CLINICA);
       const resumen = onImportar(data) || null;
       setEstado({ cargando: false, error: "", datos: data, resumen });
       setVerExtra(false);
@@ -28,6 +29,7 @@ export default function ImportarHistoriaClinica({ pacienteId, onImportar, texto 
   const { cargando, error, datos, resumen } = estado;
   return (
     <div className="card" style={{ marginBottom: 14, padding: "12px 16px" }}>
+      <AnalizandoOverlay visible={cargando} preset={ANALISIS_HISTORIA_CLINICA} subtitulo="Lectura automática · Historia clínica" etiqueta="Importación de historia clínica" />
       <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
         <label className="btn btn-secondary btn-sm" style={{ cursor: cargando ? "wait" : "pointer", opacity: cargando ? 0.6 : 1 }}>
           {cargando ? "Leyendo historia clínica…" : texto}
