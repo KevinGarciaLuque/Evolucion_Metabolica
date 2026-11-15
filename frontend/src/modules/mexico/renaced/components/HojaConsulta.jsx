@@ -315,10 +315,12 @@ const HojaConsulta = forwardRef(function HojaConsulta({ paciente, pacienteId, ca
         <AnalizandoOverlay visible={escaneo.cargando} preset={ANALISIS_LABORATORIO} subtitulo="Lectura automática · Examen de laboratorio" etiqueta="Análisis de laboratorio" />
         <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 12, flexWrap: "wrap", marginBottom: 12 }}>
           <span style={{ fontSize: 12.5, color: C.slate }}>¿Tienes el examen en PDF? Se leen los resultados y se llenan los campos.</span>
-          <label className="btn btn-secondary btn-sm" style={{ cursor: escaneo.cargando ? "wait" : "pointer", opacity: escaneo.cargando ? 0.6 : 1 }}>
-            {escaneo.cargando ? "Leyendo examen…" : "📄 Subir examen (PDF)"}
-            <input type="file" accept="application/pdf" hidden disabled={escaneo.cargando} onChange={escanearExamen} />
-          </label>
+          <span className="ai-btn-wrapper">
+            <label className="btn btn-secondary btn-sm" style={{ cursor: escaneo.cargando ? "wait" : "pointer", opacity: escaneo.cargando ? 0.6 : 1 }}>
+              {escaneo.cargando ? "Leyendo examen…" : "📄 Subir examen (PDF)"}
+              <input type="file" accept="application/pdf" hidden disabled={escaneo.cargando} onChange={escanearExamen} />
+            </label>
+          </span>
         </div>
         {escaneo.error && <div style={{ color: "#b91c1c", fontSize: 13, marginBottom: 10 }}>{escaneo.error}</div>}
         {escaneo.ok != null && (

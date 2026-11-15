@@ -31,10 +31,12 @@ export default function ImportarHistoriaClinica({ pacienteId, onImportar, texto 
     <div className="card" style={{ marginBottom: 14, padding: "12px 16px" }}>
       <AnalizandoOverlay visible={cargando} preset={ANALISIS_HISTORIA_CLINICA} subtitulo="Lectura automática · Historia clínica" etiqueta="Importación de historia clínica" />
       <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-        <label className="btn btn-secondary btn-sm" style={{ cursor: cargando ? "wait" : "pointer", opacity: cargando ? 0.6 : 1 }}>
-          {cargando ? "Leyendo historia clínica…" : texto}
-          <input type="file" accept="application/pdf" hidden disabled={cargando} onChange={leer} />
-        </label>
+        <span className="ai-btn-wrapper">
+          <label className="btn btn-secondary btn-sm" style={{ cursor: cargando ? "wait" : "pointer", opacity: cargando ? 0.6 : 1 }}>
+            {cargando ? "Leyendo historia clínica…" : texto}
+            <input type="file" accept="application/pdf" hidden disabled={cargando} onChange={leer} />
+          </label>
+        </span>
         <span style={{ fontSize: 12.5, color: "#64748b" }}>
           {ayuda || "Se leen los datos del PDF y se llenan los campos vacíos. No se guarda nada hasta que tú guardes cada apartado."}
         </span>

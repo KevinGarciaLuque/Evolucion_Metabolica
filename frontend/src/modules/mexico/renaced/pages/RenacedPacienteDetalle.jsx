@@ -726,10 +726,12 @@ export default function RenacedPacienteDetalle() {
               <option value="">Detectar laboratorio automáticamente</option>
               {labsSoportados.map((l) => <option key={l.clave} value={l.clave}>{l.nombre}</option>)}
             </select>
-            <label className="btn btn-secondary btn-sm" style={{ cursor: escaneoLab.cargando ? "wait" : "pointer", opacity: escaneoLab.cargando ? 0.6 : 1 }}>
-              {escaneoLab.cargando ? "Leyendo examen…" : "📄 Subir examen (PDF)"}
-              <input type="file" accept="application/pdf" hidden disabled={escaneoLab.cargando} onChange={escanearLab} />
-            </label>
+            <span className="ai-btn-wrapper">
+              <label className="btn btn-secondary btn-sm" style={{ cursor: escaneoLab.cargando ? "wait" : "pointer", opacity: escaneoLab.cargando ? 0.6 : 1 }}>
+                {escaneoLab.cargando ? "Leyendo examen…" : "📄 Subir examen (PDF)"}
+                <input type="file" accept="application/pdf" hidden disabled={escaneoLab.cargando} onChange={escanearLab} />
+              </label>
+            </span>
             <button className="btn btn-primary btn-sm" onClick={() => { setFormLab(LAB_VACIO); setEscaneoLab({ cargando: false, error: "", ok: null, avisos: [] }); setModalLab(true); }}>
               + Nuevo Laboratorio
             </button>

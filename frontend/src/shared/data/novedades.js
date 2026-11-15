@@ -11,6 +11,15 @@
 // Cada país ve en el panel las entradas "global" + las suyas. La versión (VERSION) es una sola para todos.
 export const NOVEDADES = [
   {
+    version: "1.20.2",
+    alcance: "mexico",
+    fecha: "2026-11-15",
+    titulo: "Botones de PDF con aura",
+    cambios: [
+      "Los botones «Importar historia clínica (PDF)» y «Subir examen (PDF)» ahora tienen un aura con destello que recorre el borde, como el escaneo de reportes MCG",
+    ],
+  },
+  {
     version: "1.20.1",
     alcance: "mexico",
     fecha: "2026-11-15",
