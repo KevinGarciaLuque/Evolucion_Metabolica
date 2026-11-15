@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { LuScanText } from "react-icons/lu";
 import { escanearHistoriaClinicaPDF } from "../api/renacedApi";
 import AnalizandoOverlay, { conAnimacion, ANALISIS_HISTORIA_CLINICA } from "../../../../shared/components/AnalizandoOverlay";
 
@@ -7,7 +8,7 @@ import AnalizandoOverlay, { conAnimacion, ANALISIS_HISTORIA_CLINICA } from "../.
  * de la pantalla SIN guardar y devuelve { llenados, respetados }. Aquí solo se muestra el resultado, los avisos
  * y los datos del PDF que RENACED no tiene dónde guardar.
  */
-export default function ImportarHistoriaClinica({ pacienteId, onImportar, texto = "📄 Importar historia clínica (PDF)", ayuda }) {
+export default function ImportarHistoriaClinica({ pacienteId, onImportar, texto = "Importar historia clínica (PDF)", ayuda }) {
   const [estado, setEstado] = useState({ cargando: false, error: "", datos: null, resumen: null });
   const [verExtra, setVerExtra] = useState(false);
 
@@ -32,7 +33,8 @@ export default function ImportarHistoriaClinica({ pacienteId, onImportar, texto 
       <AnalizandoOverlay visible={cargando} preset={ANALISIS_HISTORIA_CLINICA} subtitulo="Lectura automática · Historia clínica" etiqueta="Importación de historia clínica" />
       <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
         <span className="ai-btn-wrapper">
-          <label className="btn btn-secondary btn-sm" style={{ cursor: cargando ? "wait" : "pointer", opacity: cargando ? 0.6 : 1 }}>
+          <label className="btn btn-secondary btn-sm" style={{ cursor: cargando ? "wait" : "pointer", opacity: cargando ? 0.6 : 1, display: "inline-flex", alignItems: "center", gap: 7 }}>
+            <LuScanText size={16} style={{ color: "#7c3aed", flexShrink: 0 }} />
             {cargando ? "Leyendo historia clínica…" : texto}
             <input type="file" accept="application/pdf" hidden disabled={cargando} onChange={leer} />
           </label>

@@ -1,4 +1,5 @@
 import { forwardRef, useEffect, useImperativeHandle, useMemo, useState } from "react";
+import { LuScanText } from "react-icons/lu";
 import { llenarVacios, resumen } from "../utils/historiaClinica";
 import AnalizandoOverlay, { conAnimacion, ANALISIS_LABORATORIO } from "../../../../shared/components/AnalizandoOverlay";
 import { hoyISO } from "../../../../shared/utils/zonaHoraria";
@@ -316,8 +317,9 @@ const HojaConsulta = forwardRef(function HojaConsulta({ paciente, pacienteId, ca
         <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 12, flexWrap: "wrap", marginBottom: 12 }}>
           <span style={{ fontSize: 12.5, color: C.slate }}>¿Tienes el examen en PDF? Se leen los resultados y se llenan los campos.</span>
           <span className="ai-btn-wrapper">
-            <label className="btn btn-secondary btn-sm" style={{ cursor: escaneo.cargando ? "wait" : "pointer", opacity: escaneo.cargando ? 0.6 : 1 }}>
-              {escaneo.cargando ? "Leyendo examen…" : "📄 Subir examen (PDF)"}
+            <label className="btn btn-secondary btn-sm" style={{ cursor: escaneo.cargando ? "wait" : "pointer", opacity: escaneo.cargando ? 0.6 : 1, display: "inline-flex", alignItems: "center", gap: 7 }}>
+              <LuScanText size={16} style={{ color: "#7c3aed", flexShrink: 0 }} />
+              {escaneo.cargando ? "Leyendo examen…" : "Subir examen (PDF)"}
               <input type="file" accept="application/pdf" hidden disabled={escaneo.cargando} onChange={escanearExamen} />
             </label>
           </span>

@@ -7,6 +7,7 @@ import HistorialConsultas from "../components/HistorialConsultas";
 import ConsentimientosModal from "../components/ConsentimientosModal";
 import EncabezadoPaciente, { EnlaceEncabezado, BotonEncabezado } from "../components/EncabezadoPaciente";
 import { FiArrowLeft, FiFileText, FiEdit2 } from "react-icons/fi";
+import { LuScanText } from "react-icons/lu";
 import { useEffect, useState, Fragment } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import RenacedLayout from "../components/RenacedLayout";
@@ -727,8 +728,9 @@ export default function RenacedPacienteDetalle() {
               {labsSoportados.map((l) => <option key={l.clave} value={l.clave}>{l.nombre}</option>)}
             </select>
             <span className="ai-btn-wrapper">
-              <label className="btn btn-secondary btn-sm" style={{ cursor: escaneoLab.cargando ? "wait" : "pointer", opacity: escaneoLab.cargando ? 0.6 : 1 }}>
-                {escaneoLab.cargando ? "Leyendo examen…" : "📄 Subir examen (PDF)"}
+              <label className="btn btn-secondary btn-sm" style={{ cursor: escaneoLab.cargando ? "wait" : "pointer", opacity: escaneoLab.cargando ? 0.6 : 1, display: "inline-flex", alignItems: "center", gap: 7 }}>
+                <LuScanText size={16} style={{ color: "#7c3aed", flexShrink: 0 }} />
+                {escaneoLab.cargando ? "Leyendo examen…" : "Subir examen (PDF)"}
                 <input type="file" accept="application/pdf" hidden disabled={escaneoLab.cargando} onChange={escanearLab} />
               </label>
             </span>

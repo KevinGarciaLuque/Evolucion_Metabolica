@@ -330,7 +330,7 @@ export default function RenacedPacienteForm() {
       <ImportarHistoriaClinica
         pacienteId={esEdicion ? id : undefined}
         onImportar={importarHistoria}
-        texto={esEdicion ? "📄 Completar con historia clínica (PDF)" : "📄 Crear desde historia clínica (PDF)"}
+        texto={esEdicion ? "Completar con historia clínica (PDF)" : "Crear desde historia clínica (PDF)"}
         ayuda="Se leen nombre, CURP, domicilio, contacto, seguro y tipo de diabetes del PDF y se llenan los campos vacíos. Revisa antes de guardar."
       />
 
