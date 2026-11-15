@@ -9,6 +9,8 @@ import {
   getLaboratoriosByPaciente,
   createLaboratorio,
   escanearExamen,
+  getLaboratoriosSoportados,
+  getResultadosExtra,
 } from "../controllers/laboratorio.controller.js";
 
 // El PDF se conserva en uploads/renaced_laboratorios (igual que los de monitores en renaced_pdfs)
@@ -36,6 +38,8 @@ router.use(verificarToken, resolverTenantDB);
 // POST /api/renaced/pacientes/:paciente_id/laboratorio/escanear  (campo "pdf")
 router.post("/escanear", upload.single("pdf"), escanearExamen);
 
+router.get("/soportados", getLaboratoriosSoportados);       // laboratorios reconocidos (selector manual)
+router.get("/:id(\\d+)/resultados", getResultadosExtra);    // resto de resultados de un examen
 router.get("/",   getLaboratoriosByPaciente);
 router.post("/",  createLaboratorio);
 

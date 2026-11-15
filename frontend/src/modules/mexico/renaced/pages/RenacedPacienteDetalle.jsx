@@ -1,5 +1,7 @@
 import { LAB_CAMPOS } from "../components/HojaConsulta";
 import GraficasMCG from "../components/GraficasMCG";
+import UltrasonidosPanel from "../components/UltrasonidosPanel";
+import ResultadosExtraModal from "../components/ResultadosExtraModal";
 import HistorialConsultas from "../components/HistorialConsultas";
 import ConsentimientosModal from "../components/ConsentimientosModal";
 import EncabezadoPaciente, { EnlaceEncabezado, BotonEncabezado } from "../components/EncabezadoPaciente";
@@ -11,7 +13,7 @@ import {
   getPaciente,
   getDiagnosticoClinico,
   getConsultas, createConsulta,
-  getLaboratorios, createLaboratorio, escanearExamenPDF,
+  getLaboratorios, createLaboratorio, escanearExamenPDF, getLaboratoriosSoportados,
   getTratamiento, createTratamiento,
   createTratamientoOtx, updateTratamientoOtx, deleteTratamientoOtx,
   createAjusteDosis, updateAjusteDosis, deleteAjusteDosis,
@@ -32,11 +34,11 @@ import {
   getEmbarazos,
 } from "../api/renacedApi";
 
-const TABS = ["Resumen", "Diagnóstico", "Consultas", "Laboratorio", "Tratamiento", "Evaluación", "Monitoreo", "Reportes MCG", "Educación",
+const TABS = ["Resumen", "Diagnóstico", "Consultas", "Laboratorio", "Ultrasonidos", "Tratamiento", "Evaluación", "Monitoreo", "Reportes MCG", "Educación",
   "Comorbilidades", "Patologías", "Ant. G.O.", "Eventos", "Estilo Vida", "Toxicomanías", "Reclasificación", "Embarazo"];
 
 const TAB_GRUPOS = [
-  { label: "Expediente", tabs: ["Resumen","Diagnóstico","Consultas","Laboratorio","Tratamiento","Evaluación","Monitoreo","Reportes MCG","Educación"] },
+  { label: "Expediente", tabs: ["Resumen","Diagnóstico","Consultas","Laboratorio","Ultrasonidos","Tratamiento","Evaluación","Monitoreo","Reportes MCG","Educación"] },
   { label: "Antecedentes", tabs: ["Comorbilidades","Patologías","Ant. G.O.","Eventos","Estilo Vida","Toxicomanías","Reclasificación","Embarazo"] },
 ];
 
@@ -168,6 +170,9 @@ export default function RenacedPacienteDetalle() {
   const LAB_VACIO = { fecha_muestra: "", ...Object.fromEntries(LAB_CAMPOS.map(([, n]) => [n, ""])), archivo_pdf: "" };
   const [formLab, setFormLab]               = useState(LAB_VACIO);
   const [escaneoLab, setEscaneoLab]         = useState({ cargando: false, error: "", ok: null, avisos: [] });
+  const [labExtra, setLabExtra]               = useState(null);   // examen cuyo resto de resultados se está viendo
+  const [labsSoportados, setLabsSoportados]   = useState([]);
+  const [labElegido, setLabElegido]           = useState("");     // "" = detectar automáticamente
   const [formTratamiento, setFormTratamiento] = useState({ fecha_inicio: "", terapia_id: "", esquema_insulina_id: "", dispositivo_id: "", insulina_id: "", dosis_unidades: "", antidiabetico_id: "", dosis_mg: "", frecuencia: "" });
   const [formEvaluacion, setFormEvaluacion] = useState({ fecha_evaluacion: "", retinopatia_id: "", nefropatia_id: "", neuropatia_id: "", pie_diabetico_id: "", enf_cardiovascular_id: "", observaciones: "" });
   const [formEducacion, setFormEducacion]   = useState({ fecha: "", tema: "", modalidad: "", duracion_min: "", educador: "", observaciones: "" });
@@ -207,7 +212,10 @@ export default function RenacedPacienteDetalle() {
         .catch(() => setDx(null))
         .finally(() => setDxCargando(false));
     }
-    if (tab === "Laboratorio") getLaboratorios(id).then((r)  => setLaboratorios(r.data));
+    if (tab === "Laboratorio") {
+      getLaboratorios(id).then((r)  => setLaboratorios(r.data));
+      getLaboratoriosSoportados(id).then((r) => setLabsSoportados(r.data)).catch(() => {});
+    }
     if (tab === "Tratamiento") getTratamiento(id).then((r)   => setTratamiento(r.data));
     if (tab === "Evaluación") {
       getEvaluaciones(id).then((r)  => setEvaluaciones(r.data));
@@ -262,9 +270,9 @@ export default function RenacedPacienteDetalle() {
     if (!archivo) return;
     setEscaneoLab({ cargando: true, error: "", ok: null, avisos: [] });
     try {
-      const { data } = await escanearExamenPDF(id, archivo);
-      setFormLab({ ...LAB_VACIO, ...data.valores, fecha_muestra: data.fecha_muestra || "", archivo_pdf: data.archivo });
-      setEscaneoLab({ cargando: false, error: "", ok: data.detalle.length, avisos: data.avisos || [] });
+      const { data } = await escanearExamenPDF(id, archivo, labElegido || undefined);
+      setFormLab({ ...LAB_VACIO, ...data.valores, fecha_muestra: data.fecha_muestra || "", archivo_pdf: data.archivo, otros_resultados: data.otros || [], laboratorio_origen: data.laboratorio_nombre || "" });
+      setEscaneoLab({ cargando: false, error: "", ok: data.detalle.length, otros: (data.otros || []).length, laboratorio: data.laboratorio_nombre, avisos: data.avisos || [] });
       setModalLab(true);
     } catch (err) {
       setEscaneoLab({ cargando: false, error: err.response?.data?.error || "No se pudo leer el PDF", ok: null, avisos: [] });
@@ -712,6 +720,10 @@ export default function RenacedPacienteDetalle() {
         <div>
           <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 12 }}>
             {escaneoLab.error && <span style={{ color: "#b91c1c", fontSize: 13 }}>{escaneoLab.error}</span>}
+            <select value={labElegido} onChange={(e) => setLabElegido(e.target.value)} title="Laboratorio del examen" style={{ width: "auto", fontSize: 13, padding: "4px 8px" }}>
+              <option value="">Detectar laboratorio automáticamente</option>
+              {labsSoportados.map((l) => <option key={l.clave} value={l.clave}>{l.nombre}</option>)}
+            </select>
             <label className="btn btn-secondary btn-sm" style={{ cursor: escaneoLab.cargando ? "wait" : "pointer", opacity: escaneoLab.cargando ? 0.6 : 1 }}>
               {escaneoLab.cargando ? "Leyendo examen…" : "📄 Subir examen (PDF)"}
               <input type="file" accept="application/pdf" hidden disabled={escaneoLab.cargando} onChange={escanearLab} />
@@ -754,7 +766,8 @@ export default function RenacedPacienteDetalle() {
                       <td>{l.creatinina ?? "—"}</td>
                       <td style={{ fontSize: 12, color: "#475569", minWidth: 160 }}>
                         {LAB_CAMPOS.filter(([, n]) => !["hba1c", "glucosa_ayuno", "colesterol_total", "hdl", "ldl", "trigliceridos", "creatinina"].includes(n) && l[n] != null)
-                          .map(([label, n]) => `${label.replace(/\s*\(.*\)/, "")}: ${l[n]}`).join(" · ") || "—"}
+                          .map(([label, n]) => `${label.replace(/\s*\(.*\)/, "")}: ${l[n]}`).join(" · ") || (l.n_otros ? "" : "—")}
+                        {l.n_otros > 0 && <button style={btnEditar} onClick={() => setLabExtra(l)}>+{l.n_otros} resultados</button>}
                       </td>
                       <td>
                         {l.archivo_pdf
@@ -770,6 +783,11 @@ export default function RenacedPacienteDetalle() {
           </div>
         </div>
       )}
+
+      {/* ── Ultrasonidos ─────────────────────────────────────────────────────── */}
+      {tab === "Ultrasonidos" && <UltrasonidosPanel pacienteId={id} />}
+
+      {labExtra && <ResultadosExtraModal pacienteId={id} laboratorio={labExtra} onClose={() => setLabExtra(null)} />}
 
       {/* ── Tratamiento ──────────────────────────────────────────────────────── */}
       {tab === "Tratamiento" && (
@@ -1261,7 +1279,7 @@ export default function RenacedPacienteDetalle() {
             </div>
             {escaneoLab.ok != null && formLab.archivo_pdf && (
               <div style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", color: "#166534", borderRadius: 8, padding: "8px 12px", fontSize: 13, marginBottom: 12 }}>
-                Se leyeron {escaneoLab.ok} resultado{escaneoLab.ok === 1 ? "" : "s"} del examen (el PDF se guardará con el registro). Revísalos antes de guardar.
+                {escaneoLab.laboratorio ? <strong>{escaneoLab.laboratorio}: </strong> : null}se leyeron {escaneoLab.ok} resultado{escaneoLab.ok === 1 ? "" : "s"}{escaneoLab.otros > 0 ? ` y otros ${escaneoLab.otros} (biometría, química, orina…) que se guardarán aparte` : ""} (el PDF se guardará con el registro). Revísalos antes de guardar.
                 {escaneoLab.avisos.map((a, i) => <div key={i} style={{ color: "#b45309" }}>⚠ {a}</div>)}
               </div>
             )}

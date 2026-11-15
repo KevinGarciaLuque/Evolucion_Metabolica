@@ -29,12 +29,25 @@ export const createHojaConsulta = (pacId, data) => api.post(`${BASE}/pacientes/$
 // ── Laboratorio ───────────────────────────────────────────────────────────────
 export const getLaboratorios  = (pacId)       => api.get(`${BASE}/pacientes/${pacId}/laboratorio`);
 // Lee un PDF de examen y devuelve valores para rellenar el formulario (no guarda)
-export const escanearExamenPDF = (pacId, archivo) => {
+export const escanearExamenPDF = (pacId, archivo, laboratorio) => {
   const fd = new FormData();
   fd.append("pdf", archivo);
-  return api.post(`${BASE}/pacientes/${pacId}/laboratorio/escanear`, fd, { headers: { "Content-Type": "multipart/form-data" } });
+  return api.post(`${BASE}/pacientes/${pacId}/laboratorio/escanear${laboratorio ? `?laboratorio=${encodeURIComponent(laboratorio)}` : ""}`, fd, { headers: { "Content-Type": "multipart/form-data" } });
 };
 export const createLaboratorio =(pacId, data) => api.post(`${BASE}/pacientes/${pacId}/laboratorio`, data);
+// Resto de los resultados de un examen (los que no tienen columna propia) y laboratorios reconocidos
+export const getResultadosExtraLab = (pacId, labId) => api.get(`${BASE}/pacientes/${pacId}/laboratorio/${labId}/resultados`);
+export const getLaboratoriosSoportados = (pacId) => api.get(`${BASE}/pacientes/${pacId}/laboratorio/soportados`);
+
+// ── Ultrasonidos (se guarda el PDF y el texto del informe) ───────────────────
+export const getUltrasonidos   = (pacId)       => api.get(`${BASE}/pacientes/${pacId}/ultrasonidos`);
+export const createUltrasonido = (pacId, data) => api.post(`${BASE}/pacientes/${pacId}/ultrasonidos`, data);
+export const deleteUltrasonido = (pacId, id)   => api.delete(`${BASE}/pacientes/${pacId}/ultrasonidos/${id}`);
+export const escanearUltrasonidoPDF = (pacId, archivo) => {
+  const fd = new FormData();
+  fd.append("pdf", archivo);
+  return api.post(`${BASE}/pacientes/${pacId}/ultrasonidos/escanear`, fd, { headers: { "Content-Type": "multipart/form-data" } });
+};
 
 // ── Tratamiento ───────────────────────────────────────────────────────────────
 export const getTratamiento    = (pacId)       => api.get(`${BASE}/pacientes/${pacId}/tratamiento`);
@@ -94,6 +107,7 @@ export const getUsuariosRenaced    = ()          => api.get(`${BASE}/usuarios`);
 export const getUsuarioRenaced     = (id)        => api.get(`${BASE}/usuarios/${id}`);
 export const createUsuarioRenaced  = (data)      => api.post(`${BASE}/usuarios`, data);
 export const updateUsuarioRenaced  = (id, data)  => api.put(`${BASE}/usuarios/${id}`, data);
+export const getSaludCuentasRenaced = ()         => api.get(`${BASE}/usuarios/salud`);
 export const toggleUsuarioRenaced  = (id)        => api.patch(`${BASE}/usuarios/${id}/toggle`);
 
 // ── Clínicas (solo Admin) ──────────────────────────────────────────────────────

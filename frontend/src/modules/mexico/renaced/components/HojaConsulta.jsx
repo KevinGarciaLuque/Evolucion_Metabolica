@@ -111,12 +111,13 @@ export default function HojaConsulta({ paciente, pacienteId, cats, children, fic
     setEscaneo({ cargando: true, error: "", ok: null, avisos: [] });
     try {
       const { data } = await escanearExamenPDF(pacienteId, archivo);
-      setF((p) => ({ ...p, lab: { ...p.lab, ...data.valores, archivo_pdf: data.archivo } }));
+      // `otros_resultados`: lo que el PDF trae además de los campos de abajo (biometría, química, orina…); se guarda aparte
+      setF((p) => ({ ...p, lab: { ...p.lab, ...data.valores, archivo_pdf: data.archivo, otros_resultados: data.otros || [], laboratorio_origen: data.laboratorio_nombre || "" } }));
       if (data.fecha_muestra && data.fecha_muestra !== fecha) {
         setOtraFechaLab(true);
         set("lab", "fecha_muestra", data.fecha_muestra);
       }
-      setEscaneo({ cargando: false, error: "", ok: data.detalle.length, avisos: data.avisos || [] });
+      setEscaneo({ cargando: false, error: "", ok: data.detalle.length, otros: (data.otros || []).length, laboratorio: data.laboratorio_nombre, avisos: data.avisos || [] });
     } catch (err) {
       setEscaneo({ cargando: false, error: err.response?.data?.error || "No se pudo leer el PDF", ok: null, avisos: [] });
     }
@@ -143,7 +144,7 @@ export default function HojaConsulta({ paciente, pacienteId, cats, children, fic
 
   // ¿Qué secciones traen datos?
   const llenoVisita = ["peso", "estatura", "cintura", "cadera", "musculo_kg", "grasa_kg", "grasa_pct", "grasa_visceral", "perimetro_cefalico", "pa_sistolica", "pa_diastolica"].some((k) => lleno(v[k]));
-  const llenoLab = LAB_CAMPOS.some(([, n]) => lleno(f.lab[n])) || lleno(f.lab.observaciones);
+  const llenoLab = LAB_CAMPOS.some(([, n]) => lleno(f.lab[n])) || lleno(f.lab.observaciones) || !!f.lab.otros_resultados?.length;
   const tr = f.trat;
   const llenoTrat = ["terapia_id", "esquema_insulina_id", "dispositivo_id"].some((k) => lleno(tr[k])) ||
     tr.insulinas.some((i) => lleno(i.insulina_id)) || tr.orales.some((o) => lleno(o.antidiabetico_id));
@@ -292,7 +293,9 @@ export default function HojaConsulta({ paciente, pacienteId, cats, children, fic
         {escaneo.error && <div style={{ color: "#b91c1c", fontSize: 13, marginBottom: 10 }}>{escaneo.error}</div>}
         {escaneo.ok != null && (
           <div style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", color: "#166534", borderRadius: 8, padding: "8px 12px", fontSize: 13, marginBottom: 12 }}>
-            Se llenaron {escaneo.ok} resultado{escaneo.ok === 1 ? "" : "s"} del examen. Revísalos antes de guardar la consulta.
+            {escaneo.laboratorio ? <strong>{escaneo.laboratorio}: </strong> : null}
+            se llenaron {escaneo.ok} resultado{escaneo.ok === 1 ? "" : "s"}
+            {escaneo.otros > 0 ? ` y se guardarán ${escaneo.otros} más del mismo examen (biometría, química, orina…)` : ""}. Revísalos antes de guardar la consulta.
             {escaneo.avisos.map((a, i) => <div key={i} style={{ color: "#b45309" }}>⚠ {a}</div>)}
           </div>
         )}

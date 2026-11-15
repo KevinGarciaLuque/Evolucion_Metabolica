@@ -11,6 +11,28 @@
 // Cada país ve en el panel las entradas "global" + las suyas. La versión (VERSION) es una sola para todos.
 export const NOVEDADES = [
   {
+    version: "1.19.0",
+    alcance: "mexico",
+    fecha: "2026-11-15",
+    titulo: "Exámenes de varios laboratorios y ultrasonidos",
+    cambios: [
+      "Al subir el PDF de un examen se reconoce el laboratorio solo: INCMNSZ, ABC Santa Fe, Satélite, Quest, Bioderef, Laboratorio Médico Polanco, Chopo y Salud Digna",
+      "Además de los campos de siempre, se guardan todos los demás resultados del examen (biometría, química, tiroides, orina) y se consultan con el botón «+N resultados» en Laboratorio",
+      "Se corrigió la fecha de muestra de algunos exámenes y se evita confundir la glucosa de orina con la de sangre",
+      "Nueva pestaña «Ultrasonidos»: sube el PDF, se leen el estudio, hallazgos y conclusión, y se guarda junto con el PDF",
+    ],
+  },
+  {
+    version: "1.18.0",
+    alcance: "mexico",
+    fecha: "2026-11-15",
+    titulo: "Salud de cuentas para el administrador",
+    cambios: [
+      "Nueva pantalla «Salud de cuentas»: muestra usuarios sin médico vinculado, sin clínica, inactivos, que nunca han entrado y clínicas sin administrador",
+      "Desde la lista se puede ir directo a editar el usuario",
+    ],
+  },
+  {
     version: "1.17.0",
     alcance: "mexico",
     fecha: "2026-11-11",

@@ -23,6 +23,7 @@ import {
   HiOutlineGlobeAmericas,
   HiOutlineClipboardDocumentList,
   HiOutlineBuildingOffice2,
+  HiOutlineHeart,
 } from "react-icons/hi2";
 import "./Sidebar.css";
 
@@ -224,8 +225,8 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
                   t.codigo,
                   `${t.nombre.toUpperCase()} · RENACED`,
                   t.codigo === "mx"
-                    ? [...menuRenaced, { to: "/renaced/importar-bd", icon: HiOutlineDocumentArrowUp, label: "Importar BD" }]
-                    : menuRenaced,
+                    ? [...menuRenaced, { to: "/renaced/salud-cuentas", icon: HiOutlineHeart, label: "Salud de cuentas" }, { to: "/renaced/importar-bd", icon: HiOutlineDocumentArrowUp, label: "Importar BD" }]
+                    : [...menuRenaced, { to: "/renaced/salud-cuentas", icon: HiOutlineHeart, label: "Salud de cuentas" }],
                   (item) => renderLinkTenant(item, t.codigo),
                   t.codigo
                 )

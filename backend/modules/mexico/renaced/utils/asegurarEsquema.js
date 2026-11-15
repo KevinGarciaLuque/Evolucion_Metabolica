@@ -52,6 +52,44 @@ const INDICES = [
   ["evaluacion", "idx_consulta", "consulta_id"],
 ];
 
+// Tablas nuevas que no existen en el sistema anterior.
+const TABLAS = [
+  // Todos los resultados de un examen que no tienen columna propia en `laboratorio` (biometría, química, orina…)
+  `CREATE TABLE IF NOT EXISTS laboratorio_resultado (
+     id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+     laboratorio_id BIGINT UNSIGNED NOT NULL,
+     paciente_id BIGINT UNSIGNED NOT NULL,
+     fecha_muestra DATE DEFAULT NULL,
+     laboratorio_origen VARCHAR(80) DEFAULT NULL,
+     nombre VARCHAR(120) NOT NULL,
+     valor DECIMAL(14,4) DEFAULT NULL,
+     signo CHAR(1) DEFAULT NULL,
+     unidad VARCHAR(30) DEFAULT NULL,
+     referencia VARCHAR(80) DEFAULT NULL,
+     origen VARCHAR(10) DEFAULT NULL,
+     INDEX idx_lab (laboratorio_id),
+     INDEX idx_pac (paciente_id, fecha_muestra)
+   ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
+  // Estudios de ultrasonido: se guarda el PDF y el texto del informe (sin extraer valores)
+  `CREATE TABLE IF NOT EXISTS ultrasonido (
+     id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+     paciente_id BIGINT UNSIGNED NOT NULL,
+     fecha_estudio DATE DEFAULT NULL,
+     estudio VARCHAR(150) DEFAULT NULL,
+     sucursal VARCHAR(80) DEFAULT NULL,
+     ultrasonografista VARCHAR(120) DEFAULT NULL,
+     indicacion TEXT,
+     tecnica TEXT,
+     hallazgos MEDIUMTEXT,
+     conclusion TEXT,
+     sugerencia TEXT,
+     archivo_pdf VARCHAR(255) DEFAULT NULL,
+     usuario_id INT UNSIGNED DEFAULT NULL,
+     creado_en DATETIME DEFAULT CURRENT_TIMESTAMP,
+     INDEX idx_pac (paciente_id, fecha_estudio)
+   ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
+];
+
 const listos = new Set();
 
 /**
@@ -102,6 +140,9 @@ export async function asegurarEsquema(pool, dbKey, forzar = false) {
       "INSERT IGNORE INTO perfil (id, nombre, nivel) VALUES (7, 'Consulta nacional', 3)"
     );
   }
+
+  // Tablas nuevas (sin llaves foráneas: los respaldos del sistema PHP se restauran sin ellas)
+  for (const sql of TABLAS) await pool.query(sql);
 
   listos.add(dbKey);
 }

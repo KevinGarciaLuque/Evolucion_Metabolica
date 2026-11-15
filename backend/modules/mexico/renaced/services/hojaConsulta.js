@@ -5,6 +5,7 @@
 // (fecha_muestra, fecha_evaluacion, fecha…), que aquí se llena con la fecha de la consulta,
 // así los reportes y la importación del sistema anterior siguen funcionando igual.
 // Las fechas que son de otro momento (inicio de tratamiento, toma de muestra) se respetan si llegan.
+import { guardarResultadosExtra } from "./resultadosLab.js";
 
 export const LAB_COLS = [
   "hba1c", "glucosa_ayuno", "glucosa_postprandial", "colesterol_total", "hdl", "ldl",
@@ -76,15 +77,20 @@ export async function guardarHojaConsulta(conn, { pacienteId, usuarioId = null, 
   const consultaId = rc.insertId;
 
   // ── Laboratorio ───────────────────────────────────────────────────────────
-  if (hayDatos(laboratorio, LAB_COLS)) {
+  if (hayDatos(laboratorio, LAB_COLS) || laboratorio?.otros_resultados?.length) {
     const cols = ["paciente_id", "consulta_id", "fecha_muestra", ...LAB_COLS, "usuario_id"];
     const vals = [
       pacienteId, consultaId, laboratorio.fecha_muestra || fecha_consulta,
       ...LAB_COLS.map((c) => valor(laboratorio[c])), usuarioId,
     ];
-    await conn.query(
+    const [rl] = await conn.query(
       `INSERT INTO laboratorio (${cols.join(",")}) VALUES (${cols.map(() => "?").join(",")})`, vals
     );
+    // Resto de los resultados del examen escaneado (biometría, química ampliada, orina…)
+    await guardarResultadosExtra(conn, {
+      laboratorioId: rl.insertId, pacienteId, fecha: laboratorio.fecha_muestra || fecha_consulta,
+      origen: laboratorio.laboratorio_origen, otros: laboratorio.otros_resultados,
+    });
     guardado.push("laboratorio");
   }
 

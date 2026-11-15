@@ -16,6 +16,7 @@ const RenacedConsultasHub = lazy(() => import("./pages/RenacedConsultasHub"));
 const RenacedConsultasClinical = lazy(() => import("./pages/RenacedConsultasClinical"));
 const RenacedImportarBD = lazy(() => import("./pages/RenacedImportarBD"));
 const RenacedEscanearPDF = lazy(() => import("./pages/RenacedEscanearPDF"));
+const RenacedSaludCuentas = lazy(() => import("./pages/RenacedSaludCuentas"));
 const RenacedMapaPacientes = lazy(() => import("./pages/RenacedMapaPacientes"));
 
 export default [
@@ -35,4 +36,5 @@ export default [
   <Route key="13" path="/renaced/usuarios/nuevo" element={<RenacedProtectedRoute adminOnly conClinica><RenacedUsuarioForm /></RenacedProtectedRoute>} />,
   <Route key="14" path="/renaced/usuarios/:id/editar" element={<RenacedProtectedRoute adminOnly conClinica><RenacedUsuarioForm /></RenacedProtectedRoute>} />,
   <Route key="15" path="/renaced/importar-bd" element={<RenacedProtectedRoute adminOnly><RenacedImportarBD /></RenacedProtectedRoute>} />,
+  <Route key="16" path="/renaced/salud-cuentas" element={<RenacedProtectedRoute adminOnly><RenacedSaludCuentas /></RenacedProtectedRoute>} />,
 ];

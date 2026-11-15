@@ -5,6 +5,7 @@ import { verificarModulo } from "../middlewares/verificarModulo.js";
 import {
   getUsuarios, getMedicos, getUsuarioById, createUsuario, updateUsuario, toggleUsuario,
 } from "../controllers/usuarios.controller.js";
+import { getSaludCuentas } from "../controllers/saludCuentas.controller.js";
 
 const router = Router();
 
@@ -20,6 +21,8 @@ router.use(verificarToken, resolverTenantDB, soloAdminRenaced, verificarModulo("
 
 router.get("/",          getUsuarios);
 router.get("/medicos",   getMedicos);   // antes de "/:id"
+// Salud de cuentas: solo el Administrador del país (no el Administrador de Clínica).
+router.get("/salud", (req, res, next) => (req.usuario?.perfil_id === 1 ? next() : res.status(403).json({ error: "Acceso denegado: se requiere perfil Administrador" })), getSaludCuentas);
 router.get("/:id",       getUsuarioById);
 router.post("/",         createUsuario);
 router.put("/:id",       updateUsuario);
