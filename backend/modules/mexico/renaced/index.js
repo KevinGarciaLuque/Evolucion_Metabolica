@@ -8,6 +8,7 @@ import renacedPacientesRoutes from "./routes/pacientes.routes.js";
 import renacedConsultasRoutes from "./routes/consultas.routes.js";
 import renacedLaboratorioRoutes from "./routes/laboratorio.routes.js";
 import renacedUltrasonidosRoutes from "./routes/ultrasonidos.routes.js";
+import renacedHistoriaClinicaRoutes from "./routes/historiaClinica.routes.js";
 import renacedDashboardRoutes from "./routes/dashboard.routes.js";
 import renacedTratamientoRoutes from "./routes/tratamiento.routes.js";
 import renacedEvaluacionRoutes from "./routes/evaluacion.routes.js";
@@ -52,6 +53,7 @@ export function montar(app) {
   app.use("/api/renaced/pacientes/:paciente_id/consultas", renacedConsultasRoutes);
   app.use("/api/renaced/pacientes/:paciente_id/laboratorio", renacedLaboratorioRoutes);
   app.use("/api/renaced/pacientes/:paciente_id/ultrasonidos", renacedUltrasonidosRoutes);
+  app.use("/api/renaced/historia-clinica", renacedHistoriaClinicaRoutes);
   app.use("/api/renaced/dashboard", renacedDashboardRoutes);
   app.use("/api/renaced/pacientes/:paciente_id/tratamiento", renacedTratamientoRoutes);
   app.use("/api/renaced/pacientes/:paciente_id/evaluacion",  renacedEvaluacionRoutes);

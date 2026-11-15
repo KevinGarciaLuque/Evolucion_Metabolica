@@ -1,10 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { hoyISO } from "../../../../shared/utils/zonaHoraria";
 import EncabezadoPaciente, { EnlaceEncabezado } from "../components/EncabezadoPaciente";
 import { useParams, Link } from "react-router-dom";
 import RenacedLayout from "../components/RenacedLayout";
 import HojaConsulta from "../components/HojaConsulta";
 import SeccionAcordeon from "../components/SeccionAcordeon";
+import ImportarHistoriaClinica from "../components/ImportarHistoriaClinica";
+import { llenarVacios } from "../utils/historiaClinica";
 import ResumenPaciente from "../components/ResumenPaciente";
 import { FiArrowLeft, FiFolder, FiClipboard, FiActivity, FiLayers, FiUsers, FiHeart, FiRepeat, FiPlus, FiX } from "react-icons/fi";
 import HistorialConsultas from "../components/HistorialConsultas";
@@ -145,6 +147,27 @@ export default function RenacedConsultasClinical() {
   const [reclOk, setReclOk]     = useState("");
   const [reclErr, setReclErr]   = useState("");
   const [reclLoad, setReclLoad] = useState(false);
+
+  // ── Importar historia clínica (PDF): llena lo vacío de Diagnóstico, G.O. y Patologías, y pide a la hoja que llene lo suyo ──
+  const hojaRef = useRef(null);
+  function importarHistoria(d) {
+    const nuevoDx = { ...(d.diagnostico || {}) };
+    delete nuevoDx.tipo_diabetes_id;                 // el tipo de diabetes se edita en la ficha del paciente, no aquí
+    if (dx.fecha_diagnostico) { delete nuevoDx.fecha_approx; delete nuevoDx.fecha_approx_anio; delete nuevoDx.fecha_approx_mes; }
+    const dxR = llenarVacios(dx, nuevoDx, ["fecha_approx"]);
+    const agoR = llenarVacios(ago, d.ago);
+    const quita = (t) => String(t || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+    const nuevasPat = (d.patologias || []).filter((n) => !patList.some((x) => quita(x.nombre) === quita(n.nombre)));
+    setDx(dxR.valor);
+    setAgo(agoR.valor);
+    if (nuevasPat.length) setPatList((l) => [...l, ...nuevasPat]);
+    setAb((a) => ({ ...a, ...(dxR.llenados.length ? { dx: true } : {}), ...(agoR.llenados.length ? { ago: true } : {}), ...(nuevasPat.length ? { pat: true } : {}) }));
+    const h = hojaRef.current?.aplicarImportacion(d) || { llenados: 0, respetados: 0 };
+    return {
+      llenados: dxR.llenados.length + agoR.llenados.length + nuevasPat.length + h.llenados,
+      respetados: dxR.respetados.length + agoR.respetados.length + h.respetados,
+    };
+  }
 
   // ── Carga inicial ─────────────────────────────────────────────────────────
   useEffect(() => {
@@ -374,7 +397,8 @@ export default function RenacedConsultasClinical() {
       {vista === "consulta" && (
         <>
         <ResumenPaciente paciente={paciente} pacienteId={pacienteId} patologias={patList} />
-        <HojaConsulta paciente={paciente} pacienteId={pacienteId} cats={cats} fichaPrimero={sinDiagnostico}>
+        <ImportarHistoriaClinica pacienteId={pacienteId} onImportar={importarHistoria} />
+        <HojaConsulta ref={hojaRef} paciente={paciente} pacienteId={pacienteId} cats={cats} fichaPrimero={sinDiagnostico}>
 
           {/* ═══════ GRUPO 2 · Ficha del paciente ═══════ */}
           <div style={grupoTitulo}>Ficha del paciente <span style={grupoSub}>· se actualiza; cada apartado se guarda con su botón</span></div>

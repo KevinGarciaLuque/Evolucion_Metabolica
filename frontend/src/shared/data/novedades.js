@@ -11,6 +11,18 @@
 // Cada país ve en el panel las entradas "global" + las suyas. La versión (VERSION) es una sola para todos.
 export const NOVEDADES = [
   {
+    version: "1.20.0",
+    alcance: "mexico",
+    fecha: "2026-11-15",
+    titulo: "Importar la historia clínica desde el PDF",
+    cambios: [
+      "Nuevo botón «Importar historia clínica (PDF)» en la consulta: lee el PDF y llena los campos vacíos de Visita, Laboratorio, Tratamiento, Diagnóstico, Antecedentes G.O., Patologías, Estilo de vida y Toxicomanías",
+      "En Nuevo paciente (y al editar) se puede crear o completar la ficha con el PDF: nombre, CURP, domicilio, contacto, seguro y tipo de diabetes",
+      "No guarda nada solo y no pisa lo ya capturado: revisa y guarda cada apartado como siempre",
+      "Muestra los datos del PDF que RENACED no guarda (alergias, cirugías, tipo de sangre, etc.) para consultarlos",
+    ],
+  },
+  {
     version: "1.19.0",
     alcance: "mexico",
     fecha: "2026-11-15",

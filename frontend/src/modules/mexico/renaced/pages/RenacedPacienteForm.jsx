@@ -4,6 +4,8 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import RenacedLayout from "../components/RenacedLayout";
 import FlagIcon from "../../../../shared/components/FlagIcon";
 import SuccessModal from "../../../../shared/components/SuccessModal";
+import ImportarHistoriaClinica from "../components/ImportarHistoriaClinica";
+import { llenarVacios } from "../utils/historiaClinica";
 import { getPaciente, createPaciente, updatePaciente, checkCurpPaciente, buscarColoniasCatalogo } from "../api/renacedApi";
 
 const ESTADOS_MX = [
@@ -207,6 +209,14 @@ export default function RenacedPacienteForm() {
     }).catch(() => setError("No se pudo cargar el paciente"));
   }, [id, esEdicion]);
 
+  // Historia clínica (PDF): llena solo los campos vacíos del formulario; el usuario revisa y guarda
+  function importarHistoria(d) {
+    const r = llenarVacios(form, { ...d.paciente, tipo_diabetes_id: d.diagnostico?.tipo_diabetes_id });
+    if (!r.valor.iniciales) r.valor.iniciales = calcIniciales(r.valor.nombre, r.valor.ap_pat, r.valor.ap_mat);
+    setForm(r.valor);
+    return { llenados: r.llenados.length, respetados: r.respetados.length };
+  }
+
   function cambiar(e) {
     const { name, value, type, checked } = e.target;
     let val = type === "checkbox" ? checked : value;
@@ -316,6 +326,13 @@ export default function RenacedPacienteForm() {
           </span>
         )}
       </div>
+
+      <ImportarHistoriaClinica
+        pacienteId={esEdicion ? id : undefined}
+        onImportar={importarHistoria}
+        texto={esEdicion ? "📄 Completar con historia clínica (PDF)" : "📄 Crear desde historia clínica (PDF)"}
+        ayuda="Se leen nombre, CURP, domicilio, contacto, seguro y tipo de diabetes del PDF y se llenan los campos vacíos. Revisa antes de guardar."
+      />
 
       <form onSubmit={guardar}>
 

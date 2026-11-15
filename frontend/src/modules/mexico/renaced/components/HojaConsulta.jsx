@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { forwardRef, useEffect, useImperativeHandle, useMemo, useState } from "react";
+import { llenarVacios, resumen } from "../utils/historiaClinica";
 import { hoyISO } from "../../../../shared/utils/zonaHoraria";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -64,7 +65,7 @@ function Campo({ label, children, ancho }) {
 const grid = (min = 170) => ({ display: "grid", gridTemplateColumns: `repeat(auto-fill, minmax(${min}px, 1fr))`, gap: 14 });
 
 // `children` = Ficha del paciente y Casos especiales; `fichaPrimero` los muestra antes de "Consulta de hoy".
-export default function HojaConsulta({ paciente, pacienteId, cats, children, fichaPrimero = false }) {
+const HojaConsulta = forwardRef(function HojaConsulta({ paciente, pacienteId, cats, children, fichaPrimero = false }, ref) {
   const [fecha, setFecha] = useState(hoy());
   const [abiertas, setAbiertas] = useState({});
   const [f, setF] = useState(INIT);
@@ -90,6 +91,33 @@ export default function HojaConsulta({ paciente, pacienteId, cats, children, fic
       setVigente({ t, ins, ora });
     }).catch(() => {});
   }, [pacienteId]);
+
+  // Historia clínica (PDF): llena lo vacío de Visita, Laboratorio, Tratamiento, Estilo de vida y Toxicomanías sin pisar lo capturado
+  useImperativeHandle(ref, () => ({
+    aplicarImportacion(d) {
+      const visita = llenarVacios(f.visita, d.visita);
+      const lab = llenarVacios(f.lab, d.lab);
+      const estilo = llenarVacios(f.estilo, d.estilo);
+      const tox = llenarVacios(f.tox, d.tox);
+      let trat = { valor: f.trat, llenados: [], respetados: [] };
+      if (d.trat) {
+        const base = llenarVacios(f.trat, { terapia_id: d.trat.terapia_id, esquema_insulina_id: d.trat.esquema_insulina_id, dispositivo_id: d.trat.dispositivo_id });
+        const ins = llenarVacios(f.trat.insulinas?.[0] || {}, d.trat.insulinas?.[0]);
+        const ora = llenarVacios(f.trat.orales?.[0] || {}, d.trat.orales?.[0]);
+        trat = {
+          valor: { ...base.valor, insulinas: [ins.valor, ...(f.trat.insulinas || []).slice(1)], orales: [ora.valor, ...(f.trat.orales || []).slice(1)] },
+          llenados: [...base.llenados, ...ins.llenados, ...ora.llenados], respetados: [...base.respetados, ...ins.respetados, ...ora.respetados],
+        };
+      }
+      setF((p) => ({ ...p, visita: visita.valor, lab: lab.valor, estilo: estilo.valor, tox: tox.valor, trat: trat.valor }));
+      setAbiertas((a) => ({
+        ...a,
+        ...(visita.llenados.length ? { visita: true } : {}), ...(lab.llenados.length ? { lab: true } : {}),
+        ...(trat.llenados.length ? { trat: true } : {}), ...(estilo.llenados.length ? { estilo: true } : {}), ...(tox.llenados.length ? { tox: true } : {}),
+      }));
+      return resumen(visita, lab, estilo, tox, trat);
+    },
+  }), [f]);
 
   function cargarTox() {
     getToxicomanias(pacienteId).then((r) => {
@@ -475,7 +503,8 @@ export default function HojaConsulta({ paciente, pacienteId, cats, children, fic
       {!fichaPrimero && children}
     </div>
   );
-}
+});
+export default HojaConsulta;
 
 const grupoTitulo = { fontSize: 13, fontWeight: 800, color: "#334155", textTransform: "uppercase", letterSpacing: "0.07em", margin: "18px 2px 10px" };
 const grupoSub = { fontWeight: 500, textTransform: "none", letterSpacing: 0, color: "#94a3b8", fontSize: 12 };

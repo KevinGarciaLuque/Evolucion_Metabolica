@@ -216,3 +216,10 @@ export const subirLoteConsentimientos = (archivos, onProgress) => {
     headers: { "Content-Type": "multipart/form-data" }, timeout: 300000, onUploadProgress: onProgress,
   });
 };
+
+// ── Historia clínica (PDF de la plataforma de la clínica): lee y devuelve campos, no guarda ─────────────────
+export const escanearHistoriaClinicaPDF = (archivo, pacienteId) => {
+  const fd = new FormData();
+  fd.append("pdf", archivo);
+  return api.post(`${BASE}/historia-clinica/escanear${pacienteId ? `?paciente=${pacienteId}` : ""}`, fd, { headers: { "Content-Type": "multipart/form-data" } });
+};
