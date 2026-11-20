@@ -11,6 +11,16 @@
 // Cada país ve en el panel las entradas "global" + las suyas. La versión (VERSION) es una sola para todos.
 export const NOVEDADES = [
   {
+    version: "1.20.4",
+    alcance: "honduras",
+    fecha: "2026-11-20",
+    titulo: "Desactivar usuarios y aviso de país en el inicio de sesión",
+    cambios: [
+      "Al editar un usuario, el estado ahora es un interruptor claro: Activo o Inactivo",
+      "Si una cuenta de otro país intenta entrar por Honduras, se muestra un aviso para elegir el país correcto en lugar de abrir su sesión",
+    ],
+  },
+  {
     version: "1.20.3",
     alcance: "mexico",
     fecha: "2026-11-15",

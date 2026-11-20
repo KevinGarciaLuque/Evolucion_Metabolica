@@ -204,9 +204,21 @@ export default function UsuarioForm() {
             </div>
 
             {esEdicion && (
-              <div className="form-group" style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                <input id="estado" name="estado" type="checkbox" checked={Boolean(form.estado)} onChange={cambiar} style={{ width: "auto", accentColor: "var(--primary)" }} />
-                <label htmlFor="estado" style={{ margin: 0, cursor: "pointer" }}>Usuario activo</label>
+              <div className="form-group" style={{ gridColumn: "1 / -1" }}>
+                <label style={{ marginBottom: 10, display: "block" }}>Estado del usuario</label>
+                <div style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 18px", borderRadius: 10, border: "1.5px solid #e2e8f0", background: form.estado ? "#f0fdf4" : "#fef2f2" }}>
+                  <button
+                    type="button"
+                    onClick={() => setForm((f) => ({ ...f, estado: f.estado ? 0 : 1 }))}
+                    style={{ width: 44, height: 24, borderRadius: 12, border: "none", cursor: "pointer", background: form.estado ? "#16a34a" : "#cbd5e1", position: "relative", transition: "background 0.2s", flexShrink: 0 }}
+                    aria-label="Activar o desactivar usuario"
+                  >
+                    <span style={{ position: "absolute", top: 3, left: form.estado ? 22 : 3, width: 18, height: 18, borderRadius: "50%", background: "#fff", transition: "left 0.2s", boxShadow: "0 1px 4px rgba(0,0,0,0.25)" }} />
+                  </button>
+                  <div style={{ fontWeight: 600, fontSize: "0.88rem", color: form.estado ? "#15803d" : "#b91c1c" }}>
+                    {form.estado ? "Activo: puede iniciar sesión" : "Inactivo: no puede iniciar sesión"}
+                  </div>
+                </div>
               </div>
             )}
 
