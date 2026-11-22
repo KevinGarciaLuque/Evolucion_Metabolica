@@ -26,6 +26,7 @@ const INITIAL = {
   unidad_servicio_id: "",
   recurso_humano_curp: "",
   activo: 1,
+  gestiona_cuentas: 0,
 };
 
 export default function RenacedUsuarioForm() {
@@ -75,6 +76,7 @@ export default function RenacedUsuarioForm() {
           unidad_servicio_id: u.unidad_servicio_id || "",
           recurso_humano_curp: u.recurso_humano_curp || "",
           activo: u.activo,
+          gestiona_cuentas: u.gestiona_cuentas ? 1 : 0,
         });
       })
       .catch(() => setError("No se pudo cargar el usuario"))
@@ -293,6 +295,18 @@ export default function RenacedUsuarioForm() {
                 <label htmlFor="activo" style={{ margin: 0, cursor: "pointer" }}>
                   Usuario activo
                 </label>
+              </div>
+            )}
+
+            {esSuperAdmin && (Number(form.perfil_id) === 1 || Number(form.perfil_id) === 6) && (
+              <div>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <input id="gestiona_cuentas" name="gestiona_cuentas" type="checkbox" checked={form.gestiona_cuentas === 1} onChange={handleChange} style={{ width: "auto" }} />
+                  <label htmlFor="gestiona_cuentas" style={{ margin: 0, cursor: "pointer" }}>
+                    Puede ver y gestionar {Number(form.perfil_id) === 6 ? "Usuarios de su clínica" : "Clínicas y Usuarios"}
+                  </label>
+                </div>
+                <p style={{ fontSize: 12, color: "#94a3b8", marginTop: 4 }}>Permiso que solo el Super Admin puede dar o quitar. Apagado por defecto.</p>
               </div>
             )}
 

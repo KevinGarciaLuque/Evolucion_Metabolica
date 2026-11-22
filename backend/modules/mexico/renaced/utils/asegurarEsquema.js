@@ -12,6 +12,8 @@ const COLUMNAS = [
   ["evento",           "consulta_id", "BIGINT UNSIGNED DEFAULT NULL"],
   ["escaneo_mcg",      "extras",      "TEXT DEFAULT NULL"],
   ["unidad_servicio_salud", "zona_horaria", "VARCHAR(64) DEFAULT NULL"], // zona horaria propia de la clínica
+  // Permiso que el Super Admin da (o quita) a un Administrador para ver/gestionar Clínicas y Usuarios. Apagado por defecto.
+  ["usuario",          "gestiona_cuentas", "TINYINT(1) NOT NULL DEFAULT 0"],
   ["paciente",         "anios_estudio", "TINYINT UNSIGNED DEFAULT NULL"],
   ["paciente",         "aviso_ruta",          "VARCHAR(255) DEFAULT NULL"],
   ["paciente",         "consentimiento_ruta", "VARCHAR(255) DEFAULT NULL"],

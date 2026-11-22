@@ -1,5 +1,6 @@
 import poolRenaced from "../config/db.js";
 import { zonaDeUsuario } from "../utils/zonaClinica.js";
+import { asegurarEsquema } from "../utils/asegurarEsquema.js";
 import poolMaster from "../../../../shared/config/db.master.js";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
@@ -95,6 +96,7 @@ export async function loginRenaced(req, res) {
       nombre: usuario.nombre_completo,
       email: usuario.email || usuario.username,
       perfil_id: usuario.perfil_id,
+      gestiona_cuentas: usuario.gestiona_cuentas ? 1 : 0,
       unidad_servicio_id: usuario.unidad_servicio_id ?? null,
       tenant: "mx",
       tenant_nombre: "México",
@@ -134,8 +136,9 @@ export async function meRenaced(req, res) {
     });
   }
   try {
+    await asegurarEsquema(req.db, req.usuario?.db_name || "mx"); // crea usuario.gestiona_cuentas si falta
     const [rows] = await req.db.query(
-      `SELECT u.id, u.username, u.nombre_completo, u.email, u.perfil_id, u.unidad_servicio_id,
+      `SELECT u.id, u.username, u.nombre_completo, u.email, u.perfil_id, u.gestiona_cuentas, u.unidad_servicio_id,
               us.nombre AS unidad_nombre, CONCAT_WS(' ', m.nombre, m.ap_pat, m.ap_mat) AS medico_nombre
        FROM usuario u
        LEFT JOIN unidad_servicio_salud us ON us.id = u.unidad_servicio_id
@@ -160,7 +163,7 @@ export async function meRenaced(req, res) {
     const modulos = await intersectarConPermisosUsuario(req.db, req.usuario.id, modulosPais);
 
     res.json({
-      id: u.id, nombre: u.nombre_completo, email: u.email || u.username, perfil_id: u.perfil_id,
+      id: u.id, nombre: u.nombre_completo, email: u.email || u.username, perfil_id: u.perfil_id, gestiona_cuentas: u.gestiona_cuentas ? 1 : 0,
       unidad_servicio_id: u.unidad_servicio_id ?? null,
       unidad_nombre: u.unidad_nombre || null, medico_nombre: u.medico_nombre || null,
       tenant: req.usuario.tenant, tenant_nombre: req.usuario.tenant_nombre,

@@ -50,8 +50,9 @@ export default function RenacedLayout({ children }) {
     .filter((m) => m.clave === "escanear" || !modulosActivos || modulosActivos.includes(m.clave));
   const esAdminClinica = usuario?.perfil_id === 6 && !usuario?.super_admin;
   // El Administrador de Clínica solo ve "Usuarios" (su personal); Clínicas e Importar BD son del admin del país.
+  // Clínicas y Usuarios: solo con el permiso que da el Super Admin (él usa el Sidebar único, no este menú).
   let menuAdminVisible = MENU_ADMIN
-    .filter((m) => !esAdminClinica || m.clave === "usuarios")
+    .filter((m) => usuario?.gestiona_cuentas && (!esAdminClinica || m.clave === "usuarios"))
     .filter((m) => !modulosActivos || modulosActivos.includes(m.clave));
   // Importar base de datos: exclusivo de México, no aplica a otros países RENACED,
   // y respeta el mismo toggle de módulos que el resto del sidebar.

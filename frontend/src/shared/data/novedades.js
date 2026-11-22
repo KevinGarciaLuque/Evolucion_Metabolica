@@ -11,6 +11,16 @@
 // Cada país ve en el panel las entradas "global" + las suyas. La versión (VERSION) es una sola para todos.
 export const NOVEDADES = [
   {
+    version: "1.22.0",
+    alcance: "mexico",
+    fecha: "2026-11-22",
+    titulo: "Clínicas y Usuarios solo con permiso del Super Admin",
+    cambios: [
+      "Los módulos Clínicas y Usuarios ahora los ve únicamente el Super Admin",
+      "El Super Admin puede dar o quitar el permiso a cada Administrador desde la edición del usuario; por defecto está apagado",
+    ],
+  },
+  {
     version: "1.21.1",
     alcance: "mexico",
     fecha: "2026-11-22",

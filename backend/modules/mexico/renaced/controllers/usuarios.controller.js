@@ -35,7 +35,7 @@ export async function getUsuarios(req, res) {
       `SELECT u.id, u.username, u.nombre_completo, u.email, u.perfil_id,
               u.unidad_servicio_id, us.nombre AS unidad_nombre,
               u.recurso_humano_curp, CONCAT_WS(' ', m.nombre, m.ap_pat, m.ap_mat) AS medico_nombre,
-              u.activo, u.ultimo_acceso, p.nombre AS perfil_nombre
+              u.activo, u.gestiona_cuentas, u.ultimo_acceso, p.nombre AS perfil_nombre
        FROM usuario u
        JOIN perfil p ON p.id = u.perfil_id
        LEFT JOIN unidad_servicio_salud us ON us.id = u.unidad_servicio_id
@@ -80,11 +80,12 @@ async function validarMedico(db, curp) {
 
 export async function getUsuarioById(req, res) {
   try {
+    await asegurarEsquema(req.db, req.usuario?.db_name || "mx");
     const [[row]] = await req.db.query(
       `SELECT u.id, u.username, u.nombre_completo, u.email, u.perfil_id,
               u.unidad_servicio_id, us.nombre AS unidad_nombre,
               u.recurso_humano_curp, CONCAT_WS(' ', m.nombre, m.ap_pat, m.ap_mat) AS medico_nombre,
-              u.activo, u.ultimo_acceso, p.nombre AS perfil_nombre
+              u.activo, u.gestiona_cuentas, u.ultimo_acceso, p.nombre AS perfil_nombre
        FROM usuario u
        JOIN perfil p ON p.id = u.perfil_id
        LEFT JOIN unidad_servicio_salud us ON us.id = u.unidad_servicio_id
@@ -145,6 +146,9 @@ export async function createUsuario(req, res) {
       [username, hash, nombre_completo, email || null, perfil_id, clinicaId, curpMedico]
     );
 
+    if (req.usuario?.super_admin && req.body.gestiona_cuentas !== undefined && [1, 6].includes(Number(perfil_id))) {
+      await req.db.query("UPDATE usuario SET gestiona_cuentas = ? WHERE id = ?", [req.body.gestiona_cuentas ? 1 : 0, result.insertId]);
+    }
     res.status(201).json({ id: result.insertId, message: "Usuario creado correctamente" });
   } catch (err) {
     if (err.status) return res.status(err.status).json({ error: err.message });
@@ -227,6 +231,9 @@ export async function updateUsuario(req, res) {
        perfil_id ?? null, unidadFinal, curpFinal, activo ?? null, ...params, id]
     );
 
+    if (req.usuario?.super_admin && req.body.gestiona_cuentas !== undefined) {
+      await req.db.query("UPDATE usuario SET gestiona_cuentas = ? WHERE id = ?", [req.body.gestiona_cuentas ? 1 : 0, id]);
+    }
     res.json({ message: "Usuario actualizado correctamente" });
   } catch (err) {
     if (err.status) return res.status(err.status).json({ error: err.message });
