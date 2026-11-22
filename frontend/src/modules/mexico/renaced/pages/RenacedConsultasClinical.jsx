@@ -402,11 +402,12 @@ export default function RenacedConsultasClinical() {
         <>
         <ResumenPaciente paciente={paciente} pacienteId={pacienteId} patologias={patList} />
         <ImportarHistoriaClinica pacienteId={pacienteId} onImportar={(d) => { if (d.documento) setRecargaDocs((n) => n + 1); return importarHistoria(d); }}
-          fuentes={[
-            { texto: "Importar historia clínica (PDF)", leer: escanearHistoriaClinicaPDF },
-            { texto: "Importar nota / receta (PDF)", leer: (archivo, id) => escanearNotaEvolucionPDF(id, archivo) },
-          ]}
-          ayuda="Se leen los datos del PDF y se llenan los campos vacíos. No se guarda nada hasta que tú guardes cada apartado. Las notas y recetas se archivan en la pestaña Documentos." />
+          fuentes={[{ texto: "Importar PDF (historia, nota o receta)", leer: async (archivo, id) => {
+            // Nota de evolución / receta primero; si el PDF no es de ese tipo (422), se lee como historia clínica
+            try { return await escanearNotaEvolucionPDF(id, archivo); }
+            catch (err) { if (err.response?.status !== 422) throw err; return escanearHistoriaClinicaPDF(archivo, id); }
+          } }]}
+          ayuda="Se leen los datos del PDF y se llenan los campos vacíos. No se guarda nada hasta que tú guardes cada apartado. Se detecta solo si es historia clínica, nota de evolución o receta; las notas y recetas se archivan en la pestaña Documentos." />
         <HojaConsulta ref={hojaRef} paciente={paciente} pacienteId={pacienteId} cats={cats} fichaPrimero={sinDiagnostico}>
 
           {/* ═══════ GRUPO 2 · Ficha del paciente ═══════ */}

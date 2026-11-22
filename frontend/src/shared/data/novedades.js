@@ -11,6 +11,15 @@
 // Cada país ve en el panel las entradas "global" + las suyas. La versión (VERSION) es una sola para todos.
 export const NOVEDADES = [
   {
+    version: "1.21.1",
+    alcance: "mexico",
+    fecha: "2026-11-22",
+    titulo: "Un solo botón para importar PDF",
+    cambios: [
+      "Los botones de importar historia clínica y nota / receta se unieron en uno: «Importar PDF», que detecta solo el tipo de documento",
+    ],
+  },
+  {
     version: "1.21.0",
     alcance: "mexico",
     fecha: "2026-11-22",
