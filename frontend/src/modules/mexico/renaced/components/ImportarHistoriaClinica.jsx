@@ -8,17 +8,19 @@ import AnalizandoOverlay, { conAnimacion, ANALISIS_HISTORIA_CLINICA } from "../.
  * de la pantalla SIN guardar y devuelve { llenados, respetados }. Aquí solo se muestra el resultado, los avisos
  * y los datos del PDF que RENACED no tiene dónde guardar.
  */
-export default function ImportarHistoriaClinica({ pacienteId, onImportar, texto = "Importar historia clínica (PDF)", ayuda }) {
+export default function ImportarHistoriaClinica({ pacienteId, onImportar, texto = "Importar historia clínica (PDF)", ayuda, fuentes }) {
+  // `fuentes`: varios botones, cada uno con su propia lectura [{ texto, leer(archivo, pacienteId) }]. Por omisión, solo la historia clínica.
+  const botones = fuentes || [{ texto, leer: escanearHistoriaClinicaPDF }];
   const [estado, setEstado] = useState({ cargando: false, error: "", datos: null, resumen: null });
   const [verExtra, setVerExtra] = useState(false);
 
-  async function leer(e) {
+  async function leer(e, lector) {
     const archivo = e.target.files?.[0];
     e.target.value = "";
     if (!archivo) return;
     setEstado({ cargando: true, error: "", datos: null, resumen: null });
     try {
-      const { data } = await conAnimacion(escanearHistoriaClinicaPDF(archivo, pacienteId), ANALISIS_HISTORIA_CLINICA);
+      const { data } = await conAnimacion(lector(archivo, pacienteId), ANALISIS_HISTORIA_CLINICA);
       const resumen = onImportar(data) || null;
       setEstado({ cargando: false, error: "", datos: data, resumen });
       setVerExtra(false);
@@ -32,13 +34,15 @@ export default function ImportarHistoriaClinica({ pacienteId, onImportar, texto 
     <div className="card" style={{ marginBottom: 14, padding: "12px 16px" }}>
       <AnalizandoOverlay visible={cargando} preset={ANALISIS_HISTORIA_CLINICA} subtitulo="Lectura automática · Historia clínica" etiqueta="Importación de historia clínica" />
       <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-        <span className="ai-btn-wrapper">
-          <label className="btn btn-secondary btn-sm" style={{ cursor: cargando ? "wait" : "pointer", opacity: cargando ? 0.6 : 1, display: "inline-flex", alignItems: "center", gap: 7 }}>
-            <LuScanText size={16} style={{ color: "#7c3aed", flexShrink: 0 }} />
-            {cargando ? "Leyendo historia clínica…" : texto}
-            <input type="file" accept="application/pdf" hidden disabled={cargando} onChange={leer} />
-          </label>
-        </span>
+        {botones.map((b) => (
+          <span className="ai-btn-wrapper" key={b.texto}>
+            <label className="btn btn-secondary btn-sm" style={{ cursor: cargando ? "wait" : "pointer", opacity: cargando ? 0.6 : 1, display: "inline-flex", alignItems: "center", gap: 7 }}>
+              <LuScanText size={16} style={{ color: "#7c3aed", flexShrink: 0 }} />
+              {cargando ? "Leyendo PDF…" : b.texto}
+              <input type="file" accept="application/pdf" hidden disabled={cargando} onChange={(e) => leer(e, b.leer)} />
+            </label>
+          </span>
+        ))}
         <span style={{ fontSize: 12.5, color: "#64748b" }}>
           {ayuda || "Se leen los datos del PDF y se llenan los campos vacíos. No se guarda nada hasta que tú guardes cada apartado."}
         </span>
@@ -50,8 +54,9 @@ export default function ImportarHistoriaClinica({ pacienteId, onImportar, texto 
             {resumen
               ? <>Se llenaron <strong>{resumen.llenados}</strong> campo{resumen.llenados === 1 ? "" : "s"}
                   {resumen.respetados > 0 ? <> y se respetaron <strong>{resumen.respetados}</strong> que ya tenían un dato distinto</> : null}. Revisa y guarda cada apartado.</>
-              : "Historia clínica leída."}
+              : "PDF leído."}
           </div>
+          {datos.documento && <div style={{ color: "#4338ca", marginTop: 6 }}>📎 {datos.documento.duplicado ? "Este PDF ya estaba guardado" : "El PDF se guardó"} en la pestaña <strong>Documentos</strong> del paciente.</div>}
           {datos.avisos?.map((a, i) => <div key={i} style={{ color: "#b45309", marginTop: 6 }}>⚠ {a}</div>)}
           {datos.no_importado?.length > 0 && (
             <div style={{ marginTop: 8 }}>

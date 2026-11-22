@@ -223,3 +223,19 @@ export const escanearHistoriaClinicaPDF = (archivo, pacienteId) => {
   fd.append("pdf", archivo);
   return api.post(`${BASE}/historia-clinica/escanear${pacienteId ? `?paciente=${pacienteId}` : ""}`, fd, { headers: { "Content-Type": "multipart/form-data" } });
 };
+
+// ── Notas de evolución y recetas (PDF de la plataforma de la clínica): se leen para rellenar la consulta y se conservan ──
+export const escanearNotaEvolucionPDF = (pacId, archivo) => {
+  const fd = new FormData();
+  fd.append("pdf", archivo);
+  return api.post(`${BASE}/pacientes/${pacId}/documentos/escanear`, fd, { headers: { "Content-Type": "multipart/form-data" }, timeout: 120000 });
+};
+export const getDocumentosPaciente = (pacId) => api.get(`${BASE}/pacientes/${pacId}/documentos`);
+export const subirDocumentoPaciente = (pacId, archivo, tipo = "otro") => {
+  const fd = new FormData();
+  fd.append("tipo", tipo);
+  fd.append("pdf", archivo);
+  return api.post(`${BASE}/pacientes/${pacId}/documentos`, fd, { headers: { "Content-Type": "multipart/form-data" }, timeout: 120000 });
+};
+export const getArchivoDocumento = (pacId, id) => api.get(`${BASE}/pacientes/${pacId}/documentos/${id}/archivo`, { responseType: "blob" });
+export const borrarDocumentoPaciente = (pacId, id) => api.delete(`${BASE}/pacientes/${pacId}/documentos/${id}`);

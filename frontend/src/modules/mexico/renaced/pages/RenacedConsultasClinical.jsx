@@ -10,6 +10,7 @@ import { llenarVacios } from "../utils/historiaClinica";
 import ResumenPaciente from "../components/ResumenPaciente";
 import { FiArrowLeft, FiFolder, FiClipboard, FiActivity, FiLayers, FiUsers, FiHeart, FiRepeat, FiPlus, FiX } from "react-icons/fi";
 import HistorialConsultas from "../components/HistorialConsultas";
+import DocumentosPaciente from "../components/DocumentosPaciente";
 import {
   getPaciente,
   getDiagnosticoClinico, saveDiagnosticoClinico,
@@ -19,6 +20,7 @@ import {
   getAntecedentesGO, saveAntecedentesGO,
   getReclasificaciones, createReclasificacion, deleteReclasificacion,
   getEmbarazos, createEmbarazo, deleteEmbarazo,
+  escanearHistoriaClinicaPDF, escanearNotaEvolucionPDF,
 } from "../api/renacedApi";
 
 // ── Constantes compartidas ────────────────────────────────────────────────────
@@ -102,7 +104,8 @@ export default function RenacedConsultasClinical() {
   const { pacienteId } = useParams();
   const [paciente, setPaciente] = useState(null);
   const [cargando, setCargando] = useState(true);
-  const [vista, setVista] = useState("consulta"); // consulta | historial
+  const [vista, setVista] = useState("consulta"); // consulta | historial | documentos
+  const [recargaDocs, setRecargaDocs] = useState(0);
   const [ab, setAb] = useState({});                  // secciones de la ficha abiertas
   const alternarAb = (k) => setAb((a) => ({ ...a, [k]: !a[k] }));
   const cerrarAb = (k) => setAb((a) => ({ ...a, [k]: false })); // al guardar, la sección se encoge
@@ -383,7 +386,7 @@ export default function RenacedConsultasClinical() {
 
       {/* ── Vista: consulta (hoja única) o historial ─────────────────────────── */}
       <div style={{ display: "flex", gap: 8, margin: "4px 0 18px", borderBottom: "2px solid #e2e8f0" }}>
-        {[["consulta", "Consulta"], ["historial", "Historial"]].map(([id, label]) => (
+        {[["consulta", "Consulta"], ["historial", "Historial"], ["documentos", "Documentos"]].map(([id, label]) => (
           <button key={id} type="button" onClick={() => setVista(id)} style={{
             padding: "8px 18px", border: "none", background: "none", cursor: "pointer", fontSize: 14,
             fontWeight: vista === id ? 700 : 500, color: vista === id ? "#6366f1" : "#64748b",
@@ -393,11 +396,17 @@ export default function RenacedConsultasClinical() {
       </div>
 
       {vista === "historial" && <HistorialConsultas pacienteId={pacienteId} />}
+      {vista === "documentos" && <DocumentosPaciente pacienteId={pacienteId} recarga={recargaDocs} />}
 
       {vista === "consulta" && (
         <>
         <ResumenPaciente paciente={paciente} pacienteId={pacienteId} patologias={patList} />
-        <ImportarHistoriaClinica pacienteId={pacienteId} onImportar={importarHistoria} />
+        <ImportarHistoriaClinica pacienteId={pacienteId} onImportar={(d) => { if (d.documento) setRecargaDocs((n) => n + 1); return importarHistoria(d); }}
+          fuentes={[
+            { texto: "Importar historia clínica (PDF)", leer: escanearHistoriaClinicaPDF },
+            { texto: "Importar nota / receta (PDF)", leer: (archivo, id) => escanearNotaEvolucionPDF(id, archivo) },
+          ]}
+          ayuda="Se leen los datos del PDF y se llenan los campos vacíos. No se guarda nada hasta que tú guardes cada apartado. Las notas y recetas se archivan en la pestaña Documentos." />
         <HojaConsulta ref={hojaRef} paciente={paciente} pacienteId={pacienteId} cats={cats} fichaPrimero={sinDiagnostico}>
 
           {/* ═══════ GRUPO 2 · Ficha del paciente ═══════ */}

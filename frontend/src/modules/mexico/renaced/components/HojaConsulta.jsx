@@ -66,6 +66,20 @@ function Campo({ label, children, ancho }) {
 
 const grid = (min = 170) => ({ display: "grid", gridTemplateColumns: `repeat(auto-fill, minmax(${min}px, 1fr))`, gap: 14 });
 
+/** Une la lista del formulario con la leída del PDF: completa los vacíos del mismo medicamento, ocupa el renglón vacío o agrega uno nuevo. */
+function mezclarLista(actual, nueva, clave) {
+  const lista = [...(actual || [])];
+  const llenados = [], respetados = [];
+  for (const n of nueva || []) {
+    let i = lista.findIndex((x) => String(x[clave]) === String(n[clave]));
+    if (i < 0) i = lista.findIndex((x) => !lleno(x[clave]));
+    if (i < 0) { lista.push({ ...n }); llenados.push(clave); continue; }
+    const r = llenarVacios(lista[i], n);
+    lista[i] = r.valor; llenados.push(...r.llenados); respetados.push(...r.respetados);
+  }
+  return { lista, llenados, respetados };
+}
+
 // `children` = Ficha del paciente y Casos especiales; `fichaPrimero` los muestra antes de "Consulta de hoy".
 const HojaConsulta = forwardRef(function HojaConsulta({ paciente, pacienteId, cats, children, fichaPrimero = false }, ref) {
   const [fecha, setFecha] = useState(hoy());
@@ -104,22 +118,28 @@ const HojaConsulta = forwardRef(function HojaConsulta({ paciente, pacienteId, ca
       let trat = { valor: f.trat, llenados: [], respetados: [] };
       if (d.trat) {
         const base = llenarVacios(f.trat, { terapia_id: d.trat.terapia_id, esquema_insulina_id: d.trat.esquema_insulina_id, dispositivo_id: d.trat.dispositivo_id });
-        const ins = llenarVacios(f.trat.insulinas?.[0] || {}, d.trat.insulinas?.[0]);
-        const ora = llenarVacios(f.trat.orales?.[0] || {}, d.trat.orales?.[0]);
+        const ins = mezclarLista(f.trat.insulinas, d.trat.insulinas, "insulina_id");
+        const ora = mezclarLista(f.trat.orales, d.trat.orales, "antidiabetico_id");
         trat = {
-          valor: { ...base.valor, insulinas: [ins.valor, ...(f.trat.insulinas || []).slice(1)], orales: [ora.valor, ...(f.trat.orales || []).slice(1)] },
+          valor: { ...base.valor, insulinas: ins.lista, orales: ora.lista },
           llenados: [...base.llenados, ...ins.llenados, ...ora.llenados], respetados: [...base.respetados, ...ins.respetados, ...ora.respetados],
         };
       }
+      // Una nota o receta trae la fecha de su consulta: se usa si la fecha sigue siendo la de hoy (no se pisa una fecha que ya se eligió)
+      const fechaNueva = d.fecha_consulta && d.fecha_consulta !== fecha ? (fecha === hoy() ? d.fecha_consulta : null) : null;
+      const fechaDoc = { llenados: fechaNueva ? ["fecha"] : [], respetados: d.fecha_consulta && d.fecha_consulta !== fecha && !fechaNueva ? ["fecha"] : [] };
+      if (fechaNueva) setFecha(fechaNueva);
+      const fechaRef = fechaNueva || fecha;
+      if (lab.llenados.includes("fecha_muestra") && f.lab.fecha_muestra === "" && d.lab?.fecha_muestra && d.lab.fecha_muestra !== fechaRef) setOtraFechaLab(true);
       setF((p) => ({ ...p, visita: visita.valor, lab: lab.valor, estilo: estilo.valor, tox: tox.valor, trat: trat.valor }));
       setAbiertas((a) => ({
         ...a,
         ...(visita.llenados.length ? { visita: true } : {}), ...(lab.llenados.length ? { lab: true } : {}),
         ...(trat.llenados.length ? { trat: true } : {}), ...(estilo.llenados.length ? { estilo: true } : {}), ...(tox.llenados.length ? { tox: true } : {}),
       }));
-      return resumen(visita, lab, estilo, tox, trat);
+      return resumen(visita, lab, estilo, tox, trat, fechaDoc);
     },
-  }), [f]);
+  }), [f, fecha]);
 
   function cargarTox() {
     getToxicomanias(pacienteId).then((r) => {

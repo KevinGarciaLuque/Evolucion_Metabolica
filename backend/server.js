@@ -29,6 +29,8 @@ app.use(express.urlencoded({ extended: true }));
 const uploadsPath = process.env.UPLOADS_PATH || path.join(__dirname, "uploads");
 // Los consentimientos firmados tienen datos personales: solo se entregan por la API con sesión
 app.use("/uploads/renaced_consentimientos", (_req, res) => res.sendStatus(404));
+// Igual las notas de evolución y recetas: datos clínicos, solo por la API con sesión
+app.use("/uploads/renaced_documentos", (_req, res) => res.sendStatus(404));
 app.use("/uploads", express.static(uploadsPath));
 
 // ── Registro automático de módulos ───────────────────────────────────────────

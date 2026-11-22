@@ -11,6 +11,18 @@
 // Cada país ve en el panel las entradas "global" + las suyas. La versión (VERSION) es una sola para todos.
 export const NOVEDADES = [
   {
+    version: "1.21.0",
+    alcance: "mexico",
+    fecha: "2026-11-22",
+    titulo: "Importar notas de evolución y recetas, y pestaña Documentos",
+    cambios: [
+      "Nuevo botón «Importar nota / receta (PDF)» en la consulta: llena medidas, laboratorio, tratamiento y patologías desde la nota de evolución o la receta",
+      "Las notas y recetas importadas se guardan en la nueva pestaña «Documentos» del paciente, desde donde se abren o eliminan",
+      "En esa pestaña también se puede subir cualquier PDF del paciente",
+      "Si el PDF trae la fecha de la consulta, la hoja la usa; los datos que RENACED no guarda (impresión diagnóstica, plan, estudios solicitados) se muestran para consultarlos",
+    ],
+  },
+  {
     version: "1.20.4",
     alcance: "honduras",
     fecha: "2026-11-20",

@@ -16,7 +16,7 @@ export const SCRIPTS_DIR  = path.join(BACKEND_DIR, "scripts");
 // no cambian. En local (sin volumen) no se hace nada.
 export const VOLUMEN_PATH = process.env.RAILWAY_VOLUME_MOUNT_PATH || null;
 export const HAY_VOLUMEN = !!VOLUMEN_PATH;
-const CARPETAS_PERSISTENTES = ["renaced_consentimientos", "renaced_pdfs", "renaced_laboratorios", "renaced_backups"];
+const CARPETAS_PERSISTENTES = ["renaced_consentimientos", "renaced_pdfs", "renaced_laboratorios", "renaced_documentos", "renaced_backups"];
 
 function asegurarPersistencia() {
   if (!VOLUMEN_PATH) {

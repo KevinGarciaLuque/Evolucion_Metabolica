@@ -29,6 +29,7 @@ import renacedToxicomaniasRoutes from "./routes/toxicomanias.routes.js";
 import renacedReclasificacionRoutes from "./routes/reclasificacion.routes.js";
 import renacedEmbarazoRoutes from "./routes/embarazo.routes.js";
 import renacedImportarBDRoutes from "./routes/importarBD.routes.js";
+import renacedDocumentosRoutes from "./routes/documentos.routes.js";
 import renacedMapaRoutes from "./routes/mapa.routes.js";
 import { porPaciente as renacedConsentimientosRoutes, cargaMasiva as renacedConsentimientosMasiva } from "./routes/consentimientos.routes.js";
 
@@ -76,5 +77,6 @@ export function montar(app) {
   app.use("/api/renaced/importar-bd",                          renacedImportarBDRoutes);
   app.use("/api/renaced/mapa",                                 renacedMapaRoutes);
   app.use("/api/renaced/pacientes/:paciente_id/consentimientos", renacedConsentimientosRoutes);
+  app.use("/api/renaced/pacientes/:paciente_id/documentos",    renacedDocumentosRoutes);
   app.use("/api/renaced/consentimientos",                      renacedConsentimientosMasiva);
 }

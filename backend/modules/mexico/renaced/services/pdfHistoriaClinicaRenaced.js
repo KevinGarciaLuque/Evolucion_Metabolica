@@ -22,7 +22,7 @@ const SECCIONES = [
 ];
 
 // Etiquetas que interesan, por sección. El valor es el resto de la línea (más las líneas que continúan).
-const ETIQUETAS = {
+export const ETIQUETAS = {
   personal: ["Nombre(s)", "Apellido Paterno", "Apellido Materno", "Fecha de Nacimiento", "Sexo", "Celular", "Hogar", "Ocupación", "Email", "Seguro", "CURP"],
   motivo: ["Motivo de consulta", "Referido por"],
   heredo: ["Diabetes tipo 1", "Diabetes tipo 2", "Enfermedades tiroideas"],
@@ -79,7 +79,9 @@ function fechaDMA(v) {            // "29-Dic-1999"
   const m = String(v || "").match(/(\d{1,2})-([A-Za-zñ]{3})[a-z]*-(\d{4})/);
   return m && MESES3[norm(m[2])] ? `${m[3]}-${pad(MESES3[norm(m[2])])}-${pad(m[1])}` : "";
 }
-function fechaTexto(v) {          // "18 jul 2026" / "18 de julio de 2026"
+function fechaTexto(v) {          // "18 jul 2026" / "18 de julio de 2026" / "25/10/2026"
+  const dma = String(v || "").match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if (dma) return `${dma[3]}-${pad(dma[2])}-${pad(dma[1])}`;
   const m = norm(v).match(/(\d{1,2})\s*(?:de\s+)?([a-z]{3,10})\.?\s*(?:de\s+)?(\d{4})/);
   if (!m) return "";
   const mes = MESES[m[2]] || MESES3[m[2].slice(0, 3)];
@@ -103,9 +105,9 @@ function familiares(valor) {
   return { si: "SI", lista: orden.filter((p) => marcados.has(p)).join(", "), primo: /primo|prima/.test(n) };
 }
 
-const INSULINAS = [[/fiasp/, "15"], [/glargina.*u\s*-?300|toujeo/, "14"], [/lispro|humalog|admelog|lyumjev/, "6"], [/aspart|novorapid|novolog/, "7"], [/glulisina|apidra/, "8"],
+export const INSULINAS = [[/fiasp/, "15"], [/glargina.*u\s*-?300|toujeo/, "14"], [/lispro|humalog|admelog|lyumjev/, "6"], [/aspart|novorapid|novolog/, "7"], [/glulisina|apidra/, "8"],
   [/degludec|tresiba/, "4"], [/detemir|levemir/, "3"], [/glargina|lantus|basaglar|abasaglar/, "2"], [/\bnph\b|insulatard|humulin n/, "1"]];
-const ORALES = [[/ozempic|semaglutida|rybelsus|liraglutida|victoza|saxenda|dulaglutida|trulicity|wegovy|exenatida/, "7"], [/metformina|glucophage/, "1"],
+export const ORALES = [[/ozempic|semaglutida|rybelsus|liraglutida|victoza|saxenda|dulaglutida|trulicity|wegovy|exenatida/, "7"], [/metformina|glucophage/, "1"],
   [/empagliflozina|dapagliflozina|jardiance|forxiga|canagliflozina/, "9"], [/sitagliptina|januvia|linagliptina|trajenta|vildagliptina/, "8"], [/glibenclamida|glimepirida|gliclazida/, "2"]];
 
 /** Estructura de datos → campos de RENACED. */
@@ -166,7 +168,7 @@ export function traducirHistoria(d) {
   const nac = norm(T["Qué tipo de nacimiento tuviste"]);
   if (nac) r.diagnostico.nacido_por = /cesarea/.test(nac) ? "CESAREA" : /parto|vaginal|normal/.test(nac) ? "PARTO" : "OTRO";
   const lac = siNo(T["Recibiste lactancia"]); if (lac) r.diagnostico.lactancia_materna = lac;
-  const tiro = siNo(T["Enfermedades tiroideas"]); if (tiro === "SI" || tiro === "NO") r.diagnostico.hipotiroidismo_dx = tiro;
+  const tiro = siNo(T["Enfermedades tiroideas"]) || (T["Enfermedades tiroideas fecha diagnóstico"] ? "SI" : ""); if (tiro === "SI" || tiro === "NO") r.diagnostico.hipotiroidismo_dx = tiro;
 
   // ── Antecedentes ginecobstétricos ──
   const men = numero(G["Edad primera menstruación"]); if (men) r.ago.menarca = String(men);

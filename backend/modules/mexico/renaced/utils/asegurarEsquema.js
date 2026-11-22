@@ -70,6 +70,22 @@ const TABLAS = [
      INDEX idx_lab (laboratorio_id),
      INDEX idx_pac (paciente_id, fecha_muestra)
    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
+  // Documentos clínicos del paciente (notas de evolución, recetas…): el PDF se guarda en uploads/renaced_documentos
+  `CREATE TABLE IF NOT EXISTS paciente_documento (
+     id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+     paciente_id BIGINT UNSIGNED NOT NULL,
+     tipo VARCHAR(30) NOT NULL DEFAULT 'otro',
+     titulo VARCHAR(200) DEFAULT NULL,
+     fecha_documento DATE DEFAULT NULL,
+     archivo VARCHAR(255) NOT NULL,
+     nombre_original VARCHAR(255) DEFAULT NULL,
+     tamano INT UNSIGNED DEFAULT NULL,
+     hash_sha256 CHAR(64) DEFAULT NULL,
+     usuario_id INT UNSIGNED DEFAULT NULL,
+     creado_en DATETIME DEFAULT CURRENT_TIMESTAMP,
+     INDEX idx_pac (paciente_id, fecha_documento),
+     INDEX idx_hash (paciente_id, hash_sha256)
+   ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
   // Estudios de ultrasonido: se guarda el PDF y el texto del informe (sin extraer valores)
   `CREATE TABLE IF NOT EXISTS ultrasonido (
      id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
