@@ -13,6 +13,7 @@ import { verificarToken } from "../../../../shared/middlewares/auth.js";
 import { UPLOADS_PATH } from "../../../../shared/paths.js";
 import { resolverTenantDB } from "../middlewares/tenantDb.js";
 import { asegurarEsquema } from "../utils/asegurarEsquema.js";
+import { verificarModuloVigente } from "../middlewares/verificarModulo.js";
 import { parsearNotaEvolucion, TIPOS_DOCUMENTO } from "../services/pdfNotaEvolucionRenaced.js";
 import { nombreNoCoincide } from "../services/resultadosLab.js";
 
@@ -58,7 +59,7 @@ router.get("/", async (req, res) => {
   } catch (err) { console.error(err); res.status(500).json({ error: "Error al listar los documentos" }); }
 });
 
-router.post("/escanear", upload.single("pdf"), async (req, res) => {
+router.post("/escanear", verificarModuloVigente("importar_pdf"), upload.single("pdf"), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: "No se adjuntó ningún archivo PDF" });
   try {
     const r = await parsearNotaEvolucion(req.file.path);

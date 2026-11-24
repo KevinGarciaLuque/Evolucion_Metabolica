@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { verificarToken } from "../../../../shared/middlewares/auth.js";
 import { resolverTenantDB } from "../middlewares/tenantDb.js";
+import { verificarModuloVigente } from "../middlewares/verificarModulo.js";
 import multer from "multer";
 import fs from "fs";
 import os from "os";
@@ -21,7 +22,7 @@ router.use(verificarToken, resolverTenantDB);
 
 // POST /api/renaced/historia-clinica/escanear?paciente=ID  (campo "pdf")
 // Devuelve los campos reconocidos; con ?paciente avisa si el nombre del PDF no es el del paciente.
-router.post("/escanear", upload.single("pdf"), async (req, res) => {
+router.post("/escanear", verificarModuloVigente("importar_pdf"), upload.single("pdf"), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: "No se adjuntó ningún archivo PDF" });
   try {
     const r = await parsearHistoriaClinica(req.file.path);

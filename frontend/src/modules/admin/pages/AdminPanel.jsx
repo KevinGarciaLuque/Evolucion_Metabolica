@@ -3,9 +3,9 @@ import { ZONAS_SUGERIDAS, zonaDelTenant, fmtFechaHora } from "../../../shared/ut
 import Layout from "../../../shared/components/Layout";
 import FlagIcon from "../../../shared/components/FlagIcon";
 import TenantBitacoraModal from "./TenantBitacoraModal";
+import PermisosPaisModal from "./PermisosPaisModal";
 import {
   getTenants, createTenant, updateTenant, deleteTenant, getTenantById, getEstadisticasGlobales,
-  getUsuariosTenant, actualizarPermisosUsuarioTenant,
 } from "../api/adminApi";
 import {
   HiOutlineGlobeAmericas, HiOutlinePlusCircle, HiOutlinePencilSquare,
@@ -14,40 +14,6 @@ import {
   HiOutlineCircleStack, HiOutlineSparkles, HiOutlineClipboardDocumentList,
 } from "react-icons/hi2";
 import "./AdminPanel.css";
-
-// Catálogo de módulos disponibles por tipo de sistema (según el sidebar real de cada país)
-const MODULOS_HONDURAS = [
-  { clave: "dashboard",         nombre: "Dashboard" },
-  { clave: "consolidado",       nombre: "Consolidado" },
-  { clave: "pacientes",         nombre: "Pacientes" },
-  { clave: "analisis",          nombre: "Analizar PDF" },
-  { clave: "consultas",         nombre: "Consultas" },
-  { clave: "mapa",              nombre: "Mapa" },
-  { clave: "mensajes",          nombre: "Mensajes" },
-  { clave: "reportes",          nombre: "Reportes" },
-  { clave: "importaciones",     nombre: "Importación HEU" },
-  { clave: "backup_pacientes",  nombre: "Backup Pacientes" },
-  { clave: "permisos",          nombre: "Permisos" },
-  { clave: "usuarios",          nombre: "Usuarios" },
-  { clave: "auditoria",         nombre: "Auditoría" },
-];
-const MODULOS_RENACED = [
-  { clave: "dashboard",    nombre: "Dashboard" },
-  { clave: "pacientes",    nombre: "Pacientes" },
-  { clave: "consultas",    nombre: "Consultas" },
-  { clave: "mapa",         nombre: "Mapa" },
-  { clave: "reportes",     nombre: "Reportes" },
-  { clave: "clinicas",     nombre: "Clínicas" },
-  { clave: "usuarios",     nombre: "Usuarios" },
-  { clave: "importar_bd",  nombre: "Importar BD" },
-];
-function catalogoModulos(codigo) {
-  return codigo === "hn" ? MODULOS_HONDURAS : MODULOS_RENACED;
-}
-
-const PERFIL_LABELS = {
-  1: "Administrador", 2: "Médico", 3: "Asistente", 4: "Enfermera", 5: "Investigador",
-};
 
 const EMPTY_FORM = {
   nombre: "", codigo: "", subdominio: "", db_name: "", db_host: "", zona_horaria: "",
@@ -107,13 +73,6 @@ export default function AdminPanel() {
   const [eliminando, setEliminando] = useState(false);
   const [bitacoraModal, setBitacoraModal] = useState(null); // tenant actual
   const [permisosModal, setPermisosModal] = useState(null); // tenant actual
-  const [permisosTab, setPermisosTab] = useState("pais");   // "pais" | "usuarios"
-  const [permisosSeleccion, setPermisosSeleccion] = useState([]);
-  const [guardandoPermisos, setGuardandoPermisos] = useState(false);
-  const [usuariosTenant, setUsuariosTenant] = useState([]);
-  const [cargandoUsuariosTenant, setCargandoUsuariosTenant] = useState(false);
-  const [permisosUsuarios, setPermisosUsuarios] = useState({}); // { [usuarioId]: string[] }
-  const [estadosUsuarios, setEstadosUsuarios] = useState({});   // { [usuarioId]: "idle"|"guardando"|"ok"|"error" }
 
   useEffect(() => { cargar(); }, []);
 
@@ -142,78 +101,7 @@ export default function AdminPanel() {
   }
 
   function abrirPermisos(t) {
-    const catalogo = catalogoModulos(t.codigo);
-    const activos = Array.isArray(t.modulos) ? t.modulos : catalogo.map((m) => m.clave);
-    setPermisosSeleccion(activos.filter((m) => catalogo.some((c) => c.clave === m)));
-    setPermisosTab("pais");
     setPermisosModal(t);
-    cargarUsuariosTenant(t);
-  }
-
-  async function cargarUsuariosTenant(t) {
-    setCargandoUsuariosTenant(true);
-    try {
-      const res = await getUsuariosTenant(t.id);
-      const catalogo = catalogoModulos(t.codigo);
-      setUsuariosTenant(res.data);
-      const inicial = {};
-      res.data.forEach((u) => {
-        inicial[u.id] = u.modulos ?? catalogo.map((m) => m.clave);
-      });
-      setPermisosUsuarios(inicial);
-    } catch (_) {
-      setUsuariosTenant([]);
-    } finally {
-      setCargandoUsuariosTenant(false);
-    }
-  }
-
-  function toggleModulo(clave) {
-    setPermisosSeleccion((prev) =>
-      prev.includes(clave) ? prev.filter((m) => m !== clave) : [...prev, clave]
-    );
-  }
-
-  function toggleModuloUsuario(usuarioId, clave) {
-    setPermisosUsuarios((prev) => {
-      const actuales = prev[usuarioId] ?? [];
-      const nuevo = actuales.includes(clave)
-        ? actuales.filter((m) => m !== clave)
-        : [...actuales, clave];
-      return { ...prev, [usuarioId]: nuevo };
-    });
-  }
-
-  function toggleTodosUsuario(t, usuarioId, marcarTodos) {
-    setPermisosUsuarios((prev) => ({
-      ...prev,
-      [usuarioId]: marcarTodos ? catalogoModulos(t.codigo).map((m) => m.clave) : [],
-    }));
-  }
-
-  async function guardarPermisosUsuario(t, usuarioId) {
-    setEstadosUsuarios((prev) => ({ ...prev, [usuarioId]: "guardando" }));
-    try {
-      await actualizarPermisosUsuarioTenant(t.id, usuarioId, permisosUsuarios[usuarioId] ?? []);
-      setEstadosUsuarios((prev) => ({ ...prev, [usuarioId]: "ok" }));
-      setTimeout(() => setEstadosUsuarios((prev) => ({ ...prev, [usuarioId]: "idle" })), 2000);
-    } catch (_) {
-      setEstadosUsuarios((prev) => ({ ...prev, [usuarioId]: "error" }));
-      setTimeout(() => setEstadosUsuarios((prev) => ({ ...prev, [usuarioId]: "idle" })), 3000);
-    }
-  }
-
-  async function guardarPermisos() {
-    if (!permisosModal) return;
-    setGuardandoPermisos(true);
-    try {
-      await updateTenant(permisosModal.id, { modulos: permisosSeleccion });
-      await cargar();
-    } catch (err) {
-      setError(err.response?.data?.error || "Error al guardar permisos");
-    } finally {
-      setGuardandoPermisos(false);
-    }
   }
 
   async function guardar(e) {
@@ -639,174 +527,7 @@ export default function AdminPanel() {
 
       {/* ── Modal permisos de módulos por país ────────────────────────────── */}
       {permisosModal && (
-        <div style={{ position: "fixed", inset: 0, zIndex: 9999, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}
-          onClick={() => setPermisosModal(null)}>
-          <div style={{ background: "#fff", borderRadius: 16, width: "100%", maxWidth: 660, maxHeight: "88vh", display: "flex", flexDirection: "column", boxShadow: "0 24px 64px rgba(0,0,0,0.25)", overflow: "hidden" }}
-            onClick={(e) => e.stopPropagation()}>
-
-            {/* Header */}
-            <div style={{ padding: "22px 28px 0" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                <div>
-                  <h3 style={{ margin: 0, display: "flex", alignItems: "center", gap: 8, fontSize: "1.05rem" }}>
-                    <FlagIcon codigo={permisosModal.codigo} size={17} /> Permisos — {permisosModal.nombre}
-                  </h3>
-                  <p style={{ margin: "4px 0 0", fontSize: 12.5, color: "#94a3b8" }}>
-                    Controla qué módulos ve este país y qué ve cada usuario dentro de él.
-                  </p>
-                </div>
-                <button onClick={() => setPermisosModal(null)} style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer", color: "#94a3b8" }}>✕</button>
-              </div>
-
-              {error && (
-                <div style={{ background: "#fef2f2", color: "#dc2626", padding: "10px 14px", borderRadius: 8, marginTop: 14, fontSize: 13 }}>
-                  {error}
-                </div>
-              )}
-
-              {/* Tabs */}
-              <div style={{ display: "flex", gap: 4, background: "#f1f5f9", borderRadius: 10, padding: 4, marginTop: 18 }}>
-                <button
-                  type="button"
-                  onClick={() => setPermisosTab("pais")}
-                  style={{
-                    flex: 1, padding: "9px 14px", borderRadius: 8, border: "none", cursor: "pointer",
-                    fontSize: 13, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
-                    background: permisosTab === "pais" ? "#fff" : "transparent",
-                    color: permisosTab === "pais" ? "#1d4ed8" : "#64748b",
-                    boxShadow: permisosTab === "pais" ? "0 1px 3px rgba(0,0,0,.1)" : "none",
-                    transition: "all 0.15s",
-                  }}
-                >
-                  <HiOutlineGlobeAmericas size={15} /> Módulos del país
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setPermisosTab("usuarios")}
-                  style={{
-                    flex: 1, padding: "9px 14px", borderRadius: 8, border: "none", cursor: "pointer",
-                    fontSize: 13, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
-                    background: permisosTab === "usuarios" ? "#fff" : "transparent",
-                    color: permisosTab === "usuarios" ? "#1d4ed8" : "#64748b",
-                    boxShadow: permisosTab === "usuarios" ? "0 1px 3px rgba(0,0,0,.1)" : "none",
-                    transition: "all 0.15s",
-                  }}
-                >
-                  <HiOutlineUsers size={15} /> Usuarios {usuariosTenant.length > 0 && `(${usuariosTenant.length})`}
-                </button>
-              </div>
-            </div>
-
-            {/* Contenido de la pestaña activa */}
-            <div style={{ overflowY: "auto", flex: 1, padding: "18px 28px 4px" }}>
-              {permisosTab === "pais" ? (
-                <>
-                  <p style={{ margin: "0 0 12px", fontSize: 12.5, color: "#94a3b8" }}>
-                    Estos módulos son el techo máximo del país — un usuario nunca puede ver más de lo habilitado aquí, sin importar sus permisos individuales.
-                  </p>
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 8 }}>
-                    {catalogoModulos(permisosModal.codigo).map((m) => (
-                      <ModuloToggle
-                        key={m.clave}
-                        nombre={m.nombre}
-                        activo={permisosSeleccion.includes(m.clave)}
-                        onChange={() => toggleModulo(m.clave)}
-                      />
-                    ))}
-                  </div>
-                </>
-              ) : (
-                <>
-                  <p style={{ margin: "0 0 14px", fontSize: 12.5, color: "#94a3b8" }}>
-                    Un usuario solo ve un módulo si está habilitado para el país <strong>y</strong> para él. Cada tarjeta se guarda de forma independiente.
-                  </p>
-
-                  {cargandoUsuariosTenant ? (
-                    <p style={{ color: "#94a3b8", fontSize: 13 }}>Cargando usuarios…</p>
-                  ) : usuariosTenant.length === 0 ? (
-                    <div style={{ padding: "28px 12px", textAlign: "center", color: "#94a3b8", fontSize: 13, fontStyle: "italic", background: "#f8fafc", borderRadius: 10 }}>
-                      Este país aún no tiene usuarios activos.
-                    </div>
-                  ) : (
-                    <div style={{ display: "flex", flexDirection: "column", gap: 14, paddingBottom: 8 }}>
-                      {usuariosTenant.map((u) => {
-                        const modulosUsuario = permisosUsuarios[u.id] ?? [];
-                        const catalogo = catalogoModulos(permisosModal.codigo);
-                        const todos = modulosUsuario.length === catalogo.length;
-                        const estado = estadosUsuarios[u.id] || "idle";
-                        return (
-                          <div key={u.id} style={{ border: "1px solid #e2e8f0", borderRadius: 12, padding: "14px 16px", background: "#fff" }}>
-                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, marginBottom: 12, flexWrap: "wrap" }}>
-                              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                                <div style={{
-                                  width: 34, height: 34, borderRadius: "50%", flexShrink: 0,
-                                  background: "linear-gradient(135deg, #6366f1, #8b5cf6)",
-                                  display: "flex", alignItems: "center", justifyContent: "center",
-                                  color: "#fff", fontWeight: 700, fontSize: 13,
-                                }}>
-                                  {iniciales(u.nombre_completo)}
-                                </div>
-                                <div>
-                                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                                    <p style={{ margin: 0, fontWeight: 600, fontSize: 13.5, color: "#1e293b" }}>{u.nombre_completo}</p>
-                                    <span style={{ fontSize: 10.5, fontWeight: 700, color: "#7c3aed", background: "#f5f3ff", padding: "2px 7px", borderRadius: 999 }}>
-                                      {PERFIL_LABELS[u.perfil_id] || "Usuario"}
-                                    </span>
-                                  </div>
-                                  <p style={{ margin: 0, fontSize: 11.5, color: "#94a3b8" }}>{u.email}</p>
-                                </div>
-                              </div>
-                              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                                <button
-                                  type="button"
-                                  className="btn btn-outline btn-sm"
-                                  onClick={() => toggleTodosUsuario(permisosModal, u.id, !todos)}
-                                >
-                                  {todos ? "Quitar todos" : "Dar todos"}
-                                </button>
-                                <button
-                                  type="button"
-                                  className={`btn btn-sm ${estado === "guardando" ? "btn-outline" : "btn-primary"}`}
-                                  disabled={estado === "guardando"}
-                                  onClick={() => guardarPermisosUsuario(permisosModal, u.id)}
-                                >
-                                  {estado === "guardando" ? "Guardando…" :
-                                   estado === "ok"        ? "✓ Guardado" :
-                                   estado === "error"     ? "Error"      : "Guardar"}
-                                </button>
-                              </div>
-                            </div>
-                            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(170px, 1fr))", gap: 6 }}>
-                              {catalogo.map((m) => (
-                                <ModuloToggle
-                                  key={m.clave}
-                                  nombre={m.nombre}
-                                  activo={modulosUsuario.includes(m.clave)}
-                                  onChange={() => toggleModuloUsuario(u.id, m.clave)}
-                                  dense
-                                />
-                              ))}
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
-
-            {/* Footer */}
-            <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", padding: "16px 28px", borderTop: "1px solid #e2e8f0", background: "#f8fafc" }}>
-              <button type="button" className="btn btn-outline" onClick={() => setPermisosModal(null)}>Cerrar</button>
-              {permisosTab === "pais" && (
-                <button type="button" className="btn btn-primary" disabled={guardandoPermisos} onClick={guardarPermisos}>
-                  {guardandoPermisos ? "Guardando…" : "Guardar módulos del país"}
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
+        <PermisosPaisModal tenant={permisosModal} onClose={() => setPermisosModal(null)} onGuardado={cargar} />
       )}
 
       {/* ── Modal confirmar eliminación ───────────────────────────────────── */}
@@ -847,46 +568,4 @@ function StatCard({ icon, label, value, sub, bg }) {
       </div>
     </div>
   );
-}
-
-// Fila de módulo con interruptor tipo switch — usada tanto para permisos de
-// país como de usuario, para que ambas secciones se vean como una sola pieza.
-function ModuloToggle({ nombre, activo, onChange, dense }) {
-  return (
-    <label style={{
-      display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10,
-      padding: dense ? "7px 10px" : "10px 14px", borderRadius: 9, cursor: "pointer",
-      background: activo ? "#eff6ff" : "#f8fafc",
-      border: `1px solid ${activo ? "#bfdbfe" : "#e2e8f0"}`,
-      transition: "background-color 0.15s, border-color 0.15s",
-    }}>
-      <span style={{ fontSize: dense ? 12.5 : 13.5, fontWeight: 600, color: activo ? "#1d4ed8" : "#475569" }}>
-        {nombre}
-      </span>
-      <span
-        onClick={(e) => { e.preventDefault(); onChange(); }}
-        style={{
-          position: "relative", flexShrink: 0, width: dense ? 30 : 34, height: dense ? 17 : 19,
-          borderRadius: 999, background: activo ? "#2563eb" : "#cbd5e1",
-          transition: "background-color 0.18s", cursor: "pointer",
-        }}
-      >
-        <span style={{
-          position: "absolute", top: 2, left: activo ? (dense ? 15 : 17) : 2,
-          width: dense ? 13 : 15, height: dense ? 13 : 15, borderRadius: "50%",
-          background: "#fff", boxShadow: "0 1px 2px rgba(0,0,0,0.35)",
-          transition: "left 0.18s",
-        }} />
-      </span>
-    </label>
-  );
-}
-
-function iniciales(nombre) {
-  return (nombre || "?")
-    .split(" ")
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((p) => p[0]?.toUpperCase())
-    .join("");
 }

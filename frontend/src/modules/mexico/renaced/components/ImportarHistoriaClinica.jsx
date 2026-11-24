@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { LuScanText } from "react-icons/lu";
 import { escanearHistoriaClinicaPDF } from "../api/renacedApi";
+import { useRenacedAuth } from "../context/RenacedAuthContext";
 import AnalizandoOverlay, { conAnimacion, ANALISIS_HISTORIA_CLINICA } from "../../../../shared/components/AnalizandoOverlay";
 
 /**
@@ -13,6 +14,9 @@ export default function ImportarHistoriaClinica({ pacienteId, onImportar, texto 
   const botones = fuentes || [{ texto, leer: escanearHistoriaClinicaPDF }];
   const [estado, setEstado] = useState({ cargando: false, error: "", datos: null, resumen: null });
   const [verExtra, setVerExtra] = useState(false);
+  // Permiso "Importar PDF" (Super Admin → Permisos): si el país o el usuario no lo tienen, no se muestra.
+  const { usuario } = useRenacedAuth();
+  const permitido = !!usuario?.super_admin || !Array.isArray(usuario?.modulos) || usuario.modulos.includes("importar_pdf");
 
   async function leer(e, lector) {
     const archivo = e.target.files?.[0];
@@ -30,6 +34,7 @@ export default function ImportarHistoriaClinica({ pacienteId, onImportar, texto 
   }
 
   const { cargando, error, datos, resumen } = estado;
+  if (!permitido) return null;
   return (
     <div className="card" style={{ marginBottom: 14, padding: "12px 16px" }}>
       <AnalizandoOverlay visible={cargando} preset={ANALISIS_HISTORIA_CLINICA} subtitulo="Lectura automática · Historia clínica" etiqueta="Importación de historia clínica" />

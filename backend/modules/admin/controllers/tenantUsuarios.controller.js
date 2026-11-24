@@ -6,7 +6,8 @@ import { getTenantPool } from "../../mexico/renaced/config/db.js";
 const MODULOS_VALIDOS_TENANT = [
   "dashboard", "consolidado", "pacientes", "analisis", "consultas", "mapa",
   "mensajes", "reportes", "importaciones", "backup_pacientes",
-  "clinicas", "usuarios", "importar_bd", "auditoria",
+  "clinicas", "usuarios", "importar_pdf", "auditoria",
+  // "importar_bd" ya NO es un permiso: es exclusivo del Super Admin y no se asigna a nadie.
 ];
 
 async function crearTablaPermisosSiNoExiste(dbPool) {

@@ -2,7 +2,7 @@ import { Router } from "express";
 import multer from "multer";
 import { verificarToken } from "../../../../shared/middlewares/auth.js";
 import { resolverTenantDB } from "../middlewares/tenantDb.js";
-import { verificarModulo } from "../middlewares/verificarModulo.js";
+import { soloSuperAdmin } from "../middlewares/verificarModulo.js";
 import { importarBaseDatosMexico, iniciarMigracionPHP, estadoMigracionPHP } from "../controllers/importarBD.controller.js";
 
 const router = Router();
@@ -15,7 +15,7 @@ const uploadSql = (req, res, next) => {
   });
 };
 
-router.use(verificarToken, resolverTenantDB, verificarModulo("importar_bd"));
+router.use(verificarToken, resolverTenantDB, soloSuperAdmin); // Importar BD: exclusivo del Super Admin
 router.post("/", uploadSql, importarBaseDatosMexico);
 router.post("/php", uploadSql, iniciarMigracionPHP);
 router.get("/php/:id", estadoMigracionPHP);

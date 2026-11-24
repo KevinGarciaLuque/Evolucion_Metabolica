@@ -35,6 +35,6 @@ export default [
   <Route key="12" path="/renaced/usuarios" element={<RenacedProtectedRoute adminOnly conClinica><RenacedUsuariosList /></RenacedProtectedRoute>} />,
   <Route key="13" path="/renaced/usuarios/nuevo" element={<RenacedProtectedRoute adminOnly conClinica><RenacedUsuarioForm /></RenacedProtectedRoute>} />,
   <Route key="14" path="/renaced/usuarios/:id/editar" element={<RenacedProtectedRoute adminOnly conClinica><RenacedUsuarioForm /></RenacedProtectedRoute>} />,
-  <Route key="15" path="/renaced/importar-bd" element={<RenacedProtectedRoute adminOnly><RenacedImportarBD /></RenacedProtectedRoute>} />,
+  <Route key="15" path="/renaced/importar-bd" element={<RenacedProtectedRoute superAdminOnly><RenacedImportarBD /></RenacedProtectedRoute>} />,
   <Route key="16" path="/renaced/salud-cuentas" element={<RenacedProtectedRoute adminOnly><RenacedSaludCuentas /></RenacedProtectedRoute>} />,
 ];

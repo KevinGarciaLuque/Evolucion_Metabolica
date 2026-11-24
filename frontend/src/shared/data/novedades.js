@@ -11,6 +11,17 @@
 // Cada país ve en el panel las entradas "global" + las suyas. La versión (VERSION) es una sola para todos.
 export const NOVEDADES = [
   {
+    version: "1.23.0",
+    alcance: "mexico",
+    fecha: "2026-11-24",
+    titulo: "Permisos más claros y control del botón Importar PDF",
+    cambios: [
+      "El Super Admin puede habilitar o deshabilitar «Importar PDF» por país y por usuario",
+      "Importar BD ahora es exclusivo del Super Admin y ya no se puede asignar a nadie",
+      "Nuevo diseño del panel de permisos: módulos agrupados con descripción, búsqueda y filtro de usuarios, aviso de cambios sin guardar y guardado en lote",
+    ],
+  },
+  {
     version: "1.22.0",
     alcance: "mexico",
     fecha: "2026-11-22",
