@@ -196,3 +196,6 @@
 }
 .mh__country--link:hover .mh__country-go, .mh__country--link:focus-visible .mh__country-go { opacity: 1; transform: translateX(4px); }
 @media (hover: none) { .mh__country-go { opacity: 1; } } /* en el celular siempre visible */
+
+/* Reserva el alto del navbar fijo */
+.mh__nav-space { height: 72px; flex: none; position: relative; z-index: 2; }

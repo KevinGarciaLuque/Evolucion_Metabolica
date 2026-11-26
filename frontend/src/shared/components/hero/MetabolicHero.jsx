@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import AnimatedNumber from "./AnimatedNumber";
 import FlagIcon from "../FlagIcon";
 import GenomeBackground from "./GenomeBackground";
+import LandingNavbar from "./LandingNavbar";
 import VideoBackground from "./VideoBackground";
 import "./MetabolicHero.css";
 
@@ -52,28 +53,15 @@ export default function MetabolicHero({ paises = [], cargando = false, loginSlot
   }, []);
 
   return (
-    <div className={`mh${video ? " mh--video" : ""}`}>
+    <div id="inicio" className={`mh${video ? " mh--video" : ""}`}>
       {video ? (
         <VideoBackground />
       ) : (
         <GenomeBackground className="mh__bg" />
       )}
 
-      <header className="mh__header">
-        <a className="mh__brand" href="/" aria-label="Evolución Metabólica — inicio">
-          <span className="mh__logo" aria-hidden="true">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#062038" strokeWidth="2.2" strokeLinecap="round">
-              <path d="M7 3c0 6 10 6 10 12s-10 6-10 6" /><path d="M17 3c0 6-10 6-10 12s10 6 10 6" />
-              <path d="M8.5 7.5h7M8.5 16.5h7" />
-            </svg>
-          </span>
-          <span className="mh__brand-text">
-            <span className="mh__brand-name">Evolución Metabólica</span>
-            <span className="mh__brand-sub">Registro Latinoamericano de Diabetes</span>
-          </span>
-        </a>
-        {loginSlot}
-      </header>
+      <LandingNavbar paises={paises} onPaisClick={onPaisClick} loginSlot={loginSlot} />
+      <div className="mh__nav-space" aria-hidden="true" />
 
       <main className="mh__body" ref={bodyRef}>
         <span className="mh__eyebrow"><i /> Investigación clínica · Latinoamérica</span>

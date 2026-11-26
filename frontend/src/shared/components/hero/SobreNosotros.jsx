@@ -65,7 +65,7 @@ export default function SobreNosotros() {
   const ref = useRevealOnScroll();
 
   return (
-    <section className="sn" aria-labelledby="sn-titulo" ref={ref}>
+    <section id="sobre-nosotros" className="sn" aria-labelledby="sn-titulo" ref={ref}>
       <div className="sn__inner">
         <div className="sn__head" data-reveal>
           <span className="sn__eyebrow"><i /> Sobre el registro</span>
