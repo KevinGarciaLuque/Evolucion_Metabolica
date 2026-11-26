@@ -7,6 +7,9 @@ import FlagIcon from "../components/FlagIcon";
 import logoRenaced from "../../assets/RENACED1.png";
 import fondoGrande from "../../assets/moleculas-fondo.jpg";
 import fondoMovil from "../../assets/moleculas-fondo-movil.jpg";
+import mol1 from "../../assets/molecula-1.png";
+import mol2 from "../../assets/molecula-2.png";
+import mol3 from "../../assets/molecula-3.png";
 import { urlFoto } from "./fotosPagina";
 import "./PaginaWebVista.css";
 
@@ -21,6 +24,24 @@ const ETIQUETA = { en_curso: "En curso", proximo: "Próximo", finalizado: "Final
 const TIPOS = [["todos", "Todas"], ["articulo", "Artículos"], ["congreso", "Congresos y posters"], ["libro", "Libros"]];
 const TIPO_ETIQUETA = { articulo: "Artículo", congreso: "Congreso", libro: "Libro" };
 const POR_PAGINA = 8;
+
+// Moléculas que levitan (x/y en %, tamaño en px, desenfoque = profundidad) y destellos generados una sola vez.
+const FLOTANTES = [
+  { img: mol1, x: 82, y: 14, w: 190, o: 0.55, b: 0, d: 11, r: 6 },
+  { img: mol2, x: 6, y: 62, w: 150, o: 0.5, b: 1, d: 14, r: -7 },
+  { img: mol3, x: 70, y: 70, w: 120, o: 0.4, b: 2, d: 12, r: 5 },
+  { img: mol2, x: 90, y: 46, w: 80, o: 0.3, b: 3, d: 16, r: -4 },
+  { img: mol1, x: 20, y: 12, w: 90, o: 0.28, b: 3, d: 15, r: 7 },
+  { img: mol3, x: 44, y: 86, w: 100, o: 0.3, b: 2, d: 13, r: -6 },
+];
+const DESTELLOS = (() => {
+  let n = 7;
+  const rnd = () => ((n = (n * 9301 + 49297) % 233280) / 233280);
+  return Array.from({ length: 46 }, (_, i) => ({
+    x: rnd() * 100, y: rnd() * 100, t: 2 + rnd() * 4, dl: rnd() * 5,
+    z: 2 + rnd() * 3, ambar: i % 5 === 0,
+  }));
+})();
 
 const iniciales = (n = "") => n.replace(/^dra?\.?\s+/i, "").trim().slice(0, 1).toUpperCase();
 
@@ -93,6 +114,15 @@ export default function PaginaWebVista({ pagina, onIniciarSesion }) {
       <div className="pw__bg" aria-hidden="true">
         <img className="pw__molec" src={fondoGrande} srcSet={`${fondoMovil} 960w, ${fondoGrande} 1920w`} sizes="100vw" alt="" decoding="async" />
         <i className="pw__veil" />
+        {DESTELLOS.map((d, i) => (
+          <i key={`s${i}`} className={`pw__spark${d.ambar ? " pw__spark--a" : ""}`}
+            style={{ left: `${d.x}%`, top: `${d.y}%`, width: d.z, height: d.z, animationDuration: `${d.t}s`, animationDelay: `${d.dl}s` }} />
+        ))}
+        {FLOTANTES.map((m, i) => (
+          <img key={`m${i}`} className="pw__float" src={m.img} alt="" loading="lazy" decoding="async"
+            style={{ left: `${m.x}%`, top: `${m.y}%`, width: m.w, opacity: m.o, filter: m.b ? `blur(${m.b}px)` : undefined,
+              animationDuration: `${m.d}s`, animationDelay: `${-i * 2.3}s`, "--r": `${m.r}deg` }} />
+        ))}
       </div>
 
       <header className={`pw-nav${scrolled ? " pw-nav--s" : ""}${menu ? " pw-nav--o" : ""}`}>
