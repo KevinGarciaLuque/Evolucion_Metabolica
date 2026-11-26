@@ -1,5 +1,7 @@
 import pool from "../../../shared/config/db.master.js";
 import mysql from "mysql2/promise";
+import { asegurarTabla } from "../../admin/services/paginasWeb.js";
+import { rutaPagina } from "../../../shared/utils/paginaWeb.js";
 import { consultarStatsTenant } from "../../admin/controllers/tenants.controller.js";
 
 // Endpoint público (sin login) para la landing de ALAD: solo expone agregados
@@ -11,6 +13,11 @@ export const getEstadisticasPublicas = async (req, res) => {
     const [tenants] = await pool.query(
       `SELECT nombre, codigo FROM tenants WHERE activo = 1 ORDER BY nombre`
     );
+
+    // Páginas web activas: si el país tiene una, la landing lo lleva allí antes del login.
+    await asegurarTabla();
+    const [activas] = await pool.query(`SELECT tenant_codigo FROM paginas_web WHERE activa = 1`);
+    const conPagina = new Set(activas.map((a) => a.tenant_codigo));
 
     const estadisticas = await Promise.all(
       tenants.map(async (t) => {
@@ -28,9 +35,9 @@ export const getEstadisticasPublicas = async (req, res) => {
           });
           const s = await consultarStatsTenant(tp, t);
           await tp.end();
-          return { pais: t.nombre, codigo: t.codigo, total_pacientes: Number(s.total_pacientes) || 0 };
+          return { pais: t.nombre, codigo: t.codigo, total_pacientes: Number(s.total_pacientes) || 0, pagina_ruta: conPagina.has(t.codigo) ? rutaPagina(t) : null };
         } catch (_) {
-          return { pais: t.nombre, codigo: t.codigo, total_pacientes: null };
+          return { pais: t.nombre, codigo: t.codigo, total_pacientes: null, pagina_ruta: conPagina.has(t.codigo) ? rutaPagina(t) : null };
         }
       })
     );

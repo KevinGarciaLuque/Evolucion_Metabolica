@@ -219,6 +219,7 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
             <>
               {renderSeccion("SUPER ADMIN")}
               {renderLink({ to: "/admin/panel", icon: HiOutlineGlobeAmericas, label: "Panel Admin" })}
+              {renderLink({ to: "/admin/paginas-web", icon: HiOutlineGlobeAmericas, label: "Páginas Web" })}
               {renderGrupo("honduras", "HONDURAS · SAAPD", itemsHonduras, renderLink, "hn")}
               {paisesRenaced.map((t) =>
                 renderGrupo(

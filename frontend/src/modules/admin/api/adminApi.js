@@ -14,3 +14,9 @@ export const actualizarPermisosUsuarioTenant = (id, usuarioId, modulos) =>
   api.put(`${BASE}/${id}/usuarios/${usuarioId}/permisos`, { modulos });
 export const getBitacoraTenant             = (id, params) => api.get(`${BASE}/${id}/bitacora`, { params });
 export const getBitacoraTenantEstadisticas = (id)         => api.get(`${BASE}/${id}/bitacora/estadisticas`);
+
+// Páginas Web por país
+export const getPaginasWeb          = ()             => api.get("/admin/paginas-web");
+export const getPaginaWeb           = (codigo)       => api.get(`/admin/paginas-web/${codigo}`);
+export const crearPaginaWeb         = (codigo)       => api.post(`/admin/paginas-web/${codigo}`);
+export const cambiarEstadoPaginaWeb = (codigo, activa) => api.put(`/admin/paginas-web/${codigo}/estado`, { activa });

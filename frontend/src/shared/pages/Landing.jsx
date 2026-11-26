@@ -11,6 +11,9 @@ function loginDePais(codigo) {
   return codigo === "hn" ? "/login" : "/renaced/login";
 }
 
+// Si el país tiene su página web activa se va primero allí; si no, directo al login.
+const destinoDePais = (p) => p.pagina_ruta || loginDePais(p.codigo);
+
 export default function Landing({ variant = "video" }) {
   const navigate = useNavigate();
   const [paises, setPaises] = useState([]);
@@ -63,7 +66,7 @@ export default function Landing({ variant = "video" }) {
               key={p.codigo}
               role="menuitem"
               className="landing-pais-btn"
-              onClick={() => window.location.assign(loginDePais(p.codigo))} /* recarga completa: así el navegador toma el manifest (app instalable) del país elegido */
+              onClick={() => window.location.assign(destinoDePais(p))} /* recarga completa: así el navegador toma el manifest (app instalable) del país elegido */
               style={{
                 display: "flex", alignItems: "center", gap: 10, width: "100%",
                 padding: "10px 16px", background: "none", border: "none",
@@ -90,7 +93,7 @@ export default function Landing({ variant = "video" }) {
 
       <MetabolicHero
         variant={variant} paises={paises} cargando={cargando} loginSlot={loginSlot}
-        onPaisClick={(p) => window.location.assign(loginDePais(p.codigo))} /* recarga completa: el navegador toma el manifest (app instalable) del país elegido */
+        onPaisClick={(p) => window.location.assign(destinoDePais(p))} /* recarga completa: el navegador toma el manifest (app instalable) del país elegido */
       />
 
       <SobreNosotros />

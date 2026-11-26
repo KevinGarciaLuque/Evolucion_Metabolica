@@ -11,6 +11,17 @@
 // Cada país ve en el panel las entradas "global" + las suyas. La versión (VERSION) es una sola para todos.
 export const NOVEDADES = [
   {
+    version: "1.24.0",
+    alcance: "global",
+    fecha: "2026-11-26",
+    titulo: "Nuevo módulo Páginas Web por país",
+    cambios: [
+      "El Super Admin puede crear una página web pública para cada país (sobre nosotros, servicios y contacto)",
+      "Cada página se puede ver en vista previa y activar o desactivar cuando se quiera",
+      "Mientras una página esté inactiva, el país sigue entrando directo al login",
+    ],
+  },
+  {
     version: "1.23.0",
     alcance: "mexico",
     fecha: "2026-11-24",
