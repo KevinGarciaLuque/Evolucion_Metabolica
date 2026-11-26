@@ -1,7 +1,7 @@
 // "Mi página web" de Honduras: las doctoras (rol admin) editan el contenido de su página pública.
 // La activación (publicar/ocultar) sigue siendo del Super Admin.
 import pool from "../../../../shared/config/db.master.js";
-import { asegurarTabla, parseContenido } from "../../../admin/services/paginasWeb.js";
+import { asegurarTabla, parseContenido, invalidarCachePaginas } from "../../../admin/services/paginasWeb.js";
 import { plantillaContenido, fusionar, limpiarContenido, rutaPagina, sistemaDe, loginDe } from "../../../../shared/utils/paginaWeb.js";
 
 const CODIGO = "hn";
@@ -40,6 +40,7 @@ export const guardarMiPagina = async (req, res) => {
        ON DUPLICATE KEY UPDATE contenido = VALUES(contenido)`,
       [CODIGO, contenido]
     );
+    invalidarCachePaginas();
     res.json({ ok: true });
   } catch (err) {
     console.error(err);

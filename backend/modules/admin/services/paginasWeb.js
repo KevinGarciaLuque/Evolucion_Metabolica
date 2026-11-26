@@ -16,4 +16,20 @@ export function asegurarTabla() {
   return lista;
 }
 
+// Caché en memoria de la página pública (evita consultar la base en cada visita).
+// Se vacía al guardar/activar; el TTL cubre el caso de varias instancias del servidor.
+const TTL_MS = 120_000;
+const cache = new Map();
+export const cacheGet = (k) => {
+  const e = cache.get(k);
+  if (e && e.vence > Date.now()) return e.valor;
+  cache.delete(k);
+  return null;
+};
+export const cacheSet = (k, valor) => {
+  if (cache.size > 200) cache.clear();
+  cache.set(k, { valor, vence: Date.now() + TTL_MS });
+};
+export const invalidarCachePaginas = () => cache.clear();
+
 export const parseContenido = (c) => (typeof c === "string" ? JSON.parse(c) : c);

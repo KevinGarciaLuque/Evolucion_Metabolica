@@ -1,5 +1,5 @@
 import pool from "../../../shared/config/db.master.js";
-import { asegurarTabla, parseContenido } from "../services/paginasWeb.js";
+import { asegurarTabla, parseContenido, invalidarCachePaginas } from "../services/paginasWeb.js";
 import { rutaPagina, sistemaDe, loginDe, plantillaContenido, fusionar } from "../../../shared/utils/paginaWeb.js";
 
 const fila = (t, p) => ({
@@ -74,6 +74,7 @@ export const cambiarEstado = async (req, res) => {
     if (!t) return res.status(404).json({ error: "País no encontrado" });
     if (!p) return res.status(400).json({ error: "Primero crea la página de este país" });
     await pool.query(`UPDATE paginas_web SET activa = ? WHERE tenant_codigo = ?`, [req.body?.activa ? 1 : 0, t.codigo]);
+    invalidarCachePaginas();
     res.json(fila(t, (await cargar(t.codigo)).p));
   } catch (err) {
     console.error(err);

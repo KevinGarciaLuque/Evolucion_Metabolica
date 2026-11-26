@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { FiMenu, FiX, FiChevronDown } from "react-icons/fi";
+import { LuDna } from "react-icons/lu";
 import FlagIcon from "../FlagIcon";
 import "./LandingNavbar.css";
 
@@ -40,10 +41,7 @@ export default function LandingNavbar({ paises = [], onPaisClick, loginSlot }) {
       <div className="lnav__inner">
         <a className="mh__brand" href="#inicio" aria-label="Evolución Metabólica — inicio" onClick={irA}>
           <span className="mh__logo" aria-hidden="true">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#062038" strokeWidth="2.2" strokeLinecap="round">
-              <path d="M7 3c0 6 10 6 10 12s-10 6-10 6" /><path d="M17 3c0 6-10 6-10 12s10 6 10 6" />
-              <path d="M8.5 7.5h7M8.5 16.5h7" />
-            </svg>
+            <LuDna size={24} color="#062038" strokeWidth={2.2} />
           </span>
           <span className="mh__brand-text">
             <span className="mh__brand-name">Evolución Metabólica</span>
