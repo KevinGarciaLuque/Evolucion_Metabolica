@@ -109,7 +109,8 @@ export default function MiPaginaWeb() {
 
         <section className="card" style={{ padding: 18, marginBottom: 16 }}>
           <h3 style={{ marginTop: 0 }}>Portada</h3>
-          <Campo label="Título" value={c.titulo} onChange={(v) => set({ titulo: v })} />
+          <Campo label="Título de la portada" value={c.titulo} onChange={(v) => set({ titulo: v })} />
+          <Campo label="Nombre corto del menú superior (p. ej. SAAPD)" value={c.siglas} onChange={(v) => set({ siglas: v })} />
           <Campo label="Frase principal" value={c.eslogan} onChange={(v) => set({ eslogan: v })} />
           <Campo label="Quiénes somos (texto de introducción)" area value={c.sobre_nosotros} onChange={(v) => set({ sobre_nosotros: v })} />
           <label>

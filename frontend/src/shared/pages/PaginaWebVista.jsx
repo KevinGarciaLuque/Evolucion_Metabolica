@@ -120,7 +120,7 @@ export default function PaginaWebVista({ pagina, onIniciarSesion }) {
       <header className={`pw-nav${scrolled ? " pw-nav--s" : ""}${menu ? " pw-nav--o" : ""}`}>
         <div className="pw-nav__in">
           <a className="pw-brand" href="#inicio" onClick={() => setMenu(false)}>
-            {logo ? <img src={logo} alt={c.titulo} /> : <><FlagIcon codigo={pagina.codigo} size={22} /> {c.titulo}</>}
+            {logo ? <img src={logo} alt={c.titulo} /> : <><FlagIcon codigo={pagina.codigo} size={22} /> {c.siglas || c.titulo}</>}
           </a>
           <nav className="pw-links" aria-label="Principal">
             {enlaces.map(([h, l]) => <a key={h} href={h} onClick={() => setMenu(false)}>{l}</a>)}

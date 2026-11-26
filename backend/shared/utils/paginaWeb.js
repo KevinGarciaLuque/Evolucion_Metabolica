@@ -26,13 +26,14 @@ const PUBLICACIONES_RENACED = JSON.parse(
 );
 
 // Contenido inicial (plantilla) de una página nueva. Luego se edita desde "Mi página web".
-// Esquema: titulo, eslogan, color, sobre_nosotros, historia, hitos[{anio,texto}],
+// Esquema: titulo, siglas (nombre corto del menú), eslogan, color, sobre_nosotros, historia, hitos[{anio,texto}],
 // equipo[{nombre,cargo,bio,foto}], proyectos[{titulo,texto,estado,fecha}],
 // publicaciones[{tipo:articulo|congreso|libro,cita,anio,enlace,pubmed,titulo,revista,resumen}], servicios[{titulo,texto}], talleres[{titulo,texto,fecha,lugar}], contacto{correo,telefono,whatsapp,direccion}.
 export function plantillaContenido(tenant) {
   const sis = sistemaDe(tenant.codigo) === "saapd" ? "SAAPD" : "RENACED";
   const base = {
     titulo: `${sis} ${tenant.nombre}`,
+    siglas: sis,
     eslogan: "Seguimiento clínico para cuidar mejor a cada paciente",
     color: "#0b3a6b",
     sobre_nosotros: `${sis} es la plataforma de ${tenant.nombre} para el registro y seguimiento clínico de pacientes. Reúne la información médica en un solo lugar, de forma segura y disponible para los equipos de salud.`,
@@ -53,6 +54,7 @@ export function plantillaContenido(tenant) {
   return {
     ...base,
     titulo: "SAAPD Honduras",
+    siglas: "SAAPD",
     eslogan: "Sistema Automatizado para Atención de Pacientes con Diabetes",
     sobre_nosotros: "SAAPD es el Sistema Automatizado para Atención de Pacientes con Diabetes de Honduras. Somos un equipo médico dedicado al cuidado integral de niñas, niños, adolescentes y adultos con diabetes en Honduras. Combinamos la experiencia clínica con el monitoreo continuo de glucosa y herramientas digitales para acompañar a cada paciente y a su familia.",
     historia: "SAAPD nace de la necesidad de dar un seguimiento más cercano y ordenado a las personas con diabetes en Honduras. Lo que comenzó como un esfuerzo clínico se convirtió en un sistema propio que hoy forma parte del Registro Latinoamericano de Diabetes, junto a otros países de la región.",
@@ -79,8 +81,24 @@ export function plantillaContenido(tenant) {
 }
 
 // Completa con la plantilla las secciones que una página creada antes todavía no tiene.
+// Textos anteriores de la plantilla de Honduras: si la página aún los tiene, se actualizan solos.
+const PREVIOS_HN = {
+  titulo: ["Evolución Metabólica Honduras"],
+  eslogan: ["Ciencia, cercanía y tecnología al servicio de las personas con diabetes"],
+  sobre_nosotros: ["Somos un equipo médico dedicado"],
+  historia: ["Evolución Metabólica nace de la necesidad"],
+};
+
 export function fusionar(plantilla, contenido) {
   const c = { ...(contenido || {}) };
+  if (plantilla.siglas === "SAAPD" && plantilla.titulo === "SAAPD Honduras") {
+    for (const [k, previos] of Object.entries(PREVIOS_HN)) {
+      if (typeof c[k] === "string" && previos.some((x) => c[k].startsWith(x))) c[k] = plantilla[k];
+    }
+    if (Array.isArray(c.equipo)) {
+      c.equipo = c.equipo.map((m) => (m?.bio === "Parte del equipo médico de Evolución Metabólica Honduras." ? { ...m, bio: "Parte del equipo médico de SAAPD Honduras." } : m));
+    }
+  }
   for (const k of Object.keys(plantilla)) if (c[k] === undefined) c[k] = plantilla[k];
   return c;
 }
@@ -91,6 +109,7 @@ const lista = (v, max, f) => (Array.isArray(v) ? v.slice(0, max).map(f) : []);
 export function limpiarContenido(c = {}) {
   return {
     titulo: txt(c.titulo, 120),
+    siglas: txt(c.siglas, 30),
     eslogan: txt(c.eslogan, 200),
     color: /^#[0-9a-fA-F]{6}$/.test(c.color) ? c.color : "#0b3a6b",
     sobre_nosotros: txt(c.sobre_nosotros, 2000),
