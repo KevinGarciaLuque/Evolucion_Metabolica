@@ -64,8 +64,8 @@ export function plantillaContenido(tenant) {
       { anio: "", texto: "Honduras se une al Registro Latinoamericano de Diabetes." },
     ],
     equipo: [
-      { nombre: "Dra. Lesby", cargo: "Médica del equipo", bio: "Parte del equipo médico de SAAPD Honduras.", foto: "lesby" },
-      { nombre: "Dra. Leonela", cargo: "Médica del equipo", bio: "Parte del equipo médico de SAAPD Honduras.", foto: "leonela" },
+      { nombre: "Dra. Lesby Espinoza", cargo: "Endocrinóloga Pediatra", bio: "Parte del equipo médico de SAAPD Honduras.", foto: "lesby" },
+      { nombre: "Dra. Leonela Membreño", cargo: "Pediatra", bio: "Parte del equipo médico de SAAPD Honduras.", foto: "leonela" },
     ],
     proyectos: [
       { titulo: "Registro Latinoamericano de Diabetes", texto: "Honduras participa con datos clínicos agregados para impulsar la investigación regional en diabetes.", estado: "en_curso", fecha: "" },
@@ -96,7 +96,16 @@ export function fusionar(plantilla, contenido) {
       if (typeof c[k] === "string" && previos.some((x) => c[k].startsWith(x))) c[k] = plantilla[k];
     }
     if (Array.isArray(c.equipo)) {
-      c.equipo = c.equipo.map((m) => (m?.bio === "Parte del equipo médico de Evolución Metabólica Honduras." ? { ...m, bio: "Parte del equipo médico de SAAPD Honduras." } : m));
+      const NUEVOS = { lesby: ["Dra. Lesby Espinoza", "Endocrinóloga Pediatra"], leonela: ["Dra. Leonela Membreño", "Pediatra"] };
+      const VIEJO = { lesby: "Dra. Lesby", leonela: "Dra. Leonela" };
+      c.equipo = c.equipo.map((m) => {
+        const n = { ...m };
+        if (n.bio === "Parte del equipo médico de Evolución Metabólica Honduras.") n.bio = "Parte del equipo médico de SAAPD Honduras.";
+        const nuevo = NUEVOS[n.foto];
+        if (nuevo && n.nombre === VIEJO[n.foto]) n.nombre = nuevo[0];
+        if (nuevo && n.cargo === "Médica del equipo") n.cargo = nuevo[1];
+        return n;
+      });
     }
   }
   for (const k of Object.keys(plantilla)) if (c[k] === undefined) c[k] = plantilla[k];
