@@ -3,25 +3,40 @@
   "tipo": "articulo",
   "cita": "Faradji RN, Valenzuela-Lara M, Vidrio-Velázquez M, Yepez-Rodríguez AE, González-Galvez G, Sainz de la Maza-Viadero ME. RENACED-DT1: A national type 1 diabetes registry initiative in Mexico. Salud Publica Mex. 2020; 62:232-234.",
   "anio": "2020",
-  "enlace": ""
+  "enlace": "https://doi.org/10.21149/11185",
+  "titulo": "RENACED-DT1: A National Type 1 Diabetes Registry Initiative in Mexico",
+  "revista": "Salud Pública de México",
+  "pubmed": "https://pubmed.ncbi.nlm.nih.gov/32520478/"
  },
  {
   "tipo": "articulo",
   "cita": "Faradji-Hazán RN, Valenzuela-Lara M, Díaz-Barriga-Menchaca AP, Almeda-Valdes P, Antonio-Villa NA, Vidrio-Velázquez M, Islas-Ortega L, Martínez Ramos-Mendez A, De la Garza-Hernandez NE, Bustamante-Martínez JF, Sánchez-Ruiz KL, Yepez-Rodríguez AE, González-Galvez G, Niño-Vargas RS, Sainz de la Maza-Viadero ME, Magis-Rodriguez C: Type 1 Diabetes Care in Mexico: An Analysis of the RENACED-DT1 National Registry. Rev Invest Clin. 2021; 73 (4) 222-230. DOI:10.24875/RIC.20000498.",
   "anio": "2021",
-  "enlace": "https://doi.org/10.24875/RIC.20000498"
+  "enlace": "https://doi.org/10.24875/ric.20000498",
+  "titulo": "Type 1 Diabetes Care in Mexico: An Analysis of the RENACED-DT1 National Registry",
+  "revista": "Revista de Investigación Clínica",
+  "pubmed": "https://pubmed.ncbi.nlm.nih.gov/33944861/",
+  "resumen": "Information regarding diagnosis, treatment, and follow-up of patients with type 1 diabetes (PWT1D) in Mexico is limited. We developed an on-line platform Registro Nacional de Pacientes con Diabetes Tipo 1 (RENACED-DT1). The objective of the study was to describe the characteristics and healthcare of PWT1D registered in RENACED-DT1. Analyses of 965 PWT1D from July 2014 to January 2018 in different endocrinology clinics around Mexico. Sixty-one percent were female with median age of 21 years, age at diagnosis 11 years, and disease duration at inclusion 8.2 years. Treatment regimen was…"
  },
  {
   "tipo": "articulo",
   "cita": "Antonio-Villa NE, García-Tuomola A, Almeda-Valdes P, Vidrio-Velázquez M, Islas-Ortega L, Madrigal-Sanromán JR, Zaballa-Lasso C, Martínez-Ramos-Méndez A, De la Garza-Hernández NE, Bustamante-Martínez JF, González-Galvez G, Valadez-Capetillo M, Sanchez-Ruiz KL, Castillo-Galindo C, Yepez-Rodríguez AE, Polanco-Preza MA, Ceballos-Macías JJ, Valenzuela-Montoya JC, Escobedo-Ortiz AR, Ferreira-Hermosillo A, Rodríguez-Sanchez E, Romero-Zazueta A, Miracle-López S, Figueroa-Andrade MH, Faradji RN; RENACED-DT1 Research Group. Glycemic control, treatment and complications in patients with Type 1 Diabetes amongst healthcare settings in Mexico. Diabetes Res Clin Pract. 2021 Sep 3:109038. doi: 10.1016/j.diabres.2021.109038. Epub ahead of print. PMID: 34487758.",
   "anio": "2021",
-  "enlace": "https://doi.org/10.1016/j.diabres.2021.109038"
+  "enlace": "https://doi.org/10.1016/j.diabres.2021.109038",
+  "titulo": "Glycemic control, treatment and complications in patients with type 1 diabetes amongst healthcare settings in Mexico",
+  "revista": "Diabetes Research and Clinical Practice",
+  "pubmed": "https://pubmed.ncbi.nlm.nih.gov/34487758/",
+  "resumen": "Type 1 diabetes (T1D) is a growing chronic disease. Evidence of whether the healthcare setting affects management and glycemic control is scarce. We evaluate outcomes in patients with T1D in private and public healthcare settings in Mexico, registered in the National T1D Registry in Mexico (RENACED-DT1). Biochemical parameters, diabetes education, and treatment were analyzed considering the data registered in the last visit. Development of chronic complications was determined during follow-up. We included 1,603 patients; 71.5% (n&#xa0;=&#xa0;1,146) registered in the public system, and 28.5%…"
  },
  {
   "tipo": "articulo",
   "cita": "Al Ozairi E, Steenackers N, Pazmino S, Alattar AT, Al Kandari J, Almeda-Valdes P, Antonio-Villa NE, Delfin C, Faradji RN, García-Tuomola A A, Irshad M, Longenecker JC, Rosen J, Hurtado Del Pozo C, Sparsø T, Lavens A, Mathieu C, Van der Schueren B, le Roux CW. Prevalence of obesity in people with and without type 1 diabetes across Belgium, Kuwait, and Mexico: an IMI2 SOPHIA study. Clinical Medicine. 2024 Oct 3;77:102869. doi: 10.1016/j.eclinm.2024.102869. PMID: 39416388; PMCID: PMC11474391.",
   "anio": "2024",
-  "enlace": "https://doi.org/10.1016/j.eclinm.2024.102869"
+  "enlace": "https://doi.org/10.1016/j.eclinm.2024.102869",
+  "titulo": "Prevalence of obesity in people with and without type 1 diabetes across Belgium, Kuwait, and Mexico: an IMI2 SOPHIA study",
+  "revista": "eClinicalMedicine",
+  "pubmed": "https://pubmed.ncbi.nlm.nih.gov/39416388/",
+  "resumen": "Individuals with type 1 diabetes (T1D) are traditionally perceived as lean, but recent evidence suggests an increasing trend of obesity. To provide global estimates, this study explored the prevalence of obesity among adults with and without T1D across three distinct global regions. An observational, cross-sectional study was performed utilizing data from T1D registries and national health surveys to assess the prevalence of obesity (BMI &#x2265; 30&#xa0;kg/m 2 ) and the prevalence of overweight and obesity (BMI &#x2265; 25&#xa0;kg/m 2 ) across Belgium, Kuwait, and Mexico. Demographic and…"
  },
  {
   "tipo": "congreso",
@@ -165,7 +180,10 @@
   "tipo": "congreso",
   "cita": "Faradji RN, Garcia-Tuomola Aili L, Antonio-Villa NE, Vidrio-Velazquez M, De la Garza-Hernández Natalia E, Valadez-Capetillo M, et al: Differences in Metabolic Control, Treatment and Associated Complications in Patients Living with Type 1 Diabetes Receiving Private or Public Health Care in Mexico. Journal of the Endocrine Society, 2020; Volume 4, Issue Supplement_1, A1133.",
   "anio": "2020",
-  "enlace": ""
+  "enlace": "https://doi.org/10.1210/jendso/bvaa046.2248",
+  "titulo": "MON-LB117 Differences in Metabolic Control, Treatment and Associated Complications in Patients Living With Type 1 Diabetes Receiving Private or Public Health Care in Mexico",
+  "revista": "Journal of the Endocrine Society",
+  "resumen": "Abstract Background. Type 1 Diabetes (T1D) is the most common chronic endocrinological disease diagnosed during childhood. It requires continuous education, monitoring and treatment. An analysis was developed to learn if there were discrepancies in the level of metabolic control and complications between private and public healthcare in Mexico, based on the data obtained in the National Registry of patients with Type 1 Diabetes (RENACED DT1). Objective: Describe the sociodemographic characteristics, metabolic control, treatment and complications in patients receiving private or public health…"
  },
  {
   "tipo": "congreso",
@@ -225,7 +243,10 @@
   "tipo": "congreso",
   "cita": "Garcia Tuomola AL, Almeda-Valdes P, Antonio Villa NE, Vidrio Velazquez M, De la Garza NE, Gonzalez-Galvez G, Fausto Bustamante J, Yepez A, Miracle-Lopez S, Islas-Ortega L, Sanchez-Ruiz KL, Castillo C, Valadez-Capetillo M, Juan Ceballos J, Rodriguez-Sanchez E, Niño-Vargas RS, Faradji RN. SAT-604 Use of Adjunctive Therapy in Patients With Autoimmune Diabetes In the Renaced DT1 Registry. J Endocr Soc. 2025 Oct 22;9(Suppl 1):bvaf149.1131. doi: 10.1210/jendso/bvaf149.1131.",
   "anio": "2025",
-  "enlace": "https://doi.org/10.1210/jendso/bvaf149.1131"
+  "enlace": "https://doi.org/10.1210/jendso/bvaf149.1131",
+  "titulo": "SAT-604 Use of Adjunctive Therapy in Patients With Autoimmune Diabetes In the Renaced DT1 Registry",
+  "revista": "Journal of the Endocrine Society",
+  "resumen": "Abstract Disclosure: A.L. Garcia Tuomola: None. P. Almeda-Valdes: None. N.E. Antonio Villa: None. M. Vidrio Velazquez: None. N.E. De la Garza: None. G. Gonzalez-Galvez: None. J.F. Bustamante: None. A. Yepez: None. S. Miracle-Lopez: None. L. Islas-Ortega: None. K.L. Sanchez-Ruiz: None. C. Castillo: None. M. Valadez-Capetillo: None. J. Ceballos: None. E. Rodriguez-Sanchez: None. R.S. Niño-Vargas: None. R.N. Faradji: None. The treatment of autoimmune diabetes - type 1 (T1D) and latent autoimmune diabetes of the adult (LADA), has improved greatly due to novel insulins, methods of administration,…"
  },
  {
   "tipo": "libro",

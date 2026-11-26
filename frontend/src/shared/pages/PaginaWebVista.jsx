@@ -223,8 +223,20 @@ export default function PaginaWebVista({ pagina, onIniciarSesion }) {
                   <span className={`pw-badge pw-badge--${x.tipo === "articulo" ? "en_curso" : x.tipo === "libro" ? "finalizado" : "proximo"}`}>{TIPO_ETIQUETA[x.tipo]}</span>
                   {x.anio && <span className="pw-pub__anio">{x.anio}</span>}
                 </div>
-                <p>{x.cita}</p>
-                {x.enlace && <a href={x.enlace} target="_blank" rel="noopener noreferrer">Ver publicación →</a>}
+                {x.titulo ? (
+                  <>
+                    <h3 className="pw-pub__titulo">{x.titulo}</h3>
+                    {x.revista && <div className="pw-pub__rev">{x.revista}</div>}
+                    {x.resumen && <p className="pw-pub__resumen">{x.resumen}</p>}
+                    <details className="pw-pub__cita"><summary>Ver cita completa</summary><p>{x.cita}</p></details>
+                  </>
+                ) : <p>{x.cita}</p>}
+                {(x.enlace || x.pubmed) && (
+                  <div className="pw-pub__links">
+                    {x.enlace && <a href={x.enlace} target="_blank" rel="noopener noreferrer">Ver publicación ↗</a>}
+                    {x.pubmed && <a href={x.pubmed} target="_blank" rel="noopener noreferrer">PubMed ↗</a>}
+                  </div>
+                )}
               </article>
             ))}
           </div>

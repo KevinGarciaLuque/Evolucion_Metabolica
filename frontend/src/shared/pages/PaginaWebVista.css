@@ -111,8 +111,15 @@
 .pw-pub__top { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
 .pw-pub__anio { font-size: 13px; font-weight: 700; color: var(--pw-cyan); }
 .pw-pub p { margin: 0; color: #c3d6ee; font-size: 14px; line-height: 1.65; }
-.pw-pub a { display: inline-block; margin-top: 10px; color: var(--pw-teal); font-weight: 700; font-size: 13px; text-decoration: none; }
-.pw-pub a:hover { text-decoration: underline; }
+.pw-pub__titulo { margin: 0 0 4px; font-size: 17px; line-height: 1.4; color: #fff; }
+.pw-pub__rev { font-size: 13px; font-style: italic; color: #8fb0d4; margin-bottom: 10px; }
+.pw-pub__resumen { display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+.pw-pub__cita { margin-top: 10px; font-size: 13px; color: #9db8d6; }
+.pw-pub__cita summary { cursor: pointer; font-weight: 600; color: #7dd3fc; }
+.pw-pub__cita p { margin-top: 8px; font-size: 13px; }
+.pw-pub__links { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+.pw-pub__links a { text-decoration: none; font-weight: 700; font-size: 13px; padding: 7px 14px; border-radius: 10px; color: var(--pw-teal); border: 1px solid rgba(45,212,191,.35); background: rgba(45,212,191,.08); transition: background .18s; }
+.pw-pub__links a:hover { background: rgba(45,212,191,.2); }
 
 /* Contacto */
 .pw-contact { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }

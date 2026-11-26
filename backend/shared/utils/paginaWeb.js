@@ -28,7 +28,7 @@ const PUBLICACIONES_RENACED = JSON.parse(
 // Contenido inicial (plantilla) de una página nueva. Luego se edita desde "Mi página web".
 // Esquema: titulo, eslogan, color, sobre_nosotros, historia, hitos[{anio,texto}],
 // equipo[{nombre,cargo,bio,foto}], proyectos[{titulo,texto,estado,fecha}],
-// publicaciones[{tipo:articulo|congreso|libro,cita,anio,enlace}], servicios[{titulo,texto}], talleres[{titulo,texto,fecha,lugar}], contacto{correo,telefono,whatsapp,direccion}.
+// publicaciones[{tipo:articulo|congreso|libro,cita,anio,enlace,pubmed,titulo,revista,resumen}], servicios[{titulo,texto}], talleres[{titulo,texto,fecha,lugar}], contacto{correo,telefono,whatsapp,direccion}.
 export function plantillaContenido(tenant) {
   const sis = sistemaDe(tenant.codigo) === "saapd" ? "SAAPD" : "RENACED";
   const base = {
@@ -104,7 +104,9 @@ export function limpiarContenido(c = {}) {
     publicaciones: lista(c.publicaciones, 150, (x) => ({
       tipo: ["articulo", "congreso", "libro"].includes(x?.tipo) ? x.tipo : "articulo",
       cita: txt(x?.cita, 1500), anio: txt(x?.anio, 4),
-      enlace: /^https?:///.test(x?.enlace || "") ? txt(x.enlace, 300) : "",
+      titulo: txt(x?.titulo, 300), revista: txt(x?.revista, 200), resumen: txt(x?.resumen, 1500),
+      enlace: /^https?:\/\//.test(x?.enlace || "") ? txt(x.enlace, 300) : "",
+      pubmed: /^https?:\/\//.test(x?.pubmed || "") ? txt(x.pubmed, 300) : "",
     })),
     servicios: lista(c.servicios, 20, (s) => ({ titulo: txt(s?.titulo, 100), texto: txt(s?.texto, 500) })),
     talleres: lista(c.talleres, 30, (t) => ({ titulo: txt(t?.titulo, 150), texto: txt(t?.texto, 800), fecha: txt(t?.fecha, 40), lugar: txt(t?.lugar, 150) })),

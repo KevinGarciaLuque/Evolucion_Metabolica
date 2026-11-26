@@ -166,7 +166,7 @@ export default function MiPaginaWeb() {
 
         <Lista titulo="Publicaciones" items={c.publicaciones || []} onChange={(publicaciones) => set({ publicaciones })}
           vacio="Aún no hay publicaciones. Si no agregas ninguna, la sección no aparece en la página."
-          nuevo={{ tipo: "articulo", cita: "", anio: "", enlace: "" }}
+          nuevo={{ tipo: "articulo", cita: "", anio: "", enlace: "", titulo: "", revista: "", resumen: "", pubmed: "" }}
           render={(x, up) => (<>
             <label>
               <span style={etiqueta}>Tipo</span>
@@ -176,6 +176,9 @@ export default function MiPaginaWeb() {
                 <option value="libro">Libro o capítulo</option>
               </select>
             </label>
+            <Campo label="Título (opcional, se muestra destacado)" value={x.titulo} onChange={(v) => up({ titulo: v })} />
+            <Campo label="Revista o congreso (opcional)" value={x.revista} onChange={(v) => up({ revista: v })} />
+            <Campo label="Resumen para la vista previa (opcional)" area value={x.resumen} onChange={(v) => up({ resumen: v })} />
             <Campo label="Cita completa (autores, título, revista o congreso)" area value={x.cita} onChange={(v) => up({ cita: v })} />
             <Campo label="Año" value={x.anio} maxLength={4} onChange={(v) => up({ anio: v.replace(/D/g, "") })} />
             <Campo label="Enlace (DOI o URL, opcional)" value={x.enlace} onChange={(v) => up({ enlace: v })} />
