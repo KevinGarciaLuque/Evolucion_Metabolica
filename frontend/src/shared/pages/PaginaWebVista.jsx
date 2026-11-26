@@ -1,92 +1,256 @@
 // Plantilla visual única de la página web de un país. Recibe el contenido (JSON) y lo dibuja:
-// portada, sobre nosotros, servicios, contacto y botón de acceso al sistema.
+// portada, sobre nosotros (historia + equipo), proyectos, servicios, talleres y contacto.
+// Estilo de vidrio sobre fondo genómico, igual que la página principal.
+import { useEffect, useMemo, useRef, useState } from "react";
+import { FiMenu, FiX, FiMapPin, FiCalendar } from "react-icons/fi";
 import FlagIcon from "../components/FlagIcon";
+import GenomeBackground from "../components/hero/GenomeBackground";
 import logoRenaced from "../../assets/RENACED1.png";
+import { urlFoto } from "./fotosPagina";
+import "./PaginaWebVista.css";
 
 // Logo propio de cada sistema (si no hay, se usa la bandera + título).
 const LOGOS = { renaced: logoRenaced };
 
+const ESTADOS = [
+  ["todos", "Todos"], ["en_curso", "En curso"], ["proximo", "Próximos"], ["finalizado", "Finalizados"],
+];
+const ETIQUETA = { en_curso: "En curso", proximo: "Próximo", finalizado: "Finalizado" };
+
+const iniciales = (n = "") => n.replace(/^dra?\.?\s+/i, "").trim().slice(0, 1).toUpperCase();
+
 export default function PaginaWebVista({ pagina, onIniciarSesion }) {
   const logo = LOGOS[pagina.sistema];
   const c = pagina.contenido || {};
-  const color = c.color || "#0b3a6b";
   const contacto = c.contacto || {};
-  const hayContacto = contacto.correo || contacto.telefono || contacto.direccion || contacto.whatsapp;
+  const equipo = c.equipo || [];
+  const proyectos = c.proyectos || [];
+  const servicios = c.servicios || [];
+  const talleres = c.talleres || [];
+  const hitos = (c.hitos || []).filter((h) => h.texto);
+  const wa = (contacto.whatsapp || "").replace(/\D/g, "");
+  const datosContacto = [
+    contacto.correo && { k: "Correo", v: contacto.correo, href: `mailto:${contacto.correo}` },
+    contacto.telefono && { k: "Teléfono", v: contacto.telefono, href: `tel:${contacto.telefono.replace(/[^\d+]/g, "")}` },
+    wa && { k: "WhatsApp", v: contacto.whatsapp, href: `https://wa.me/${wa}` },
+    contacto.direccion && { k: "Dirección", v: contacto.direccion },
+  ].filter(Boolean);
 
-  const seccion = { maxWidth: 1000, margin: "0 auto", padding: "56px 24px" };
-  const titulo = { fontSize: 26, fontWeight: 700, color, margin: "0 0 16px" };
+  const [scrolled, setScrolled] = useState(false);
+  const [menu, setMenu] = useState(false);
+  const [filtro, setFiltro] = useState("todos");
+  const raiz = useRef(null);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 24);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  // Aparición suave al hacer scroll (se re-engancha si cambia el contenido).
+  useEffect(() => {
+    const els = raiz.current?.querySelectorAll("[data-pwr]") || [];
+    if (!("IntersectionObserver" in window) || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      els.forEach((e) => e.classList.add("pw-in"));
+      return;
+    }
+    const io = new IntersectionObserver((es) => es.forEach((e) => {
+      if (e.isIntersecting) { e.target.classList.add("pw-in"); io.unobserve(e.target); }
+    }), { threshold: 0.12, rootMargin: "0px 0px -40px 0px" });
+    els.forEach((e) => io.observe(e));
+    return () => io.disconnect();
+  }, [pagina, filtro]);
+
+  const visibles = useMemo(
+    () => (filtro === "todos" ? proyectos : proyectos.filter((p) => p.estado === filtro)),
+    [proyectos, filtro]
+  );
+  const rostros = equipo.filter((m) => urlFoto(m.foto)).slice(0, 3);
+
+  const enlaces = [
+    ["#inicio", "Inicio"], ["#sobre-nosotros", "Sobre nosotros"], ["#proyectos", "Proyectos"],
+    ["#servicios", "Servicios"], ["#talleres", "Talleres"], ["#contacto", "Contacto"],
+  ];
 
   return (
-    <div style={{ fontFamily: "system-ui, sans-serif", color: "#1e293b", background: "#fff", minHeight: "100vh" }}>
-      <header style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 10, padding: "10px 24px", background: logo ? "#fff" : color, color: logo ? color : "#fff", boxShadow: logo ? "0 1px 8px rgba(0,0,0,0.1)" : "none" }}>
-        {logo ? (
-          <img src={logo} alt={c.titulo} style={{ height: 48, width: "auto", display: "block" }} />
-        ) : (
-          <span style={{ display: "flex", alignItems: "center", gap: 10, fontWeight: 700 }}>
-            <FlagIcon codigo={pagina.codigo} size={22} /> {c.titulo}
-          </span>
-        )}
-        <nav style={{ display: "flex", alignItems: "center", gap: 18, fontSize: 14 }}>
-          <a href="#sobre-nosotros" style={{ color: "inherit", textDecoration: "none" }}>Sobre nosotros</a>
-          <a href="#servicios" style={{ color: "inherit", textDecoration: "none" }}>Servicios</a>
-          <a href="#contacto" style={{ color: "inherit", textDecoration: "none" }}>Contacto</a>
-          <button onClick={onIniciarSesion} style={{ background: logo ? color : "#fff", color: logo ? "#fff" : color, border: "none", borderRadius: 8, padding: "8px 16px", fontWeight: 600, cursor: "pointer" }}>
-            Iniciar sesión
+    <div className="pw" ref={raiz} style={{ "--pw-accent": c.color || "#0b3a6b", scrollBehavior: "smooth" }}>
+      <div className="pw__bg" aria-hidden="true"><GenomeBackground className="pw__canvas" parallax={false} /></div>
+
+      <header className={`pw-nav${scrolled ? " pw-nav--s" : ""}${menu ? " pw-nav--o" : ""}`}>
+        <div className="pw-nav__in">
+          <a className="pw-brand" href="#inicio" onClick={() => setMenu(false)}>
+            {logo ? <img src={logo} alt={c.titulo} /> : <><FlagIcon codigo={pagina.codigo} size={22} /> {c.titulo}</>}
+          </a>
+          <nav className="pw-links" aria-label="Principal">
+            {enlaces.map(([h, l]) => <a key={h} href={h} onClick={() => setMenu(false)}>{l}</a>)}
+          </nav>
+          <button className="pw-login" onClick={onIniciarSesion}>Iniciar sesión</button>
+          <button className="pw-burger" aria-label={menu ? "Cerrar menú" : "Abrir menú"} onClick={() => setMenu((m) => !m)}>
+            {menu ? <FiX /> : <FiMenu />}
           </button>
-        </nav>
+        </div>
       </header>
 
-      <section style={{ background: `linear-gradient(135deg, ${color}, #1d4ed8)`, color: "#fff", textAlign: "center", padding: "90px 24px" }}>
-        {logo && (
-          <div style={{ display: "inline-block", background: "#fff", borderRadius: 18, padding: "18px 28px", marginBottom: 22, boxShadow: "0 10px 30px rgba(0,0,0,0.25)" }}>
-            <img src={logo} alt={c.titulo} style={{ height: 120, width: "auto", display: "block" }} />
+      <section id="inicio" className={`pw-hero${rostros.length ? "" : " pw-hero--solo"}`}>
+        <div>
+          {logo && <div className="pw-logo-hero"><img src={logo} alt={c.titulo} /></div>}
+          <span className="pw-eyebrow"><i /> {pagina.pais}</span>
+          <h1>{c.titulo}</h1>
+          <p>{c.eslogan}</p>
+          <div className="pw-cta">
+            <button className="pw-login" onClick={onIniciarSesion}>Acceder al sistema</button>
+            <a className="pw-btn2" href="#proyectos">Ver proyectos</a>
+          </div>
+        </div>
+        {rostros.length > 0 && (
+          <div className="pw-faces" data-pwr>
+            {rostros.map((m, i) => (
+              <figure className="pw-face" key={i}>
+                <img src={urlFoto(m.foto)} alt={m.nombre} />
+                <figcaption>{m.nombre}</figcaption>
+              </figure>
+            ))}
           </div>
         )}
-        <h1 style={{ fontSize: 40, margin: "0 0 14px" }}>{c.titulo}</h1>
-        <p style={{ fontSize: 18, opacity: 0.9, maxWidth: 640, margin: "0 auto 28px" }}>{c.eslogan}</p>
-        <button onClick={onIniciarSesion} style={{ background: "#fff", color, border: "none", borderRadius: 10, padding: "12px 28px", fontSize: 16, fontWeight: 700, cursor: "pointer" }}>
-          Acceder al sistema
-        </button>
       </section>
 
-      <section id="sobre-nosotros" style={seccion}>
-        <h2 style={titulo}>Sobre nosotros</h2>
-        <p style={{ lineHeight: 1.7, fontSize: 16, margin: 0 }}>{c.sobre_nosotros}</p>
-      </section>
+      <section id="sobre-nosotros" className="pw-sec">
+        <div className="pw-head" data-pwr>
+          <span className="pw-eyebrow"><i /> Sobre nosotros</span>
+          <h2 className="pw-h2">Quiénes <span>somos</span></h2>
+          <p className="pw-lead">{c.sobre_nosotros}</p>
+        </div>
 
-      {!!c.servicios?.length && (
-        <section id="servicios" style={{ background: "#f1f5f9" }}>
-          <div style={seccion}>
-            <h2 style={titulo}>Servicios</h2>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 18 }}>
-              {c.servicios.map((s, i) => (
-                <div key={i} style={{ background: "#fff", borderRadius: 12, padding: 22, boxShadow: "0 2px 10px rgba(0,0,0,0.06)" }}>
-                  <h3 style={{ margin: "0 0 8px", color }}>{s.titulo}</h3>
-                  <p style={{ margin: 0, color: "#475569", lineHeight: 1.6 }}>{s.texto}</p>
-                </div>
+        {(c.historia || hitos.length > 0) && (
+          <div className="pw-about">
+            <div className="pw-glass pw-card" data-pwr>
+              <h3>Nuestra historia</h3>
+              <p>{c.historia}</p>
+            </div>
+            {hitos.length > 0 && (
+              <div className="pw-glass pw-card" data-pwr>
+                <h3>Nuestro camino</h3>
+                <ul className="pw-time">
+                  {hitos.map((h, i) => <li key={i}>{h.anio && <b>{h.anio}</b>}{h.texto}</li>)}
+                </ul>
+              </div>
+            )}
+          </div>
+        )}
+
+        {equipo.length > 0 && (
+          <>
+            <h3 className="pw-sub" data-pwr>Nuestro equipo</h3>
+            <div className="pw-team">
+              {equipo.map((m, i) => (
+                <article className="pw-glass pw-member" key={i} data-pwr style={{ transitionDelay: `${i * 90}ms` }}>
+                  <div className="pw-member__img">
+                    {urlFoto(m.foto) ? <img src={urlFoto(m.foto)} alt={m.nombre} /> : <span className="pw-member__ini">{iniciales(m.nombre)}</span>}
+                  </div>
+                  <div className="pw-member__body">
+                    <h4>{m.nombre}</h4>
+                    {m.cargo && <div className="pw-member__cargo">{m.cargo}</div>}
+                    {m.bio && <p>{m.bio}</p>}
+                  </div>
+                </article>
               ))}
             </div>
-          </div>
-        </section>
-      )}
-
-      <section id="contacto" style={seccion}>
-        <h2 style={titulo}>Contacto</h2>
-        {hayContacto ? (
-          <ul style={{ listStyle: "none", padding: 0, margin: 0, lineHeight: 2 }}>
-            {contacto.correo && <li>✉️ {contacto.correo}</li>}
-            {contacto.telefono && <li>📞 {contacto.telefono}</li>}
-            {contacto.whatsapp && <li>💬 WhatsApp: {contacto.whatsapp}</li>}
-            {contacto.direccion && <li>📍 {contacto.direccion}</li>}
-          </ul>
-        ) : (
-          <p style={{ color: "#64748b", margin: 0 }}>Próximamente publicaremos los datos de contacto.</p>
+          </>
         )}
       </section>
 
-      <footer style={{ background: color, color: "#cbd5e1", textAlign: "center", padding: "18px 20px", fontSize: 13 }}>
-        © {new Date().getFullYear()} {c.titulo} · Todos los derechos reservados
-      </footer>
+      <section id="proyectos" className="pw-sec">
+        <div className="pw-head" data-pwr>
+          <span className="pw-eyebrow"><i /> Investigación</span>
+          <h2 className="pw-h2">Proyectos <span>en marcha y por venir</span></h2>
+          <p className="pw-lead">Lo que estamos desarrollando hoy y lo que viene para seguir mejorando la atención de la diabetes.</p>
+        </div>
+        {proyectos.length > 0 && (
+          <div className="pw-chips">
+            {ESTADOS.map(([k, l]) => (
+              <button key={k} className={`pw-chip${filtro === k ? " pw-chip--on" : ""}`} onClick={() => setFiltro(k)}>{l}</button>
+            ))}
+          </div>
+        )}
+        {visibles.length ? (
+          <div className="pw-grid">
+            {visibles.map((p, i) => (
+              <article className="pw-glass pw-item" key={`${filtro}-${i}`} data-pwr style={{ transitionDelay: `${i * 70}ms` }}>
+                <span className={`pw-badge pw-badge--${p.estado}`}>{ETIQUETA[p.estado]}</span>
+                <h3>{p.titulo}</h3>
+                <p>{p.texto}</p>
+                {p.fecha && <div className="pw-meta"><span><FiCalendar /> {p.fecha}</span></div>}
+              </article>
+            ))}
+          </div>
+        ) : (
+          <div className="pw-glass pw-empty">Próximamente publicaremos nuestros proyectos.</div>
+        )}
+      </section>
+
+      <section id="servicios" className="pw-sec">
+        <div className="pw-head" data-pwr>
+          <span className="pw-eyebrow"><i /> Qué hacemos</span>
+          <h2 className="pw-h2">Nuestros <span>servicios</span></h2>
+        </div>
+        {servicios.length ? (
+          <div className="pw-grid">
+            {servicios.map((s, i) => (
+              <article className="pw-glass pw-item" key={i} data-pwr style={{ transitionDelay: `${i * 70}ms` }}>
+                <div className="pw-ico">{i + 1}</div>
+                <h3>{s.titulo}</h3>
+                <p>{s.texto}</p>
+              </article>
+            ))}
+          </div>
+        ) : <div className="pw-glass pw-empty">Próximamente publicaremos nuestros servicios.</div>}
+      </section>
+
+      <section id="talleres" className="pw-sec">
+        <div className="pw-head" data-pwr>
+          <span className="pw-eyebrow"><i /> Educación</span>
+          <h2 className="pw-h2">Talleres y <span>eventos</span></h2>
+          <p className="pw-lead">Espacios para aprender, compartir y acompañarnos entre pacientes, familias y profesionales.</p>
+        </div>
+        {talleres.length ? (
+          <div className="pw-grid">
+            {talleres.map((t, i) => (
+              <article className="pw-glass pw-item" key={i} data-pwr style={{ transitionDelay: `${i * 70}ms` }}>
+                <h3 style={{ marginTop: 0 }}>{t.titulo}</h3>
+                <p>{t.texto}</p>
+                {(t.fecha || t.lugar) && (
+                  <div className="pw-meta">
+                    {t.fecha && <span><FiCalendar /> {t.fecha}</span>}
+                    {t.lugar && <span><FiMapPin /> {t.lugar}</span>}
+                  </div>
+                )}
+              </article>
+            ))}
+          </div>
+        ) : <div className="pw-glass pw-empty">Próximamente publicaremos nuestros talleres.</div>}
+      </section>
+
+      <section id="contacto" className="pw-sec">
+        <div className="pw-head" data-pwr>
+          <span className="pw-eyebrow"><i /> Contacto</span>
+          <h2 className="pw-h2">Hablemos</h2>
+        </div>
+        {datosContacto.length ? (
+          <div className="pw-contact">
+            {datosContacto.map((d) => {
+              const Tag = d.href ? "a" : "div";
+              return (
+                <Tag key={d.k} className="pw-glass" data-pwr {...(d.href ? { href: d.href, target: "_blank", rel: "noopener noreferrer" } : {})}>
+                  <small>{d.k}</small><span>{d.v}</span>
+                </Tag>
+              );
+            })}
+          </div>
+        ) : <div className="pw-glass pw-empty">Próximamente publicaremos los datos de contacto.</div>}
+      </section>
+
+      <footer className="pw-foot">© {new Date().getFullYear()} {c.titulo} · Todos los derechos reservados</footer>
     </div>
   );
 }

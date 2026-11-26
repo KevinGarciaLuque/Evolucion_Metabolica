@@ -20,6 +20,7 @@ const PermisosList = lazy(() => import("./pages/Permisos/PermisosList"));
 const BackupPacientes = lazy(() => import("./pages/Reportes/Reportes"));
 const ReportesVisuales = lazy(() => import("./pages/ReportesVisuales/ReportesVisuales"));
 const ImportacionHEU = lazy(() => import("./pages/Importaciones/ImportacionHEU"));
+const MiPaginaWeb = lazy(() => import("./pages/MiPaginaWeb/MiPaginaWeb"));
 
 export default [
   <Route key="0" path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />,
@@ -42,4 +43,5 @@ export default [
   <Route key="17" path="/backup-pacientes" element={<ProtectedRoute><BackupPacientes /></ProtectedRoute>} />,
   <Route key="18" path="/reportes" element={<ProtectedRoute><ReportesVisuales /></ProtectedRoute>} />,
   <Route key="19" path="/importaciones/heu" element={<ProtectedRoute><ImportacionHEU /></ProtectedRoute>} />,
+  <Route key="20" path="/mi-pagina-web" element={<ProtectedRoute><MiPaginaWeb /></ProtectedRoute>} />,
 ];

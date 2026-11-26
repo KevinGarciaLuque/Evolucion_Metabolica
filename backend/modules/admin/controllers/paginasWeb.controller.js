@@ -1,6 +1,6 @@
 import pool from "../../../shared/config/db.master.js";
 import { asegurarTabla, parseContenido } from "../services/paginasWeb.js";
-import { rutaPagina, sistemaDe, loginDe, plantillaContenido } from "../../../shared/utils/paginaWeb.js";
+import { rutaPagina, sistemaDe, loginDe, plantillaContenido, fusionar } from "../../../shared/utils/paginaWeb.js";
 
 const fila = (t, p) => ({
   codigo: t.codigo,
@@ -41,7 +41,7 @@ export const obtenerPagina = async (req, res) => {
     if (!t) return res.status(404).json({ error: "País no encontrado" });
     const f = fila(t, p);
     // Vista previa: si aún no se crea, muestra la plantilla.
-    res.json({ ...f, contenido: f.contenido || plantillaContenido(t) });
+    res.json({ ...f, contenido: fusionar(plantillaContenido(t), f.contenido) });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Error al obtener la página web" });

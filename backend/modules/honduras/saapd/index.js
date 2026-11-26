@@ -14,6 +14,7 @@ import crecimientoRoutes from "./routes/crecimiento.routes.js";
 import reportesRoutes from "./routes/reportes.routes.js";
 import reportesVisualesRoutes from "./routes/reportesVisuales.routes.js";
 import importacionesRoutes from "./routes/importaciones.routes.js";
+import miPaginaWebRoutes from "./routes/miPaginaWeb.routes.js";
 
 export const codigo = "hn";
 

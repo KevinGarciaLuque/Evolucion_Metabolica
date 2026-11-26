@@ -39,6 +39,7 @@ const menuHonduras = [
   { to: "/reportes",           icon: HiOutlinePresentationChartLine,  label: "Reportes",         modulo: "reportes"        },
   { to: "/importaciones/heu",  icon: HiOutlineDocumentArrowUp,        label: "Importación HEU",  modulo: "importaciones"   },
   { to: "/backup-pacientes",   icon: HiOutlineDocumentArrowUp,        label: "Backup Pacientes", modulo: "backup_pacientes"},
+  { to: "/mi-pagina-web",     icon: HiOutlineGlobeAmericas,          label: "Mi página web",   rol: "admin"},
   { to: "/permisos",           icon: HiOutlineLockOpen,               label: "Permisos",         modulo: "permisos", rol: "admin"},
   { to: "/usuarios",           icon: HiOutlineUserGroup,              label: "Usuarios",         modulo: "usuarios", rol: "admin"},
   { to: "/auditoria",          icon: HiOutlineShieldCheck,            label: "Auditoría",        modulo: "auditoria", rol: "admin"},
