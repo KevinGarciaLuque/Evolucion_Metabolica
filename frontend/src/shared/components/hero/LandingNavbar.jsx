@@ -40,11 +40,12 @@ export default function LandingNavbar({ paises = [], onPaisClick, loginSlot }) {
       <div className="lnav__inner">
         <a className="mh__brand" href="#inicio" aria-label="Evolución Metabólica — inicio" onClick={irA}>
           <span className="mh__logo" aria-hidden="true">
-            {/* Doble hélice completa, dentro del recuadro (no se corta en los extremos). */}
-            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#062038" strokeWidth="1.9" strokeLinecap="round">
-              <path d="M7 2.5C7 7 17 7 17 12S7 17 7 21.5" />
-              <path d="M17 2.5C17 7 7 7 7 12S17 17 17 21.5" />
-              <path d="M9 4.6h6M9 9.6h6M9 14.4h6M9 19.4h6" strokeWidth="1.5" />
+            {/* Misma hélice del favicon (public/favicon.svg), en color oscuro. */}
+            <svg width="26" height="26" viewBox="0 0 64 64" fill="none" stroke="#062038" strokeLinecap="round">
+              <path d="M32 8C48 16 48 24 32 32C16 40 16 48 32 56" strokeWidth="4.5" />
+              <path d="M32 8C16 16 16 24 32 32C48 40 48 48 32 56" strokeWidth="4.5" opacity="0.55" />
+              <path d="M44 20H20M20 44H44" strokeWidth="3.2" />
+              <g fill="#062038" stroke="none"><circle cx="32" cy="8" r="4.2" /><circle cx="32" cy="56" r="4.2" /><circle cx="32" cy="32" r="3" /></g>
             </svg>
           </span>
           <span className="mh__brand-text">
