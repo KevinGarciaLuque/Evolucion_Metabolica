@@ -33,6 +33,8 @@
 .pw-links { display: flex; align-items: center; gap: 4px; }
 .pw-links a { text-decoration: none; font-size: 14px; font-weight: 600; color: #d7e6f7; padding: 9px 13px; border-radius: 10px; transition: background .18s, color .18s; }
 .pw-links a:hover { background: rgba(255,255,255,0.1); color: #fff; }
+.pw-links a.pw-volver { display: inline-flex; align-items: center; gap: 6px; margin-right: 8px; border: 1px solid rgba(125,211,252,.28); background: rgba(255,255,255,0.07); color: #e6f1ff; }
+.pw-links a.pw-volver:hover { background: rgba(94,234,212,.16); border-color: rgba(94,234,212,.5); }
 .pw-login { border: 1px solid rgba(125,211,252,.35); cursor: pointer; font: inherit; font-weight: 700; font-size: 14px; color: #062038;
   background: linear-gradient(135deg, var(--pw-teal), var(--pw-cyan)); padding: 10px 20px; border-radius: 12px; transition: transform .18s, box-shadow .18s; }
 .pw-login:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(56,189,248,.35); }

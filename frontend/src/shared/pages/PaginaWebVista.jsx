@@ -2,7 +2,7 @@
 // portada, sobre nosotros (historia + equipo), proyectos, servicios, talleres y contacto.
 // Estilo de vidrio sobre fondo genómico, igual que la página principal.
 import { useEffect, useMemo, useRef, useState } from "react";
-import { FiMenu, FiX, FiMapPin, FiCalendar } from "react-icons/fi";
+import { FiMenu, FiX, FiMapPin, FiCalendar, FiArrowLeft } from "react-icons/fi";
 import FlagIcon from "../components/FlagIcon";
 import logoRenaced from "../../assets/RENACED1.png";
 import fondoGrande from "../../assets/moleculas-fondo.jpg";
@@ -123,6 +123,7 @@ export default function PaginaWebVista({ pagina, onIniciarSesion }) {
             {logo ? <img src={logo} alt={c.titulo} /> : <><FlagIcon codigo={pagina.codigo} size={22} /> {c.siglas || c.titulo}</>}
           </a>
           <nav className="pw-links" aria-label="Principal">
+            <a className="pw-volver" href="/"><FiArrowLeft /> Evolución Metabólica</a>
             {enlaces.map(([h, l]) => <a key={h} href={h} onClick={() => setMenu(false)}>{l}</a>)}
           </nav>
           <button className="pw-login" onClick={onIniciarSesion}>Iniciar sesión</button>
