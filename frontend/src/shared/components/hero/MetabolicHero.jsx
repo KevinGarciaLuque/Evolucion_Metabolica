@@ -53,6 +53,9 @@ export default function MetabolicHero({ paises = [], cargando = false, loginSlot
   }, []);
 
   return (
+    <>
+      {/* Fuera de .mh: ese contenedor usa isolation y dejaba el menú de Países por debajo de las secciones siguientes */}
+      <LandingNavbar paises={paises} onPaisClick={onPaisClick} loginSlot={loginSlot} />
     <div id="inicio" className={`mh${video ? " mh--video" : ""}`}>
       {video ? (
         <VideoBackground />
@@ -60,7 +63,6 @@ export default function MetabolicHero({ paises = [], cargando = false, loginSlot
         <GenomeBackground className="mh__bg" />
       )}
 
-      <LandingNavbar paises={paises} onPaisClick={onPaisClick} loginSlot={loginSlot} />
       <div className="mh__nav-space" aria-hidden="true" />
 
       <main className="mh__body" ref={bodyRef}>
@@ -116,5 +118,6 @@ export default function MetabolicHero({ paises = [], cargando = false, loginSlot
         )}
       </main>
     </div>
+    </>
   );
 }

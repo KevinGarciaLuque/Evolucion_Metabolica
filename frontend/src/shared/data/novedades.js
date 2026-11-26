@@ -16,6 +16,7 @@ export const NOVEDADES = [
     fecha: "2026-11-26",
     titulo: "Página principal más clara",
     cambios: [
+      "El menú Países ahora aparece al frente y se movió a la derecha, junto a la nueva pestaña Contacto",
       "Se quitó el botón Iniciar sesión del menú superior: se entra eligiendo el país",
       "Nueva sección Sobre el registro: presenta a GLAK, el sistema a la medida y la seguridad de datos por país",
     ],

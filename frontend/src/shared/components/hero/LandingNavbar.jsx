@@ -7,6 +7,7 @@ import "./LandingNavbar.css";
 const ENLACES = [
   { label: "Inicio", href: "#inicio" },
   { label: "Sobre el registro", href: "#sobre-nosotros" },
+  { label: "Contacto", href: "#contacto" },
 ];
 
 // Navbar fijo de la página principal: marca, enlaces, menú de países y acceso.
@@ -51,7 +52,7 @@ export default function LandingNavbar({ paises = [], onPaisClick, loginSlot }) {
         </a>
 
         <nav className="lnav__links" aria-label="Principal">
-          {ENLACES.slice(0, 1).map((l) => (
+          {ENLACES.map((l) => (
             <a key={l.href} href={l.href} onClick={irA}>{l.label}</a>
           ))}
 
@@ -72,10 +73,6 @@ export default function LandingNavbar({ paises = [], onPaisClick, loginSlot }) {
               </div>
             )}
           </div>
-
-          {ENLACES.slice(1).map((l) => (
-            <a key={l.href} href={l.href} onClick={irA}>{l.label}</a>
-          ))}
         </nav>
 
         <div className="lnav__right">
