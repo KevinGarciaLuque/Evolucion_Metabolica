@@ -19,9 +19,15 @@ export default function ContactoGlak() {
             ¿Quieres sumar tu país o institución al registro, o conocer cómo funciona la
             plataforma? Escríbenos y con gusto te contamos.
           </p>
-          <a className="mh__login" target="_blank" rel="noopener noreferrer"
+          <a target="_blank" rel="noopener noreferrer"
             href={`https://wa.me/${WHATSAPP}?text=${encodeURIComponent(MENSAJE)}`}
-            style={{ display: "inline-flex", alignItems: "center", gap: 8, marginTop: 24, textDecoration: "none" }}>
+            style={{
+              display: "inline-flex", alignItems: "center", gap: 10, marginTop: 24, textDecoration: "none",
+              padding: "14px 28px", borderRadius: 14, fontWeight: 700, fontSize: 15, color: "#062038",
+              background: "linear-gradient(135deg, #2dd4bf, #38bdf8)",
+              border: "1px solid rgba(125, 211, 252, 0.45)",
+              boxShadow: "0 10px 30px rgba(56, 189, 248, 0.28), inset 0 1px 0 rgba(255,255,255,0.35)",
+            }}>
             <FiMessageCircle /> Escríbenos por WhatsApp
           </a>
           <p className="sn__lead" style={{ marginTop: 14, fontSize: 14 }}>{WHATSAPP_VISIBLE}</p>
