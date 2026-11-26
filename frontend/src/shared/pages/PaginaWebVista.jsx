@@ -7,9 +7,6 @@ import FlagIcon from "../components/FlagIcon";
 import logoRenaced from "../../assets/RENACED1.png";
 import fondoGrande from "../../assets/moleculas-fondo.jpg";
 import fondoMovil from "../../assets/moleculas-fondo-movil.jpg";
-import mol1 from "../../assets/molecula-1.png";
-import mol2 from "../../assets/molecula-2.png";
-import mol3 from "../../assets/molecula-3.png";
 import { urlFoto } from "./fotosPagina";
 import "./PaginaWebVista.css";
 
@@ -25,15 +22,7 @@ const TIPOS = [["todos", "Todas"], ["articulo", "Artículos"], ["congreso", "Con
 const TIPO_ETIQUETA = { articulo: "Artículo", congreso: "Congreso", libro: "Libro" };
 const POR_PAGINA = 8;
 
-// Moléculas que levitan (x/y en %, tamaño en px, desenfoque = profundidad) y destellos generados una sola vez.
-const FLOTANTES = [
-  { img: mol1, x: 82, y: 14, w: 190, o: 0.55, b: 0, d: 11, r: 6 },
-  { img: mol2, x: 6, y: 62, w: 150, o: 0.5, b: 1, d: 14, r: -7 },
-  { img: mol3, x: 70, y: 70, w: 120, o: 0.4, b: 2, d: 12, r: 5 },
-  { img: mol2, x: 90, y: 46, w: 80, o: 0.3, b: 3, d: 16, r: -4 },
-  { img: mol1, x: 20, y: 12, w: 90, o: 0.28, b: 3, d: 15, r: 7 },
-  { img: mol3, x: 44, y: 86, w: 100, o: 0.3, b: 2, d: 13, r: -6 },
-];
+// Destellos del fondo, generados una sola vez.
 const DESTELLOS = (() => {
   let n = 7;
   const rnd = () => ((n = (n * 9301 + 49297) % 233280) / 233280);
@@ -117,11 +106,6 @@ export default function PaginaWebVista({ pagina, onIniciarSesion }) {
         {DESTELLOS.map((d, i) => (
           <i key={`s${i}`} className={`pw__spark${d.ambar ? " pw__spark--a" : ""}`}
             style={{ left: `${d.x}%`, top: `${d.y}%`, width: d.z, height: d.z, animationDuration: `${d.t}s`, animationDelay: `${d.dl}s` }} />
-        ))}
-        {FLOTANTES.map((m, i) => (
-          <img key={`m${i}`} className="pw__float" src={m.img} alt="" loading="lazy" decoding="async"
-            style={{ left: `${m.x}%`, top: `${m.y}%`, width: m.w, opacity: m.o, filter: m.b ? `blur(${m.b}px)` : undefined,
-              animationDuration: `${m.d}s`, animationDelay: `${-i * 2.3}s`, "--r": `${m.r}deg` }} />
         ))}
       </div>
 
