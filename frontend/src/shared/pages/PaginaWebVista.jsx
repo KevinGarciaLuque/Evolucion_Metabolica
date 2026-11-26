@@ -17,6 +17,10 @@ const ESTADOS = [
 ];
 const ETIQUETA = { en_curso: "En curso", proximo: "Próximo", finalizado: "Finalizado" };
 
+const TIPOS = [["todos", "Todas"], ["articulo", "Artículos"], ["congreso", "Congresos y posters"], ["libro", "Libros"]];
+const TIPO_ETIQUETA = { articulo: "Artículo", congreso: "Congreso", libro: "Libro" };
+const POR_PAGINA = 8;
+
 const iniciales = (n = "") => n.replace(/^dra?\.?\s+/i, "").trim().slice(0, 1).toUpperCase();
 
 export default function PaginaWebVista({ pagina, onIniciarSesion }) {
@@ -27,6 +31,7 @@ export default function PaginaWebVista({ pagina, onIniciarSesion }) {
   const proyectos = c.proyectos || [];
   const servicios = c.servicios || [];
   const talleres = c.talleres || [];
+  const publicaciones = c.publicaciones || [];
   const hitos = (c.hitos || []).filter((h) => h.texto);
   const wa = (contacto.whatsapp || "").replace(/\D/g, "");
   const datosContacto = [
@@ -39,6 +44,8 @@ export default function PaginaWebVista({ pagina, onIniciarSesion }) {
   const [scrolled, setScrolled] = useState(false);
   const [menu, setMenu] = useState(false);
   const [filtro, setFiltro] = useState("todos");
+  const [tipoPub, setTipoPub] = useState("todos");
+  const [verPub, setVerPub] = useState(POR_PAGINA);
   const raiz = useRef(null);
 
   useEffect(() => {
@@ -60,16 +67,23 @@ export default function PaginaWebVista({ pagina, onIniciarSesion }) {
     }), { threshold: 0.12, rootMargin: "0px 0px -40px 0px" });
     els.forEach((e) => io.observe(e));
     return () => io.disconnect();
-  }, [pagina, filtro]);
+  }, [pagina, filtro, tipoPub, verPub]);
 
   const visibles = useMemo(
     () => (filtro === "todos" ? proyectos : proyectos.filter((p) => p.estado === filtro)),
     [proyectos, filtro]
   );
+  const pubs = useMemo(
+    () => publicaciones
+      .filter((x) => tipoPub === "todos" || x.tipo === tipoPub)
+      .sort((a, b) => String(b.anio).localeCompare(String(a.anio))),
+    [publicaciones, tipoPub]
+  );
   const rostros = equipo.filter((m) => urlFoto(m.foto)).slice(0, 3);
 
   const enlaces = [
     ["#inicio", "Inicio"], ["#sobre-nosotros", "Sobre nosotros"], ["#proyectos", "Proyectos"],
+    ...(publicaciones.length ? [["#publicaciones", "Publicaciones"]] : []),
     ["#servicios", "Servicios"], ["#talleres", "Talleres"], ["#contacto", "Contacto"],
   ];
 
@@ -188,6 +202,41 @@ export default function PaginaWebVista({ pagina, onIniciarSesion }) {
           <div className="pw-glass pw-empty">Próximamente publicaremos nuestros proyectos.</div>
         )}
       </section>
+
+      {publicaciones.length > 0 && (
+        <section id="publicaciones" className="pw-sec">
+          <div className="pw-head" data-pwr>
+            <span className="pw-eyebrow"><i /> Producción científica</span>
+            <h2 className="pw-h2">Nuestras <span>publicaciones</span></h2>
+            <p className="pw-lead">Artículos en revistas indexadas, presentaciones en congresos y capítulos de libros del equipo.</p>
+          </div>
+          <div className="pw-chips">
+            {TIPOS.map(([k, l]) => (
+              <button key={k} className={`pw-chip${tipoPub === k ? " pw-chip--on" : ""}`}
+                onClick={() => { setTipoPub(k); setVerPub(POR_PAGINA); }}>{l}</button>
+            ))}
+          </div>
+          <div className="pw-pubs">
+            {pubs.slice(0, verPub).map((x, i) => (
+              <article className="pw-glass pw-pub" key={`${tipoPub}-${i}`} data-pwr>
+                <div className="pw-pub__top">
+                  <span className={`pw-badge pw-badge--${x.tipo === "articulo" ? "en_curso" : x.tipo === "libro" ? "finalizado" : "proximo"}`}>{TIPO_ETIQUETA[x.tipo]}</span>
+                  {x.anio && <span className="pw-pub__anio">{x.anio}</span>}
+                </div>
+                <p>{x.cita}</p>
+                {x.enlace && <a href={x.enlace} target="_blank" rel="noopener noreferrer">Ver publicación →</a>}
+              </article>
+            ))}
+          </div>
+          {pubs.length > verPub && (
+            <div style={{ textAlign: "center", marginTop: 24 }}>
+              <button className="pw-chip" onClick={() => setVerPub((n) => n + POR_PAGINA)}>
+                Ver más ({pubs.length - verPub} restantes)
+              </button>
+            </div>
+          )}
+        </section>
+      )}
 
       <section id="servicios" className="pw-sec">
         <div className="pw-head" data-pwr>

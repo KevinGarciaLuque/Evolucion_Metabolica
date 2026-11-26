@@ -106,6 +106,14 @@
 .pw-ico { width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; font-weight: 800; font-size: 18px; color: #062038; background: linear-gradient(135deg, var(--pw-teal), var(--pw-cyan)); }
 .pw-empty { padding: 30px; text-align: center; color: #9db8d6; }
 
+.pw-pubs { display: grid; gap: 14px; }
+.pw-pub { padding: 18px 22px; }
+.pw-pub__top { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.pw-pub__anio { font-size: 13px; font-weight: 700; color: var(--pw-cyan); }
+.pw-pub p { margin: 0; color: #c3d6ee; font-size: 14px; line-height: 1.65; }
+.pw-pub a { display: inline-block; margin-top: 10px; color: var(--pw-teal); font-weight: 700; font-size: 13px; text-decoration: none; }
+.pw-pub a:hover { text-decoration: underline; }
+
 /* Contacto */
 .pw-contact { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
 .pw-contact a, .pw-contact div { text-decoration: none; padding: 20px 22px; display: block; }

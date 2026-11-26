@@ -164,6 +164,23 @@ export default function MiPaginaWeb() {
             <Campo label="Fecha (texto libre, p. ej. “Marzo 2027”)" value={p.fecha} onChange={(v) => up({ fecha: v })} />
           </>)} />
 
+        <Lista titulo="Publicaciones" items={c.publicaciones || []} onChange={(publicaciones) => set({ publicaciones })}
+          vacio="Aún no hay publicaciones. Si no agregas ninguna, la sección no aparece en la página."
+          nuevo={{ tipo: "articulo", cita: "", anio: "", enlace: "" }}
+          render={(x, up) => (<>
+            <label>
+              <span style={etiqueta}>Tipo</span>
+              <select style={campo} value={x.tipo} onChange={(e) => up({ tipo: e.target.value })}>
+                <option value="articulo">Artículo en revista</option>
+                <option value="congreso">Congreso / póster / abstract</option>
+                <option value="libro">Libro o capítulo</option>
+              </select>
+            </label>
+            <Campo label="Cita completa (autores, título, revista o congreso)" area value={x.cita} onChange={(v) => up({ cita: v })} />
+            <Campo label="Año" value={x.anio} maxLength={4} onChange={(v) => up({ anio: v.replace(/D/g, "") })} />
+            <Campo label="Enlace (DOI o URL, opcional)" value={x.enlace} onChange={(v) => up({ enlace: v })} />
+          </>)} />
+
         <Lista titulo="Servicios" items={c.servicios} onChange={(servicios) => set({ servicios })}
           vacio="Aún no hay servicios." nuevo={{ titulo: "", texto: "" }}
           render={(s, up) => (<>
