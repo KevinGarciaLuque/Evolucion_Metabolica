@@ -4,7 +4,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { FiMenu, FiX, FiMapPin, FiCalendar } from "react-icons/fi";
 import FlagIcon from "../components/FlagIcon";
-import GenomeBackground from "../components/hero/GenomeBackground";
 import logoRenaced from "../../assets/RENACED1.png";
 import { urlFoto } from "./fotosPagina";
 import "./PaginaWebVista.css";
@@ -89,7 +88,7 @@ export default function PaginaWebVista({ pagina, onIniciarSesion }) {
 
   return (
     <div className="pw" ref={raiz} style={{ "--pw-accent": c.color || "#0b3a6b", scrollBehavior: "smooth" }}>
-      <div className="pw__bg" aria-hidden="true"><GenomeBackground className="pw__canvas" parallax={false} /></div>
+      <div className="pw__bg" aria-hidden="true"><i className="pw__orb pw__orb--1" /><i className="pw__orb pw__orb--2" /><i className="pw__orb pw__orb--3" /><i className="pw__grid" /></div>
 
       <header className={`pw-nav${scrolled ? " pw-nav--s" : ""}${menu ? " pw-nav--o" : ""}`}>
         <div className="pw-nav__in">
