@@ -151,7 +151,7 @@ export default function Login() {
         <div className="login-header">
           <FlagIcon codigo="hn" size={48} style={{ display: "block", margin: "0 auto 12px" }} />
           <h1>SAAPD Honduras</h1>
-          <p>Sistema de Monitoreo Continuo de Glucosa</p>
+          <p>Sistema Automatizado para Atención de Pacientes con Diabetes</p>
         </div>
 
         <form onSubmit={handleSubmit} className="login-form">
