@@ -11,6 +11,16 @@
 // Cada país ve en el panel las entradas "global" + las suyas. La versión (VERSION) es una sola para todos.
 export const NOVEDADES = [
   {
+    version: "1.24.1",
+    alcance: "global",
+    fecha: "2026-11-26",
+    titulo: "Página principal más clara",
+    cambios: [
+      "Se quitó el botón Iniciar sesión del menú superior: se entra eligiendo el país",
+      "Nueva sección Sobre el registro: presenta a GLAK, el sistema a la medida y la seguridad de datos por país",
+    ],
+  },
+  {
     version: "1.24.0",
     alcance: "global",
     fecha: "2026-11-26",

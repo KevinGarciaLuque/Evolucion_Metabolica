@@ -1,8 +1,20 @@
 import { useEffect, useRef } from "react";
-import { FiShield, FiGlobe, FiActivity, FiLock } from "react-icons/fi";
+import { FiShield, FiGlobe, FiTool, FiLock } from "react-icons/fi";
 import "./SobreNosotros.css";
 
 const tarjetas = [
+  {
+    icon: <FiTool />,
+    titulo: "Sistema a la medida",
+    texto:
+      "No es un software genérico: la plataforma se diseña y adapta a la forma de trabajo de cada país e institución, para que el registro se ajuste a su realidad clínica y no al revés.",
+  },
+  {
+    icon: <FiLock />,
+    titulo: "Seguridad de datos por país",
+    texto:
+      "La información de cada país se mantiene separada y protegida. Cada institución accede únicamente a sus propios pacientes, y solo se comparten datos agregados para la investigación regional.",
+  },
   {
     icon: <FiShield />,
     titulo: "Estándar ISPAD",
@@ -11,21 +23,9 @@ const tarjetas = [
   },
   {
     icon: <FiGlobe />,
-    titulo: "Red multipaís",
+    titulo: "Una red que crece",
     texto:
-      "SAAPD (Honduras) y RENACED (México) comparten un mismo estándar de datos. La red está diseñada para seguir creciendo con más países e instituciones de la región.",
-  },
-  {
-    icon: <FiActivity />,
-    titulo: "Datos MCG en tiempo real",
-    texto:
-      "Los reportes de Monitoreo Continuo de Glucosa se procesan automáticamente: TIR, TAR, TBR, GMI y CV quedan listos para el análisis epidemiológico, sin transcripción manual.",
-  },
-  {
-    icon: <FiLock />,
-    titulo: "Privacidad por institución",
-    texto:
-      "Cada institución accede únicamente a sus propios pacientes, aun cuando los datos agregados alimentan la investigación regional conjunta.",
+      "Un mismo estándar de datos para todos los países participantes, con la flexibilidad de sumar nuevos países e instituciones de la región sin perder el control local de la información.",
   },
 ];
 
@@ -73,10 +73,10 @@ export default function SobreNosotros() {
             Investigación clínica que cruza <span>fronteras</span>
           </h2>
           <p className="sn__lead">
-            Evolución Metabólica es la plataforma detrás del registro: un sistema clínico
-            especializado en el manejo integral de pacientes con diabetes que usan Monitoreo
-            Continuo de Glucosa, hoy en producción con datos reales en Honduras y México, y
-            pensado desde el inicio para crecer como una red regional de investigación.
+            En <strong>GLAK</strong> estamos desarrollando Evolución Metabólica, la plataforma
+            que da vida al Registro Latinoamericano de Diabetes: un sistema creado a la medida
+            para que los países de la región registren, protejan y analicen la información
+            clínica de sus pacientes, y la conviertan en investigación conjunta.
           </p>
         </div>
 

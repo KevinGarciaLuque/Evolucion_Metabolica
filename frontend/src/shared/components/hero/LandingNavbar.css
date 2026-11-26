@@ -32,16 +32,19 @@ html { scroll-behavior: smooth; }
 .lnav__chev--up { transform: rotate(180deg); }
 .lnav__menu {
   position: absolute; top: calc(100% + 8px); left: 0; min-width: 210px; padding: 6px;
-  background: #fff; border-radius: 14px; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+  background: linear-gradient(160deg, rgba(14, 52, 96, 0.62), rgba(6, 26, 52, 0.52));
+  -webkit-backdrop-filter: blur(18px) saturate(150%); backdrop-filter: blur(18px) saturate(150%);
+  border: 1px solid rgba(125, 211, 252, 0.22); border-radius: 14px;
+  box-shadow: 0 20px 50px rgba(2, 10, 28, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.12);
   display: flex; flex-direction: column; animation: lnav-pop 0.16s ease both;
 }
 .lnav__menu button {
   display: flex; align-items: center; gap: 10px; width: 100%; text-align: left;
   background: none; border: 0; padding: 10px 12px; border-radius: 9px; cursor: pointer;
-  font: inherit; font-size: 14px; color: #0f2a4a; transition: background-color 0.15s ease;
+  font: inherit; font-size: 14px; color: #e6f1ff; transition: background-color 0.15s ease, color 0.15s ease;
 }
-.lnav__menu button:hover { background: #eff6ff; }
-.lnav__vacio { padding: 10px 12px; font-size: 13px; color: #94a3b8; }
+.lnav__menu button:hover { background: rgba(94, 234, 212, 0.14); color: #fff; }
+.lnav__vacio { padding: 10px 12px; font-size: 13px; color: #9db8d6; }
 
 .lnav__right { display: flex; align-items: center; gap: 10px; }
 .lnav__burger {
