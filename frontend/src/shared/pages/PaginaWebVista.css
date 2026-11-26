@@ -18,6 +18,9 @@
 .pw__spark--a { background: #ffd9a0; box-shadow: 0 0 9px 2px rgba(251,191,36,.8); }
 @keyframes pw-brilla { 0%, 100% { opacity: 0; transform: scale(.4); } 50% { opacity: .95; transform: scale(1.25); } }
 @media (max-width: 700px) { .pw__spark:nth-of-type(odd) { display: none; } }
+.pw__veil--izq { background:
+    linear-gradient(270deg, rgba(6,26,51,.6) 0%, rgba(6,26,51,.28) 55%, rgba(6,26,51,.1) 100%),
+    linear-gradient(180deg, rgba(6,26,51,.2), rgba(6,26,51,.5)); }
 @keyframes pw-drift { from { transform: scale(1.04) translate3d(0,0,0); } to { transform: scale(1.12) translate3d(-1.5%, -1%, 0); } }
 .pw > *:not(.pw__bg) { position: relative; z-index: 1; }
 

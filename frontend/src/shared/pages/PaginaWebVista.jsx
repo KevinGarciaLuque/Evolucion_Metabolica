@@ -7,6 +7,8 @@ import FlagIcon from "../components/FlagIcon";
 import logoRenaced from "../../assets/RENACED1.png";
 import fondoGrande from "../../assets/moleculas-fondo.jpg";
 import fondoMovil from "../../assets/moleculas-fondo-movil.jpg";
+import fondoHn from "../../assets/moleculas-fondo-honduras.jpg";
+import fondoHnMovil from "../../assets/moleculas-fondo-honduras-movil.jpg";
 import { urlFoto } from "./fotosPagina";
 import "./PaginaWebVista.css";
 
@@ -22,6 +24,12 @@ const TIPOS = [["todos", "Todas"], ["articulo", "Artículos"], ["congreso", "Con
 const TIPO_ETIQUETA = { articulo: "Artículo", congreso: "Congreso", libro: "Libro" };
 const POR_PAGINA = 8;
 
+// Fondo propio por país (clave = código del país). Si no hay, se usa el de moléculas azules.
+const FONDOS = {
+  hn: { grande: fondoHn, movil: fondoHnMovil, pos: "30% center", veil: "izq" },
+};
+const FONDO_BASE = { grande: fondoGrande, movil: fondoMovil, pos: "70% center", veil: "der" };
+
 // Destellos del fondo, generados una sola vez.
 const DESTELLOS = (() => {
   let n = 7;
@@ -36,6 +44,7 @@ const iniciales = (n = "") => n.replace(/^dra?\.?\s+/i, "").trim().slice(0, 1).t
 
 export default function PaginaWebVista({ pagina, onIniciarSesion }) {
   const logo = LOGOS[pagina.sistema];
+  const fondo = FONDOS[pagina.codigo] || FONDO_BASE;
   const c = pagina.contenido || {};
   const contacto = c.contacto || {};
   const equipo = c.equipo || [];
@@ -90,7 +99,6 @@ export default function PaginaWebVista({ pagina, onIniciarSesion }) {
       .sort((a, b) => String(b.anio).localeCompare(String(a.anio))),
     [publicaciones, tipoPub]
   );
-  const rostros = equipo.filter((m) => urlFoto(m.foto)).slice(0, 3);
 
   const enlaces = [
     ["#inicio", "Inicio"], ["#sobre-nosotros", "Sobre nosotros"], ["#proyectos", "Proyectos"],
@@ -101,8 +109,8 @@ export default function PaginaWebVista({ pagina, onIniciarSesion }) {
   return (
     <div className="pw" ref={raiz} style={{ "--pw-accent": c.color || "#0b3a6b", scrollBehavior: "smooth" }}>
       <div className="pw__bg" aria-hidden="true">
-        <img className="pw__molec" src={fondoGrande} srcSet={`${fondoMovil} 960w, ${fondoGrande} 1920w`} sizes="100vw" alt="" decoding="async" />
-        <i className="pw__veil" />
+        <img className="pw__molec" src={fondo.grande} srcSet={`${fondo.movil} 960w, ${fondo.grande} 1920w`} sizes="100vw" alt="" decoding="async" style={{ objectPosition: fondo.pos }} />
+        <i className={`pw__veil pw__veil--${fondo.veil}`} />
         {DESTELLOS.map((d, i) => (
           <i key={`s${i}`} className={`pw__spark${d.ambar ? " pw__spark--a" : ""}`}
             style={{ left: `${d.x}%`, top: `${d.y}%`, width: d.z, height: d.z, animationDuration: `${d.t}s`, animationDelay: `${d.dl}s` }} />
@@ -124,7 +132,7 @@ export default function PaginaWebVista({ pagina, onIniciarSesion }) {
         </div>
       </header>
 
-      <section id="inicio" className={`pw-hero${rostros.length ? "" : " pw-hero--solo"}`}>
+      <section id="inicio" className="pw-hero pw-hero--solo">
         <div>
           {logo && <div className="pw-logo-hero"><img src={logo} alt={c.titulo} /></div>}
           <span className="pw-eyebrow"><i /> {pagina.pais}</span>
@@ -135,16 +143,6 @@ export default function PaginaWebVista({ pagina, onIniciarSesion }) {
             <a className="pw-btn2" href="#proyectos">Ver proyectos</a>
           </div>
         </div>
-        {rostros.length > 0 && (
-          <div className="pw-faces" data-pwr>
-            {rostros.map((m, i) => (
-              <figure className="pw-face" key={i}>
-                <img src={urlFoto(m.foto)} alt={m.nombre} />
-                <figcaption>{m.nombre}</figcaption>
-              </figure>
-            ))}
-          </div>
-        )}
       </section>
 
       <section id="sobre-nosotros" className="pw-sec">

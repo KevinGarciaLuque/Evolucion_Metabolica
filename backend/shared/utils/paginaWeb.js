@@ -52,18 +52,18 @@ export function plantillaContenido(tenant) {
   if (tenant.codigo !== "hn") return base;
   return {
     ...base,
-    titulo: "Evolución Metabólica Honduras",
-    eslogan: "Ciencia, cercanía y tecnología al servicio de las personas con diabetes",
-    sobre_nosotros: "Somos un equipo médico dedicado al cuidado integral de niñas, niños, adolescentes y adultos con diabetes en Honduras. Combinamos la experiencia clínica con el monitoreo continuo de glucosa y herramientas digitales para acompañar a cada paciente y a su familia.",
-    historia: "Evolución Metabólica nace de la necesidad de dar un seguimiento más cercano y ordenado a las personas con diabetes en Honduras. Lo que comenzó como un esfuerzo clínico se convirtió en un sistema propio que hoy forma parte del Registro Latinoamericano de Diabetes, junto a otros países de la región.",
+    titulo: "SAAPD Honduras",
+    eslogan: "Sistema Automatizado para Atención de Pacientes con Diabetes",
+    sobre_nosotros: "SAAPD es el Sistema Automatizado para Atención de Pacientes con Diabetes de Honduras. Somos un equipo médico dedicado al cuidado integral de niñas, niños, adolescentes y adultos con diabetes en Honduras. Combinamos la experiencia clínica con el monitoreo continuo de glucosa y herramientas digitales para acompañar a cada paciente y a su familia.",
+    historia: "SAAPD nace de la necesidad de dar un seguimiento más cercano y ordenado a las personas con diabetes en Honduras. Lo que comenzó como un esfuerzo clínico se convirtió en un sistema propio que hoy forma parte del Registro Latinoamericano de Diabetes, junto a otros países de la región.",
     hitos: [
       { anio: "", texto: "Nacimiento del programa de seguimiento clínico en Honduras." },
       { anio: "", texto: "Incorporación del monitoreo continuo de glucosa a la consulta." },
       { anio: "", texto: "Honduras se une al Registro Latinoamericano de Diabetes." },
     ],
     equipo: [
-      { nombre: "Dra. Lesby", cargo: "Médica del equipo", bio: "Parte del equipo médico de Evolución Metabólica Honduras.", foto: "lesby" },
-      { nombre: "Dra. Leonela", cargo: "Médica del equipo", bio: "Parte del equipo médico de Evolución Metabólica Honduras.", foto: "leonela" },
+      { nombre: "Dra. Lesby", cargo: "Médica del equipo", bio: "Parte del equipo médico de SAAPD Honduras.", foto: "lesby" },
+      { nombre: "Dra. Leonela", cargo: "Médica del equipo", bio: "Parte del equipo médico de SAAPD Honduras.", foto: "leonela" },
     ],
     proyectos: [
       { titulo: "Registro Latinoamericano de Diabetes", texto: "Honduras participa con datos clínicos agregados para impulsar la investigación regional en diabetes.", estado: "en_curso", fecha: "" },
